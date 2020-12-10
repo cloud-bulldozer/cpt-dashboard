@@ -81,4 +81,17 @@ const data = [
   ]
 ]
 
-export { data };
+const cloud_data = [
+  ['aws', ...dates, ...results],
+  ['aws future', ...dates, ...results]
+]
+
+const ocpdata = [
+  {version: '4.6 nightly', cloud_data: cloud_data},
+  {version: '4.6 ovn nightly', cloud_data: cloud_data},
+  {version: '4.7 nightly', cloud_data: cloud_data},
+  {version: '4.7 ovn nightly', cloud_data: cloud_data},
+  {version: '4.8 nightly', cloud_data: cloud_data}
+]
+
+export { data, ocpdata };

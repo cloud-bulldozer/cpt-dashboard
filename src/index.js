@@ -8,32 +8,30 @@ import "@patternfly/react-core/dist/styles/base.css";
 import './fonts.css';
 
 // import BasicTable from './FilterableVersionTable';
-import { data } from './mocks';
+import { ocpdata } from './mocks';
 
-import { TableComposable, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
+import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
+import { Title, TitleSizes } from '@patternfly/react-core';
 // import { ToggleGroup, ToggleGroupItem } from '@patternfly/react-core';
 
-const FilterableVersionTable = (props) => {
+import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
+
+const VersionTable = (props) => {
   const columns = [
-    'OCP Version', 'Cloud Pipeline', 'Build Date', 'Run Date',
+    'Cloud Pipeline', 'Build Date', 'Run Date',
     'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 'Object Density',
     'Upgrade'];
   const rows = props.data;
-  // const columns = ['Repositories', 'Branches', 'Pull requests', 'Workspaces', 'Last commit'];
-  // const rows = [
-  //   ['one', 'two', 'three', 'four', 'five'],
-  //   ['one - 2', null, null, 'four - 2', 'five - 2'],
-  //   ['one - 3', 'two - 3', 'three - 3', 'four - 3', {res:'five - 3', col:'yellow'}]
-  // ];
-
   return (
-    <React.Fragment>
+    <>
+      <Title headingLevel="h2" size={TitleSizes['3xl']}>
+        {props.version}
+      </Title>
       <TableComposable
         aria-label="Simple table"
         variant='compact'
         borders='compactBorderless'
       >
-        <Caption>Simple table using composable components</Caption>
         <Thead>
           <Tr>
             {columns.map((column, columnIndex) => (
@@ -53,15 +51,50 @@ const FilterableVersionTable = (props) => {
           ))}
         </Tbody>
       </TableComposable>
-    </React.Fragment>
+    </>
   );
 };
+
+const VersionList = (props) => (
+  props.data.map((t) => (
+      <VersionTable 
+        key={t.version}
+        version={t.version}
+        data={t.cloud_data} />
+  ))
+)
+
+const WithLabels = (props) => (
+  <>
+    <JumpLinks label="jump to version links do not work">
+      {props.data.map((t) => (
+        <JumpLinksItem key={t.version}>
+          {t.version}
+        </JumpLinksItem>
+      ))}
+    </JumpLinks>
+  </>
+)
+
+const VersionsDataframe = (props) => {
+  const versions = props.data
+  return (
+    <>
+    <Title headingLevel="h1" size={TitleSizes['4xl']}>
+      OCP Performance at Scale
+    </Title>
+    <WithLabels data={versions} />
+    <VersionList data={versions} />
+    </>
+  )
+}
 
 
 
 ReactDOM.render(
   <React.StrictMode>
-    <FilterableVersionTable data={data}/> 
+    {/* <VersionList data={ocpdata} /> */}
+    <VersionsDataframe data={ocpdata} />
   </React.StrictMode>,
   document.getElementById('root')
 );

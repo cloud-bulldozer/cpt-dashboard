@@ -68,3 +68,43 @@ const BasicTable = () => {
 };
 
 export default FilterableVersionTable;
+
+
+
+// const FilterableVersionTable = (props) => {
+//   const columns = [
+//     'OCP Version', 'Cloud Pipeline', 'Build Date', 'Run Date',
+//     'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 'Object Density',
+//     'Upgrade'];
+//   const rows = props.data;
+
+//   return (
+//     <React.Fragment>
+//       <TableComposable
+//         aria-label="Simple table"
+//         variant='compact'
+//         borders='compactBorderless'
+//       >
+//         <Caption>Simple table using composable components</Caption>
+//         <Thead>
+//           <Tr>
+//             {columns.map((column, columnIndex) => (
+//               <Th key={columnIndex}>{column}</Th>
+//             ))}
+//           </Tr>
+//         </Thead>
+//         <Tbody>
+//           {rows.map((row, rowIndex) => (
+//             <Tr key={rowIndex}>
+//               {row.map((cell, cellIndex) => (
+//                 <Td key={`${rowIndex}_${cellIndex}`} dataLabel={columns[cellIndex]}>
+//                   {cell}
+//                 </Td>
+//               ))}
+//             </Tr>
+//           ))}
+//         </Tbody>
+//       </TableComposable>
+//     </React.Fragment>
+//   );
+// };
