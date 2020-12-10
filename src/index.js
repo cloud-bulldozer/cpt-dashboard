@@ -16,7 +16,7 @@ import { Title, TitleSizes } from '@patternfly/react-core';
 
 import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
 
-const VersionTable = (props) => {
+const VersionDf = (props) => {
   const columns = [
     'Cloud Pipeline', 'Build Date', 'Run Date',
     'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 'Object Density',
@@ -57,7 +57,7 @@ const VersionTable = (props) => {
 
 const VersionList = (props) => (
   props.data.map((t) => (
-      <VersionTable 
+      <VersionDf 
         key={t.version}
         version={t.version}
         data={t.cloud_data} />
@@ -76,7 +76,7 @@ const WithLabels = (props) => (
   </>
 )
 
-const VersionsDataframe = (props) => {
+const OcpPerformanceApp = (props) => {
   const versions = props.data
   return (
     <>
@@ -93,8 +93,7 @@ const VersionsDataframe = (props) => {
 
 ReactDOM.render(
   <React.StrictMode>
-    {/* <VersionList data={ocpdata} /> */}
-    <VersionsDataframe data={ocpdata} />
+    <OcpPerformanceApp data={ocpdata} />
   </React.StrictMode>,
   document.getElementById('root')
 );
