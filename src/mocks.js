@@ -94,4 +94,31 @@ const ocpdata = [
   {version: '4.8 nightly', cloud_data: cloud_data}
 ]
 
-export { data, ocpdata };
+const dates2 = [
+  {title:'01/01/2021'}, {title:'01/02/2021'}
+]
+
+const results2 = [
+  {title: 'success', url: 'redhat.com'},
+  {title: 'warning', url: 'redhat.com'},
+  {title: 'failure', url: 'redhat.com'}, 
+  {title: 'success', url: 'redhat.com'},
+  {title: 'success', url: 'redhat.com'},
+  {title: 'success', url: 'redhat.com'},
+  {title: 'success', url: 'redhat.com'},
+]
+
+const cloud_data2 = [
+  ['aws', ...dates, ...results2],
+  ['aws future', ...dates, ...results2]
+]
+
+const ocpdata2 = [
+  {version: '4.6 nightly', cloud_data: cloud_data2},
+  {version: '4.6 ovn nightly', cloud_data: cloud_data2},
+  {version: '4.7 nightly', cloud_data: cloud_data2},
+  {version: '4.7 ovn nightly', cloud_data: cloud_data2},
+  {version: '4.8 nightly', cloud_data: cloud_data2}
+]
+
+export { data, ocpdata, ocpdata2 };
