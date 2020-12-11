@@ -16,6 +16,8 @@ import { Title, TitleSizes } from '@patternfly/react-core';
 
 import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
 
+import { StyleSheet, css } from '@patternfly/react-styles';
+
 const VersionDf = (props) => {
   const columns = [
     'Cloud Pipeline', 'Build Date', 'Run Date',
@@ -66,15 +68,22 @@ const VersionList = (props) => (
 
 const WithLabels = (props) => (
   <>
-    <JumpLinks label="jump to version links do not work">
+    <JumpLinks label="jump to version">
       {props.data.map((t) => (
-        <JumpLinksItem key={t.version}>
+        <JumpLinksItem key={t.version} href={`#${t.version}`}>
           {t.version}
         </JumpLinksItem>
       ))}
     </JumpLinks>
   </>
 )
+
+
+const Colors = new Map([
+  ['success', 'green'],
+  ['warning', 'yellow'],
+  ['failure', 'red']
+]);
 
 
 
@@ -90,12 +99,18 @@ const VersionDf2 = (props) => {
     if (index <= 2) {
       return cell
     }
-    return cell.title
+    return (
+      <>
+      <a href={cell.url} style={{backgroundColor:Colors.get(cell.title)}}>
+        {cell.title}
+      </a>
+      </>
+    )
   }
 
   return (
     <>
-      <Title headingLevel="h2" size={TitleSizes['3xl']}>
+      <Title headingLevel="h2" size={TitleSizes['3xl']} id={props.version}>
         {props.version}
       </Title>
       <TableComposable
@@ -103,7 +118,7 @@ const VersionDf2 = (props) => {
         variant='compact'
         borders='compactBorderless'
       >
-            <Thead>
+      <Thead>
         <Tr>
           {columns.map((column, columnIndex) => (
             <Th key={columnIndex}>{column}</Th>

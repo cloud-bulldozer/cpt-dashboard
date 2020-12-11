@@ -99,18 +99,23 @@ const dates2 = [
 ]
 
 const results2 = [
-  {title: 'success', url: 'redhat.com'},
-  {title: 'warning', url: 'redhat.com'},
-  {title: 'failure', url: 'redhat.com'}, 
-  {title: 'success', url: 'redhat.com'},
-  {title: 'success', url: 'redhat.com'},
-  {title: 'success', url: 'redhat.com'},
-  {title: 'success', url: 'redhat.com'},
+  {title: 'success', url: 'https://www.redhat.com'},
+  {title: 'warning', url: 'https://www.redhat.com'},
+  {title: 'failure', url: 'https://www.redhat.com'}, 
+  {title: 'success', url: 'https://www.redhat.com'},
+  {title: 'success', url: 'https://www.redhat.com'},
+  {title: 'success', url: 'https://www.redhat.com'},
+  {title: 'success', url: 'https://www.redhat.com'},
 ]
 
 const cloud_data2 = [
   ['aws', ...dates, ...results2],
-  ['aws future', ...dates, ...results2]
+  ['aws next', ...dates, ...results2],
+  ['aws future', ...dates, ...results2],
+  ['aws 2 electric boogaloo ', ...dates, ...results2],
+  ['aws tron', ...dates, ...results2],
+  ['aws tron legacy', ...dates, ...results2],
+  ['gcp redux', ...dates, ...results2]
 ]
 
 const ocpdata2 = [
