@@ -80,9 +80,9 @@ const WithLabels = (props) => (
 
 
 const Colors = new Map([
-  ['success', 'green'],
-  ['warning', 'yellow'],
-  ['failure', 'red']
+  ['success', '#00800052'],
+  ['warning', '#ffff00a1'],
+  ['failure', '#ff000070']
 ]);
 
 
@@ -100,11 +100,11 @@ const VersionDf2 = (props) => {
       return cell
     }
     return (
-      <>
-      <a href={cell.url} style={{backgroundColor:Colors.get(cell.title)}}>
+      <div>
+      <a href={cell.url}>
         {cell.title}
       </a>
-      </>
+      </div>
     )
   }
 
@@ -126,6 +126,7 @@ const VersionDf2 = (props) => {
         </Tr>
       </Thead>
       {rows.map((row, rowIndex) => {
+        console.log(rows)
         return (
           <Tbody key={rowIndex}>
             <React.Fragment>
@@ -136,6 +137,7 @@ const VersionDf2 = (props) => {
                       key={`${rowIndex}_${cellIndex}`}
                       dataLabel={columns[cellIndex]}
                       component={cellIndex === 0 ? 'th' : 'td'}
+                      style={{backgroundColor:Colors.get(cell.title), border:"1px solid black"}}
                     >
                       {customRender(cell, cellIndex)}
                     </Td>
