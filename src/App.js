@@ -2,12 +2,16 @@ import './App.css';
 import './fonts.css';
 import "@patternfly/react-core/dist/styles/base.css";
 
-import VersionDf from './components/VersionDf';
+// import components
+import OcpPerformanceApp from './components/OcpPerformanceApp';
+
+// import fake data
+import { ocpdata, ocpdata2 } from './mocks';
 
 function App() {
   return (
     <div className="App">
-      <VersionDf />
+      <OcpPerformanceApp data={ocpdata2}/>
     </div>
   );
 }

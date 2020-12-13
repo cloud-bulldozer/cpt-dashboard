@@ -1,63 +1,23 @@
 import React from 'react';
-// import BasicTable from './FilterableVersionTable';
-import { ocpdata, ocpdata2 } from '../mocks';
+
+import { Title, TitleSizes } from '@patternfly/react-core';
 
 import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
-import { Title, TitleSizes } from '@patternfly/react-core';
-// import { ToggleGroup, ToggleGroupItem } from '@patternfly/react-core';
-
-import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
-
-import { StyleSheet, css } from '@patternfly/react-styles';
-
-const VersionList = (props) => (
-  props.data.map((t) => (
-      <VersionDf
-        key={t.version}
-        version={t.version}
-        data={t.cloud_data} />
-  ))
-)
-
-const WithLabels = (props) => (
-  <>
-    <JumpLinks label="jump to version">
-      {props.data.map((t) => (
-        <JumpLinksItem key={t.version} href={`#${t.version}`}>
-          {t.version}
-        </JumpLinksItem>
-      ))}
-    </JumpLinks>
-  </>
-)
-
-
-const Colors = new Map([
-  ['success', 'green'],
-  ['warning', 'yellow'],
-  ['failure', 'red']
-]);
-
-
-const OcpPerformanceApp = (props) => {
-  const versions = props.data
-  return (
-    <>
-    <Title headingLevel="h1" size={TitleSizes['4xl']}>
-      OCP Performance at Scale
-    </Title>
-    <WithLabels data={versions} />
-    <VersionList data={versions} />
-    </>
-  )
-}
 
 const VersionDf = (props) => {
+  
   const columns = [
     'Cloud Pipeline', 'Build Date', 'Run Date',
     'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 'Object Density',
     'Upgrade'];
+
   const rows = props.data;
+
+  const Colors = new Map([
+    ['success', 'green'],
+    ['warning', 'yellow'],
+    ['failure', 'red']
+  ]);
 
   const customRender = (cell, index) => {
     // coupled to the position of each column
@@ -115,6 +75,5 @@ const VersionDf = (props) => {
     </>
   );
 };
-
 
 export default VersionDf
