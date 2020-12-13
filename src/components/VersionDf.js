@@ -39,6 +39,18 @@ const Colors = new Map([
 ]);
 
 
+const OcpPerformanceApp = (props) => {
+  const versions = props.data
+  return (
+    <>
+    <Title headingLevel="h1" size={TitleSizes['4xl']}>
+      OCP Performance at Scale
+    </Title>
+    <WithLabels data={versions} />
+    <VersionList data={versions} />
+    </>
+  )
+}
 
 const VersionDf = (props) => {
   const columns = [
