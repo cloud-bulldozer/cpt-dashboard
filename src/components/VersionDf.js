@@ -1,7 +1,5 @@
 import React from 'react';
-
 import { Title, TitleSizes } from '@patternfly/react-core';
-
 import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
 
 const VersionDf = (props) => {

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
 
 const WithLabels = (props) => {

@@ -1,5 +1,4 @@
 import React from 'react';
-
 import VersionDf from './VersionDf';
 
 const VersionList = (props) => {

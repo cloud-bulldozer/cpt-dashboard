@@ -1,9 +1,6 @@
 import React from 'react';
-
 import WithLabels from './WithLabels';
-
 import VersionList from './VersionList';
-
 import { Title, TitleSizes } from '@patternfly/react-core';
 
 const OcpPerformanceApp = (props) => {
