@@ -12,9 +12,9 @@ const VersionDf = (props) => {
   const rows = props.data;
 
   const Colors = new Map([
-    ['success', 'green'],
-    ['warning', 'yellow'],
-    ['failure', 'red']
+    ['success', '#00800052'],
+    ['warning', '#ffff00a1'],
+    ['failure', '#ff000070']
   ]);
 
   const customRender = (cell, index) => {
@@ -23,11 +23,11 @@ const VersionDf = (props) => {
       return cell
     }
     return (
-      <>
-      <a href={cell.url} style={{backgroundColor:Colors.get(cell.title)}}>
+      <div>
+      <a href={cell.url}>
         {cell.title}
       </a>
-      </>
+      </div>
     )
   }
 
@@ -51,7 +51,7 @@ const VersionDf = (props) => {
       {rows.map((row, rowIndex) => {
         return (
           <Tbody key={rowIndex}>
-            <React.Fragment>
+            <>
               <Tr>
                 {row.map((cell, cellIndex) => {
                   return (
@@ -59,13 +59,15 @@ const VersionDf = (props) => {
                       key={`${rowIndex}_${cellIndex}`}
                       dataLabel={columns[cellIndex]}
                       component={cellIndex === 0 ? 'th' : 'td'}
+                      style={{backgroundColor:Colors.get(cell.title), 
+                        border:"1 px solid black"}}
                     >
                       {customRender(cell, cellIndex)}
                     </Td>
                   );
                 })}
               </Tr>
-            </React.Fragment>
+            </>
           </Tbody>
         );
       })}      
