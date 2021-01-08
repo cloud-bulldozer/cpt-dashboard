@@ -1,5 +1,9 @@
 # frontend
 
+## Development in a container
+
+
+
 ## Available Scripts
 
 In the project directory, you can run:
