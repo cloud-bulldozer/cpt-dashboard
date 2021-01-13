@@ -6,7 +6,7 @@ from pprint import pprint
 
 
 def nest_two(a: np.array):
-  return {'verdict': a[0], 'result': a[1]}
+  return {'title': a[0], 'url': a[1]}
 
 
 def wider(long: pd.DataFrame, heading_colname: str):
@@ -29,7 +29,7 @@ def ocpframe(heading: str, df: pd.DataFrame):
 
 def ocpframelist(wide: pd.DataFrame, heading_colname: str):
   return [
-    ocpframe(g[0], g[1]) 
+    ocpframe(g[0], g[1].drop(columns=[heading_colname])) 
     for g in wide.groupby(by=[heading_colname])
   ]
 
@@ -43,8 +43,28 @@ def main():
     .pipe(wider, heading_colname='heading')
     .pipe(ocpframelist, heading_colname='heading')
   )
-  pprint(wide)
-  # print(orjson.dumps(wide))
+  with open('../tests/widened2.json', 'wb') as widened:
+    widened.write(orjson.dumps({'data':wide}))
+
+
+def to_ocpapp(long: pd.DataFrame):
+  return ( long
+    .pipe(wider, heading_colname='heading')
+    .pipe(ocpframelist, heading_colname='heading')
+  )
+
+
+def to_ocpapp_tst(csvpath, jsonpath):
+  wide = to_ocpapp(pd.read_csv(csvpath,
+    dtype={
+      'openshift': 'string',
+      'build_id': 'string'
+    }))
+  with open(jsonpath, 'wb') as widened:
+    widened.write(orjson.dumps({'data':wide}))
+
+
+  
 
 
 if __name__ == '__main__':

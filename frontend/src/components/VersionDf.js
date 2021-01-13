@@ -5,9 +5,9 @@ import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from 
 const VersionDf = (props) => {
   
   const columns = [
-    'Cloud Pipeline', 'Build Date', 'Run Date',
-    'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 'Object Density',
-    'Upgrade'];
+    'Platform', 'Build Date', 'Run Date', 'Job', 'Build ID', 
+    'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 
+    'Object Density', 'Upgrade'];
 
   const rows = props.data;
 
@@ -19,7 +19,7 @@ const VersionDf = (props) => {
 
   const customRender = (cell, index) => {
     // coupled to the position of each column
-    if (index <= 2) {
+    if (index <= 4) {
       return cell
     }
     return (
