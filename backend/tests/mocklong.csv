@@ -1,83 +1,83 @@
 openshift,network,platform,build_date,run_date,job,build_id,workload,verdict,result
-4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,failure,NA
-4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,failure,NA
+4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,failure,null
+4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,failure,null
 4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,uperf,success,https://www.redhat.com
 4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,kubelet,unstable,https://www.redhat.com
 4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,object density,unstable,https://www.redhat.com
 4.6,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,failure,NA
+4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,failure,null
 4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,uperf,success,https://www.redhat.com
 4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,http,unstable,https://www.redhat.com
 4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,kubelet,unstable,https://www.redhat.com
 4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,object density,unstable,https://www.redhat.com
 4.6,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,failure,NA
-4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,failure,null
+4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,uperf,unstable,https://www.redhat.com
 4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,http,success,https://www.redhat.com
 4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,kubelet,unstable,https://www.redhat.com
 4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,object density,unstable,https://www.redhat.com
 4.6,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,upgrade,failure,https://www.redhat.com
-4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,success,NA
-4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,failure,NA
+4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,success,null
+4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,failure,null
 4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,uperf,unstable,https://www.redhat.com
 4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,kubelet,success,https://www.redhat.com
 4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,object density,failure,https://www.redhat.com
 4.6,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,upgrade,failure,https://www.redhat.com
-4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,success,NA
+4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,success,null
 4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,uperf,failure,https://www.redhat.com
 4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,kubelet,failure,https://www.redhat.com
 4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,object density,failure,https://www.redhat.com
 4.6,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,upgrade,failure,https://www.redhat.com
-4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,uperf,unstable,https://www.redhat.com
 4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,kubelet,unstable,https://www.redhat.com
 4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,object density,success,https://www.redhat.com
 4.6,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,success,NA
-4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,success,null
+4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,uperf,failure,https://www.redhat.com
 4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,http,unstable,https://www.redhat.com
 4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,kubelet,unstable,https://www.redhat.com
 4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,object density,success,https://www.redhat.com
 4.7,sdn,aws,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,success,NA
+4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,success,null
 4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,uperf,success,https://www.redhat.com
 4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,kubelet,failure,https://www.redhat.com
 4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,object density,success,https://www.redhat.com
 4.7,sdn,azure,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,success,NA
+4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,success,null
 4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,uperf,failure,https://www.redhat.com
 4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,kubelet,failure,https://www.redhat.com
 4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,object density,failure,https://www.redhat.com
 4.7,sdn,gcp,2020-01-01,2020-01-02,bulbasaur,1,upgrade,unstable,https://www.redhat.com
-4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,NA
-4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,build,unstable,null
+4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,uperf,success,https://www.redhat.com
 4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,kubelet,failure,https://www.redhat.com
 4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,object density,unstable,https://www.redhat.com
 4.7,ovn,aws,2020-01-01,2020-01-02,bulbasaur,1,upgrade,success,https://www.redhat.com
-4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,success,NA
-4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,build,success,null
+4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,uperf,unstable,https://www.redhat.com
 4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,kubelet,success,https://www.redhat.com
 4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,object density,success,https://www.redhat.com
 4.7,ovn,azure,2020-01-01,2020-01-02,bulbasaur,1,upgrade,success,https://www.redhat.com
-4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,failure,NA
-4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,NA
+4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,build,failure,null
+4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,install,unstable,null
 4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,uperf,unstable,https://www.redhat.com
 4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,http,failure,https://www.redhat.com
 4.7,ovn,gcp,2020-01-01,2020-01-02,bulbasaur,1,kubelet,failure,https://www.redhat.com
