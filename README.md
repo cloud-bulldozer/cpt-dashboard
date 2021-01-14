@@ -88,7 +88,7 @@ This will build and run the backend and frontend containers, and expose their po
 ### Requires
 
 * podman
-* working direcotry is the repository root directory
+* working directory is the repository root directory
 
 ```shell 
 #!/bin/sh
