@@ -4,7 +4,8 @@ ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
     PYTHONPATH=/app
 
-COPY main.py requirements.txt /app
+COPY app /app
+COPY scripts /scripts
 
 WORKDIR /app
 
@@ -12,6 +13,6 @@ RUN ln -s /usr/bin/python3 /usr/bin/python \
   && dnf install -y python3-pip \
   && pip install --no-cache-dir -r requirements.txt
 
-CMD ["uvicorn", "--port=8000", "--forwarded-allow-ips='*'", "--proxy-headers", "main:app"]
+CMD ["/usr/bin/bash", "/scripts/start.sh"]
 
 

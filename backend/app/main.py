@@ -7,7 +7,6 @@ import orjson
 
 from services import transform
 
-
 app = FastAPI()
 
 
@@ -17,6 +16,7 @@ def root(request: Request):
         "url": str(request.url),
         "root_path": request.scope.get('root_path')
     }
+
 
 
 @app.get("/domain/{domain}")

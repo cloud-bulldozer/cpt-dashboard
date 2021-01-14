@@ -1,8 +1,87 @@
-# ocp_perf_dashboard
+# Something Quirky
 OpenShift Container Platform Performance Dashboard
 
 
-## Example Container Orchestration
+## Development
+
+### Requires
+
+* podman
+
+### Build Backend
+
+#### Requires
+
+* pipenv  
+* current working directory is `backend/app`
+
+Build backend image.
+
+    $ pipenv lock -r > requirements.txt
+
+    $ podman build \
+      --tag ocpp-back-i \
+      --file backend.containerfile \
+      .
+
+
+### Run Backend 
+
+Run the backend container and attach source code as a writable volume.
+
+    $ podman run \
+        --interactive \
+        --tty \
+        --volume "$PWD/app:/app:z" \
+        --publish 8000:8000 \
+        ocpp-back-i /scripts/start-reload.sh
+
+
+### Build Frontend
+
+#### Requires
+
+* current working directory is `frontend`
+
+Build frontend image.
+
+    $ podman build \
+        --tag ocpp-front-dev-i \
+        --file frontend-dev.containerfile \
+        .
+
+### Run Frontend and Backend
+
+Create a pod for communication between containers.
+
+    $ podman pod create --name=ocpp-dev --publish 8000:3000
+
+Go to the backend directory.
+
+Run backend.
+
+    $ cd backend
+
+    $ podman run \
+        --interactive \
+        --tty \
+        --volume "$PWD/app:/app:z" \
+        --pod ocpp-dev
+        ocpp-back-i /scripts/start-reload.sh 
+
+Open a second terminal. Go to the frontend directory.
+
+Run frontend.
+
+    $ podman run \
+        --interactive \
+        --tty \
+        --volume "$PWD:/app:z" \
+        --pod ocpp-dev \
+        ocpp-front-dev-i
+
+
+## Example Production Orchestration
 
 This will build and run the backend and frontend containers, and expose their pod on port `8080`.
 
@@ -20,7 +99,6 @@ podman build . --tag ocpp-back-i
 
 cd ../frontend
 podman build . --tag ocpp-front-i
-
 
 podman rm -f front back
 podman pod rm -f ocpp

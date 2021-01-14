@@ -18,17 +18,19 @@ const VersionDf = (props) => {
   ]);
 
   const customRender = (cell, index) => {
-    // coupled to the position of each column
-    if (index <= 4) {
-      return cell
+    if (cell instanceof Object) {
+      if (cell.url) {
+        return (
+          <div>
+            <a href={cell.url}>
+              {cell.title}
+            </a>
+          </div>
+        )
+      }
+      return cell.title
     }
-    return (
-      <div>
-      <a href={cell.url}>
-        {cell.title}
-      </a>
-      </div>
-    )
+    return cell
   }
 
   return (

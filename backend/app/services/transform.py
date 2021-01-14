@@ -36,7 +36,7 @@ def ocpframelist(wide: pd.DataFrame, heading_colname: str):
 
 def main():
   wide = (pd.read_csv('../tests/mocklong.csv',
-    dtype={
+                      dtype={
       'openshift': 'string',
       'build_id': 'string'
     })
