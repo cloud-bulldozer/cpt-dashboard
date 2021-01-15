@@ -11,29 +11,40 @@ import { ocpdata, ocpdata2 } from './mocks';
 import { useState, useEffect } from 'react';
 
 
-const fastjson = require('fastjson');
+//const fastjson = require('fastjson');
 
 
-
-
+//!!! this part doesn't work yet !!!
 function App() {
   const [appState, setAppState] = useState([]);
 
-  
+  const query = {
+                  "query": {
+                        "range": {
+                        "timestamp": {
+                            "format": "strict_date_optional_time",
+                            "gte": "2020-10-02T03:48:15.261Z",
+                            "lte": "2021-01-11T04:48:15.261Z"
+                        }
+                        }
+                  }
+                }
 
   useEffect(() => {
-    fetch('/api/widened')
+    const requestOptions = {
+      method: 'POST',
+      headers: {'Content-Type': 'application/json'},
+      body: JSON.stringify(query)
+    }
+    fetch('http://localhost:8000/api/download', requestOptions)
       .then(res => res.json())
       .then((d) => setAppState(d.data));
   })
 
-
-
   
   return (
     <div className="App">
-
-      <OcpPerformanceApp data={appState}/>
+      <OcpPerformanceApp data={ocpdata}/>
     </div>
   );
 }

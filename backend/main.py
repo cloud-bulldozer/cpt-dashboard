@@ -3,13 +3,42 @@ import time
 import httpx
 from httpx import Response
 from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
 import orjson
 
 from services import transform
 
+from pydantic import BaseModel
+
+from api.elasticsearch_api import Elasticsearch
+
+class Timesrange(BaseModel):
+    format: str
+    gte: str
+    lte: str
+
+class Timestamp(BaseModel):
+    timestamp: Timesrange
+
+class Range(BaseModel):
+    range: Timestamp
+
+class Query(BaseModel):
+    query: Range
+
+origins = [
+    "http://localhost:3000",
+]
 
 app = FastAPI()
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 
 @app.get("/")
 def root(request: Request):
@@ -37,3 +66,13 @@ async def wide():
     transform.to_ocpapp_tst('tests/mocklong.csv', 'tests/widened2.json')
     with open('tests/widened2.json', 'r') as wjson:
         return orjson.loads(wjson.read())
+
+@app.post('/api/download')
+def download(query: Query):
+    es = Elasticsearch()
+    try:
+        response = es.post(query)
+    except:
+        print("An exception occurred")
+        response = {'Error': 'Elasticsearch post failed'}
+    return response
