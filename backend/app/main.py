@@ -8,7 +8,6 @@ import orjson
 
 from services import transform
 
-<<<<<<< HEAD:backend/main.py
 from pydantic import BaseModel
 
 from api.elasticsearch_api import Elasticsearch_API
@@ -31,8 +30,6 @@ origins = [
     "http://localhost:3000",
 ]
 
-=======
->>>>>>> main:backend/app/main.py
 app = FastAPI()
 
 app.add_middleware(
