@@ -107,9 +107,9 @@ def to_ocp_data(response):
         else:
           cloud_data.append("N/A")
 
-        # 6. build
-        if "job_name" in indice:
-          cloud_data.append(indice["job_name"])
+        # 6. build !! hard coded right now
+        if "job_status" in indice:
+          cloud_data.append(indice["job_status"].lower())
         else:
           cloud_data.append("N/A")
 

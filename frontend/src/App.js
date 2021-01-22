@@ -39,11 +39,11 @@ function App() {
     fetch('http://localhost:8000/api/download', requestOptions)
       .then(res => res.json())
       .then((d) => setAppState(d.response));
-  })
+  }, [])
 
   return (
     <div className="App">
-      <OcpPerformanceApp data={ocpdata}/>
+      <OcpPerformanceApp data={appState}/>
     </div>
   );
 }
