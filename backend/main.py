@@ -10,7 +10,7 @@ from services import transform
 
 from pydantic import BaseModel
 
-from api.elasticsearch_api import Elasticsearch
+from api.elasticsearch_api import Elasticsearch_API
 
 class Timesrange(BaseModel):
     format: str
@@ -62,17 +62,27 @@ async def now():
 
 
 @app.get('/api/widened')
-async def wide():
+def wide():
     transform.to_ocpapp_tst('tests/mocklong.csv', 'tests/widened2.json')
     with open('tests/widened2.json', 'r') as wjson:
         return orjson.loads(wjson.read())
 
 @app.post('/api/download')
 def download(query: Query):
-    es = Elasticsearch()
+
+    es = Elasticsearch_API()
+    response = {}
+    
     try:
+        # first get the es response
         response = es.post(query)
     except:
-        print("An exception occurred")
-        response = {'Error': 'Elasticsearch post failed'}
+        print("Elasticsearch post failed")
+
+    try:
+        # parse the response
+        response = transform.to_ocp_data(response)
+    except:
+        print("Error parsing Elasticsearch response")
+
     return response

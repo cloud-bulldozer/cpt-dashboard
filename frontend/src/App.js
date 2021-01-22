@@ -22,9 +22,9 @@ function App() {
                   "query": {
                         "range": {
                         "timestamp": {
-                            "format": "strict_date_optional_time",
-                            "gte": "2020-10-02T03:48:15.261Z",
-                            "lte": "2021-01-11T04:48:15.261Z"
+                          "gte": "2021-01-15T05:15:04.120Z",
+                          "lte": "2021-01-22T05:15:04.120Z",
+                          "format": "strict_date_optional_time"
                         }
                         }
                   }
@@ -38,10 +38,9 @@ function App() {
     }
     fetch('http://localhost:8000/api/download', requestOptions)
       .then(res => res.json())
-      .then((d) => setAppState(d.data));
+      .then((d) => setAppState(d.response));
   })
 
-  
   return (
     <div className="App">
       <OcpPerformanceApp data={ocpdata}/>
