@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import orjson
 
-from services import transform
+from app.services import transform
 
 from pydantic import BaseModel
 
@@ -46,7 +46,6 @@ def root(request: Request):
         "url": str(request.url),
         "root_path": request.scope.get('root_path')
     }
-
 
 
 @app.get("/domain/{domain}")

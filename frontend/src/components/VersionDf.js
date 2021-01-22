@@ -11,26 +11,11 @@ const VersionDf = (props) => {
 
   const rows = props.data;
 
-  const Colors = new Map([
-    ['success', '#00800052'],
-    ['warning', '#ffff00a1'],
-    ['failure', '#ff000070']
-  ]);
-
-  const customRender = (cell, index) => {
-    if (cell instanceof Object) {
-      if (cell.url) {
-        return (
-          <div>
-            <a href={cell.url}>
-              {cell.title}
-            </a>
-          </div>
-        )
-      }
-      return cell.title
-    }
-    return cell
+  const Colors = {
+    'success': '#00800052',
+    'warning': '#ffff00a1',
+    'failure': '#ff000070',
+    'N/A': '#00000000'
   }
 
   return (
@@ -61,10 +46,10 @@ const VersionDf = (props) => {
                       key={`${rowIndex}_${cellIndex}`}
                       dataLabel={columns[cellIndex]}
                       component={cellIndex === 0 ? 'th' : 'td'}
-                      style={{backgroundColor:Colors.get(cell.title), 
+                      style={{backgroundColor:Colors[cell], 
                         border:"1 px solid black"}}
                     >
-                      {customRender(cell, cellIndex)}
+                      {cell}
                     </Td>
                   );
                 })}

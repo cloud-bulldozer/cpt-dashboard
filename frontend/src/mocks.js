@@ -19,7 +19,7 @@ const dates_dict = {
 }
 
 const dates = [
-  '01/01/2021', '01/02/2021'
+  '01/01/2021', '01/02/2021', 'indexer', '155'
 ]
 
 const results = [

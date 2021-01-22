@@ -63,9 +63,109 @@ def to_ocpapp_tst(csvpath, jsonpath):
   with open(jsonpath, 'wb') as widened:
     widened.write(orjson.dumps({'data':wide}))
 
+# Fuqing added
+def to_ocp_data(response):
+  res = {}
+  indices_list = response["hits"]["hits"]
+  for indice in indices_list:
+      indice = indice["_source"]
 
-  
+      if "cluster_version" in indice and "network_type" in indice:
+        network = indice["network_type"].replace("Kubernetes", "").replace("OpenShift","")
+        version = ".".join(indice["cluster_version"].split(".")[:2])
+        version_id = version + " " + network
 
+        # should have 10 fields
+        cloud_data = []
+        # 1. platform
+        if "platform" in indice:
+          cloud_data.append(indice["platform"])
+        else:
+          cloud_data.append("N/A")
+
+        # 2. build date !!! missing
+        if "timestamp" in indice:
+          cloud_data.append(indice["timestamp"])
+        else:
+          cloud_data.append("N/A")
+
+        # 3. run date 
+        if "timestamp" in indice:
+          cloud_data.append(indice["timestamp"])
+        else:
+          cloud_data.append("N/A")
+
+        # 4. job
+        if "job_name" in indice:
+          cloud_data.append(indice["job_name"])
+        else:
+          cloud_data.append("N/A")
+
+        # 5. build id !! deprecated
+        if "build_number" in indice:
+          cloud_data.append(indice["build_number"])
+        else:
+          cloud_data.append("N/A")
+
+        # 6. build !! hard coded right now
+        if "job_status" in indice:
+          cloud_data.append(indice["job_status"].lower())
+        else:
+          cloud_data.append("N/A")
+
+        if "build_tag" in indice:
+          workload = indice["build_tag"]
+          # 7. install
+          if "INSTALL" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+
+          # 8. uperf
+          if "UPERF" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+
+          # 9. http
+          if "HTTP" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+
+          # 10. kublet
+          if "KUBLET" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+
+          # 11. object density
+          if "DENSITY" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+
+          # 12. upgrade
+          if "UPGRADE" in workload:
+            cloud_data.append(indice["job_status"].lower())
+          else:
+            cloud_data.append("N/A")
+        else:
+          continue
+
+        if version_id not in res:
+          res[version_id] = []
+        res[version_id].append(cloud_data)
+
+      else:
+        continue
+
+  # additional parsing
+  res_list = []
+  for key, value in res.items():
+    res_list.append({'version': key, 'cloud_data': value})
+
+  return {"response": res_list}
 
 if __name__ == '__main__':
   main()
