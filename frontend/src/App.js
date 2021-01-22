@@ -5,16 +5,8 @@ import "@patternfly/react-core/dist/styles/base.css";
 // import components
 import OcpPerformanceApp from './components/OcpPerformanceApp';
 
-// import fake data
-import { ocpdata, ocpdata2 } from './mocks';
-
 import { useState, useEffect } from 'react';
 
-
-//const fastjson = require('fastjson');
-
-
-//!!! this part doesn't work yet !!!
 function App() {
   const [appState, setAppState] = useState([]);
 
@@ -29,7 +21,6 @@ function App() {
                         }
                   }
                 }
-
   useEffect(() => {
     const requestOptions = {
       method: 'POST',

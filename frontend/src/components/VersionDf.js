@@ -11,32 +11,11 @@ const VersionDf = (props) => {
 
   const rows = props.data;
 
-  // const Colors = new Map([
-  //   ['success', '#00800052'],
-  //   ['warning', '#ffff00a1'],
-  //   ['failure', '#ff000070'],
-  //   ['N/A', '#00000000']
-  // ]);
-
   const Colors = {
     'success': '#00800052',
     'warning': '#ffff00a1',
     'failure': '#ff000070',
     'N/A': '#00000000'
-  }
-
-  const customRender = (cell, index) => {
-    // coupled to the position of each column
-    if (index <= 4) {
-      return cell
-    }
-    return (
-      <div>
-        <a href={cell.url}>
-          {cell.title}
-        </a>
-      </div>
-    )
   }
 
   return (

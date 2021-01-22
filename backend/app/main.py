@@ -6,8 +6,9 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import orjson
 
-from app.services import transform
+from services import transform
 
+<<<<<<< HEAD:backend/main.py
 from pydantic import BaseModel
 
 from api.elasticsearch_api import Elasticsearch_API
@@ -30,6 +31,8 @@ origins = [
     "http://localhost:3000",
 ]
 
+=======
+>>>>>>> main:backend/app/main.py
 app = FastAPI()
 
 app.add_middleware(
@@ -46,6 +49,7 @@ def root(request: Request):
         "url": str(request.url),
         "root_path": request.scope.get('root_path')
     }
+
 
 
 @app.get("/domain/{domain}")
