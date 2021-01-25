@@ -6,25 +6,30 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import orjson
 
-from services import transform
+from app.services import transform
 
 from pydantic import BaseModel
 
 from api.elasticsearch_api import Elasticsearch_API
+
 
 class Timesrange(BaseModel):
     format: str
     gte: str
     lte: str
 
+
 class Timestamp(BaseModel):
     timestamp: Timesrange
+
 
 class Range(BaseModel):
     range: Timestamp
 
+
 class Query(BaseModel):
     query: Range
+
 
 origins = [
     "http://localhost:3000",
@@ -40,13 +45,13 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+
 @app.get("/")
 def root(request: Request):
     return {
         "url": str(request.url),
         "root_path": request.scope.get('root_path')
     }
-
 
 
 @app.get("/domain/{domain}")
@@ -68,20 +73,33 @@ def wide():
     with open('tests/widened2.json', 'r') as wjson:
         return orjson.loads(wjson.read())
 
-@app.post('/api/download')
-def download(query: Query):
 
+# add default query
+@app.post('/api/download')
+def download(query: Query = Query(
+    query = {
+        'range': {
+            'timestamp': {
+                'format': 'strict_date_optional_time',
+                'gte': 'now-3M',
+                'lte': 'now'
+            }
+        }
+    })
+):
     es = Elasticsearch_API()
     response = {}
-    
-    try:
-        # first get the es response
-        response = es.post(query)
-    except:
-        print("Elasticsearch post failed")
+
+    # try:
+    # first get the es response
+    response = es.post(query)
+    print(response)
+    # except:
+    #     print("Elasticsearch post failed")
 
     try:
         # parse the response
+        print(response)
         response = transform.to_ocp_data(response)
     except:
         print("Error parsing Elasticsearch response")

@@ -63,8 +63,10 @@ def to_ocpapp_tst(csvpath, jsonpath):
   with open(jsonpath, 'wb') as widened:
     widened.write(orjson.dumps({'data':wide}))
 
+
 # Fuqing added
 def to_ocp_data(response):
+  # TODO handle empty response
   res = {}
   indices_list = response["hits"]["hits"]
   for indice in indices_list:

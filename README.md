@@ -2,7 +2,19 @@
 OpenShift Container Platform Performance Dashboard
 
 
-## Development
+## Development on Local System
+
+### Requires
+
+* Python 3.9
+* pipenv
+* yarn
+
+1. Follow [backend setup readme](backend/README.md)
+2. Follow [frontend setup readme](frontend/README.md)
+
+
+## Development in Containers
 
 ### Requires
 
@@ -67,7 +79,7 @@ Run backend.
         --tty \
         --volume "$PWD/app:/app:z" \
         --pod ocpp-dev
-        ocpp-back-i /scripts/start-reload.sh 
+        ocpp-back-i /app/scripts/start-reload.sh 
 
 Open a second terminal. Go to the frontend directory.
 

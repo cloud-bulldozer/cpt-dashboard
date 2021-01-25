@@ -11,6 +11,7 @@ uvicorn = "*"
 httpx = "*"
 orjson = "*"
 pandas = "*"
+elasticsearch = "*"
 
 [requires]
 python_version = "3.9"

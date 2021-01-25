@@ -1,6 +1,8 @@
 import os
 import sys
 import configparser
+from pathlib import Path
+
 
 def get_server_config():
 	config_path = os.environ.get("_OCP_SERVER_CONFIG_")
@@ -9,6 +11,7 @@ def get_server_config():
 		sys.exit(1)
 
 	config = configparser.ConfigParser()
-	config.read(config_path)
+
+	config.read(Path(config_path))
 
 	return config
