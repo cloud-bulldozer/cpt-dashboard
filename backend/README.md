@@ -2,35 +2,9 @@
 
 ## Configure Environment
 
-### Application Configuration
+### Requires
 
-*Deprecated*. Will be refactored to use [TOML](https://toml.io/en/) format.
-
-Create an `ini` format file, name it `ocpperf.cfg`, and then fill in these blanks.
-
-
-```ini
-[elasticsearch]
-url=
-indice=
-username=
-password=
-
-[ocp-server]
-port=
-```
-
-Add an environment variable to tell the application where it's configuration file is.
-
-```shell
-export _OCP_SERVER_CONFIG_="$PWD"/ocpperf.cfg
-```
-
-
-### Install Dependencies
-
-#### Requires
-
+* [elasticsearch configuration](../README.md#elasticsearch-configuration)
 * `pwd` is `backend/`
 * pipenv
 
@@ -55,7 +29,6 @@ pipenv install
 Start development environment.
 
 ```shell
-cd app
 pipenv shell
 ```
 

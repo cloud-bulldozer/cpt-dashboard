@@ -5,12 +5,10 @@ from httpx import Response
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import orjson
-
-from app.services import transform
-
 from pydantic import BaseModel
 
-from api.elasticsearch_api import Elasticsearch_API
+from app.services import transform
+from app.api.elasticsearch_api import Elasticsearch_API
 
 
 class Timesrange(BaseModel):

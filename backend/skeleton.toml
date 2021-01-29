@@ -1,0 +1,9 @@
+[elasticsearch]
+url=
+indice=
+username=
+password=
+
+[ocp-server]
+port=
+

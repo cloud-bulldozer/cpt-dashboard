@@ -8,10 +8,13 @@ verify_ssl = true
 [packages]
 fastapi = "*"
 uvicorn = "*"
-httpx = "*"
-orjson = "*"
 pandas = "*"
+vyper-config = "*"
+environs = "*"
 elasticsearch = "*"
+pydantic = "*"
+orjson = "*"
+httpx = "*"
 
 [requires]
 python_version = "3.9"

@@ -1,7 +1,7 @@
 import json
 
 from fastapi.encoders import jsonable_encoder
-from app.core.config import get_server_config
+from app.core.config import vyper_config
 from elasticsearch import Elasticsearch
 
 
@@ -9,25 +9,17 @@ class Elasticsearch_API():
 	# add error message for unauthorized user
 
 	def __init__(self):
-		try:
-			self.config = get_server_config()
+		self.cfg = vyper_config()
+		self.url = self.cfg.get('elasticsearch.url')
+		self.indice = self.cfg.get('elasticsearch.indice')
+		self.es = Elasticsearch(
+			self.url,
+			http_auth=(self.cfg.get('elasticsearch.username'),
+					   self.cfg.get('elasticsearch.password'))
 
-			self.url = self.config['elasticsearch']['url']
-			# print(self.url)
-			self.indice = self.config['elasticsearch']['indice']
-			# print(self.indice)
-			self.user = self.config['elasticsearch']['username']
-			# print(self.user)
-			self.password = self.config['elasticsearch']['password']
-			# print(self.password)
-
-			self.es = Elasticsearch(self.url, http_auth=(self.user, self.password))
-
-		except:
-			print("Elasticsearch url undefined")
+		)
 
 	def post(self, query):
-
 		json_query = json.dumps(jsonable_encoder(query))
 		response = {}
 
@@ -37,3 +29,7 @@ class Elasticsearch_API():
 			# print("Forward proxy had an error while forwarding")
 
 		return response
+
+
+if __name__ == '__main__':
+	es = Elasticsearch_API()

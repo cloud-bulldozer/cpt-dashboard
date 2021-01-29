@@ -4,29 +4,25 @@ from pathlib import Path
 import configparser
 
 from vyper import v
-from vyper.errors import UnsupportedConfigError
-from colorama import Fore, Back, Style
-import vyper
 from environs import Env
 from marshmallow.validate import Length
 from typing import Optional
-import os
 
 
-def vyper_cfg():
-	env = Env()
+def vyper_config():
+	# not yet sure if we want to have elasticsearch config file override option
+	# env = Env()
 	# env.read_env()
-	if os.getenv('OCPPERF_SERVER_CONFIG') is not None:
-		env.str(
-			'OCPPERF_SERVER_CONFIG',
-			validate=Length(min=1),
-			subset=Optional
-		)
+	# if os.getenv('OCPPERF_SERVER_CONFIG') is not None:
+	# 	env.str(
+	# 		'OCPPERF_SERVER_CONFIG',
+	# 		validate=Length(min=1),
+	# 		subset=Optional
+	# 	)
 	v.set_config_name('ocpperf')
 	v.add_config_path('.')
-	v.add_config_path('./app')
-	print(v.debug())
-	return v.read_in_config()
+	v.read_in_config()
+	return v
 	
 	
 
@@ -45,4 +41,4 @@ def get_server_config():
 
 
 if __name__ == '__main__':
-	vyper_cfg()
+	v2 = vyper_config()

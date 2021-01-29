@@ -1,14 +1,30 @@
-# Something Quirky
-OpenShift Container Platform Performance Dashboard
+# OpenShift Performance Dashboard
 
 
-## Development on Local System
+
+## Elasticsearch configuration
 
 ### Requires
 
-* Python 3.9
-* pipenv
-* yarn
+* `pwd` is `backend/`
+
+Create a configuration file, named **ocperf** with the following key structure, and fill in the values:
+
+```toml
+[elasticsearch]
+url=
+indice=
+username=
+password=
+
+[ocp-server]
+port=
+```
+
+[TOML](https://toml.io/en/) is used above, but it also accepts YAML.
+
+
+## Development on System
 
 1. Follow [backend setup readme](backend/README.md)
 2. Follow [frontend setup readme](frontend/README.md)
@@ -24,12 +40,9 @@ OpenShift Container Platform Performance Dashboard
 
 #### Requires
 
-* pipenv  
-* current working directory is `backend/app`
+* current working directory is `backend/`
 
 Build backend image.
-
-    $ pipenv lock -r > requirements.txt
 
     $ podman build \
       --tag ocpp-back-i \
@@ -44,7 +57,8 @@ Run the backend container and attach source code as a writable volume.
     $ podman run \
         --interactive \
         --tty \
-        --volume "$PWD/app:/app:z" \
+        --volume "$PWD/app:/backend/app:z" \
+        --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
         --publish 8000:8000 \
         ocpp-back-i /scripts/start-reload.sh
 
@@ -77,9 +91,10 @@ Run backend.
     $ podman run \
         --interactive \
         --tty \
-        --volume "$PWD/app:/app:z" \
-        --pod ocpp-dev
-        ocpp-back-i /app/scripts/start-reload.sh 
+        --volume "$PWD/app:/backend/app:z" \
+        --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
+        --publish 8000:8000 \
+        ocpp-back-i /scripts/start-reload.sh
 
 Open a second terminal. Go to the frontend directory.
 
@@ -95,7 +110,7 @@ Run frontend.
 
 ## Example Production Orchestration
 
-This will build and run the backend and frontend containers, and expose their pod on port `8080`.
+This will build and run the backend and frontend containers, and expose their pod on port `8080`. You should see the frontend at `localhost:8080` in a web browser.
 
 ### Requires
 
@@ -105,17 +120,11 @@ This will build and run the backend and frontend containers, and expose their po
 ```shell 
 #!/bin/sh
 
-cd backend
-pipenv lock -r > requirements.txt
-podman build . --tag ocpp-back-i
-
-cd ../frontend
-podman build . --tag ocpp-front-i
-
 podman rm -f front back
 podman pod rm -f ocpp
 podman pod create --name ocpp --publish 8080:80
 
-podman run -d --name=back --pod ocpp ocpp-back-i
+podman run -d --name=back --pod ocpp -v "$PWD/ocpperf.toml:/backend/ocpperf.toml" ocpp-back-i
+
 podman run -d --name=front --pod ocpp ocpp-front-i
 ```

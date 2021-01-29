@@ -2,11 +2,13 @@ FROM quay.io/fedora/fedora:34
 
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
-    PYTHONPATH=/
+    PYTHONPATH=/backend
 
-COPY app /app
+COPY app/ /backend/app
+COPY scripts/ /backend/scripts
+COPY requirements.txt /backend
 
-WORKDIR /app
+WORKDIR /backend
 
 RUN ln -s /usr/bin/python3 /usr/bin/python \
   && dnf install -y python3-pip \
