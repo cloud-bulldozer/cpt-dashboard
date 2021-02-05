@@ -1,7 +1,5 @@
 # OpenShift Performance Dashboard
 
-
-
 ## Elasticsearch configuration
 
 ### Requires
@@ -18,7 +16,7 @@ username=
 password=
 
 [ocp-server]
-port=
+port=8000
 ```
 
 [TOML](https://toml.io/en/) is used above, but it also accepts YAML.
