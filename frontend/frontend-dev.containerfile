@@ -1,8 +1,9 @@
-FROM node:14.15.3-alpine3.12
+FROM node:14.15.4-alpine3.12
 
+RUN mkdir /app
 WORKDIR /app
 
-COPY package.json yarn.lock /app
+COPY package.json /app
 COPY src/ /app/src
 COPY public/ /app/public
 

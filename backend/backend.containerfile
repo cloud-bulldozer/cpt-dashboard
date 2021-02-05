@@ -4,6 +4,8 @@ ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
     PYTHONPATH=/backend
 
+RUN mkdir /backend
+
 COPY app/ /backend/app
 COPY scripts/ /backend/scripts
 COPY requirements.txt /backend

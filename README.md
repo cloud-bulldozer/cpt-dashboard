@@ -110,21 +110,13 @@ Run frontend.
 
 ## Example Production Orchestration
 
-This will build and run the backend and frontend containers, and expose their pod on port `8080`. You should see the frontend at `localhost:8080` in a web browser.
+**Work In Progress**
 
-### Requires
+~~This will build and run the backend and frontend containers, and expose their pod on port `8080`. You should see the frontend at `localhost:8080` in a web browser.~~
 
-* podman
-* working directory is the repository root directory
+### ~~Requires~~
 
-```shell 
-#!/bin/sh
+~~podman~~  
+~~working directory is the repository root directory~~
 
-podman rm -f front back
-podman pod rm -f ocpp
-podman pod create --name ocpp --publish 8080:80
 
-podman run -d --name=back --pod ocpp -v "$PWD/ocpperf.toml:/backend/ocpperf.toml" ocpp-back-i
-
-podman run -d --name=front --pod ocpp ocpp-front-i
-```
