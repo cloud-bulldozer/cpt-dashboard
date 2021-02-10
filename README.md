@@ -4,7 +4,7 @@
 
 ### Requires
 
-* `pwd` is `backend/`
+* current working directory is `backend/`
 
 Create a configuration file, named **ocpperf** with the following key structure, and fill in the values:
 
@@ -58,14 +58,14 @@ Run the backend container and attach source code as a writable volume.
         --volume "$PWD/app:/backend/app:z" \
         --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
         --publish 8000:8000 \
-        ocpp-back-i /scripts/start-reload.sh
+        ocpp-back-i /backend/scripts/start-reload.sh
 
 
 ### Build Frontend
 
 #### Requires
 
-* current working directory is `frontend`
+* current working directory is `frontend/`
 
 Build frontend image.
 
@@ -74,35 +74,20 @@ Build frontend image.
         --file frontend-dev.containerfile \
         .
 
-### Run Frontend and Backend
+### Run Frontend
 
-Create a pod for communication between containers.
+#### Requires
 
-    $ podman pod create --name=ocpp-dev --publish 8000:3000
+* second terminal
+* current working directory is `frontend/`
 
-Go to the backend directory.
-
-Run backend.
-
-    $ cd backend
-
-    $ podman run \
-        --interactive \
-        --tty \
-        --volume "$PWD/app:/backend/app:z" \
-        --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
-        --publish 8000:8000 \
-        ocpp-back-i /scripts/start-reload.sh
-
-Open a second terminal. Go to the frontend directory.
-
-Run frontend.
+Run frontend container and attach source code as a writable volume.
 
     $ podman run \
         --interactive \
         --tty \
         --volume "$PWD:/app:z" \
-        --pod ocpp-dev \
+        --publish 3000:3000 \
         ocpp-front-dev-i
 
 
