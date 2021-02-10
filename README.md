@@ -6,7 +6,7 @@
 
 * `pwd` is `backend/`
 
-Create a configuration file, named **ocperf** with the following key structure, and fill in the values:
+Create a configuration file, named **ocpperf** with the following key structure, and fill in the values:
 
 ```toml
 [elasticsearch]
