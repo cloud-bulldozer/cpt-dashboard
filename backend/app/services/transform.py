@@ -2,7 +2,48 @@ import pandas as pd
 import numpy as np
 import orjson
 
+from app.models.jobrun import JobRun
+
 from pprint import pprint
+
+
+
+
+def main2():
+  with open('../tests/es_response_1.json') as file:
+    es_resp = file.read()
+    r = orjson.loads(es_resp)
+  jobrun_jsons = r['hits']['hits']
+  df = extract_to_long_df(jobrun_jsons)
+  print(df)
+  print('---------------------------')
+  # print(long_df_to_ocpapp(df))
+
+
+def to_ocpapp(es_response):
+  df = extract_to_long_df(es_response['hits']['hits'])
+  return {
+    'response': long_df_to_ocpapp(df),
+    'workloads': df['build_tag'].unique()
+  }
+
+
+def extract_to_long_df(jobrun_jsons: list):
+  return pd.DataFrame((
+    # (JobRun(**j['_source'])).__dict__
+    parse_jobrun(j['_source'])
+    for j in jobrun_jsons))
+
+
+def parse_jobrun(j):
+  jr = JobRun(**j)
+  jr.build_tag = parse_build_tag(jr.build_tag)
+  jr.job_status = jr.job_status.lower()
+  return jr.dict()
+  
+
+def parse_build_tag(build_tag: str):
+  return build_tag.split('-')[1]
 
 
 def nest_two(a: np.array):
@@ -10,14 +51,24 @@ def nest_two(a: np.array):
 
 
 def wider(long: pd.DataFrame, heading_colname: str):
-  long['heading'] = long['openshift'] + ' ' + long['network']
-  long['outcome'] = np.apply_along_axis(nest_two, 1, long[['verdict', 'result']])
-  long = long.drop(columns=['openshift', 'network', 'verdict', 'result'])
+  long[heading_colname] = long['cluster_version'] + ' ' + long['network_type']
+  # long['outcome'] = np.apply_along_axis(nest_two, 1,
+    # long[['job_status', 'result']])
+  long['outcome'] = long['job_status']
+  long = long.drop(
+    columns=['cluster_version', 'network_type', 'job_name', 'job_status', 'result'])
   return long.pivot(
-    index=['heading','platform', 'build_date',
-      'run_date', 'job','build_id'],
-    columns='workload',values='outcome')\
+    index=['heading','platform',
+      'timestamp','build_number'],
+    columns='build_tag',values='outcome')\
     .reset_index()
+
+
+def long_df_to_ocpapp(long: pd.DataFrame):
+  return ( long
+    .pipe(wider, heading_colname='heading')
+    .pipe(ocpframelist, heading_colname='heading')
+  )
 
 
 def ocpframe(heading: str, df: pd.DataFrame):
@@ -45,13 +96,6 @@ def main():
   )
   with open('../tests/widened2.json', 'wb') as widened:
     widened.write(orjson.dumps({'data':wide}))
-
-
-def to_ocpapp(long: pd.DataFrame):
-  return ( long
-    .pipe(wider, heading_colname='heading')
-    .pipe(ocpframelist, heading_colname='heading')
-  )
 
 
 def to_ocpapp_tst(csvpath, jsonpath):
@@ -170,4 +214,4 @@ def to_ocp_data(response):
   return {"response": res_list}
 
 if __name__ == '__main__':
-  main()
+  main2()

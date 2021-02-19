@@ -1,4 +1,5 @@
 import time
+import typing
 
 import httpx
 from httpx import Response
@@ -9,6 +10,16 @@ from pydantic import BaseModel
 
 from app.services import transform
 from app.api.elasticsearch_api import Elasticsearch_API
+
+from fastapi.responses import JSONResponse
+
+
+
+class ORJSONResponse(JSONResponse):
+    media_type = "application/json"
+
+    def render(self, content: typing.Any) -> bytes:
+        return orjson.dumps(content)
 
 
 class Timesrange(BaseModel):
@@ -34,7 +45,7 @@ origins = [
     "localhost:3000"
 ]
 
-app = FastAPI()
+app = FastAPI(default_response_class=ORJSONResponse)
 
 app.add_middleware(
     CORSMiddleware,
@@ -92,15 +103,18 @@ def download(query: Query = Query(
     # try:
     # first get the es response
     response = es.post(query)
-    print(response)
+
+    # print(response)
     # except:
     #     print("Elasticsearch post failed")
 
-    try:
-        # parse the response
-        print(response)
-        response = transform.to_ocp_data(response)
-    except:
-        print("Error parsing Elasticsearch response")
-
+    # try:
+    #     # parse the response
+    #     response = transform.to_ocpapp(response)
+    #     print(response)
+    # except:
+    #     print("Error parsing Elasticsearch response")
+    # print(response)
+    response = transform.to_ocpapp(response)
+    print(response)
     return response
