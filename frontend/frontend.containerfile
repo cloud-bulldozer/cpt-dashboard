@@ -1,15 +1,19 @@
-FROM node:14.15.3-alpine3.12 AS build
+# pull official base image
+FROM node:alpine
 
 RUN mkdir /app
 WORKDIR /app
 
-COPY package.json yarn.lock /app
-COPY src/ /app/src
-COPY public/ /app/public
+
+
+COPY . /app
+
 
 RUN yarn install
-RUN yarn build
+EXPOSE 3000
 
-FROM nginx:1.19.6
-COPY ./nginx.conf /etc/nginx/conf.d/default.conf
-COPY --from=build /app/build /usr/share/nginx/html
+RUN chown node /app
+USER node
+
+# start app
+CMD ["yarn", "run", "start"]

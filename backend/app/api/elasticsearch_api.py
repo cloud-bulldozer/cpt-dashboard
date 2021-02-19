@@ -12,12 +12,16 @@ class Elasticsearch_API():
 		self.cfg = vyper_config()
 		self.url = self.cfg.get('elasticsearch.url')
 		self.indice = self.cfg.get('elasticsearch.indice')
-		self.es = Elasticsearch(
-			self.url,
-			http_auth=(self.cfg.get('elasticsearch.username'),
-					   self.cfg.get('elasticsearch.password'))
 
-		)
+		if self.cfg.is_set('elasticsearch.username') and self.cfg.is_set('elasticsearch.password'):
+			self.es = Elasticsearch(
+				self.url,
+				http_auth=(self.cfg.get('elasticsearch.username'),
+						self.cfg.get('elasticsearch.password'))
+				)
+		else:
+			self.es = Elasticsearch(self.url)
+
 
 	def post(self, query):
 		json_query = json.dumps(jsonable_encoder(query))

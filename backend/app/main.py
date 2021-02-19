@@ -31,6 +31,7 @@ class Query(BaseModel):
 
 origins = [
     "http://localhost:3000",
+    "localhost:3000"
 ]
 
 app = FastAPI()
