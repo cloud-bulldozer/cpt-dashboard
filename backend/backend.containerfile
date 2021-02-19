@@ -1,4 +1,4 @@
-FROM quay.io/fedora/fedora:34
+FROM python:latest
 
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
@@ -12,10 +12,9 @@ COPY requirements.txt /backend
 
 WORKDIR /backend
 
-RUN ln -s /usr/bin/python3 /usr/bin/python \
-  && dnf install -y python3-pip \
-  && pip install --no-cache-dir -r requirements.txt
+EXPOSE 8000
+RUN pip install --no-cache-dir -r requirements.txt
 
-CMD ["/usr/bin/bash", "./scripts/start.sh"]
+CMD ["/bin/sh", "./scripts/start.sh"]
 
 
