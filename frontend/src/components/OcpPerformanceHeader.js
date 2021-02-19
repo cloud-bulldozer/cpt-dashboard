@@ -3,7 +3,7 @@ import WithLabels from './WithLabels';
 import VersionList from './VersionList';
 import { Title, TitleSizes } from '@patternfly/react-core';
 
-const OcpPerformanceApp = (props) => {
+const OcpPerformanceHeader = (props) => {
   const versions = props.data
   return (
     <>
@@ -16,4 +16,4 @@ const OcpPerformanceApp = (props) => {
   )
 }
 
-export default OcpPerformanceApp
+export default OcpPerformanceHeader

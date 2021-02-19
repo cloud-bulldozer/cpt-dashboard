@@ -1,12 +1,12 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
-import App from './App';
+import OcpPerformanceTable from './components/OcpPerformanceTable';
 import reportWebVitals from './reportWebVitals';
 
 ReactDOM.render(
   <React.StrictMode>
-    <App />
+    <OcpPerformanceTable />
   </React.StrictMode>,
   document.getElementById('root')
 );
