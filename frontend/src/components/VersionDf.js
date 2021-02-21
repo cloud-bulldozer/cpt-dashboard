@@ -4,10 +4,7 @@ import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from 
 
 const VersionDf = (props) => {
   
-  const columns = [
-    'Platform', 'Build Date', 'Run Date', 'Job', 'Build ID', 
-    'Build', 'Install', 'Uperf', 'HTTP', 'Kubelet', 
-    'Object Density', 'Upgrade'];
+  const columns = props.columns;
 
   const rows = props.data;
 

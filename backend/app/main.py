@@ -5,14 +5,12 @@ import httpx
 from httpx import Response
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import orjson
 from pydantic import BaseModel
 
 from app.services import transform
 from app.api.elasticsearch_api import Elasticsearch_API
-
-from fastapi.responses import JSONResponse
-
 
 
 class ORJSONResponse(JSONResponse):
@@ -115,6 +113,14 @@ def download(query: Query = Query(
     # except:
     #     print("Error parsing Elasticsearch response")
     # print(response)
+
     response = transform.to_ocpapp(response)
-    print(response)
+    # print(response)
     return response
+
+    # transform.to_ocpapp_tst('./app/tests/mocklong2.csv', './app/tests/tab_wide.json')
+    # with open('./app/tests/tab_wide.json') as wide:
+        # d = wide.read()
+        # print(d)
+        
+    # return orjson.loads(d)
