@@ -8,7 +8,7 @@ const OcpPerformanceHeader = (props) => {
   return (
     <>
         <Title headingLevel="h1" size={TitleSizes['4xl']}>
-          All Your Base Are Belong To Keith
+          All Your Base (are) Belong To Keith
         </Title>
         <SimpleTabs data={versions} />
     </>
