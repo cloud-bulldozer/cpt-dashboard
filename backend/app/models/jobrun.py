@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import datetime
 from ipaddress import IPv4Address
 from typing import Optional
 from enum import Enum
@@ -13,13 +13,14 @@ class Verdict(str, Enum):
 
 
 class JobRun(BaseModel):
-  openshift: PositiveFloat
   platform: str
-  network: str
-  build_date: date
-  run_date: date
-  job: str
-  build_number: PositiveInt
-  workload: str
-  verdict: str
-  results: Optional[IPv4Address] = None
+  cluster_version: str
+  network_type: str
+  timestamp: datetime
+  upstream_job: str
+  job_name: str
+  build_tag: str
+  build_number: Optional[PositiveInt] = None
+  job_status: str
+  result: Optional[IPv4Address] = None
+  

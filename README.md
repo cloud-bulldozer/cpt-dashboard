@@ -43,7 +43,7 @@ port=8000
 Build backend image.
 
     $ podman build \
-      --tag ocpp-back-i \
+      --tag ocpp-back \
       --file backend.containerfile \
       .
 
@@ -58,7 +58,7 @@ Run the backend container and attach source code as a writable volume.
         --volume "$PWD/app:/backend/app:z" \
         --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
         --publish 8000:8000 \
-        ocpp-back-i /backend/scripts/start-reload.sh
+        ocpp-back /backend/scripts/start-reload.sh
 
 
 ### Build Frontend
@@ -70,7 +70,7 @@ Run the backend container and attach source code as a writable volume.
 Build frontend image.
 
     $ podman build \
-        --tag ocpp-front-dev-i \
+        --tag ocpp-front \
         --file frontend-dev.containerfile \
         .
 
@@ -88,7 +88,7 @@ Run frontend container and attach source code as a writable volume.
         --tty \
         --volume "$PWD:/app:z" \
         --publish 3000:3000 \
-        ocpp-front-dev-i
+        ocpp-front
 
 
 ## Example Production Orchestration

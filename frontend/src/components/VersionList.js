@@ -7,7 +7,8 @@ const VersionList = (props) => {
 	      <VersionDf 
 	        key={t.version}
 	        version={t.version}
-	        data={t.cloud_data} />
+	        data={t.cloud_data}
+					columns={t.columns} />
 	  ))
 	);
 }

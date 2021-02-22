@@ -1,4 +1,4 @@
-FROM python:latest
+FROM docker.io/library/python:3.9.1-buster
 
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \

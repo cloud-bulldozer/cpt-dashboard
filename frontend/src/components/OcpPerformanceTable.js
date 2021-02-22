@@ -32,7 +32,7 @@ export default function OcpPerformanceTable() {
         }
         var hostname = window.location.hostname
         if (hostname == "localhost"){
-            var host = "http//localhost:8000/api/download";
+            var host = "http://localhost:8000/api/download";
         } else {
             var host = window.location.protocol + '//' + window.location.hostname + "/api/download";
         }
