@@ -13,15 +13,14 @@ class Verdict(str, Enum):
 
 
 class JobRun(BaseModel):
-  cluster_version: str
   platform: str
+  cluster_version: str
   network_type: str
-  # build_date: date
   timestamp: datetime
+  upstream_job: str
   job_name: str
-  # build_number: PositiveInt
+  build_tag: str
   build_number: Optional[PositiveInt] = None
-  # workload: str
   job_status: str
   result: Optional[IPv4Address] = None
-  build_tag: str
+  
