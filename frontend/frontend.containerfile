@@ -10,7 +10,7 @@ COPY . /app
 RUN yarn install
 EXPOSE 3000
 
-RUN chown node /app
+RUN chown -R node /app
 USER node
 
 # start app
