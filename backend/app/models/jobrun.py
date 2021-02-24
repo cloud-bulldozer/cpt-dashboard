@@ -18,9 +18,7 @@ class JobRun(BaseModel):
   network_type: str
   timestamp: datetime
   upstream_job: str
-  job_name: str
+  upstream_job_build: str
   build_tag: str
-  build_number: Optional[PositiveInt] = None
   job_status: str
   result: Optional[IPv4Address] = None
-  

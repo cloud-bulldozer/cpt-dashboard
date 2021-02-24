@@ -1,6 +1,8 @@
-/.idea
+**/.idea
 **/*.cfg
 ocpperf.toml
+**/*.csv
+**/*.json
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
