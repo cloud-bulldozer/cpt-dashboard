@@ -21,6 +21,8 @@ def extract_to_long_df(jobrun_jsons: list):
 
 def parse_jobrun(j):
   jr = JobRun(**j)
+  if jr.build_tag is None:
+    jr.build_tag = jr.job_name
   return jr.dict()
   
 
@@ -40,6 +42,7 @@ def to_ocpapp(es_response):
   df = df.drop(columns=['upstream_job_build'])
   df['timestamp'] = df['timestamp'].round('s')
   pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H-%M-%S')
+  # pprint(df[['upstream_job', 'timestamp', 'build_tag']])
   # print(df['timestamp'])
   # print(df)
 
@@ -52,12 +55,22 @@ def nest_two(a: np.array):
   return {'title': a[0], 'url': a[1]}
 
 
+def myfunc(x):
+  print(type(x))
+  # x['timestamp'] = x['timestamp'].min()
+
+
 def widerr(long: pd.DataFrame):
   # long['outcome'] = np.apply_along_axis(nest_two, 1,
   # long[['job_status', 'result']])
 
   # TODO: group by upstream_job, then set timestamp
   long['timestamp'] = long['timestamp'].min()
+  # long['timestamp'] = long.groupby('upstream_job').transform(myfunc)
+  # pprint(long.groupby('upstream_job').apply(myfunc))
+  # print(long)
+  
+
 
   # pd.to_datetime(long['timestamp'], format='%Y-%m-%d %H-%M-%S')
   # long['timestamp'] = long['timestamp'].apply(datetime.fromtimestamp)
