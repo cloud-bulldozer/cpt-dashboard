@@ -10,27 +10,6 @@ from pprint import pprint
 router = APIRouter()
 
 
-# @router.post('/api/long')
-# async def long(query: Query = Query(
-#     query = {
-#         'range': {
-#             'timestamp': {
-#                 'format': 'strict_date_optional_time',
-#                 'gte': 'now-3M',
-#                 'lte': 'now'
-#             }
-#         }
-#     })
-# ):
-#     es = Elasticsearch_API()
-#     response = {}
-#     response = await es.post(query)
-#     await es.close()
-#     response = transform.extract_to_long_df(response)
-    
-
-
-
 @router.post('/api/download')
 async def download(query: Query = Query(
     query = {
