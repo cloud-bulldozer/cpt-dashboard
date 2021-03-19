@@ -1,8 +1,10 @@
 import React from 'react';
 import { Title, TitleSizes } from '@patternfly/react-core';
-import { TableComposable, TableHeader, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
+import { TableComposable, TableHeader, TableText, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
 
 const VersionDf = (props) => {
+
+  const colwidths = [25, 35]
   
   const columns = props.columns;
 
@@ -28,7 +30,13 @@ const VersionDf = (props) => {
       <Thead>
         <Tr>
           {columns.map((column, columnIndex) => (
-            <Th key={columnIndex}>{column}</Th>
+            <Th 
+            key={columnIndex}
+            width={columnIndex < 2 ? colwidths[columnIndex] : 13}
+            // modifier="fitContent"
+            >
+              {column}
+            </Th>
           ))}
         </Tr>
       </Thead>
@@ -46,7 +54,12 @@ const VersionDf = (props) => {
                       style={{backgroundColor:Colors[cell], 
                         border:"1 px solid black"}}
                     >
-                      {cell}
+                      <TableText
+                        // modifier="fitContent"
+                        // width={cellIndex < 2 ? colwidths[cellIndex] : 15}
+                      >
+                        {cell}
+                      </TableText>
                     </Td>
                   );
                 })}

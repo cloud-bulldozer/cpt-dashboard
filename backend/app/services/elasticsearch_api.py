@@ -26,13 +26,13 @@ class Elasticsearch_API():
 			self.es = AsyncElasticsearch(self.url)
 
 
-	async def post(self, query: dict):
+	async def post(self, query):
 		# json_query = json.dumps(jsonable_encoder(query))
-		
+		print(query)
 		response = {}
 		# try:
 		response = await self.es.search(index=self.indice, 
-			body=query,
+			body=jsonable_encoder(query),
 			size=1000)
 		# except:
 			# print("Forward proxy had an error while forwarding")

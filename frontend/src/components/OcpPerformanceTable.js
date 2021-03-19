@@ -17,8 +17,8 @@ export default function OcpPerformanceTable() {
                   "query": {
                         "range": {
                         "timestamp": {
-                          "gte": "2021-01-15T05:15:04.120Z",
-                          "lte": "2021-01-22T05:15:04.120Z",
+                          "gte": "now-3M",
+                          "lte": "now",
                           "format": "strict_date_optional_time"
                         }
                         }
