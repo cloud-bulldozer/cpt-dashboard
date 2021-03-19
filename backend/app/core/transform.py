@@ -48,11 +48,6 @@ def nest_two(a: np.array):
   return {'title': a[0], 'url': a[1]}
 
 
-def myfunc(x):
-  print(type(x))
-  # x['timestamp'] = x['timestamp'].min()
-
-
 def widerr(long: pd.DataFrame):
   # long['outcome'] = np.apply_along_axis(nest_two, 1,
   # long[['job_status', 'result']])
@@ -60,17 +55,6 @@ def widerr(long: pd.DataFrame):
   # TODO: group by upstream_job, then set timestamp
   long['timestamp'] = long['timestamp'].min()
   long['timestamp'] = long['timestamp'].dt.strftime('%b %d, %Y @ %H:%M')
-  # long['timestamp'] = long.groupby('upstream_job').transform(myfunc)
-  # pprint(long.groupby('upstream_job').apply(myfunc))
-  
-  
-
-
-  # pd.to_datetime(long['timestamp'], format='%Y-%m-%d %H-%M-%S')
-  # long['timestamp'] = long['timestamp'].apply(datetime.fromtimestamp)
-  # print(pd.to_datetime(long['timestamp'], format='%Y-%m-%d %H-%M-%S'))
-  
-
   # pprint(long)
 
   long['outcome'] = long['job_status']
@@ -86,7 +70,8 @@ def frame(title: str, df: pd.DataFrame):
   return {
     'version': title,
     'cloud_data': df.values.tolist(),
-    'columns': df.columns.tolist()
+    'columns': [name.replace('_', ' ') 
+                for name in df.columns.tolist()]
   }
 
 
