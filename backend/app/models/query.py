@@ -3,8 +3,8 @@ from pydantic import BaseModel
 
 class Timesrange(BaseModel):
     format: str
-    gte: str
-    lte: str
+    gte: str = 'now-3M'
+    lte: str = 'now'
 
 
 class Timestamp(BaseModel):
@@ -17,3 +17,4 @@ class Range(BaseModel):
 
 class Query(BaseModel):
     query: Range
+

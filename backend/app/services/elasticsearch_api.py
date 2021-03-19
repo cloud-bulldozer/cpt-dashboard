@@ -1,9 +1,11 @@
 import json
+from pprint import pprint
 
 from fastapi.encoders import jsonable_encoder
 from app.core.config import vyper_config
 from elasticsearch import Elasticsearch
 from elasticsearch import AsyncElasticsearch
+
 
 
 class Elasticsearch_API():
@@ -24,12 +26,14 @@ class Elasticsearch_API():
 			self.es = AsyncElasticsearch(self.url)
 
 
-	async def post(self, query):
-		json_query = json.dumps(jsonable_encoder(query))
+	async def post(self, query: dict):
+		# json_query = json.dumps(jsonable_encoder(query))
+		
 		response = {}
-
 		# try:
-		response = await self.es.search(index=self.indice, body=json_query)
+		response = await self.es.search(index=self.indice, 
+			body=query,
+			size=1000)
 		# except:
 			# print("Forward proxy had an error while forwarding")
 
