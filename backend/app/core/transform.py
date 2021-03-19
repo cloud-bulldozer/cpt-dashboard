@@ -1,16 +1,10 @@
+from pprint import pprint
 from datetime import datetime
 
 import pandas as pd
 import numpy as np
-import orjson
 
 from app.models.jobrun import JobRun
-
-from elasticsearch import Elasticsearch
-
-from pprint import pprint
-
-# from cytoolz import pipe
 
 
 def extract_to_long_df(jobrun_jsons: list):
@@ -38,16 +32,15 @@ def to_ocpapp(es_response):
   df = extract_to_long_df(es_response['hits']['hits'])
   df[df.drop(columns=['network_type']).select_dtypes(include='object').columns] = df[df.select_dtypes(include='object').columns].drop(['network_type'], axis=1).apply(lambda x: x.str.lower())
   df['build_tag'] = df['build_tag'].apply(parse_build_tag)
+
   df['upstream_job'] = df['upstream_job'] + '-' + df['upstream_job_build']
   df = df.drop(columns=['upstream_job_build'])
-  df['timestamp'] = df['timestamp'].round('s')
-  pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H-%M-%S')
-  # pprint(df[['upstream_job', 'timestamp', 'build_tag']])
-  # print(df['timestamp'])
-  # print(df)
+
+  df['ocp_profile'] = df['cluster_version'] + ' ' + df['network_type']
+  df = df.drop(columns=['cluster_version', 'network_type'])
 
   return {
-    'response': by_platform(edit_long(df))
+    'response': by_platform(df)
   }
 
 
@@ -66,16 +59,20 @@ def widerr(long: pd.DataFrame):
 
   # TODO: group by upstream_job, then set timestamp
   long['timestamp'] = long['timestamp'].min()
+  long['timestamp'] = long['timestamp'].dt.strftime('%b %d, %Y @ %H:%M')
   # long['timestamp'] = long.groupby('upstream_job').transform(myfunc)
   # pprint(long.groupby('upstream_job').apply(myfunc))
-  # print(long)
+  
   
 
 
   # pd.to_datetime(long['timestamp'], format='%Y-%m-%d %H-%M-%S')
   # long['timestamp'] = long['timestamp'].apply(datetime.fromtimestamp)
   # print(pd.to_datetime(long['timestamp'], format='%Y-%m-%d %H-%M-%S'))
-  # print(long['timestamp'])
+  
+
+  # pprint(long)
+
   long['outcome'] = long['job_status']
   long = long.drop(
     columns=['job_status', 'result'])
@@ -86,7 +83,6 @@ def widerr(long: pd.DataFrame):
 
 
 def frame(title: str, df: pd.DataFrame):
-  # pd.to_datetime(df['timestamp'], format='%Y-%m-%d %H-%M-%S')
   return {
     'version': title,
     'cloud_data': df.values.tolist(),
@@ -113,11 +109,6 @@ def by_platform(df: pd.DataFrame):
     tab(g[0], g[1].drop(columns=['platform']))
     for g in df.groupby(by=['platform'])
   ]
-
-
-def edit_long(long: pd.DataFrame):
-  long['ocp_profile'] = long['cluster_version'] + ' ' + long['network_type']
-  return long.drop(columns=['cluster_version', 'network_type'])
 
 
 def main():
