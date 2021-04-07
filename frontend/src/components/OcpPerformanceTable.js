@@ -47,7 +47,9 @@ export default function OcpPerformanceTable() {
 
   return (
     <OcpPerformanceTableContext.Provider value={{perfData, fetchPerfData}}>
+      
     <div className="OcpPerformanceTable">
+    <img class="OcpPerformanceTable-logo" src="logo.png" alt="Kiwi standing on oval"/>
       <OcpPerformanceHeader data={perfData}/>
     </div>
     </OcpPerformanceTableContext.Provider>

@@ -61,7 +61,6 @@ async def download(
 
     # pprint(response['hits']['hits'])
     # pprint(transform.extract_to_long_df(response['hits']['hits']))
+    
+    return transform.build_results_dataframe(response)
 
-    response = transform.to_ocpapp(response)
-    # pprint(response)
-    return response
