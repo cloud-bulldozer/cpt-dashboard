@@ -1,5 +1,6 @@
 .OcpPerformanceTable {
   text-align: center;
+  background-color: white !important;
 }
 
 .OcpPerformanceTable-logo {
@@ -8,7 +9,7 @@
   max-height: 100px;  
 }
 .pf-c-title {
-  display: inline; 
+  display: inline-flexbox
 }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -19,11 +20,14 @@
 
 .OcpPerformanceTable-header {
   background-color: #282c34;
-  min-height: 100vh;
-  
-  flex-direction: column;
+  min-height: 10vh;
+  padding-bottom: 20px;
+  z-index: -1;
+  display: flexbox;
+  vertical-align: middle;
   align-items: center;
   justify-content: center;
+  text-align: center;
   font-size: calc(10px + 2vmin);
   color: white;
 }

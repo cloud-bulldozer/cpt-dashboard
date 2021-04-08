@@ -6,11 +6,11 @@ import SimpleTabs from './PerformanceTabs';
 const OcpPerformanceHeader = (props) => {
   const versions = props.data
   return (
-    <>  
+    <> 
+        <img class="OcpPerformanceTable-logo" src="logo.png" alt="Openshift Logo"/>
         <Title headingLevel="h1" size={TitleSizes['4xl']}>
           Openshift Performance and Scale Nightlies 
         </Title>
-        <SimpleTabs data={versions} />
     </>
   )
 }

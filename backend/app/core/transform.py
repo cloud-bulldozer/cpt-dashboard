@@ -40,6 +40,7 @@ def get_framelist(data_frame: pd.DataFrame):
   ]
 
 def get_frame(title: str, data_frame: pd.DataFrame):
+  print(data_frame.columns)
   return {
     'version': title,
     'cloud_data': data_frame.values.tolist(),
@@ -50,10 +51,10 @@ def get_frame(title: str, data_frame: pd.DataFrame):
 def flatten(long: pd.DataFrame):
   long['start_date'] = long['start_date'].min().strftime('%b %d, %Y @ %H:%M')
   long['end_date'] = long['end_date'].max().strftime('%b %d, %Y @ %H:%M')
-  long['outcome'] = long['job_status']
+  long['outcome'] = list(zip(long.job_status, long.build_url))
 
   return long.pivot(
-    index=['build_version', 'upstream_job', 'upstream_job_build', 'start_date', 'end_date' ],
+    index=['build_version', 'upstream_job', 'upstream_job_build', 'start_date', 'end_date'],
     columns=['build_tag'], values='outcome') \
     .reset_index()
 

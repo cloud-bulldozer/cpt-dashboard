@@ -1,6 +1,7 @@
 import '../OcpPerformanceTable.css';
 import '../fonts.css';
 import "@patternfly/react-core/dist/styles/base.css";
+import SimpleTabs from './PerformanceTabs';
 
 // import components
 import OcpPerformanceHeader from './OcpPerformanceHeader';
@@ -46,14 +47,16 @@ export default function OcpPerformanceTable() {
   }, [])
 
   return (
+    <>
     <OcpPerformanceTableContext.Provider value={{perfData, fetchPerfData}}>
-      
-    <div className="OcpPerformanceTable">
-    <img class="OcpPerformanceTable-logo" src="logo.png" alt="Kiwi standing on oval"/>
+      <div class="OcpPerformanceTable-header">
       <OcpPerformanceHeader data={perfData}/>
     </div>
+    <div class="OcpPerformanceTable">
+      <SimpleTabs data={perfData} />
+    </div>
     </OcpPerformanceTableContext.Provider>
-    
+    </>
   );
 }
 
