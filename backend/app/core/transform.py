@@ -21,24 +21,32 @@ def parse_jobrun(j):
   
 
 def parse_build_tag(build_tag: str) -> str:
-  return ' '.join(build_tag.split('-')[1:-1])
+  return ' '.join(build_tag.split('-'))
 
 
 def parse_upstream_job(upstream_tag: str) -> str:
   return ' '.join(upstream_tag.split('-')[:-1])
 
 
+def parse_job_name(job_name: str) -> str:
+  return ' '.join(job_name.split('-'))
+
+
 def to_ocpapp(es_response):
   df = extract_to_long_df(es_response['hits']['hits'])
+  # print(df)
   df[df.drop(columns=['network_type']).select_dtypes(include='object').columns] = df[df.select_dtypes(include='object').columns].drop(['network_type'], axis=1).apply(lambda x: x.str.lower())
   df['build_tag'] = df['build_tag'].apply(parse_build_tag)
+  # df['job_name'] = df['job_name'].apply(parse_job_name)
 
   df['upstream_job'] = df['upstream_job'] + '-' + df['upstream_job_build']
   df = df.drop(columns=['upstream_job_build'])
 
   df['ocp_profile'] = df['cluster_version'] + ' ' + df['network_type']
   df = df.drop(columns=['cluster_version', 'network_type'])
+  # print(df)
 
+  df.to_csv('superlong.csv')
   return {
     'response': by_platform(df)
   }
@@ -53,13 +61,14 @@ def widerr(long: pd.DataFrame):
   # long[['job_status', 'result']])
 
   # TODO: group by upstream_job, then set timestamp
-  long['timestamp'] = long['timestamp'].min()
+  # long['timestamp'] = long['timestamp'].min()
   long['timestamp'] = long['timestamp'].dt.strftime('%b %d, %Y @ %H:%M')
   # pprint(long)
 
   long['outcome'] = long['job_status']
   long = long.drop(
     columns=['job_status', 'result'])
+
   return long.pivot(
     index=['timestamp', 'upstream_job'],
     columns='build_tag', values='outcome') \

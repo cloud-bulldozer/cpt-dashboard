@@ -12,27 +12,27 @@ router = APIRouter()
 
 @router.post('/api/download')
 async def download(
-    # query = { 
-    #     'query': {
-    #         'range': {
-    #             'timestamp': {
-    #                 'format': 'strict_date_optional_time',
-    #                 'gte': 'now-3M',
-    #                 'lte': 'now'
-    #             }
-    #         }
-    #     }
-    # }
-    query: Query = Query(
-    query = {
-        'range': {
-            'timestamp': {
-                'format': 'strict_date_optional_time',
-                'gte': 'now-3M',
-                'lte': 'now'
+    query = { 
+        'query': {
+            'range': {
+                'timestamp': {
+                    'format': 'strict_date_optional_time',
+                    'gte': 'now-3M',
+                    'lte': 'now'
+                }
             }
         }
-    })    
+    }
+    # query: Query = Query(
+    # query = {
+    #     'range': {
+    #         'timestamp': {
+    #             'format': 'strict_date_optional_time',
+    #             'gte': 'now-3M',
+    #             'lte': 'now'
+    #         }
+    #     }
+    # })    
 ):
     es = Elasticsearch_API()
     response = {}
