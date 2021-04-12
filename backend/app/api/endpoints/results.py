@@ -1,7 +1,6 @@
 from fastapi import APIRouter
 
 from app.core import transform
-from app.models.query import Query
 from app.services.elasticsearch_api import Elasticsearch_API
 
 from pprint import pprint
@@ -10,8 +9,8 @@ from pprint import pprint
 router = APIRouter()
 
 
-@router.post('/api/download')
-async def download(
+@router.post('/api/results')
+async def results(
     query = { 
         'query': {
             'range': {

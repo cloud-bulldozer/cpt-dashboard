@@ -27,7 +27,7 @@ function App() {
       headers: {'Content-Type': 'application/json'},
       body: JSON.stringify(query)
     }
-    fetch('http://localhost:8000/api/download', requestOptions)
+    fetch('http://localhost:8000/api/results', requestOptions)
       .then(res => res.json())
       .then((d) => setAppState(d.response));
   }, [])

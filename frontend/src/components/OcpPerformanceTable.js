@@ -33,7 +33,7 @@ export default function OcpPerformanceTable() {
         }
         var hostname = window.location.hostname
         if (hostname == "localhost"){
-            var host = "http://localhost:8000/api/download";
+            var host = "http://localhost:8000/api/results";
         } else {
             var host = window.location.protocol + '//' + window.location.hostname + "/api/download";
         }
@@ -49,10 +49,10 @@ export default function OcpPerformanceTable() {
   return (
     <>
     <OcpPerformanceTableContext.Provider value={{perfData, fetchPerfData}}>
-      <div class="OcpPerformanceTable-header">
+      <div className="OcpPerformanceTable-header">
       <OcpPerformanceHeader data={perfData}/>
     </div>
-    <div class="OcpPerformanceTable">
+    <div className="OcpPerformanceTable">
       <SimpleTabs data={perfData} />
     </div>
     </OcpPerformanceTableContext.Provider>
