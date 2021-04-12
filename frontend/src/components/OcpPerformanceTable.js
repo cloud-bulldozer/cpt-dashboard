@@ -1,5 +1,4 @@
-import '../OcpPerformanceTable.css';
-import '../fonts.css';
+import './OcpPerformanceTable.css';
 import "@patternfly/react-core/dist/styles/base.css";
 import SimpleTabs from './PerformanceTabs';
 
