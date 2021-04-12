@@ -8,9 +8,7 @@
   pointer-events: none; 
   max-height: 100px;  
 }
-.pf-c-title {
-  display: inline-flexbox
-}
+
 
 @media (prefers-reduced-motion: no-preference) {
   .OcpPerformanceTable-logo {
