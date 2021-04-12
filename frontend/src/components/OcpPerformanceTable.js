@@ -1,6 +1,6 @@
-import '../OcpPerformanceTable.css';
-import '../fonts.css';
+import './OcpPerformanceTable.css';
 import "@patternfly/react-core/dist/styles/base.css";
+import PlatformTabs from './PlatformTabs';
 
 // import components
 import OcpPerformanceHeader from './OcpPerformanceHeader';
@@ -32,7 +32,7 @@ export default function OcpPerformanceTable() {
         }
         var hostname = window.location.hostname
         if (hostname == "localhost"){
-            var host = "http://localhost:8000/api/download";
+            var host = "http://localhost:8000/api/results";
         } else {
             var host = window.location.protocol + '//' + window.location.hostname + "/api/download";
         }
@@ -46,12 +46,16 @@ export default function OcpPerformanceTable() {
   }, [])
 
   return (
+    <>
     <OcpPerformanceTableContext.Provider value={{perfData, fetchPerfData}}>
+      <div className="OcpPerformanceTable-header">
+      <OcpPerformanceHeader />
+    </div>
     <div className="OcpPerformanceTable">
-      <OcpPerformanceHeader data={perfData}/>
+      <PlatformTabs data={perfData} />
     </div>
     </OcpPerformanceTableContext.Provider>
-    
+    </>
   );
 }
 

@@ -3,111 +3,63 @@ from datetime import datetime
 
 import pandas as pd
 import numpy as np
+import semver
 
 from app.models.jobrun import JobRun
 
+def build_results_dataframe(raw_es_results, columns=[]):
+    docs = raw_es_results["hits"]["hits"]
+    jobs = [JobRun(**doc["_source"]).dict() for doc in docs]
+    data_frame = pd.DataFrame(jobs)
 
-def extract_to_long_df(jobrun_jsons: list):
-  return pd.DataFrame((
-    parse_jobrun(j['_source'])
-    for j in jobrun_jsons))
+    data_frame['major_version'] = data_frame['cluster_version'].apply(_get_major_minor_version)
+    data_frame['build_version'] = data_frame['cluster_version']
+    data_frame['ocp_profile'] = data_frame['major_version'] + ' ' + data_frame['network_type']
 
-
-def parse_jobrun(j):
-  jr = JobRun(**j)
-  if jr.build_tag is None:
-    jr.build_tag = jr.job_name
-  return jr.dict()
-  
-
-def parse_build_tag(build_tag: str) -> str:
-  return ' '.join(build_tag.split('-'))
+    return {
+        'response': group_by_platform(data_frame)
+    }
 
 
-def parse_upstream_job(upstream_tag: str) -> str:
-  return ' '.join(upstream_tag.split('-')[:-1])
+def group_by_platform(data_frame: pd.DataFrame):
+  return [
+    get_table(group[0], group[1].drop(columns=['platform']))
+    for group in data_frame.groupby(by=['platform'])
+  ]
 
-
-def parse_job_name(job_name: str) -> str:
-  return ' '.join(job_name.split('-'))
-
-
-def to_ocpapp(es_response):
-  df = extract_to_long_df(es_response['hits']['hits'])
-  # print(df)
-  df[df.drop(columns=['network_type']).select_dtypes(include='object').columns] = df[df.select_dtypes(include='object').columns].drop(['network_type'], axis=1).apply(lambda x: x.str.lower())
-  df['build_tag'] = df['build_tag'].apply(parse_build_tag)
-  # df['job_name'] = df['job_name'].apply(parse_job_name)
-
-  df['upstream_job'] = df['upstream_job'] + '-' + df['upstream_job_build']
-  df = df.drop(columns=['upstream_job_build'])
-
-  df['ocp_profile'] = df['cluster_version'] + ' ' + df['network_type']
-  df = df.drop(columns=['cluster_version', 'network_type'])
-  # print(df)
-
-  df.to_csv('superlong.csv')
+def get_table(title: str, data_frame: pd.DataFrame):
   return {
-    'response': by_platform(df)
+    'title': title,
+    'data': get_framelist(data_frame)
   }
 
+def get_framelist(data_frame: pd.DataFrame):
+  return [
+    get_frame(group[0], flatten(group[1].drop(columns=['ocp_profile'])))
+    for group in data_frame.groupby(by=['ocp_profile'])
+  ]
 
-def nest_two(a: np.array):
-  return {'title': a[0], 'url': a[1]}
+def get_frame(title: str, data_frame: pd.DataFrame):
+  print(data_frame.columns)
+  return {
+    'version': title,
+    'cloud_data': data_frame.values.tolist(),
+    'columns': [name.replace('_', ' ').title()
+                for name in data_frame.columns.tolist()]
+  }
 
-
-def widerr(long: pd.DataFrame):
-  # long['outcome'] = np.apply_along_axis(nest_two, 1,
-  # long[['job_status', 'result']])
-
-  # TODO: group by upstream_job, then set timestamp
-  # long['timestamp'] = long['timestamp'].min()
-  long['timestamp'] = long['timestamp'].dt.strftime('%b %d, %Y @ %H:%M')
-  # pprint(long)
-
-  long['outcome'] = long['job_status']
-  long = long.drop(
-    columns=['job_status', 'result'])
+def flatten(long: pd.DataFrame):
+  long['start_date'] = long['start_date'].min().strftime('%b %d, %Y @ %H:%M')
+  long['end_date'] = long['end_date'].max().strftime('%b %d, %Y @ %H:%M')
+  long['outcome'] = list(zip(long.job_status, long.build_url))
 
   return long.pivot(
-    index=['timestamp', 'upstream_job'],
-    columns='build_tag', values='outcome') \
+    index=['build_version', 'upstream_job', 'upstream_job_build', 'start_date', 'end_date'],
+    columns=['build_tag'], values='outcome') \
     .reset_index()
 
 
-def frame(title: str, df: pd.DataFrame):
-  return {
-    'version': title,
-    'cloud_data': df.values.tolist(),
-    'columns': [name.replace('_', ' ') 
-                for name in df.columns.tolist()]
-  }
 
-
-def framelist(df: pd.DataFrame):
-  return [
-    frame(g[0], g[1].drop(columns=['ocp_profile']).pipe(widerr))
-    for g in df.groupby(by=['ocp_profile'])
-  ]
-
-
-def tab(title: str, df: pd.DataFrame):
-  return {
-    'title': title,
-    'data': framelist(df)
-  }
-
-
-def by_platform(df: pd.DataFrame):
-  return [
-    tab(g[0], g[1].drop(columns=['platform']))
-    for g in df.groupby(by=['platform'])
-  ]
-
-
-def main():
-  pass
-
-
-if __name__ == '__main__':
-  main()
+def _get_major_minor_version(version: str):
+    parsed_version = semver.VersionInfo.parse(version)
+    return f"{parsed_version.major}.{parsed_version.minor}"

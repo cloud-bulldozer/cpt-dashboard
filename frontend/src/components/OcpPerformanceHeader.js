@@ -1,16 +1,14 @@
 import React from 'react';
 import { Title, TitleSizes } from '@patternfly/react-core';
-import SimpleTabs from './PerformanceTabs';
 
 
-const OcpPerformanceHeader = (props) => {
-  const versions = props.data
+const OcpPerformanceHeader = () => {
   return (
-    <>
+    <> 
+        <img className="OcpPerformanceTable-logo" src="logo.png" alt="Openshift Logo"/>
         <Title headingLevel="h1" size={TitleSizes['4xl']}>
-          All Your Base (are) Belong To Keith and Matt and Mohit
+          Openshift Performance and Scale Nightlies 
         </Title>
-        <SimpleTabs data={versions} />
     </>
   )
 }

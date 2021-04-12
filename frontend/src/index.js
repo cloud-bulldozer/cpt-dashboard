@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom';
 import './index.css';
+import './common/fonts.css'
 import OcpPerformanceTable from './components/OcpPerformanceTable';
 import reportWebVitals from './reportWebVitals';
 

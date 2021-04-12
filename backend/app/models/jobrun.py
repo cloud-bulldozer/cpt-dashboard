@@ -6,12 +6,6 @@ from enum import Enum
 from pydantic import BaseModel, PositiveFloat, PositiveInt
 
 
-class Verdict(str, Enum):
-  success = 'success'
-  unstable = 'unstable'
-  failure = 'failure'
-
-
 class JobRun(BaseModel):
   build_tag: Optional[str] = None
   cluster_version: str
@@ -23,4 +17,10 @@ class JobRun(BaseModel):
   timestamp: datetime
   upstream_job: str
   upstream_job_build: str
+  start_date: Optional[datetime] = None
+  end_date: Optional[datetime] = None
+  duration: Optional[str] = None
+  execution_date: datetime = None
+  build_url: Optional[str] = None
+
   

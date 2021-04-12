@@ -17,6 +17,7 @@ orjson = "*"
 httpx = "*"
 aiohttp = "*"
 cytoolz = "*"
+semver = "*"
 
 [requires]
 python_version = "3.9"
