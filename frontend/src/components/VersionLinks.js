@@ -1,7 +1,7 @@
 import React from 'react';
 import { JumpLinks, JumpLinksItem } from '@patternfly/react-core';
 
-const WithLabels = (props) => {
+const VersionLinks = (props) => {
 	return (
 	    <JumpLinks>
 	      {props.data.map((t) => (
@@ -13,4 +13,4 @@ const WithLabels = (props) => {
 	);
 }
 
-export default WithLabels;
+export default VersionLinks;

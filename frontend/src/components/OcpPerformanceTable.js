@@ -1,6 +1,6 @@
 import './OcpPerformanceTable.css';
 import "@patternfly/react-core/dist/styles/base.css";
-import SimpleTabs from './PerformanceTabs';
+import PlatformTabs from './PlatformTabs';
 
 // import components
 import OcpPerformanceHeader from './OcpPerformanceHeader';
@@ -49,10 +49,10 @@ export default function OcpPerformanceTable() {
     <>
     <OcpPerformanceTableContext.Provider value={{perfData, fetchPerfData}}>
       <div className="OcpPerformanceTable-header">
-      <OcpPerformanceHeader data={perfData}/>
+      <OcpPerformanceHeader />
     </div>
     <div className="OcpPerformanceTable">
-      <SimpleTabs data={perfData} />
+      <PlatformTabs data={perfData} />
     </div>
     </OcpPerformanceTableContext.Provider>
     </>

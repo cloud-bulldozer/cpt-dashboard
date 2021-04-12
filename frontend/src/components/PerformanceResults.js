@@ -1,10 +1,10 @@
 import React from 'react';
-import VersionDf from './VersionDf';
+import PerformanceEntry from './PerformanceEntry';
 
-const VersionList = (props) => {
+const PerformanceResults = (props) => {
 	return (
 	  props.data.map((t) => (
-	      <VersionDf 
+	      <PerformanceEntry 
 	        key={t.version}
 	        version={t.version}
 	        data={t.cloud_data}
@@ -13,4 +13,4 @@ const VersionList = (props) => {
 	);
 }
 
-export default VersionList;
+export default PerformanceResults;

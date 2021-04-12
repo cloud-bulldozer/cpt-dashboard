@@ -2,21 +2,11 @@ import React from 'react';
 import { Title, TitleSizes } from '@patternfly/react-core';
 import { TableComposable, TableHeader, TableText, Thead, Tbody, Tr, Th, Td, Caption } from '@patternfly/react-table';
 
-{/* <TableText
-// modifier="fitContent"
-// width={cellIndex < 2 ? colwidths[cellIndex] : 15}
->
-{cell}
-</TableText> */}
-
-const VersionDf = (props) => {
+const PerformanceEntry = (props) => {
 
   const colwidths = [25, 35]
-
   const columns = props.columns;
-
   const rows = props.data;
-
   const Colors = {
     'success': '#00800052',
     'warning': '#ffff00a1',
@@ -73,8 +63,8 @@ const VersionDf = (props) => {
                         }}
                       >
                         <TableText>
-                      {table_text}
-                    </TableText>
+                          {table_text}
+                        </TableText>
                       </Td>
                     );
                   })}
@@ -88,4 +78,4 @@ const VersionDf = (props) => {
   );
 };
 
-export default VersionDf
+export default PerformanceEntry
