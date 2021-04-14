@@ -6,6 +6,7 @@ import { FaAws, FaMicrosoft,  FaGoogle } from "react-icons/fa";
 import VersionLinks from './VersionLinks';
 import PerformanceResults from './PerformanceResults';
 import VersionTabs from './VersionTabs';
+import './PlatformTabs.css'
 
 class PlatformTabs extends React.Component {
   constructor(props) {
@@ -41,7 +42,7 @@ class PlatformTabs extends React.Component {
        ))
       }
       </Tabs>
-
+      
     );
   }
 }

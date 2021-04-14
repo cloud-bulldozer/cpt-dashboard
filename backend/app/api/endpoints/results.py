@@ -10,6 +10,7 @@ router = APIRouter()
 
 
 @router.post('/api/results')
+@router.get('/api/results')
 async def results(
     query = { 
         'query': {
