@@ -26,9 +26,9 @@ class PlatformTabs extends React.Component {
     const { activeTabKey } = this.state;
     const data = this.props.data;
     const icons = {
-         'Azure': <><TabTitleIcon><FaMicrosoft /></TabTitleIcon><TabTitleText>Azure</TabTitleText></>,
-         'GCP':  <><TabTitleIcon><FaGoogle /></TabTitleIcon><TabTitleText>GCP</TabTitleText></>,
-         'AWS': <><TabTitleIcon><FaAws /></TabTitleIcon><TabTitleText>AWS</TabTitleText></>
+         'azure': <><TabTitleIcon><FaMicrosoft /></TabTitleIcon><TabTitleText>Azure</TabTitleText></>,
+         'gcp':  <><TabTitleIcon><FaGoogle /></TabTitleIcon><TabTitleText>GCP</TabTitleText></>,
+         'aws': <><TabTitleIcon><FaAws /></TabTitleIcon><TabTitleText>AWS</TabTitleText></>
     }
     return (
       <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick}>

@@ -21,7 +21,7 @@ export default function usePerfData() {
         }
         var hostname = window.location.hostname
         if (hostname == "localhost") {
-            var host = "http://localhost:8000/api/results";
+            var host = "http://localhost:8000/api/airflow";
         } else {
             var host = window.location.protocol + '//' + window.location.hostname + "/api/results";
         }
