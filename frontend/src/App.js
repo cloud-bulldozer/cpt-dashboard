@@ -5,12 +5,11 @@ import {
   Route,
   Link
 } from "react-router-dom";
-import OcpPerformanceTable from './components/Platform/OcpPerformanceTable';
-import { Nav, NavExpandable, NavItem, NavItemSeparator, NavList, NavGroup, PageHeader } from '@patternfly/react-core';
+import PlatformView from './components/Platform/PlatformView';
+import { Nav, NavItem, NavList, PageHeader } from '@patternfly/react-core';
 import {
   Page,
   PageHeaderTools,
-  PageSidebar,
   PageSection,
   PageSectionVariants
 } from '@patternfly/react-core';
@@ -59,7 +58,7 @@ export default function App() {
                 <About />
               </Route>
               <Route path="/platform">
-                <OcpPerformanceTable />
+                <PlatformView />
               </Route>
               <Route path="/">
                 <Home />
@@ -81,6 +80,3 @@ function About() {
   return <h2>About</h2>;
 }
 
-function Users() {
-  return <h2>Users</h2>;
-}

@@ -3,10 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, TabTitleText, TabContent, TabTitleIcon, Checkbox } from '@patternfly/react-core';
 import { FaAws, FaMicrosoft,  FaGoogle } from "react-icons/fa";
 
-import VersionLinks from './VersionLinks';
-import PerformanceResults from './PerformanceResults';
-import VersionTabs from './VersionTabs';
-import './PlatformTabs.css'
+import VersionTabs from './Version';
+import './Platform.css'
 
 class PlatformTabs extends React.Component {
   constructor(props) {
@@ -33,7 +31,7 @@ class PlatformTabs extends React.Component {
     return (
       <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick}>
       {this.props.data.map((tab, index) => (    
-        <Tab eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}> 
+        <Tab key={index} eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}> 
           <TabContent>
           <VersionTabs data={tab.data} />
           </TabContent>

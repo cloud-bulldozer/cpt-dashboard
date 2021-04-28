@@ -1,15 +1,15 @@
 from fastapi.encoders import jsonable_encoder
-from app.core.config import vyper_config
+from app import config
 from elasticsearch import Elasticsearch
 from elasticsearch import AsyncElasticsearch
 
 
 
-class Elasticsearch_API():
+class ElasticService():
 	# add error message for unauthorized user
 
 	def __init__(self):
-		self.cfg = vyper_config()
+		self.cfg = config.get_config()
 		self.url = self.cfg.get('elasticsearch.url')
 		self.indice = self.cfg.get('elasticsearch.indice')
 
@@ -23,10 +23,12 @@ class Elasticsearch_API():
 			self.es = AsyncElasticsearch(self.url)
 
 
-	async def post(self, query):
+	async def post(self, query, indice=None):
 		response = {}
+		if indice is None:
+			indice = self.indice
 		# try:
-		response = await self.es.search(index=self.indice, 
+		response = await self.es.search(index=indice, 
 			body=jsonable_encoder(query),
 			size=1000)
 		# except:
@@ -40,4 +42,4 @@ class Elasticsearch_API():
 
 
 if __name__ == '__main__':
-	es = Elasticsearch_API()
+	es = ElasticService()

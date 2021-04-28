@@ -17,8 +17,15 @@ def build_airflow_dataframe(dags):
     data_frame = data_frame.drop(columns=['tags', 'runs'])
     merged_data_frame = pd.merge(data_frame, run_dataframe, on='dag_id', how='left')
     merged_data_frame['profile_and_version'] = merged_data_frame['version'] + " " + merged_data_frame['profile']
-    print(merged_data_frame)
-    return { 'response': group_by_platform(merged_data_frame) } 
+
+    merged_data_frame['start_date'] = merged_data_frame['start_date'].dt.strftime('%b %d, %Y @ %H:%M')
+    merged_data_frame = merged_data_frame.drop(columns=['execution_date'])
+
+    if pd.api.types.is_datetime64_any_dtype(merged_data_frame.end_date.dtype):
+      merged_data_frame['end_date'] = merged_data_frame['end_date'].dt.strftime('%b %d, %Y @ %H:%M')
+
+    ordered_data_frame = merged_data_frame.reindex(columns=["dag_id", "dag_run_id", "platform", "profile_and_version", "version", "release_stream", "profile", "start_date", "end_date", "state"])
+    return { 'response': group_by_platform(ordered_data_frame.rename(columns={"dag_id": "pipeline_id", "dag_run_id": "job_id"})) } 
 
 def group_by_platform(data_frame: pd.DataFrame):
     return [
@@ -34,12 +41,11 @@ def get_table(title: str, data_frame: pd.DataFrame):
 
 def get_framelist(data_frame: pd.DataFrame):
   return [
-    get_frame(group[0], (group[1].drop(columns=['profile_and_version'])))
+    get_frame(group[0], (group[1].drop(columns=['profile_and_version', 'profile', 'version'])))
     for group in data_frame.groupby(by=['profile_and_version'])
   ]
 
 def get_frame(title: str, data_frame: pd.DataFrame):
-  print(data_frame.columns)
   return {
     'version': title.title(),
     'cloud_data': data_frame.values.tolist(),
@@ -47,10 +53,6 @@ def get_frame(title: str, data_frame: pd.DataFrame):
                 for name in data_frame.columns.tolist()]
   }
 
-def flatten(long: pd.DataFrame):
-  return long.pivot(
-    index=['dag_id', 'version', 'release_stream']) \
-    .reset_index()
 
 
 

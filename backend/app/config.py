@@ -9,7 +9,7 @@ from marshmallow.validate import Length
 from typing import Optional
 
 
-def vyper_config():
+def get_config():
 	# not yet sure if we want to have elasticsearch config file override option
 	# env = Env()
 	# env.read_env()
