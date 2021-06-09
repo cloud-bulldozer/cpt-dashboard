@@ -17,6 +17,11 @@ password=
 
 [ocp-server]
 port=8000
+
+[airflow]
+url=
+username=
+password=
 ```
 
 [TOML](https://toml.io/en/) is used above, but it also accepts YAML.
