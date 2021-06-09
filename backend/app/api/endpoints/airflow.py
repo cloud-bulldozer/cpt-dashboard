@@ -33,7 +33,7 @@ def parse_id(dag_id: str):
 
 def get_release_stream(tags: list):
     for tag in tags:
-        if "-stable" in tag['name'] or semver.VersionInfo.isvalid(tag['name']):
+        if "-stable" in tag['name'] or "latest-" in tag['name'] or semver.VersionInfo.isvalid(tag['name']):
             return {"release_stream": tag['name']}
         
 def get_runs(dag_id: str):
