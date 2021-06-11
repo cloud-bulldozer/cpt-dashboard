@@ -2,7 +2,6 @@ from app import config
 import requests
 from requests.auth import HTTPBasicAuth
 import httpx
-import asks
 
 
 class AirflowService:
@@ -15,7 +14,7 @@ class AirflowService:
 
     def get(self, path):
         return requests.get(
-          f"{self.base_url}/{path}", 
+          f"{self.base_url}/{path}",
           auth=HTTPBasicAuth(self.user, self.password)).json()
 
     def post(self, body, path):
@@ -27,7 +26,4 @@ class AirflowService:
     def httpx_client(self):
         return httpx.AsyncClient(auth=(self.user, self.password))
 
-    def asks_client(self):
-        return asks.Session(
-            connections=10
-        )
+
