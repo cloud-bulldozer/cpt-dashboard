@@ -16,23 +16,23 @@ import asyncio
 import trio
 
 
-@router.post('/api/airflow')
-@router.get('/api/airflow')
-def airflow():
-    path = "api/v1/dags"
-    response = airflow_service.get(path)
-    parsed_dags = [
-        {**dag, **parse_id(dag['dag_id']), **get_release_stream(dag['tags'])}
-        for dag in response['dags']]
-    dags = [Dag(**dag) for dag in parsed_dags]
-    now = datetime.now()
-    for dag in dags:
-        dag.runs = get_runs(dag.dag_id)
-    later = datetime.now()
-    # print(f"we got: {dags}")
-    print(f"latency: {later - now}")
-    dags = [dag.dict() for dag in dags]
-    return airflow_transform.build_airflow_dataframe(dags)
+# @router.post('/api/airflow')
+# @router.get('/api/airflow')
+# def airflow():
+#     path = "api/v1/dags"
+#     response = airflow_service.get(path)
+#     parsed_dags = [
+#         {**dag, **parse_id(dag['dag_id']), **get_release_stream(dag['tags'])}
+#         for dag in response['dags']]
+#     dags = [Dag(**dag) for dag in parsed_dags]
+#     now = datetime.now()
+#     for dag in dags:
+#         dag.runs = get_runs(dag.dag_id)
+#     later = datetime.now()
+#     # print(f"we got: {dags}")
+#     print(f"latency: {later - now}")
+#     dags = [dag.dict() for dag in dags]
+#     return airflow_transform.build_airflow_dataframe(dags)
 
 
 async def trio_main(dags):
@@ -60,28 +60,25 @@ async def trio_main(dags):
     return results
 
 
-# @router.post('/api/airflow')
-# @router.get('/api/airflow')
-# async def airflow():
-#     path = "api/v1/dags"
-#     response = airflow_service.get(path)
-#     parsed_dags = [
-#         {**dag, **parse_id(dag['dag_id']), **get_release_stream(dag['tags'])}
-#         for dag in response['dags']]
-#     dags = [Dag(**dag) for dag in parsed_dags]
-#
-#     now = datetime.now()
-#     # for dag in dags:
-#         # dag.runs = await async_get_runs(dag.dag_id)
-#
-#     # get dag runs
-#     dags = await asyncio_main(trio_main, dags)
-#     later = datetime.now()
-#     # print(f"we got: {dags}")
-#     print(f"latency: {later - now}")
-#
-#     dags = [dag.dict() for dag in dags]
-#     return airflow_transform.build_airflow_dataframe(dags)
+@router.post('/api/airflow')
+@router.get('/api/airflow')
+async def airflow():
+    path = "api/v1/dags"
+    response = airflow_service.get(path)
+    parsed_dags = [
+        {**dag, **parse_id(dag['dag_id']), **get_release_stream(dag['tags'])}
+        for dag in response['dags']]
+    dags = [Dag(**dag) for dag in parsed_dags]
+
+    now = datetime.now()
+    # get dag runs
+    dags = await asyncio_main(trio_main, dags)
+    later = datetime.now()
+    # print(f"we got: {dags}")
+    print(f"latency: {later - now}")
+
+    dags = [dag.dict() for dag in dags]
+    return airflow_transform.build_airflow_dataframe(dags)
 
 
 def parse_id(dag_id: str):
@@ -92,6 +89,7 @@ def get_release_stream(tags: list):
     for tag in tags:
         if "-stable" in tag['name'] or semver.VersionInfo.isvalid(tag['name']):
             return {"release_stream": tag['name']}
+
 
 async def async_get_runs(dag_id: str):
     path = (
