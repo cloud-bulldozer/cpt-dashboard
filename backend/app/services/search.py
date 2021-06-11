@@ -1,11 +1,10 @@
 from fastapi.encoders import jsonable_encoder
 from app import config
-from elasticsearch import Elasticsearch
+
 from elasticsearch import AsyncElasticsearch
+import elasticsearch as es
 
-
-
-class ElasticService():
+class ElasticService:
 	# add error message for unauthorized user
 
 	def __init__(self):
@@ -22,7 +21,6 @@ class ElasticService():
 		else:
 			self.es = AsyncElasticsearch(self.url)
 
-
 	async def post(self, query, indice=None):
 		response = {}
 		if indice is None:
@@ -34,7 +32,6 @@ class ElasticService():
 		# except:
 			# print("Forward proxy had an error while forwarding")
 		return response
-
 
 	async def close(self):
 		await self.es.close()

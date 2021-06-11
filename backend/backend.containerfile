@@ -13,7 +13,9 @@ COPY requirements.txt /backend
 WORKDIR /backend
 
 EXPOSE 8000
-RUN pip install --no-cache-dir -r requirements.txt
+RUN python -m pip install poetry && \
+    poetry export -f requirements -o requirements.txt && \
+    pip install --no-cache-dir -r requirements.txt
 
 CMD ["/bin/sh", "./scripts/start.sh"]
 

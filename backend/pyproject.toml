@@ -1,0 +1,30 @@
+[tool.poetry]
+name = "openshift_perfscale_api"
+version = "0.1.1"
+description = "python transformer of openshift performance and scale test results"
+authors = ["mleader <mleader@redhat.com>"]
+
+[tool.poetry.dependencies]
+python = "^3.9"
+pandas = "1.2.4"
+vyper-config = "1.0.0"
+environs = "9.3.2"
+orjson = "3.5.2"
+httpx = "0.17.1"
+semver = "2.13.0"
+requests = "2.25.1"
+uvloop = "^0.15.2"
+httptools = "^0.2.0"
+elasticsearch = "^7.13.1"
+fastapi = "^0.65.2"
+pydantic = "^1.8.2"
+uvicorn = "^0.14.0"
+asks = "^2.4.12"
+trio = "^0.18.0"
+
+[tool.poetry.dev-dependencies]
+watchgod = "^0.7"
+
+[build-system]
+requires = ["poetry-core>=1.0.0"]
+build-backend = "poetry.core.masonry.api"
