@@ -17,6 +17,12 @@ class AirflowService:
           f"{self.base_url}/{path}",
           auth=HTTPBasicAuth(self.user, self.password)).json()
 
+    async def async_get(self, path):
+        async with httpx.AsyncClient(auth=(self.user, self.password)) as client:
+            return await client.get(
+              f'{self.base_url}/{path}'
+            )
+
     def post(self, body, path):
         return requests.post(
           f"{self.base_url}/{path}", 

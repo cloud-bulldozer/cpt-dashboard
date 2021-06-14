@@ -2,7 +2,7 @@ from fastapi.encoders import jsonable_encoder
 from app import config
 
 from elasticsearch import AsyncElasticsearch
-import elasticsearch as es
+
 
 class ElasticService:
 	# add error message for unauthorized user
@@ -26,7 +26,7 @@ class ElasticService:
 		if indice is None:
 			indice = self.indice
 		# try:
-		response = await self.es.search(index=indice, 
+		response = await self.es.search(index=indice,
 			body=jsonable_encoder(query),
 			size=1000)
 		# except:
@@ -35,8 +35,3 @@ class ElasticService:
 
 	async def close(self):
 		await self.es.close()
-
-
-
-if __name__ == '__main__':
-	es = ElasticService()

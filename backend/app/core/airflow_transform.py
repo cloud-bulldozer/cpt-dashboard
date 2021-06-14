@@ -4,6 +4,7 @@ import pandas as pd
 
 
 def build_airflow_dataframe(dags):
+    # now = datetime.now()
     data_frame = pd.DataFrame(dags)
     runs = [dag['runs'] for dag in dags]
     runs = [run for run_list in runs for run in run_list]
@@ -29,9 +30,13 @@ def build_airflow_dataframe(dags):
         columns=["dag_id", "dag_run_id", "platform", "profile_and_version",
                  "version", "release_stream", "profile", "start_date",
                  "end_date", "state"])
-    return {'response': group_by_platform(ordered_data_frame.rename(
+    df = {'response': group_by_platform(ordered_data_frame.rename(
         columns={"dag_id": "pipeline_id", "dag_run_id": "job_id"}))}
+    # later = datetime.now()
+    # print(f"tf latency: {later - now}")
+    return df
 
+from datetime import datetime
 
 def group_by_platform(data_frame: pd.DataFrame):
     return [

@@ -29,9 +29,3 @@ app.add_middleware(
     allow_headers=["*"],
 )
 app.include_router(api_router)
-
-
-
-# @app.on_event('shutdown')
-# async def shutdown_event():
-#     pass
