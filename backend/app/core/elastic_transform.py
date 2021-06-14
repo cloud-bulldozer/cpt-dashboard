@@ -12,7 +12,7 @@ def build_results_dataframe(raw_es_results, columns=[]):
     jobs = [JobRun(**doc["_source"]).dict() for doc in docs]
     data_frame = pd.DataFrame(jobs)
 
-    data_frame['major_version'] = data_frame['cluster_version'].apply(_get_major_minor_version)
+    data_frame['major_version'] = data_frame['upstream_job'].apply(_get_version_from_job)
     data_frame['build_version'] = data_frame['cluster_version']
     data_frame['ocp_profile'] = data_frame['major_version'] + ' ' + data_frame['network_type']
 
@@ -61,5 +61,8 @@ def flatten(long: pd.DataFrame):
 
 
 def _get_major_minor_version(version: str):
-    parsed_version = semver.VersionInfo.parse(version)
-    return f"{parsed_version.major}.{parsed_version.minor}"
+  parsed_version = semver.VersionInfo.parse(version)
+  return f"{parsed_version.major}.{parsed_version.minor}"
+
+def _get_version_from_job(job: str):
+  return job.split('_')[0]

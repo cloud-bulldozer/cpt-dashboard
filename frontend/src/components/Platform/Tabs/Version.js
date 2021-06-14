@@ -2,8 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, TabTitleText, TabContent, Checkbox } from '@patternfly/react-core';
 
-import VersionLinks from './VersionLinks';
-import PerformanceEntry from './PerformanceEntry';
+import PlatformTable from '../Table/PlatformTable';
 
 
 class VersionTabs extends React.Component {
@@ -27,17 +26,19 @@ class VersionTabs extends React.Component {
 
 
       return (
-        <Tabs activeKey={activeTabKey} isSecondary isFilled  isBox variant="light300" onSelect={this.handleTabClick}>
-        {this.props.data.map((tab, index) => (         
-          <Tab eventKey={index} title={<TabTitleText>{tab.version}</TabTitleText>}> 
-            <TabContent>
-            <PerformanceEntry 
+        <Tabs activeKey={activeTabKey} isSecondary isFilled isBox variant="light300" onSelect={this.handleTabClick}>
+        {this.props.data.map((tab, index) => (     
+          <Tab key={index} eventKey={index} title={<TabTitleText>{tab.version}</TabTitleText>}> 
+          <TabContent>
+            <PlatformTable 
 	        key={tab.version}
 	        version={tab.version}
 	        data={tab.cloud_data}
 					columns={tab.columns} />
             </TabContent>
+            
            </Tab>
+          
 
          ))
         }

@@ -3,9 +3,8 @@ import React, { useState, useEffect } from 'react';
 import { Tabs, Tab, TabTitleText, TabContent, TabTitleIcon, Checkbox } from '@patternfly/react-core';
 import { FaAws, FaMicrosoft,  FaGoogle } from "react-icons/fa";
 
-import VersionLinks from './VersionLinks';
-import PerformanceResults from './PerformanceResults';
-import VersionTabs from './VersionTabs';
+import VersionTabs from './Version';
+import './Platform.css'
 
 class PlatformTabs extends React.Component {
   constructor(props) {
@@ -25,14 +24,14 @@ class PlatformTabs extends React.Component {
     const { activeTabKey } = this.state;
     const data = this.props.data;
     const icons = {
-         'Azure': <><TabTitleIcon><FaMicrosoft /></TabTitleIcon><TabTitleText>Azure</TabTitleText></>,
-         'GCP':  <><TabTitleIcon><FaGoogle /></TabTitleIcon><TabTitleText>GCP</TabTitleText></>,
-         'AWS': <><TabTitleIcon><FaAws /></TabTitleIcon><TabTitleText>AWS</TabTitleText></>
+         'azure': <><TabTitleIcon><FaMicrosoft /></TabTitleIcon><TabTitleText>Azure</TabTitleText></>,
+         'gcp':  <><TabTitleIcon><FaGoogle /></TabTitleIcon><TabTitleText>GCP</TabTitleText></>,
+         'aws': <><TabTitleIcon><FaAws /></TabTitleIcon><TabTitleText>AWS</TabTitleText></>
     }
     return (
       <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick}>
       {this.props.data.map((tab, index) => (    
-        <Tab eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}> 
+        <Tab key={index} eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}> 
           <TabContent>
           <VersionTabs data={tab.data} />
           </TabContent>
@@ -41,7 +40,7 @@ class PlatformTabs extends React.Component {
        ))
       }
       </Tabs>
-
+      
     );
   }
 }
