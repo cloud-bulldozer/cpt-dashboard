@@ -12,7 +12,8 @@ class ElasticService:
 		self.url = self.cfg.get('elasticsearch.url')
 		self.indice = self.cfg.get('elasticsearch.indice')
 
-		if self.cfg.is_set('elasticsearch.username') and self.cfg.is_set('elasticsearch.password'):
+		if self.cfg.is_set('elasticsearch.username') and \
+				self.cfg.is_set('elasticsearch.password'):
 			self.es = AsyncElasticsearch(
 				self.url,
 				http_auth=(self.cfg.get('elasticsearch.username'),
@@ -22,16 +23,12 @@ class ElasticService:
 			self.es = AsyncElasticsearch(self.url)
 
 	async def post(self, query, indice=None):
-		response = {}
 		if indice is None:
 			indice = self.indice
-		# try:
-		response = await self.es.search(index=indice,
+		return await self.es.search(
+			index=indice,
 			body=jsonable_encoder(query),
 			size=1000)
-		# except:
-			# print("Forward proxy had an error while forwarding")
-		return response
 
 	async def close(self):
 		await self.es.close()

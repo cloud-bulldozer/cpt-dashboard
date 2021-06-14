@@ -2,7 +2,7 @@ from datetime import datetime
 from pprint import pprint
 
 import trio
-from fastapi import APIRouter
+from fastapi import APIRouter, Request
 
 from app.services.airflow import AirflowService
 from app.services.search import ElasticService
@@ -11,6 +11,14 @@ from app.util import trio_run_with_asyncio
 router = APIRouter()
 
 airflow_service = AirflowService()
+
+
+@router.get("/")
+def root(request: Request):
+    return {
+        "url": str(request.url),
+        "root_path": request.scope.get('root_path')
+    }
 
 
 @router.get('/api/results/{pipeline_id}/{job_id}')

@@ -74,5 +74,3 @@ def get_release_stream(tags: list):
     for tag in tags:
         if "-stable" in tag['name'] or semver.VersionInfo.isvalid(tag['name']):
             return {"release_stream": tag['name']}
-
-

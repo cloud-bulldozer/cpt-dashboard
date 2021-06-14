@@ -8,15 +8,20 @@ RUN mkdir /backend
 
 COPY app/ /backend/app
 COPY scripts/ /backend/scripts
-COPY requirements.txt /backend
+COPY pyproject.toml /backend
+COPY poetry.lock /backend
 
 WORKDIR /backend
 
 EXPOSE 8000
-RUN python -m pip install poetry && \
-    poetry export -f requirements -o requirements.txt && \
+
+
+RUN pip install --user poetry && \
+#     poetry config virtualenvs.create false && \
+#     poetry install && \
+    poetry export -f requirements.txt -o requirements.txt && \
     pip install --no-cache-dir -r requirements.txt
 
-CMD ["/bin/sh", "./scripts/start.sh"]
+CMD ["/bin/bash", "./scripts/start.sh"]
 
 
