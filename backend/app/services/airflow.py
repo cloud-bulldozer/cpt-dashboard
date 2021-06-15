@@ -4,6 +4,7 @@ from app import config
 
 
 class AirflowService:
+    # todo add bulkhead pattern
 
     def __init__(self):
         self.cfg = config.get_config()
@@ -13,9 +14,12 @@ class AirflowService:
 
     async def async_get(self, path):
         async with httpx.AsyncClient(auth=(self.user, self.password)) as client:
-            return await client.get(
+            resp = await client.get(
               f'{self.base_url}/{path}'
             )
+            # todo gracefully handle airflow http errors
+            resp.raise_for_status()
+            return resp.json()
 
     def post(self, body, path):
         return httpx.post(

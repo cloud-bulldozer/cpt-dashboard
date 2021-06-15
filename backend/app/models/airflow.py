@@ -23,3 +23,6 @@ class DagRun(BaseModel):
     external_trigger: bool
     start_date: Optional[datetime] = None
     state: str
+
+
+

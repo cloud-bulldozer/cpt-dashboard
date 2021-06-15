@@ -1,4 +1,7 @@
 import asyncio
+
+from typing import Coroutine, Callable, Any, List, TypeVar
+
 import trio
 
 

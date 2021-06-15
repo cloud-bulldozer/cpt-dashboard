@@ -8,7 +8,7 @@ from fastapi import APIRouter
 from app.models.airflow import Dag, DagRun
 from app.core import airflow_transform
 from app.services.airflow import AirflowService
-from app.util import trio_run_with_asyncio
+from app.async_util import trio_run_with_asyncio
 
 router = APIRouter()
 airflow_service = AirflowService()
@@ -25,7 +25,7 @@ async def airflow():
     # print(f"airflow dag latency: {res_t1 - res_t0}")
 
     # now = datetime.now()
-    dags = await trio_run_with_asyncio(trio_main, response.json()['dags'])
+    dags = await trio_run_with_asyncio(trio_main, response['dags'])
     # later = datetime.now()
     # print(f"we got: {dags}")
     # print(f"airflow runs latency: {later - now}")

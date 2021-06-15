@@ -5,7 +5,8 @@ from elasticsearch import AsyncElasticsearch
 
 
 class ElasticService:
-	# add error message for unauthorized user
+	# todo add bulkhead pattern
+	# todo add error message for unauthorized user
 
 	def __init__(self):
 		self.cfg = config.get_config()
