@@ -1,9 +1,7 @@
 #!/bin/sh
 
 podman rm -f front back
-podman pod rm -f ocpp
-podman pod create --name ocpp --publish 8080:3000
 
-podman run -d --name=back --pod ocpp -v "$PWD/ocpperf.toml:/backend/ocpperf.toml" ocpp-back-i
+podman run -d --name=back -p 8000:8000 -v "$PWD/backend/ocpperf.toml:/backend/ocpperf.toml" ocpp-back-i
 
-podman run -d --name=front --pod ocpp ocpp-front-i
+podman run -d --name=front -p 3000:3000 ocpp-front-i

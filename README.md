@@ -94,17 +94,3 @@ Run frontend container and attach source code as a writable volume.
         --volume "$PWD:/app:z" \
         --publish 3000:3000 \
         ocpp-front
-
-
-## Example Production Orchestration
-
-**Work In Progress**
-
-~~This will build and run the backend and frontend containers, and expose their pod on port `8080`. You should see the frontend at `localhost:8080` in a web browser.~~
-
-### ~~Requires~~
-
-~~podman~~  
-~~working directory is the repository root directory~~
-
-
