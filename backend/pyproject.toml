@@ -8,7 +8,6 @@ authors = ["mleader <mleader@redhat.com>"]
 python = "^3.9"
 pandas = "1.2.4"
 vyper-config = "1.0.0"
-environs = "9.3.2"
 semver = "2.13.0"
 uvloop = "^0.15.2"
 httptools = "^0.2.0"

@@ -15,9 +15,9 @@ export default function usePerfData() {
     }
     const fetchPerfData = async () => {
         const requestOptions = {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(query)
+            method: 'GET',
+            headers: { 'Content-Type': 'application/json' }
+            // body: JSON.stringify(query)
         }
         var hostname = window.location.hostname
         if (hostname == "localhost") {

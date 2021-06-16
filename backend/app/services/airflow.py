@@ -15,7 +15,7 @@ class AirflowService:
     async def async_get(self, path):
         async with httpx.AsyncClient(auth=(self.user, self.password)) as client:
             resp = await client.get(
-              f'{self.base_url}/{path}'
+                f'{self.base_url}/{path}'
             )
             # todo gracefully handle airflow http errors
             resp.raise_for_status()
@@ -23,9 +23,9 @@ class AirflowService:
 
     def post(self, body, path):
         return httpx.post(
-          f"{self.base_url}/{path}", 
-          data=body, 
-          auth=(self.user, self.password)).json()
+            f"{self.base_url}/{path}",
+            data=body,
+            auth=(self.user, self.password)).json()
 
     def httpx_client(self):
         return httpx.AsyncClient(auth=(self.user, self.password))

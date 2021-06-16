@@ -1,6 +1,3 @@
-from datetime import datetime
-import asyncio
-
 import trio
 import semver
 from fastapi import APIRouter
@@ -18,18 +15,8 @@ airflow_service = AirflowService()
 @router.get('/api/airflow')
 async def airflow():
     path = "api/v1/dags"
-
-    # res_t0 = datetime.now()
     response = await airflow_service.async_get(path)
-    # res_t1 = datetime.now()
-    # print(f"airflow dag latency: {res_t1 - res_t0}")
-
-    # now = datetime.now()
     dags = await trio_run_with_asyncio(trio_main, response['dags'])
-    # later = datetime.now()
-    # print(f"we got: {dags}")
-    # print(f"airflow runs latency: {later - now}")
-
     return airflow_transform.build_airflow_dataframe(dags)
 
 
@@ -63,6 +50,7 @@ async def get_runs(s, dag_id):
         f"api/v1/dags/{dag_id}"
         f"/dagRuns?limit=10&execution_date_gte=2021-04-18T15%3A40%3A39")
     r = await s.get(path)
+    r.raise_for_status()
     return r.json()
 
 

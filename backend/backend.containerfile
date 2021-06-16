@@ -15,10 +15,7 @@ WORKDIR /backend
 
 EXPOSE 8000
 
-
 RUN pip install --user poetry && \
-#     poetry config virtualenvs.create false && \
-#     poetry install && \
     poetry export -f requirements.txt -o requirements.txt && \
     pip install --no-cache-dir -r requirements.txt
 

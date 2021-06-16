@@ -1,7 +1,7 @@
-from fastapi.encoders import jsonable_encoder
-from app import config
-
 from elasticsearch import AsyncElasticsearch
+from fastapi.encoders import jsonable_encoder
+
+from app import config
 
 
 class ElasticService:

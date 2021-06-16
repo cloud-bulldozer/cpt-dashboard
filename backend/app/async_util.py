@@ -1,12 +1,9 @@
 import asyncio
 
-from typing import Coroutine, Callable, Any, List, TypeVar
-
 import trio
 
 
 async def trio_run_with_asyncio(trio_fn, *args):
-
     asyncio_loop = asyncio.get_running_loop()
 
     def run_sync_soon_threadsafe(fn):
