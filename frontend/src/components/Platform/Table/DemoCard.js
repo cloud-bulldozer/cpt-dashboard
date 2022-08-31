@@ -17,25 +17,16 @@ export default function Basic(props) {
   if (typeof cardData !== undefined && cardData.length > 0) {
     return (
       <Grid className='demoCard'>
-        <GridItem span="5">
+        <GridItem span="7">
           <InstallCard data={ cardData.filter((item) => item.build_tag == "install")[0] } />
         </GridItem>
-        <GridItem span="3">
-          <ScaleCard data={ cardData.filter((item) => item.build_tag.includes("scale")) } />
+        <GridItem span="5">
+          <BenchmarkCard data={ cardData.filter((item) => item.build_tag != "install") } />
         </GridItem>
-        <GridItem span="2">
-          <BenchmarkCard data={ cardData.filter((item) => !item.build_tag.includes("scale") && item.build_tag != "install" && item.build_tag != "upgrades") } />
-        </GridItem>
-        <GridItem span="2">
-          <UpgradeCard data={ cardData.filter((item) => item.build_tag == "upgrades")[0] } />
-        </GridItem>
-    
-    
       </Grid>
     )
   }
   else {
     return <Grid>No Results Found</Grid>
   }
-  
-} 
+}

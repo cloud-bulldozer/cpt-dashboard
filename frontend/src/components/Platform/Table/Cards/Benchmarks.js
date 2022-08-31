@@ -37,7 +37,7 @@ export default function BenchmarkCard(props) {
                         'aria-expanded': isExpanded
                     }}
                 >
-                    <CardTitle>Tests Ran</CardTitle>
+                    <CardTitle>Tasks Ran</CardTitle>
                 </CardHeader>
                 <CardExpandableContent>
                     <CardBody>
@@ -61,8 +61,8 @@ export default function BenchmarkCard(props) {
     } else {
         return (
             <Card>
-                <CardTitle>Tests Ran</CardTitle>
-                <CardBody><Spinner isSVG /><br />Awaiting Results</CardBody>
+                <CardTitle>Tasks Ran</CardTitle>
+                <CardBody><br />No Results</CardBody>
                 <CardFooter></CardFooter>
             </Card>
         )

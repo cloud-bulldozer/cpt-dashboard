@@ -1,5 +1,5 @@
 # pull official base image
-FROM docker.io/library/node:15.9.0-alpine3.13
+FROM docker.io/library/node:16.10.0-alpine3.13
 
 RUN mkdir /app
 

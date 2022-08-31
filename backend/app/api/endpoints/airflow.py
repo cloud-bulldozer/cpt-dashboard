@@ -24,11 +24,18 @@ async def trio_main(dags):
     results = []
 
     async def make_dag(s, dag_data):
+        if parse_id(dag_data['dag_id']) is None or get_release_stream(dag_data['tags']) is None :
+            return
         dag = Dag(
             **dag_data,
             **parse_id(dag_data['dag_id']),
             **get_release_stream(dag_data['tags']))
+        if dag.profile == "sdn" :
+            return
         r = await get_runs(s, dag.dag_id)
+        # Skip dags w/o runs
+        if len(r['dag_runs']) == 0:
+            return
         dag.runs = [DagRun(**run).dict() for run in r['dag_runs']]
         results.append(dag.dict())
 
@@ -55,8 +62,7 @@ async def get_runs(s, dag_id):
 
 
 def parse_id(dag_id: str):
-    return dict(zip(('version', 'platform', 'profile'), dag_id.split('_')))
-
+    return dict(zip(('version', 'platform', 'profile'), dag_id.split('-')))
 
 def get_release_stream(tags: list):
     for tag in tags:

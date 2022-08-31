@@ -17,6 +17,8 @@ class ElasticService:
                 self.cfg.is_set('elasticsearch.password'):
             self.es = AsyncElasticsearch(
                 self.url,
+                use_ssl=False,
+                verify_certs=False,
                 http_auth=(self.cfg.get('elasticsearch.username'),
                            self.cfg.get('elasticsearch.password'))
             )

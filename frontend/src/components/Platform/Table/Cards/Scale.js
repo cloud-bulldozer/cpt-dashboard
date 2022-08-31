@@ -10,7 +10,7 @@ import { SiApacheairflow } from "react-icons/si";
 export default function ScaleCard(props) {
     let scaleConfigs = props.data
 
-    const [isExpanded, setExpanded] = React.useState([true, null])
+    const [isExpanded, setExpanded] = React.useState([false, false])
 
 
     const onExpand = () => {
@@ -23,7 +23,6 @@ export default function ScaleCard(props) {
         "upstream_failed": <><FaExclamationTriangle color="yellow" /></>,
 
     }
-
 
     if (scaleConfigs && scaleConfigs.length > 0) {
         return (
@@ -58,12 +57,24 @@ export default function ScaleCard(props) {
             </Card>)
     } else {
         return (
-            <Card>
+            <Card isHoverable isExpanded={isExpanded}>
+                <CardHeader
+                    onExpand={onExpand}
+                    toggleButtonProps={{
+                        id: 'toggle-button',
+                        'aria-label': 'Details',
+                        'aria-labelledby': 'titleId toggle-button',
+                        'aria-expanded': false
+                    }}
+                >
+                    <CardTitle>Scale Configs</CardTitle>
+                </CardHeader>
                 <CardTitle>Scale Configuration</CardTitle>
-                <CardBody><Spinner isSVG /><br />Awaiting Results</CardBody>
+                <CardExpandableContent>
+                <CardBody><br />No Scale Configuration</CardBody>
+                </CardExpandableContent>
                 <CardFooter></CardFooter>
             </Card>
         )
     }
-
 }
