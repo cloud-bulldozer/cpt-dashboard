@@ -27,22 +27,18 @@ class PlatformTabs extends React.Component {
          'azure': <><TabTitleIcon><FaMicrosoft /></TabTitleIcon><TabTitleText>Azure</TabTitleText></>,
          'gcp':  <><TabTitleIcon><FaGoogle /></TabTitleIcon><TabTitleText>GCP</TabTitleText></>,
          'aws': <><TabTitleIcon><FaAws /></TabTitleIcon><TabTitleText>AWS</TabTitleText></>
-         'alibaba': <><TabTitleIcon><SiAlibabacloud /></TabTitleIcon><TabTitleText>Alibaba</TabTitleText></>
-         'nutanix': <><TabTitleIcon><SiNutanix /></TabTitleIcon><TabTitleText>Nutanix</TabTitleText></>
     }
     return (
       <Tabs activeKey={activeTabKey} onSelect={this.handleTabClick}>
-      {this.props.data.map((tab, index) => (    
-        <Tab key={index} eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}> 
+      {this.props.data.map((tab, index) => (
+        <Tab key={index} eventKey={index} title={(icons[tab.title] || <TabTitleText>{tab.title}</TabTitleText>)}>
           <TabContent>
           <VersionTabs data={tab.data} />
           </TabContent>
          </Tab>
-           
        ))
       }
       </Tabs>
-      
     );
   }
 }
