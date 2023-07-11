@@ -4,12 +4,11 @@ import './index.css';
 import './common/fonts.css'
 
 
-import App from './App'; 
+import App from './App';
 
 
 ReactDOM.render(
   <React.StrictMode>
-      
     <App />
   </React.StrictMode>,
   document.getElementById('root')

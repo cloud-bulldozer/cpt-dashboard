@@ -2,9 +2,8 @@ import { useState, useEffect, componentDidMount } from 'react';
 
 export default function useCardData(row, isExpanded) {
     const [cardData, setCardData] = useState([]);
-    
     const pipeline_id = row[0]
-    const job_id = row[1] 
+    const job_id = row[1]
 
     const fetchCardData = async () => {
         const requestOptions = {

@@ -32,7 +32,7 @@ async def results_for_job(pipeline_id: str, job_id: str):
         }
     }
 
-    es = ElasticService()
+    es = ElasticService(airflow=True)
     response = await es.post(query)
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]

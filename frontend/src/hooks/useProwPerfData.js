@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function usePerfData() {
+export default function useProwPerfData() {
     const [perfData, setPerfData ] = useState([]);
     const query = {
         "query": {
@@ -20,7 +20,7 @@ export default function usePerfData() {
             // body: JSON.stringify(query)
         }
         var hostname = window.location.hostname
-        var endpoint = "airflow"
+        var endpoint = "jobs"
         if (hostname == "localhost") {
             var host = "http://localhost:8000/api/"+endpoint;
         } else {

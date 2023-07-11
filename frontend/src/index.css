@@ -16,19 +16,16 @@ html {
   background-color: #282c34;
 }
 
-
 .OCPPerformance-header {
   background-color: #282c34 !important;
   min-height: 10vh;
   padding-bottom: 20px;
-  color: white; 
+  color: white;
 }
-
-
 
 .OCPPerformance-logo {
   height: 40vmin;
-  pointer-events: none; 
+  pointer-events: none;
   max-height: 100px;
-  margin: 10px; 
+  margin: 10px;
 }

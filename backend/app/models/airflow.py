@@ -13,7 +13,6 @@ class Dag(BaseModel):
     profile: str
     release_stream: str
 
-
 class DagRun(BaseModel):
     conf: Optional[dict] = {}
     dag_id: str
