@@ -6,6 +6,7 @@ import {
   Link
 } from "react-router-dom";
 import PlatformView from './components/Platform/PlatformView';
+import JobView from './components/Platform/JobView';
 import { Nav, NavItem, NavList, PageHeader } from '@patternfly/react-core';
 import {
   Page,
@@ -29,10 +30,10 @@ export default function App() {
           <Link to="/">Home</Link>
         </NavItem>
         <NavItem>
-          <Link to="/platform">Platform</Link>
+          <Link to="/jobs">Prow</Link>
         </NavItem>
         <NavItem>
-          <Link to="/releases">Releases</Link>
+          <Link to="/platform">Airflow</Link>
         </NavItem>
       </NavList>
     </Nav>
@@ -54,8 +55,11 @@ export default function App() {
         <Page header={Header}>
           <PageSection variant={PageSectionVariants.light}>
             <Switch>
-              <Route path="/releases">
-                <About />
+              <Route path="/active">
+                <Home />
+              </Route>
+              <Route path="/jobs">
+                <JobView />
               </Route>
               <Route path="/platform">
                 <PlatformView />

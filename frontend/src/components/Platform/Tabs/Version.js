@@ -18,28 +18,23 @@ class VersionTabs extends React.Component {
         });
       };
     }
-  
     render() {
       const { activeTabKey } = this.state;
       const data = this.props.data;
-      
 
 
       return (
         <Tabs activeKey={activeTabKey} isSecondary isFilled isBox variant="light300" onSelect={this.handleTabClick}>
-        {this.props.data.map((tab, index) => (     
-          <Tab key={index} eventKey={index} title={<TabTitleText>{tab.version}</TabTitleText>}> 
+        {this.props.data.map((tab, index) => (
+          <Tab key={index} eventKey={index} title={<TabTitleText>{tab.version}</TabTitleText>}>
           <TabContent>
-            <PlatformTable 
+            <PlatformTable
 	        key={tab.version}
 	        version={tab.version}
 	        data={tab.cloud_data}
 					columns={tab.columns} />
             </TabContent>
-            
            </Tab>
-          
-
          ))
         }
         </Tabs>

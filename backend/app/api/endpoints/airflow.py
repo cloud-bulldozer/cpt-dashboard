@@ -1,3 +1,4 @@
+from datetime import datetime,timedelta
 import trio
 import semver
 from fastapi import APIRouter
@@ -20,10 +21,24 @@ async def airflow():
     return airflow_transform.build_airflow_dataframe(dags)
 
 
+@router.post('/api/active')
+@router.get('/api/active')
+async def airflow_active():
+    path = "api/v1/dags"
+    results = []
+    response = await airflow_service.async_get(path)
+    for dag in response['dags'] :
+        if dag['is_paused'] :
+            continue
+        else :
+            results.append(dag)
+    return results
+
 async def trio_main(dags):
     results = []
 
     async def make_dag(s, dag_data):
+        print(dag_data['dag_id'])
         if parse_id(dag_data['dag_id']) is None or get_release_stream(dag_data['tags']) is None :
             return
         dag = Dag(
@@ -52,10 +67,12 @@ async def trio_main(dags):
 
 
 async def get_runs(s, dag_id):
+    # Find the dags from the last 60 days
+    date = (datetime.now()-timedelta(days=60)).strftime("%Y-%m-%dT00:00:00Z")
     path = (
         f"{airflow_service.base_url}/"
         f"api/v1/dags/{dag_id}"
-        f"/dagRuns?limit=10&execution_date_gte=2021-04-18T15%3A40%3A39")
+        f"/dagRuns?limit=10&execution_date_gte={date}")
     r = await s.get(path)
     r.raise_for_status()
     return r.json()
