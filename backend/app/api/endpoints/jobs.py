@@ -19,7 +19,7 @@ async def jobs():
       "must": [
         {
           "query_string": {
-            "query": "ciSystem == PROW"
+            "query": "ciSystem == PROW || ciSystem == JENKINS"
           }
         },
         {
