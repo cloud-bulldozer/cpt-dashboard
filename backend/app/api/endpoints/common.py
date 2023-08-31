@@ -63,7 +63,7 @@ def get_table(title: str, data_frame: pd.DataFrame):
 def get_framelist(data_frame: pd.DataFrame):
     return [
         get_frame(group[0], (group[1].drop(
-            columns=['nodeName', 'ocpVersion'])))
+            columns=['ocpVersion'])))
         for group in data_frame.groupby(by=['shortVersion'])
     ]
 
