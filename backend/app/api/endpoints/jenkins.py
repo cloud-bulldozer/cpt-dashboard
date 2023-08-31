@@ -5,7 +5,7 @@ from app.async_util import trio_run_with_asyncio
 
 router = APIRouter()
 
-@router.post('/api/jobs')
-@router.get('/api/jobs')
+@router.post('/api/jenkins')
+@router.get('/api/jenkins')
 async def jobs():
-    return await getData("PROW")
+    return await getData("JENKINS")
