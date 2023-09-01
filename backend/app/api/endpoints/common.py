@@ -34,18 +34,16 @@ async def getData(type):
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]
     jobs = pd.json_normalize(tasks)
-
+    cleanJobs = jobs[jobs['platform'] != ""]
 
     drop = ['endDate','clusterName','upstreamJobBuild','executionDate',
             'startDate','buildTag','upstreamJob','releaseStream','timestamp',
             'jobDuration','networkType','workerNodesType','infraNodesType','masterNodesType',
             'workerNodesCount','infraNodesCount','masterNodesCount']
-    jobs = jobs.drop(columns=drop)
-    jobs['shortVersion'] = jobs['ocpVersion'].str.slice(0,4)
+    cleanJobs = cleanJobs.drop(columns=drop)
+    cleanJobs['shortVersion'] = cleanJobs['ocpVersion'].str.slice(0,4)
 
-    cloud_data = []
-
-    df = {'response': group_by_platform(jobs) }
+    df = {'response': group_by_platform(cleanJobs)}
 
     return df
 
