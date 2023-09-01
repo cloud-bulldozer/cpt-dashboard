@@ -1,12 +1,12 @@
 import './PlatformView.css';
 import "@patternfly/react-core/dist/styles/base.css";
 import PlatformTabs from './Tabs/Platform';
-import useProwPerfData from '../../hooks/useProwPerfData';
+import useESPerfData from '../../hooks/useESPerfData';
 import React from 'react';
 
 
 export default function JobView() {
-  const perfData = useProwPerfData()
+  const perfData = useESPerfData("jobs")
   return (
     <>
     <div className="PlatformView">

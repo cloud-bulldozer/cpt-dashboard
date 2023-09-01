@@ -7,6 +7,7 @@ import {
 } from "react-router-dom";
 import PlatformView from './components/Platform/PlatformView';
 import JobView from './components/Platform/JobView';
+import JenkinsView from './components/Platform/JenkinsView';
 import { Nav, NavItem, NavList, PageHeader } from '@patternfly/react-core';
 import {
   Page,
@@ -31,6 +32,9 @@ export default function App() {
         </NavItem>
         <NavItem>
           <Link to="/jobs">Prow</Link>
+        </NavItem>
+        <NavItem>
+          <Link to="/jenkins">Jenkins</Link>
         </NavItem>
         <NavItem>
           <Link to="/platform">Airflow</Link>
@@ -60,6 +64,9 @@ export default function App() {
               </Route>
               <Route path="/jobs">
                 <JobView />
+              </Route>
+              <Route path="/jenkins">
+                <JenkinsView />
               </Route>
               <Route path="/platform">
                 <PlatformView />

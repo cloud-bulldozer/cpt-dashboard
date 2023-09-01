@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 
-export default function useProwPerfData() {
+export default function useESPerfData(endpoint) {
     const [perfData, setPerfData ] = useState([]);
     const query = {
         "query": {
@@ -20,7 +20,6 @@ export default function useProwPerfData() {
             // body: JSON.stringify(query)
         }
         var hostname = window.location.hostname
-        var endpoint = "jobs"
         if (hostname == "localhost") {
             var host = "http://localhost:8000/api/"+endpoint;
         } else {
