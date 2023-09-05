@@ -1,7 +1,8 @@
+import json
 from datetime import datetime,timedelta
 import trio
 import semver
-from fastapi import APIRouter
+from fastapi import APIRouter, Response
 
 from app.models.airflow import Dag, DagRun
 from app.core import airflow_transform
@@ -15,17 +16,22 @@ airflow_service = AirflowService()
 
 @router.post('/api/airflow')
 @router.get('/api/airflow')
-async def airflow():
-    return await getData("AIRFLOW", True)
+async def airflow(pretty: bool = False):
+    response = await getData("AIRFLOW", True)
+    if pretty:
+        json_str = json.dumps(response, indent=4)
+        return Response(content=json_str, media_type='application/json')
+    return response
     # path = "api/v1/dags"
     # response = await airflow_service.async_get(path)
     # dags = await trio_run_with_asyncio(trio_main, response['dags'])
     # return airflow_transform.build_airflow_dataframe(dags)
 
 
+
 @router.post('/api/active')
 @router.get('/api/active')
-async def airflow_active():
+async def airflow_active(pretty: bool = False):
     path = "api/v1/dags"
     results = []
     response = await airflow_service.async_get(path)
@@ -34,7 +40,11 @@ async def airflow_active():
             continue
         else :
             results.append(dag)
+    if pretty:
+        json_str = json.dumps(results, indent=4)
+        return Response(content=json_str, media_type='application/json')
     return results
+
 
 async def trio_main(dags):
     results = []
