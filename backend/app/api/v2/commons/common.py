@@ -1,24 +1,24 @@
-from datetime import datetime
+from datetime import datetime, date
 import pandas as pd
 from app.services.search import ElasticService
 
 
-async def getData(start_datetime: datetime, end_datetime: datetime):
+async def getData(start_datetime: date, end_datetime: date):
     query = {
         "query": {
             "bool": {
                 "filter": {
                     "range": {
                         "timestamp": {
-                            "format": "yyyy-MM-dd HH:mm:ss"
+                            "format": "yyyy-MM-dd"
                         }
                     }
                 }
             }
         }
     }
-    query['query']['bool']['filter']['range']['timestamp']['lte'] = str(end_datetime.replace(microsecond=0))
-    query['query']['bool']['filter']['range']['timestamp']['gte'] = str(start_datetime.replace(microsecond=0))
+    query['query']['bool']['filter']['range']['timestamp']['lte'] = str(end_datetime)
+    query['query']['bool']['filter']['range']['timestamp']['gte'] = str(start_datetime)
 
     es = ElasticService()
     response = await es.post(query)

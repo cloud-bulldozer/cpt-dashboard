@@ -1,9 +1,17 @@
 import React from 'react';
-import { render } from "react-dom";
 import ColumnResize from "react-table-column-resizer";
 import { Title, TitleSizes } from '@patternfly/react-core';
-import { TableComposable, TableText, Thead, Tbody, Tr, Th, Td, ExpandableRowContent } from '@patternfly/react-table';
-import { Timestamp, TimestampTooltipVariant } from '@patternfly/react-core';
+import {
+  TableText,
+  Thead,
+  Tbody,
+  Tr,
+  Th,
+  Td,
+  ExpandableRowContent,
+  Table
+} from '@patternfly/react-table';
+import { Timestamp } from '@patternfly/react-core';
 import Basic from './DemoCard';
 
 export default function PlatformTable(props) {
@@ -78,7 +86,7 @@ export default function PlatformTable(props) {
   return (
     <>
       {getTitle(props)}
-      <TableComposable
+      <Table
         aria-label="Simple table"
         variant='default'
         borders='compactBorderless'
@@ -226,7 +234,7 @@ export default function PlatformTable(props) {
 
 
         })}
-      </TableComposable>
+      </Table>
     </>
   );
 };
