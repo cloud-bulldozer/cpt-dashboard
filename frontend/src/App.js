@@ -15,12 +15,12 @@ import {
   PageSection,
   PageSectionVariants
 } from '@patternfly/react-core';
+import HomeView from "./components/Platform/HomeView";
 
 export default function App() {
   const logoProps = {
-    href: 'https://patternfly.org',
+    href: '/',
     onClick: () => console.log('clicked logo'),
-    target: '_blank'
   };
 
   const PerfNav = (
@@ -60,7 +60,7 @@ export default function App() {
           <PageSection variant={PageSectionVariants.light}>
             <Switch>
               <Route path="/active">
-                <Home />
+                <HomeView />
               </Route>
               <Route path="/jobs">
                 <JobView />
@@ -72,7 +72,7 @@ export default function App() {
                 <PlatformView />
               </Route>
               <Route path="/">
-                <Home />
+                <HomeView />
               </Route>
             </Switch>
 
@@ -81,10 +81,6 @@ export default function App() {
       </Router>
     </>
   );
-}
-
-function Home() {
-  return <h2>Home</h2>;
 }
 
 function About() {
