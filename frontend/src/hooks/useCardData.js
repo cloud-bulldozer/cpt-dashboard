@@ -19,7 +19,6 @@ export default function useCardData(row, isExpanded) {
         }
         const response = await fetch(url, requestOptions)
         const cardData = await response.json()
-        console.log(cardData)
         setCardData(cardData)
     }
 

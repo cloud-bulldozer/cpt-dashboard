@@ -18,7 +18,7 @@ export default function Basic(props) {
     return (
       <Grid className='demoCard'>
         <GridItem span="7">
-          <InstallCard data={ cardData.filter((item) => item.build_tag == "install")[0] } />
+          <InstallCard data={ cardData[0] } />
         </GridItem>
         <GridItem span="5">
           <BenchmarkCard data={ cardData.filter((item) => item.build_tag != "install") } />

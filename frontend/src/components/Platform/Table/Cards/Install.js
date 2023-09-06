@@ -8,7 +8,7 @@ import { SiApacheairflow } from "react-icons/si";
 
 
 export default function InstallCard(props) {
-    let installConfigs = props.data
+    let config = props.data
     const [isExpanded, setExpanded] = React.useState([true, null])
 
 
@@ -23,7 +23,7 @@ export default function InstallCard(props) {
 
     }
 
-    if (installConfigs) {
+    if (config) {
         return (
         <Card isHoverable isExpanded={isExpanded}>
             <CardHeader
@@ -36,7 +36,7 @@ export default function InstallCard(props) {
           }}
         >
                 <CardTitle>Install Configs</CardTitle>
-                
+
             </CardHeader>
             <CardExpandableContent>
             <CardBody>
@@ -44,36 +44,36 @@ export default function InstallCard(props) {
                     <GridItem rowSpan="1">
                         <Card isHoverable><CardHeader><CardTitle>Cluster Metadata</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Release Binary</u>: {installConfigs.cluster_version}</li>
-                                <li><u>Cluster Name</u>: {installConfigs.cluster_name}</li>
-                                <li><u>Network Type</u>: {installConfigs.network_type}</li>
-                                <li><u>Install Status</u>: {icons[installConfigs.job_status] || installConfigs.job_status} <a href={installConfigs.build_url}><SiApacheairflow color="teal"/></a></li>
-                                <li><u>Duration</u>: {formatTime(installConfigs.job_duration)}</li>
+                                <li><u>Release Binary</u>: {config.cluster_version != '' && config.cluster_version || config.ocpVersion}</li>
+                                <li><u>Cluster Name</u>: {config.cluster_name != '' && config.cluster_name || config.clusterName}</li>
+                                <li><u>Network Type</u>: {config.network_type != '' && config.network_type || config.networkType}</li>
+                                <li><u>Install Status</u>: {icons[config.job_status != '' && config.job_status || config.jobStatus] || config.job_status != '' && config.job_status || config.jobStatus} <a href={config.build_url != '' && config.build_url || config.buildUrl}><SiApacheairflow color="teal"/></a></li>
+                                <li><u>Duration</u>: {formatTime(config.job_duration != '' && config.job_duration || config.jobDuration)}</li>
                             </ul>
-                            
+
                             </CardBody></Card></GridItem>
 
                     <GridItem span="6">
                         <Card isHoverable><CardHeader><CardTitle>Node Types</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Master</u>: {installConfigs.master_type}</li>
-                                <li><u>Worker</u>: {installConfigs.worker_type}</li>
-                                <li><u>Workload</u>: {installConfigs.workload_type}</li>
-                                <li><u>Infra</u>: {installConfigs.infra_type}</li>
+                                <li><u>Master</u>: {config.master_type != '' && config.master_type || config.masterNodesType}</li>
+                                <li><u>Worker</u>: {config.worker_type != '' && config.worker_type || config.workerNodesType}</li>
+                                <li><u>Workload</u>: {config.workload_type != '' && config.workload_type || config.benchmark}</li>
+                                <li><u>Infra</u>: {config.infra_type != '' && config.infra_type || config.infraNodesType}</li>
                             </ul>
                             </CardBody></Card></GridItem><GridItem span="6">
                         <Card isHoverable><CardHeader><CardTitle>Node Counts</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Master</u>: {installConfigs.master_count}</li>
-                                <li><u>Worker</u>: {installConfigs.worker_count}</li>
-                                <li><u>Workload</u>: {installConfigs.workload_count}</li>
-                                <li><u>Infra</u>: {installConfigs.infra_count}</li>
+                                <li><u>Master</u>: {config.master_count != '' && config.master_count || config.masterNodesCount}</li>
+                                <li><u>Worker</u>: {config.worker_count != '' && config.worker_count || config.workerNodesCount}</li>
+                                <li><u>Workload</u>: {config.workload_count != '' && config.workload_count || config.totalNodesCount}</li>
+                                <li><u>Infra</u>: {config.infra_count != '' && config.infra_count || config.infraNodesCount}</li>
                             </ul>
                             </CardBody></Card></GridItem>
                 </Grid>
             </CardBody></CardExpandableContent>
 
-            
+
         </Card>)
     } else {
         return (

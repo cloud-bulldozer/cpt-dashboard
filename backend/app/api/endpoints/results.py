@@ -39,10 +39,11 @@ async def results_for_job(ci: str, job_id: str):
     response = await es.post(query)
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]
-    # tasks_states = await async_tasks_states(tasks)
+    if ci == "AIRFLOW":
+        tasks_states = await async_tasks_states(tasks)
 
-    # for task in tasks:
-    #     task['job_status'] = tasks_states[task['build_tag']]
+        for task in tasks:
+            task['job_status'] = tasks_states[task['build_tag']]
 
     return tasks
 
