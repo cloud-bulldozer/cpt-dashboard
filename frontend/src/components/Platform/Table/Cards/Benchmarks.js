@@ -52,7 +52,7 @@ export default function BenchmarkCard(props) {
                                 return (
                                     <>
                                         <li> {icons[status] || status}
-                                            {buildTag}
+                                            {benchConfig.benchmark}
                                             ({status != "upstream_failed" ? formatTime(benchConfig.job_duration != '' && benchConfig.job_duration || benchConfig.jobDuration) : "Skipped"})
                                             <a href={benchConfig.build_url != '' && benchConfig.build_url || benchConfig.buildUrl}>
                                                 <SiApacheairflow color="teal" />

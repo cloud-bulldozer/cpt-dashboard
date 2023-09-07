@@ -66,8 +66,8 @@ export default function InstallCard(props) {
                             <CardBody><ul>
                                 <li><u>Master</u>: {config.master_count != '' && config.master_count || config.masterNodesCount}</li>
                                 <li><u>Worker</u>: {config.worker_count != '' && config.worker_count || config.workerNodesCount}</li>
-                                <li><u>Workload</u>: {config.workload_count != '' && config.workload_count || config.totalNodesCount}</li>
                                 <li><u>Infra</u>: {config.infra_count != '' && config.infra_count || config.infraNodesCount}</li>
+                                <li><u>Total Nodes</u>: {config.workload_count != '' && config.workload_count || config.totalNodesCount}</li>
                             </ul>
                             </CardBody></Card></GridItem>
                 </Grid>
