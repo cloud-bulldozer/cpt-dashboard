@@ -56,8 +56,8 @@ async def getData(type, airflow=False):
 
     jbs = jbs.drop(columns=["nodeName"])
 
-    if type == "PROW":
-        jobs['upstreamJob'] = jobs['upstreamJob'].map(shorten)
+    # if type == "PROW":
+    #     jobs['upstreamJob'] = jobs['upstreamJob'].map(shorten)
 
     df = {'response': group_by_platform(jbs)}
 
