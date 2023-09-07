@@ -7,6 +7,7 @@ from app.models.airflow import Dag, DagRun
 from app.core import airflow_transform
 from app.services.airflow import AirflowService
 from app.async_util import trio_run_with_asyncio
+from .common import getData
 
 router = APIRouter()
 airflow_service = AirflowService()
@@ -15,10 +16,11 @@ airflow_service = AirflowService()
 @router.post('/api/airflow')
 @router.get('/api/airflow')
 async def airflow():
-    path = "api/v1/dags"
-    response = await airflow_service.async_get(path)
-    dags = await trio_run_with_asyncio(trio_main, response['dags'])
-    return airflow_transform.build_airflow_dataframe(dags)
+    return await getData("AIRFLOW", True)
+    # path = "api/v1/dags"
+    # response = await airflow_service.async_get(path)
+    # dags = await trio_run_with_asyncio(trio_main, response['dags'])
+    # return airflow_transform.build_airflow_dataframe(dags)
 
 
 @router.post('/api/active')

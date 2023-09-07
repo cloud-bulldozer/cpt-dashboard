@@ -7,7 +7,9 @@ export default function PlatformTable(props) {
 
 
   const [activeChild, setActiveChild] = React.useState([1, null]);
-  const columns = props.columns;
+  // const columns = props.columns;
+  const columIndexes = [17, 1, 2, 21, 22, 15]
+  const columns = ["Pipeline Id", "Job Id", "Release Stream", "Start Date", "End Date", "State"];
   const numColumns = columns.length;
   const rows = props.data;
   const rowPairs = rows.map(k => ({ "parent": k, "child": ["placeholder"] }));
@@ -21,7 +23,7 @@ export default function PlatformTable(props) {
     'N/A': '#00000000'
   }
 
-  
+
 
   let rowIndex = -1;
 
@@ -112,27 +114,91 @@ export default function PlatformTable(props) {
                       onToggle: handleExpansionToggle
                     }}
               />
-              {pair.parent.map((cell, cellIndex) => (
-                <Td
-                  key={`${rowIndex}_${cellIndex}`}
-                  dataLabel={columns[cellIndex]}
-                  component={cellIndex === 0 ? 'th' : 'td'}
+              <Td
+                key={`${rowIndex}_1`}
+                dataLabel={columns[0]}
+                component='td'
+                width={30}
+                modifier="wrap"
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[0]]],
+                  border: "1 px solid black"
+
+                }}>
+                <TableText
                   style={{
-                    backgroundColor: Colors[cell],
-                    border: "1 px solid black"
-                  }}
-                >
-                  <TableText>
-                    {cell}
-                  </TableText>
-                </Td>
-              ))}
+                    width: "100%",
+                  }}>
+                {pair.parent[columIndexes[0]]}
+                </TableText>
+              </Td>
+              <Td
+                key={`${rowIndex}_2`}
+                dataLabel={columns[1]}
+                component='td'
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[1]]],
+                  border: "1 px solid black"
+                }}>
+                <TableText
+                  wrapModifier="nowrap">
+                {pair.parent[columIndexes[1]]}
+                </TableText>
+              </Td>
+              <Td
+                key={`${rowIndex}_3`}
+                dataLabel={columns[2]}
+                component='td'
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[2]]],
+                  border: "1 px solid black"
+                }}>
+                <TableText>
+                {pair.parent[columIndexes[2]]}
+                </TableText>
+              </Td>
+              <Td
+                key={`${rowIndex}_4`}
+                dataLabel={columns[3]}
+                component='td'
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[3]]],
+                  border: "1 px solid black"
+                }}>
+                <TableText>
+                {pair.parent[columIndexes[3]]}
+                </TableText>
+              </Td>
+              <Td
+                key={`${rowIndex}_5`}
+                dataLabel={columns[4]}
+                component='td'
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[4]]],
+                  border: "1 px solid black"
+                }}>
+                <TableText>
+                {pair.parent[columIndexes[4]]}
+                </TableText>
+              </Td>
+              <Td
+                key={`${rowIndex}_6`}
+                dataLabel={columns[5]}
+                component='td'
+                style={{
+                  backgroundColor: Colors[pair.parent[columIndexes[5]]],
+                  border: "1 px solid black"
+                }}>
+                <TableText>
+                {pair.parent[columIndexes[5]]}
+                </TableText>
+              </Td>
             </Tr>
           );
 
-      
+
           rowIndex += 1;
-        
+
           const childRow = (
             <Tr key={rowIndex} isExpanded={expanded[pairIndex] === true}>
               <Td dataLabel={columns[0]} noPadding colSpan={6}>
