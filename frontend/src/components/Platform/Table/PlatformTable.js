@@ -118,11 +118,17 @@ export default function PlatformTable(props) {
                 key={`${rowIndex}_1`}
                 dataLabel={columns[0]}
                 component='td'
+                width={30}
+                modifier="wrap"
                 style={{
                   backgroundColor: Colors[pair.parent[columIndexes[0]]],
                   border: "1 px solid black"
+
                 }}>
-                <TableText>
+                <TableText
+                  style={{
+                    width: "100%",
+                  }}>
                 {pair.parent[columIndexes[0]]}
                 </TableText>
               </Td>
@@ -134,7 +140,8 @@ export default function PlatformTable(props) {
                   backgroundColor: Colors[pair.parent[columIndexes[1]]],
                   border: "1 px solid black"
                 }}>
-                <TableText>
+                <TableText
+                  wrapModifier="nowrap">
                 {pair.parent[columIndexes[1]]}
                 </TableText>
               </Td>
