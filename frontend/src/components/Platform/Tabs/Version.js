@@ -4,7 +4,7 @@ import { Tabs, Tab, TabTitleText, TabContent, Checkbox } from '@patternfly/react
 
 import PlatformTable from '../Table/PlatformTable';
 
-const columns = ["Pipeline Id", "Job Id", "Release Stream", "Start Date", "End Date", "State"];
+const columns = ["Benchmark", "Job Id", "Release Stream", "Start Date", "End Date", "State"];
 
 class VersionTabs extends React.Component {
     constructor(props) {

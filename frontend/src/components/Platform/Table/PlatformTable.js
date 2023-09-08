@@ -8,8 +8,8 @@ export default function PlatformTable(props) {
 
   const [activeChild, setActiveChild] = React.useState([1, null]);
   // const columns = props.columns;
-  const columIndexes = [17, 1, 2, 21, 22, 15]
-  const columns = ["Pipeline Id", "Job Id", "Release Stream", "Start Date", "End Date", "State"];
+  const columIndexes = [4, 1, 2, 21, 22, 15]
+  const columns = ["Benchmark", "Job Id", "Release Stream", "Start Date", "End Date", "State"];
   const numColumns = columns.length;
   const rows = props.data;
   const rowPairs = rows.map(k => ({ "parent": k, "child": ["placeholder"] }));

@@ -48,6 +48,11 @@ export default function BenchmarkCard(props) {
                                 var edate = new Date(benchConfig.end_date != '' && benchConfig.end_date || benchConfig.endDate).valueOf()
                                 var status = benchConfig.job_status != '' && benchConfig.job_status || benchConfig.jobStatus
                                 var buildTag = benchConfig.build_tag != '' && benchConfig.build_tag || benchConfig.buildTag
+                                var dataSource = "AWS%20Pro%20-%20ripsaw-kube-burner"
+                                if (benchConfig.ciSystem == "JENKINS" || benchConfig.ci_system == "JENKINS" ||
+                                    benchConfig.ciSystem == "PROW" || benchConfig.ci_system == "PROW"){
+                                    dataSource = "QE+kube-burner"
+                                }
                                 let gimg = "https://upload.wikimedia.org/wikipedia/commons/thumb/3/3b/Grafana_icon.svg/351px-Grafana_icon.svg.png"
                                 return (
                                     <>
@@ -57,7 +62,7 @@ export default function BenchmarkCard(props) {
                                             <a href={benchConfig.build_url != '' && benchConfig.build_url || benchConfig.buildUrl}>
                                                 <SiApacheairflow color="teal" />
                                             </a>
-                                            <a href={"https://grafana.rdu2.scalelab.redhat.com:3000/d/9qdKt3K4z/kube-burner-report-ocp-wrapper?orgId=1&from="+sdate+"&to="+edate+"&var-Datasource=AWS%20Pro%20-%20ripsaw-kube-burner&var-platform="+benchConfig.platform+"&var-workload="+buildTag+"&var-uuid="+benchConfig.uuid}>
+                                            <a href={"https://grafana.rdu2.scalelab.redhat.com:3000/d/9qdKt3K4z/kube-burner-report-ocp-wrapper?orgId=1&from="+sdate+"&to="+edate+"&var-Datasource="+dataSource+"&var-platform="+benchConfig.platform+"&var-workload="+buildTag+"&var-uuid="+benchConfig.uuid}>
                                                 <img src={gimg} style={{width:'25px',heigh:'25px'}} />
                                             </a>
                                         </li>
