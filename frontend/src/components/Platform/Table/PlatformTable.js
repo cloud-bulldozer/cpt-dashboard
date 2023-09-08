@@ -1,6 +1,7 @@
 import React from 'react';
 import { Title, TitleSizes } from '@patternfly/react-core';
 import { TableComposable, TableText, Thead, Tbody, Tr, Th, Td, ExpandableRowContent } from '@patternfly/react-table';
+import { Timestamp, TimestampTooltipVariant } from '@patternfly/react-core';
 import Basic from './DemoCard';
 
 export default function PlatformTable(props) {
@@ -118,7 +119,7 @@ export default function PlatformTable(props) {
                 key={`${rowIndex}_1`}
                 dataLabel={columns[0]}
                 component='td'
-                width={30}
+                width={20}
                 modifier="wrap"
                 style={{
                   backgroundColor: Colors[pair.parent[columIndexes[0]]],
@@ -165,9 +166,7 @@ export default function PlatformTable(props) {
                   backgroundColor: Colors[pair.parent[columIndexes[3]]],
                   border: "1 px solid black"
                 }}>
-                <TableText>
-                {pair.parent[columIndexes[3]]}
-                </TableText>
+                <Timestamp date={pair.parent[columIndexes[3]]} />
               </Td>
               <Td
                 key={`${rowIndex}_5`}
@@ -177,9 +176,7 @@ export default function PlatformTable(props) {
                   backgroundColor: Colors[pair.parent[columIndexes[4]]],
                   border: "1 px solid black"
                 }}>
-                <TableText>
-                {pair.parent[columIndexes[4]]}
-                </TableText>
+                <Timestamp date={pair.parent[columIndexes[4]]} />
               </Td>
               <Td
                 key={`${rowIndex}_6`}
