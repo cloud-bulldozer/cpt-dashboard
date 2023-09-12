@@ -108,7 +108,6 @@ export default function PlatformTable(props) {
                   resizeEnd={(width) => console.log("resize end", width)}
                   resizeStart={() => console.log("resize start")}
                   className="columnResizer"
-                  style={{"min-width": "3px"}}
                 />
                 </>
               )
@@ -131,7 +130,6 @@ export default function PlatformTable(props) {
                 key={`${rowIndex}_1`}
                 dataLabel={columns[0]}
                 component='td'
-                width={20}
                 modifier="wrap"
                 style={{
                   backgroundColor: Colors[pair.parent[columIndexes[0]]],
