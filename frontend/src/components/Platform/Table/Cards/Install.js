@@ -46,6 +46,7 @@ export default function InstallCard(props) {
                             <CardBody><ul>
                                 <li><u>Release Binary</u>: {config.cluster_version != '' && config.cluster_version || config.ocpVersion}</li>
                                 <li><u>Cluster Name</u>: {config.cluster_name != '' && config.cluster_name || config.clusterName}</li>
+                                <li><u>Cluster Type</u>: {config.cluster_type != '' && config.cluster_type || config.clusterType}</li>
                                 <li><u>Network Type</u>: {config.network_type != '' && config.network_type || config.networkType}</li>
                                 <li><u>Install Status</u>: {icons[config.job_status != '' && config.job_status || config.jobStatus] || config.job_status != '' && config.job_status || config.jobStatus} <a href={config.build_url != '' && config.build_url || config.buildUrl}><SiApacheairflow color="teal"/></a></li>
                                 <li><u>Duration</u>: {formatTime(config.job_duration != '' && config.job_duration || config.jobDuration)}</li>
