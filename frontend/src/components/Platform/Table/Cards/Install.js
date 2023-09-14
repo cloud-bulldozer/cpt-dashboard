@@ -35,7 +35,7 @@ export default function InstallCard(props) {
             'aria-expanded': isExpanded
           }}
         >
-                <CardTitle>Install Configs</CardTitle>
+                <CardTitle>Configs</CardTitle>
 
             </CardHeader>
             <CardExpandableContent>
