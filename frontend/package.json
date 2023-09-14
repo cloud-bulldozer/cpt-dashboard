@@ -17,6 +17,7 @@
     "react-plotly.js": "^2.6.0",
     "react-router-dom": "^5.2.0",
     "react-scripts": "4.0.1",
+    "react-table-column-resizer": "1.1.7",
     "web-vitals": "^0.2.4"
   },
   "scripts": {

@@ -1,4 +1,6 @@
 import React from 'react';
+import { render } from "react-dom";
+import ColumnResize from "react-table-column-resizer";
 import { Title, TitleSizes } from '@patternfly/react-core';
 import { TableComposable, TableText, Thead, Tbody, Tr, Th, Td, ExpandableRowContent } from '@patternfly/react-table';
 import { Timestamp, TimestampTooltipVariant } from '@patternfly/react-core';
@@ -46,7 +48,7 @@ export default function PlatformTable(props) {
           return a[index] - b[index];
         }
         return b[index] - a[index];
-      } else if (new Date(a[index]).toString !== "Invalid Date") {
+      } else if (new Date(a[index]).toString() !== "Invalid Date") {
         if (direction === 'asc') {
           return new Date(a[index]) - new Date(b[index])
         }
@@ -84,21 +86,30 @@ export default function PlatformTable(props) {
         <Thead>
           <Tr><Th />
             {columns.map((column, columnIndex) => {
-              const sortParams = column === "Start Date" ? {
+              const sortParams = {
                 sort: {
                   sortBy: {
                     index: activeSortIndex,
                     direction: activeSortDirection
                   },
                   onSort,
-                  columnIndex
+                  columnIndex: columIndexes[columnIndex]
                 }
-              } : {};
+              };
               return (
+                <>
                 <Th
-                  key={columnIndex} {...sortParams}>
+                  key={columnIndex} {...sortParams}
+                >
                   {column}
                 </Th>
+                <ColumnResize
+                  id={columnIndex}
+                  resizeEnd={(width) => console.log("resize end", width)}
+                  resizeStart={() => console.log("resize start")}
+                  className="columnResizer"
+                />
+                </>
               )
             })}
           </Tr>
@@ -119,7 +130,6 @@ export default function PlatformTable(props) {
                 key={`${rowIndex}_1`}
                 dataLabel={columns[0]}
                 component='td'
-                width={20}
                 modifier="wrap"
                 style={{
                   backgroundColor: Colors[pair.parent[columIndexes[0]]],
@@ -132,7 +142,7 @@ export default function PlatformTable(props) {
                   }}>
                 {pair.parent[columIndexes[0]]}
                 </TableText>
-              </Td>
+              </Td><td/>
               <Td
                 key={`${rowIndex}_2`}
                 dataLabel={columns[1]}
@@ -145,7 +155,7 @@ export default function PlatformTable(props) {
                   wrapModifier="nowrap">
                 {pair.parent[columIndexes[1]]}
                 </TableText>
-              </Td>
+              </Td><td/>
               <Td
                 key={`${rowIndex}_3`}
                 dataLabel={columns[2]}
@@ -157,7 +167,7 @@ export default function PlatformTable(props) {
                 <TableText>
                 {pair.parent[columIndexes[2]]}
                 </TableText>
-              </Td>
+              </Td><td/>
               <Td
                 key={`${rowIndex}_4`}
                 dataLabel={columns[3]}
@@ -167,7 +177,7 @@ export default function PlatformTable(props) {
                   border: "1 px solid black"
                 }}>
                 <Timestamp date={pair.parent[columIndexes[3]]} />
-              </Td>
+              </Td><td/>
               <Td
                 key={`${rowIndex}_5`}
                 dataLabel={columns[4]}
@@ -177,7 +187,7 @@ export default function PlatformTable(props) {
                   border: "1 px solid black"
                 }}>
                 <Timestamp date={pair.parent[columIndexes[4]]} />
-              </Td>
+              </Td><td/>
               <Td
                 key={`${rowIndex}_6`}
                 dataLabel={columns[5]}
