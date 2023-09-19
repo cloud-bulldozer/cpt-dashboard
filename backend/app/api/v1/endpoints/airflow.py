@@ -14,8 +14,8 @@ router = APIRouter()
 airflow_service = AirflowService()
 
 
-@router.post('/api/airflow')
-@router.get('/api/airflow')
+@router.post('/api/v1/vairflow')
+@router.get('/api/v1/vairflow')
 async def airflow(pretty: bool = False):
     response = await getData("AIRFLOW", True)
     if pretty:
@@ -29,8 +29,8 @@ async def airflow(pretty: bool = False):
 
 
 
-@router.post('/api/active')
-@router.get('/api/active')
+@router.post('/api/v1/vactive')
+@router.get('/api/v1/vactive')
 async def airflow_active(pretty: bool = False):
     path = "api/v1/dags"
     results = []

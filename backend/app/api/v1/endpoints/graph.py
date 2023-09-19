@@ -9,7 +9,7 @@ import pandas as pd
 from app.services.search import ElasticService
 router = APIRouter()
 
-@router.get('/api/graph/{uuid}')
+@router.get('/api/v1/graph/{uuid}')
 async def graph(uuid: str):
     index = ""
     meta = await getMetadata(uuid)

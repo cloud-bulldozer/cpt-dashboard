@@ -13,9 +13,9 @@ export default function useCardData(row, isExpanded) {
         var hostname = window.location.hostname
         var url = ""
         if (hostname === "localhost") {
-            url = "http://localhost:8000/api/results/" + ci + "/" + job_id;
+            url = "http://localhost:8000/api/v1/results/" + ci + "/" + job_id;
         } else {
-            url = window.location.protocol + '//' + window.location.hostname + "/api/results/" + ci + "/" + job_id;
+            url = window.location.protocol + '//' + window.location.hostname + "/api/v1/results/" + ci + "/" + job_id;
         }
         const response = await fetch(url, requestOptions)
         const cardData = await response.json()

@@ -20,7 +20,7 @@ def root(request: Request):
     }
 
 
-@router.get('/api/results/{ci}/{job_id}')
+@router.get('/api/v1/results/{ci}/{job_id}')
 async def results_for_job(ci: str, job_id: str):
     query = {
         "query": {

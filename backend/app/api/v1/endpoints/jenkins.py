@@ -8,10 +8,10 @@ from fastapi import APIRouter
 
 router = APIRouter()
 
-@router.post('/api/jobs')
-@router.get('/api/jobs')
+@router.post('/api/v1/jenkins')
+@router.get('/api/v1/jenkins')
 async def jobs(pretty: bool = False):
-    response = await getData("PROW")
+    response = await getData("JENKINS")
     if pretty:
         json_str = json.dumps(response, indent=4)
         return Response(content=json_str, media_type='application/json')

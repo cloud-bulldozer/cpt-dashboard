@@ -22,9 +22,9 @@ export default function usePerfData() {
         var hostname = window.location.hostname
         var endpoint = "airflow"
         if (hostname == "localhost") {
-            var host = "http://localhost:8000/api/"+endpoint;
+            var host = "http://localhost:8000/api/v1/"+endpoint;
         } else {
-            var host = window.location.protocol + '//' + window.location.hostname + "/api/"+endpoint;
+            var host = window.location.protocol + '//' + window.location.hostname + "/api/v1/"+endpoint;
         }
         const response = await fetch(host, requestOptions)
         const perfData = await response.json()
