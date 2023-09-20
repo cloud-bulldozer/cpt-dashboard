@@ -17,4 +17,4 @@ api_router.include_router(jenkins.router, tags=['perfscale'])
 api_router.include_router(graph.router, tags=['perfscale'])
 
 # v2 endpoints
-api_router.include_router(jobsv2.router, tags=['perfscale'])
+api_router.include_router(jobsv2.router, tags=['perfscale', 'v2'])
