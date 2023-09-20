@@ -47,7 +47,7 @@ class ElasticService:
         return await self.es.search(
             index=indice,
             body=jsonable_encoder(query),
-            size=1000)
+            size=10000)
 
     async def close(self):
         await self.es.close()
