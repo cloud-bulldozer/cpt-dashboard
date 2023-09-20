@@ -56,18 +56,10 @@ async def getData(type, airflow=False):
 
     jbs = jbs.drop(columns=["nodeName"])
 
-    # if type == "PROW":
-    #     jobs['upstreamJob'] = jobs['upstreamJob'].map(shorten)
 
     df = {'response': group_by_platform(jbs)}
 
     return df
-
-
-def shorten(job: str):
-    i = job.index("-main-")
-    sub = job[i + 6:]
-    return sub
 
 
 def renameColumns(df):
