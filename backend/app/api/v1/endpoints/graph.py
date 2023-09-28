@@ -6,8 +6,107 @@ import io
 import pprint
 from json import loads
 import pandas as pd
+import datetime
 from app.services.search import ElasticService
 router = APIRouter()
+
+"""
+"""
+@router.get('/api/v1/graph/trend/{version}/{count}/{benchmark}')
+async def trend(benchmark: str,count: int,version: str):
+    index = "ripsaw-kube-burner*"
+    meta = {}
+    meta['benchmark'] = benchmark
+    # Instance types for self-managed.
+    if count > 50 :
+        meta['masterNodesType'] = "m6a.4xlarge"
+        meta['workerNodesType'] = "m5.xlarge"
+    else:
+        meta['masterNodesType'] = "m6a.xlarge"
+        meta['workerNodesType'] = "m6a.xlarge"
+    meta['masterNodesCount'] = 3
+    meta['workerNodesCount'] = count
+    meta['platform'] = "AWS"
+    # Query the up coming release data
+    meta['ocpVersion']= version
+    current_uuids = await getMatchRuns(meta,True)
+    if len(current_uuids) < 1 :
+        return []
+
+    current_jobs = await jobSummary(current_uuids)
+    current_ids = jobFilter(current_jobs, current_jobs)
+    # Capture result data
+    oData = await getBurnerResults("",current_ids,index)
+    odf = pd.json_normalize(oData)
+    columns = ['timestamp', 'quantileName','metricName', 'P99']
+    odf = pd.DataFrame(odf, columns=columns)
+    odf = odf.sort_values(by=['timestamp'])
+    current = {'y' : (odf['P99']/1000).to_list(),
+        'x' : odf['timestamp'].to_list(),
+        'name' : version + ' results - PodLatency: Ready 99th%tile ( seconds )',
+        'type' : 'scatter',
+    }
+    return [current]
+
+
+"""
+diff_cpu - Will accept the version, prev_version , count, benchmark and namespace to diff trend CPU
+data.
+"""
+@router.get('/api/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
+async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, prev_version: str):
+    aTrend = await trend_cpu(namespace,benchmark,count,version)
+    bTrend = await trend_cpu(namespace,benchmark,count,prev_version)
+    return [aTrend[0],bTrend[0]]
+
+"""
+trend_cpu - Will accept the version, count, benchmark and namespace to trend CPU
+data.
+"""
+@router.get('/api/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
+async def trend_cpu(namespace: str, benchmark: str, count: int, version: str):
+    index = "ripsaw-kube-burner*"
+    meta = {}
+    meta['benchmark'] = benchmark
+    meta['masterNodesCount'] = 3
+    # Instance types for self-managed.
+    if count > 50 :
+        meta['masterNodesType'] = "m6a.4xlarge"
+        meta['workerNodesType'] = "m5.xlarge"
+    else:
+        meta['masterNodesType'] = "m6a.xlarge"
+        meta['workerNodesType'] = "m6a.xlarge"
+    meta['workerNodesCount'] = count
+    meta['platform'] = "AWS"
+    meta['ocpVersion']= version
+    current_uuids = await getMatchRuns(meta,True)
+    # Query the current release data.
+    current_jobs = await jobSummary(current_uuids)
+    current_ids = jobFilter(current_jobs,current_jobs)
+    result = await getBurnerCPUResults(current_ids, namespace,index)
+    result = parseCPUResults(result)
+    cdf = pd.json_normalize(result)
+    cdf = cdf.sort_values(by=['timestamp'])
+    current = {'y' : cdf['cpu_avg'].to_list(),
+        'x' : cdf['timestamp'].to_list(),
+        'name' : version+' results - '+namespace+' avg CPU usage - for benchmark '+benchmark,
+        'type' : 'scatter',
+    }
+
+    return [current]
+
+def parseCPUResults(data: dict):
+    res = []
+    stamps = data['aggregations']['time']['buckets']
+    cpu = data['aggregations']['uuid']['buckets']
+    for stamp in stamps :
+        dat = {}
+        dat['uuid'] = stamp['key']
+        dat['timestamp'] = stamp['time']['value_as_string']
+        acpu = next(item for item in cpu if item["key"] == stamp['key'])
+        dat['cpu_avg'] = acpu['cpu']['value']
+        res.append(dat)
+    return res
 
 @router.get('/api/v1/graph/{uuid}')
 async def graph(uuid: str):
@@ -66,9 +165,9 @@ async def graph(uuid: str):
         ids = jobFilter(job,jobs)
 
         oData = await getBurnerResults(uuid,ids,index)
-
         oMetrics = await processBurner(oData)
         oMetrics = oMetrics.reset_index()
+
         cData = await getBurnerResults(uuid,[uuid],index)
         nMetrics = await processBurner(cData)
         nMetrics = nMetrics.reset_index()
@@ -151,7 +250,6 @@ def burnerFilter(data: dict) :
     pprint.pprint(data)
     columns = ['quantileName','metricName', 'P99']
     ndf = pd.DataFrame(data, columns=columns)
-    print(ndf)
     return ndf
 
 def netperfFilter(df):
@@ -171,10 +269,62 @@ def netperfFilter(df):
     d = d[d.profile.str.contains('TCP_STREAM')]
     return d
 
-async def getBurnerResults(uuid: str, uuids: list, index: str ):
+async def getBurnerCPUResults(uuids: list, namespace: str, index: str ):
+    ids = "\" OR uuid: \"".join(uuids)
+    print(ids)
+    query = {
+        "size": 0,
+        "aggs": {
+            "time": {
+            "terms": {
+                "field": "uuid.keyword"
+            },
+            "aggs": {
+                "time": {
+                "avg": {
+                    "field": "timestamp"}
+                }
+            }
+        },
+        "uuid": {
+            "terms": {
+                "field": "uuid.keyword"
+            },
+            "aggs": {
+                "cpu": {
+                    "avg": {
+                        "field": "value"
+                        }
+                    }
+                }
+            }
+        },
+        "query": {
+            "bool": {
+                "must": [{
+                    "query_string": {
+                        "query": (
+                            f'( uuid: \"{ids}\" )'
+                            f' AND metricName: "containerCPU"'
+                            f' AND labels.namespace.keyword: {namespace}'
+                        )
+                    }
+                }]
+            }
+        }
+    }
+    print(query)
+    es = ElasticService(airflow=False,index=index)
+    runs = await es.post(query,size=0)
+    await es.close()
+    return runs
 
+async def getBurnerResults(uuid: str, uuids: list, index: str ):
     if len(uuids) > 1 :
-        uuids.remove(uuid)
+        if len(uuid) > 0 :
+            uuids.remove(uuid)
+    if len(uuids) < 1 :
+        return []
     ids = "\" OR uuid: \"".join(uuids)
     print(ids)
     query = {
@@ -220,9 +370,11 @@ async def getMatchRuns(meta: dict, workerCount: False):
     version = meta["ocpVersion"][:4]
     query = {
         "query": {
-            "query_string": {
+            "bool": {
+                "must": [{
+                    "query_string": {
                 "query": (
-                    f'benchmark: "{meta["benchmark"]}"'
+                    f'benchmark: "{meta["benchmark"]}$"'
                     f' AND workerNodesType: "{meta["workerNodesType"]}"'
                     f' AND masterNodesType: "{meta["masterNodesType"]}"'
                     f' AND platform: "{meta["platform"]}"'
@@ -230,25 +382,32 @@ async def getMatchRuns(meta: dict, workerCount: False):
                     f' AND jobStatus: success'
                     )
             }
+        }]
+            }
         }
     }
     if workerCount :
         query = {
-            "query": {
-                "query_string": {
-                    "query": (
-                        f'benchmark: "{meta["benchmark"]}"'
-                        f' AND workerNodesType: "{meta["workerNodesType"]}"'
-                        f' AND masterNodesType: "{meta["masterNodesType"]}"'
-                        f' AND masterNodesCount: "{meta["masterNodesCount"]}"'
-                        f' AND workerNodesCount: "{meta["workerNodesCount"]}"'
-                        f' AND platform: "{meta["platform"]}"'
-                        f' AND ocpVersion: {version}*'
-                        f' AND jobStatus: success'
-                        )
+        "query": {
+            "bool": {
+                "must": [{
+                    "query_string": {
+                "query": (
+                    f'benchmark: "{meta["benchmark"]}$"'
+                    f' AND workerNodesType: "{meta["workerNodesType"]}"'
+                    f' AND masterNodesType: "{meta["masterNodesType"]}"'
+                    f' AND masterNodesCount: "{meta["masterNodesCount"]}"'
+                    f' AND workerNodesCount: "{meta["workerNodesCount"]}"'
+                    f' AND platform: "{meta["platform"]}"'
+                    f' AND ocpVersion: {version}*'
+                    f' AND jobStatus: success'
+                    )
                 }
+                }]
             }
         }
+        }
+
     print(query)
     es = ElasticService(airflow=False)
     response = await es.post(query)
