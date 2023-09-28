@@ -1,93 +1,52 @@
-import React from "react";
+import React, {useEffect} from 'react';
+import '@patternfly/react-core/dist/styles/base.css';
+
 import {
-  BrowserRouter as Router,
-  Switch,
-  Route,
-  Link
-} from "react-router-dom";
-import PlatformView from './components/Platform/PlatformView';
-import JobView from './components/Platform/JobView';
-import JenkinsView from './components/Platform/JenkinsView';
-import { Nav, NavItem, NavList, PageHeader } from '@patternfly/react-core';
-import {
-  Page,
-  PageHeaderTools,
-  PageSection,
-  PageSectionVariants
+    Page,
+    PageSection,
+    PageSectionVariants,
 } from '@patternfly/react-core';
+import {fetchJobsData} from "./store/Actions/ActionCreator";
+import {useDispatch} from "react-redux";
+import HomeView from "./components/HomeView";
+import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
+import {NavBar} from "./components/NavBar/NavBar";
+import JenkinView from "./components/Platform/JenkinView";
+import JobView from "./components/Platform/JobView";
 
-export default function App() {
-  const logoProps = {
-    href: 'https://patternfly.org',
-    onClick: () => console.log('clicked logo'),
-    target: '_blank'
-  };
 
-  const PerfNav = (
+export const App = () => {
+    const dispatch = useDispatch()
 
-    <Nav variant="horizontal">
-      <NavList>
-        <NavItem>
-          <Link to="/">Home</Link>
-        </NavItem>
-        <NavItem>
-          <Link to="/jobs">Prow</Link>
-        </NavItem>
-        <NavItem>
-          <Link to="/jenkins">Jenkins</Link>
-        </NavItem>
-        <NavItem>
-          <Link to="/platform">Airflow</Link>
-        </NavItem>
-      </NavList>
-    </Nav>
+    useEffect(() => {
+          const fetchData = async () =>{
+              await dispatch(fetchJobsData())
+          }
+          fetchData()
+    }, [dispatch])
 
-  );
 
-  const Header = (
-    <PageHeader className="OCPPerformance-header"
-      logo={<img className="OCPPerformance-logo" src="logo.png" alt="Openshift Logo" />}
-      logoProps={logoProps}
-      headerTools={<PageHeaderTools>Openshift Performance and Scale</PageHeaderTools>}
-      topNav={PerfNav}
-    />
 
-  );
+
   return (
-    <>
       <Router>
-        <Page header={Header}>
-          <PageSection variant={PageSectionVariants.light}>
-            <Switch>
-              <Route path="/active">
-                <Home />
-              </Route>
-              <Route path="/jobs">
-                <JobView />
-              </Route>
-              <Route path="/jenkins">
-                <JenkinsView />
-              </Route>
-              <Route path="/platform">
-                <PlatformView />
-              </Route>
-              <Route path="/">
-                <Home />
-              </Route>
-            </Switch>
-
+        <Page
+          header={<NavBar />}
+          groupProps={{
+            stickyOnBreakpoint: { default: 'top' },
+            sticky: 'top'
+          }}
+        >
+          <PageSection variant={PageSectionVariants.light} hasOverflowScroll={true} aria-label={"overflow false"}>
+              <Switch>
+                  <Route path="/" exact><HomeView /></Route>
+                  <Route path="/jobs" exact><JobView /></Route>
+                  <Route path="/jenkins" exact><JenkinView /></Route>
+              </Switch>
           </PageSection>
         </Page>
       </Router>
-    </>
   );
-}
+};
 
-function Home() {
-  return <h2>Home</h2>;
-}
-
-function About() {
-  return <h2>About</h2>;
-}
-
+export default App
