@@ -18,7 +18,6 @@ export const fetchJobsData = (startDate = '', endDate='') => async dispatch => {
     }
     try{
          const api_data = await fetchAPI(buildUrl)
-        console.log(api_data)
         if(api_data){
             const results = api_data.results
             const benchmarks = GetBenchmarks(results)
