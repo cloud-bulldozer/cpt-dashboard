@@ -1,8 +1,13 @@
 
 
 export const getUrl = () => {
-    const {hostname, protocol} = window.location
-    return (hostname === "localhost") ? "http://localhost:8000":`${protocol}/${hostname}`
+    var hostname = window.location.hostname
+    if (hostname === "localhost") {
+        var host = "http://localhost:8000";
+    } else {
+        var host = window.location.protocol + '//' + window.location.hostname;
+    }
+    return host
 }
 
 export const BASE_URL = getUrl()
