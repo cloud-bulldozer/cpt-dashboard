@@ -14,37 +14,21 @@ const equalIgnoreCase = (value1 , value2, ...args) => {
 }
 
 
-const getPlatformData = (platform, data) => {
-    return data.filter(item => equalIgnoreCase(item.platform, platform) || equalIgnoreCase(platform, 'all') )
-}
-
-const getBenchmarkData = (benchmark, data) => {
-    return data.filter(item => equalIgnoreCase(item.benchmark, benchmark) || equalIgnoreCase(benchmark, 'all') )
-}
-
-const getVersionsData = (version, data) => {
-    return data.filter(item => equalIgnoreCase(item.shortVersion, version) || equalIgnoreCase(version, 'all') )
-}
-
-const getWorkersData = (workerCount, data) => {
-    return data.filter(item => equalIgnoreCase(item.workerNodesCount, workerCount) || equalIgnoreCase(workerCount, 'all') )
-}
-
-const getNetworkTypesData = (networkType, data) => {
-    return data.filter(item => equalIgnoreCase(item.networkType, networkType) || equalIgnoreCase(networkType, 'all') )
-}
-
-const getCiSystemData = (ciSystem, data) => {
-    return data.filter(item => equalIgnoreCase(item.ciSystem, ciSystem) || equalIgnoreCase(ciSystem, 'all') )
+const getFilteredData = (data, selectedValue, keyValue) => {
+    return data.filter(item => equalIgnoreCase(item[keyValue], selectedValue) || equalIgnoreCase(selectedValue, 'all') )
 }
 
 const GetUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem) => {
-    const ciSystemData = getCiSystemData(ciSystem, data)
-    const platformData = getPlatformData(platform, ciSystemData)
-    const benchmarkData = getBenchmarkData(benchmark, platformData)
-    const versionData = getVersionsData(version, benchmarkData)
-    const workerData = getWorkersData(workerCount, versionData)
-    return getNetworkTypesData(networkType, workerData)
+    const filterValues = {
+        "platform": platform, "benchmark": benchmark,
+        "shortVersion": version, "workerNodesCount": workerCount,
+        "networkType": networkType, "ciSystem": ciSystem
+    }
+    let filteredData = data
+    for (let [keyName, value] of Object.entries(filterValues))
+        filteredData = getFilteredData(filteredData, value, keyName)
+
+    return filteredData
 }
 
 const GetSummary = (api_data) => {
@@ -81,11 +65,7 @@ const jobsSlice = createSlice({
             state.ciSystems = ["All", ...action.payload.ciSystems]
             state.updatedTime = action.payload.updatedTime
             state.error = null
-            const {success, failure, others, total} = GetSummary(state.data)
-            state.success = success
-            state.failure = failure
-            state.others = others
-            state.total = total
+            Object.assign(state,  GetSummary(state.data))
             state.startDate = action.payload.startDate
             state.endDate = action.payload.endDate
         },
@@ -98,27 +78,22 @@ const jobsSlice = createSlice({
             state.selectedWorkerCount = workerCount
             state.selectedCiSystem = ciSystem
             state.data = GetUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, networkType, ciSystem)
-             const {success, failure, others, total} = GetSummary(state.data)
-            state.success = success
-            state.failure = failure
-            state.others = others
-            state.total = total
+            Object.assign(state,  GetSummary(state.data))
         },
         updateMetaData: (state, action) => {
             state.data = GetUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
                 state.selectedVersion, state.selectedWorkerCount, state.selectedNetworkType, state.selectedCiSystem)
-            const {success, failure, others, total} = GetSummary(state.data)
-            state.success = success
-            state.failure = failure
-            state.others = others
-            state.total = total
+            Object.assign(state,  GetSummary(state.data))
         },
         setWaitForUpdate: (state, action) => {
             state.waitForUpdate = action.payload.waitForUpdate
         },
         errorCall: (state, action) => {
             state.error = action.payload.error
-        }
+        },
+        getUuidResults: (state, action) => {
+            Object.assign(state.uuid_results, action.payload.data)
+        },
     }
 })
 export const {getJobsData, updateDataFilter, setWaitForUpdate, updateMetaData, errorCall} = jobsSlice.actions

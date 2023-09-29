@@ -1,9 +1,74 @@
 
-import {Table, Thead, Tr, Th, Tbody, Td} from '@patternfly/react-table';
+import {Table, Thead, Tr, Th, Tbody, Td, ExpandableRowContent} from '@patternfly/react-table';
 import {Puff} from "react-loading-icons";
-import React from "react";
+import React, {useEffect, useState} from "react";
+import {BenchmarkResults} from "../../Home/BenchmarkResults";
 
-export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false, ...props  }) => {
+
+export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false,
+                              addExpandableRows = false,  ...props  }) => {
+    /*
+        rows: {
+        dataset: {} // Complete data object
+        tableRows: {} // Table values that need to be displayed
+        }
+    */
+
+
+    const [expand, setExpand] = useState(
+        Object.assign({}, ...Object.keys(rows).map( (items, idx) => ({[idx]: false})))
+    )
+
+    useEffect(()=>{
+        if(rows)
+        setExpand(
+            Object.assign({}, ...Object.keys(rows).map( (items, idx) => ({[idx]: false})))
+        )
+    }, [rows])
+    //
+    const handleToggle = (event, index) => {
+        setExpand({
+            ...expand, [index]: !expand[index]
+        })
+    }
+
+
+    const NonExpandableTableRows = () => {
+        return <Tbody>
+                    { rows &&
+                      rows.map( (item, index)=> <Tr key={index}>
+                          {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
+                          </Tr>
+                      )
+                    }
+               </Tbody>
+    }
+
+    const ExpandableRows = () => {
+        return(
+            <>
+                { rows && rows.map( (item, index)=> <Tbody key={index} isExpanded={expand[index]}>
+                        <Tr key={index}>
+                               <Td expand={{
+                                  rowIndex: index,
+                                  isExpanded: expand[index],
+                                  onToggle: handleToggle
+                              }} />
+                              {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
+                        </Tr>
+                        <Tr isExpanded={expand[index]}>
+                              <Td dataLabel={columns[0]} noPadding colSpan={6}>
+                                <ExpandableRowContent>
+                                    <BenchmarkResults dataset={item.dataset} />
+                                </ExpandableRowContent>
+                              </Td>
+                          </Tr>
+                    </Tbody>)
+                }
+            </>
+        )
+    }
+
     // index of the currently active column
     const [activeSortIndex, setActiveSortIndex] = React.useState(-1);
     // sort direction of the currently active column
@@ -13,7 +78,9 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
         setActiveSortIndex(index);
         setActiveSortDirection(direction);
         // sorts the rows
-        const updatedRows = rows.sort((a, b) => {
+        rows = rows.sort((a, b) => {
+            a = a.tableRows
+            b = b.tableRows
             if (typeof a[index].props.value === 'number') {
             // numeric sort
             if (direction === 'asc') {
@@ -33,21 +100,21 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
             return b[index].props.value.localeCompare(a[index].props.value);
             }
         });
-        rows = updatedRows;
     };
 
     const onSortStatus = (event, index, direction) => {
         setActiveSortIndex(index);
         setActiveSortDirection(direction);
         // sorts the rows
-        const updatedRows = rows.sort((a, b) => {
+        rows = rows.sort((a, b) => {
+            a = a.tableRows
+            b = b.tableRows
             // string sort
             if (direction === 'asc') {
                 return a[index].props.children.localeCompare(b[index].props.children);
             }
             return b[index].props.children.localeCompare(a[index].props.children);
         });
-        rows = updatedRows;
     };
 
     const getSortParams = (columnIndex, item) => ({
@@ -65,19 +132,16 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
         <Table  isStickyHeader={stickyHeader} {...props}>
           <Thead>
             <Tr>
+                {addExpandableRows && <Th />}
                 { columns && columns.map( (item, index) =>
                     <Th modifier="fitContent" key={index}
                         sort={getSortParams(index, item)}
                     >{item}</Th>)}
             </Tr>
           </Thead>
-          <Tbody>
-              { rows &&
-                  rows.map( (item, index)=> <Tr key={index}>
-                      {item.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
-                  </Tr> )
-              }
-          </Tbody>
+            {
+                (addExpandableRows && ExpandableRows()) || NonExpandableTableRows()
+            }
         </Table>}
     </>
 }
