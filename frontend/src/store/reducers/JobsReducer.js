@@ -9,7 +9,8 @@ const equalIgnoreCase = (value1 , value2, ...args) => {
         args.forEach(item => response = item.toString().toUpperCase() === value1.toString().toUpperCase() && response)
         return response
     }
-    return false
+    return value1 === value2;
+
 
 }
 

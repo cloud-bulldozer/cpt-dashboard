@@ -3,5 +3,10 @@ import React from "react";
 
 
 export const DatePickerView = ({defaultDate, setDate, ...props}) => {
-    return <DatePicker {...props} value={defaultDate} onChange={(_e, value)=>setDate(value)} />
+    return <DatePicker {...props}
+                       appendTo={() => document.body}
+                       value={defaultDate}
+                       onChange={(_e, value)=>setDate(value)}
+                       placement="right"
+    />
 }
