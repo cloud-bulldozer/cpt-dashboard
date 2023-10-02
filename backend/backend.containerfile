@@ -24,6 +24,6 @@ RUN pip install --user poetry && \
     pip install --user dash && \
     pip install --no-cache-dir -r requirements.txt
 
-CMD ["/bin/bash", "./scripts/start.sh"]
+ENTRYPOINT ["/bin/bash", "./scripts/start.sh"]
 
 
