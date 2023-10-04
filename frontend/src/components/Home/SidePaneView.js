@@ -64,7 +64,7 @@ export const SidePaneView = () => {
         <Stack hasGutter>
             <StackItem span={3}>
 
-                <CardView body={<p>{DisplayDate()}</p>}/>
+                <CardView body={DisplayDate()}/>
             </StackItem>
             {
                 stackDetails.map( item =>

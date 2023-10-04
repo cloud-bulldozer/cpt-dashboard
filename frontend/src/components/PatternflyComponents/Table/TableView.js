@@ -59,7 +59,7 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
                         <Tr isExpanded={expand[index]}>
                               <Td dataLabel={columns[0]} noPadding colSpan={6}>
                                 <ExpandableRowContent>
-                                    <BenchmarkResults dataset={item.dataset} />
+                                    <BenchmarkResults isExpanded={expand[index]} dataset={item.dataset} />
                                 </ExpandableRowContent>
                               </Td>
                           </Tr>
