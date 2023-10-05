@@ -25,6 +25,9 @@ async def getData(start_datetime: date, end_datetime: date):
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]
     jobs = pd.json_normalize(tasks)
+    jobs[['masterNodesCount', 'workerNodesCount',
+          'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
+    jobs.fillna('', inplace=True)
 
     if len(jobs) == 0:
         return jobs
