@@ -52,9 +52,10 @@ async def graph(uuid: str):
         metrics.append(old)
         metrics.append(new)
 
-    elif meta["benchmark"] == "ingress-perf" :
+    elif meta["benchmark"] == "ingress-perf":
+        uuids = await getMatchRuns(meta, False)
         index = "ingress-performance"
-        data = await getResults(uuid,uuids,index)
+        data = await getResults(uuid, uuids, index)
     else:
         index = "ripsaw-kube-burner*"
         uuids = await getMatchRuns(meta,True)
