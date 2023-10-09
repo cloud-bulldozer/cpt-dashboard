@@ -34,6 +34,7 @@ export const DataDisplayView = () => {
                                                              rows={getRows()}
                                                              stickyHeader={true}
                                                              addExpandableRows={true}
+                                                             expandableComponent={BenchmarkResults}
                                                  />}
                 />
           </Page>

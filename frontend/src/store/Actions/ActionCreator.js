@@ -1,14 +1,38 @@
 
-import {BASE_URL, JOBS_API_V2} from "../Shared";
+import {BASE_URL, GRAPH_API_V1, JOBS_API_V2} from "../Shared";
 import axios from "axios";
-import {errorCall, getJobsData, setWaitForUpdate, updateMetaData} from "../reducers/JobsReducer";
+import {
+    errorCall,
+    getJobsData,
+    setWaitForUpdate,
+    updateMetaData
+} from "../reducers/JobsReducer";
+import {getUuidResults, setGraphError} from "../reducers/GraphReducer";
 
 
 export const fetchAPI = async (url, requestOptions = {}) => {
     const response = await axios(url, requestOptions)
-    return JSON.parse(response.data)
+    return response.data
 }
 
+
+export const fetchGraphData =  (uuid) => async dispatch =>{
+    try {
+        let buildUrl = `${BASE_URL}${GRAPH_API_V1}/${uuid}`
+        const api_data = await fetchAPI(buildUrl)
+        if(api_data) dispatch(getUuidResults({ [uuid]: api_data }))
+    }
+    catch (error){
+        if (axios.isAxiosError(error)) {
+            console.error('Axios Error:', error);
+            console.error('Request:', error.request);
+            console.error('Response:', error.response);
+        } else {
+            console.error('Axios Error:', error);
+            dispatch(setGraphError({error: error.response.data.details}))
+        }
+    }
+}
 
 export const fetchJobsData = (startDate = '', endDate='') => async dispatch => {
     let buildUrl = `${BASE_URL}${JOBS_API_V2}`
@@ -17,30 +41,38 @@ export const fetchJobsData = (startDate = '', endDate='') => async dispatch => {
         dispatch(setWaitForUpdate({waitForUpdate:true}))
     }
     try{
-         const api_data = await fetchAPI(buildUrl)
+         let api_data = await fetchAPI(buildUrl)
+        api_data = JSON.parse(api_data)
         if(api_data){
             const results = api_data.results
-            const benchmarks = GetBenchmarks(results)
-            const versions = GetVersions(results)
-            const platforms = GetPlatforms(results)
-            const workers = GetWorkers(results)
-            const networkTypes = GetNetworkTypes(results)
-            const ciSystems = GetCiSystems(results)
-            const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
-            await dispatch(getJobsData({
-                data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
-                updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
-            }))
-            await dispatch(updateMetaData({data: results}))
+            if(results){
+                const benchmarks = GetBenchmarks(results)
+                const versions = GetVersions(results)
+                const platforms = GetPlatforms(results)
+                const workers = GetWorkers(results)
+                const networkTypes = GetNetworkTypes(results)
+                const ciSystems = GetCiSystems(results)
+                const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
+                await dispatch(getJobsData({
+                    data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
+                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                }))
+                await dispatch(updateMetaData({data: results}))
+            }
+
         }
     }
     catch (e) {
         const error = e
-        if(error){
+        if(error.response){
             await dispatch(errorCall({error: error.response.data.error}))
-            dispatch(setWaitForUpdate({waitForUpdate:false}))
             alert(error.response.data.error)
         }
+        else{
+            console.log(error)
+        }
+        dispatch(setWaitForUpdate({waitForUpdate:false}))
+
     }
 
 }

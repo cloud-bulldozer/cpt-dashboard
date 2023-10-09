@@ -6,7 +6,7 @@ import {BenchmarkResults} from "../../Home/BenchmarkResults";
 
 
 export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false,
-                              addExpandableRows = false,  ...props  }) => {
+                              addExpandableRows = false, expandableComponent: ExpandableComponent,  ...props  }) => {
     /*
         rows: {
         dataset: {} // Complete data object
@@ -57,9 +57,11 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
                               {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
                         </Tr>
                         <Tr isExpanded={expand[index]}>
-                              <Td dataLabel={columns[0]} noPadding colSpan={6}>
+                              <Td dataLabel={columns[index]} noPadding colSpan={columns.length + 1}>
                                 <ExpandableRowContent>
-                                    <BenchmarkResults isExpanded={expand[index]} dataset={item.dataset} />
+                                    { ExpandableComponent  &&
+                                        <ExpandableComponent isExpanded={expand[index]} dataset={item.dataset}/>
+                                    }
                                 </ExpandableRowContent>
                               </Td>
                           </Tr>

@@ -91,11 +91,14 @@ const jobsSlice = createSlice({
         },
         errorCall: (state, action) => {
             state.error = action.payload.error
-        },
-        getUuidResults: (state, action) => {
-            Object.assign(state.uuid_results, action.payload.data)
-        },
+        }
     }
 })
-export const {getJobsData, updateDataFilter, setWaitForUpdate, updateMetaData, errorCall} = jobsSlice.actions
+export const {
+    getJobsData,
+    updateDataFilter,
+    setWaitForUpdate,
+    updateMetaData,
+    errorCall,
+} = jobsSlice.actions
 export default jobsSlice.reducer

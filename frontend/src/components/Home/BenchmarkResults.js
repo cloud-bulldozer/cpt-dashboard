@@ -1,23 +1,28 @@
 import {Grid, GridItem} from "@patternfly/react-core";
 import InstallCard from "../Platform/Table/Cards/Install";
 import React from "react";
-import {DisplayGrafana} from "./DisplayGrafana";
+import {DisplayGraph} from "./DisplayGraph";
 
 
 export const BenchmarkResults = ({dataset, isExpanded}) => {
     return (
-        <>
-            <Grid className='demoCard' hasGutter>
-                <GridItem span={"7"}>
-                  <InstallCard data={ dataset }
-                               isExpanded={isExpanded} />
-                </GridItem>
-                <GridItem span={"5"}>
-                  <DisplayGrafana benchmarkConfigs={ dataset }
-                                  isExpanded={isExpanded} />
-                </GridItem>
+        <> {
+            ( isExpanded &&
+                <Grid className='demoCard' hasGutter>
+                    <GridItem span={"6"}>
+                      <InstallCard data={ dataset }
+                                   isExpanded={isExpanded} />
+                    </GridItem>
+                    <GridItem span={"6"}>
+                      <DisplayGraph uuid={ dataset.uuid }
+                                    benchmark={dataset.benchmark}
+                                     />
+                    </GridItem>
 
-            </Grid>
+                </Grid>
+            ) || <>NO Data</>
+        }
+
         </>
     )
 }

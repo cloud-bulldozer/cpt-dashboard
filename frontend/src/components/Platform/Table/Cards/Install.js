@@ -5,6 +5,7 @@ import { Spinner } from '@patternfly/react-core';
 import { formatTime } from '../../../../helpers/Formatters'
 import { FaCheck, FaExclamationCircle,  FaExclamationTriangle } from "react-icons/fa";
 import { SiApacheairflow } from "react-icons/si";
+import {DisplayGrafana} from "../../../Home/DisplayGrafana";
 
 
 export default function InstallCard(props) {
@@ -48,12 +49,12 @@ export default function InstallCard(props) {
                                 <li><u>Cluster Name</u>: {config.cluster_name && config.cluster_name || config.clusterName}</li>
                                 <li><u>Cluster Type</u>: {config.cluster_type  && config.cluster_type || config.clusterType}</li>
                                 <li><u>Network Type</u>: {config.network_type  && config.network_type || config.networkType}</li>
-                                <li><u>Install Status</u>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
+                                <li><u>Benchmark Status</u>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
                                 <li><u>Duration</u>: {formatTime(config.job_duration  && config.job_duration || config.jobDuration)}</li>
                             </ul>
 
                             </CardBody></Card></GridItem>
-
+                    <DisplayGrafana benchmarkConfigs={ config } />
                     <GridItem span="6">
                         <Card><CardHeader><CardTitle>Node Types</CardTitle></CardHeader>
                             <CardBody><ul>
@@ -70,7 +71,8 @@ export default function InstallCard(props) {
                                 <li><u>Infra</u>: {config.infra_count  && config.infra_count || config.infraNodesCount}</li>
                                 <li><u>Total Nodes</u>: {config.workload_count  && config.workload_count || config.totalNodesCount}</li>
                             </ul>
-                            </CardBody></Card></GridItem>
+                            </CardBody></Card>
+                    </GridItem>
                 </Grid>
             </CardBody></CardExpandableContent>
 
