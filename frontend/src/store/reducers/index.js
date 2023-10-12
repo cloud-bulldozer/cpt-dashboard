@@ -1,6 +1,8 @@
 import jobsReducer from "./JobsReducer";
+import graphReducer from "./GraphReducer";
 
 
 export const rootReducer = {
-    'jobs': jobsReducer
+    'jobs': jobsReducer,
+    'graph': graphReducer
 }

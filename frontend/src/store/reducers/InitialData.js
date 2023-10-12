@@ -29,5 +29,10 @@ export const INITIAL_DATA = {
                  {name: "WorkerCount", value: "workerNodesCount"},
                  {name: "StartDate", value: "startDate"},
                  {name: "EndDate", value: "endDate"},
-                 {name: "Status", value: "jobStatus"}]
+                 {name: "Status", value: "jobStatus"}],
+}
+
+export const GRAPH_INITIAL_DATA = {
+    uuid_results: {},
+    graphError: false,
 }

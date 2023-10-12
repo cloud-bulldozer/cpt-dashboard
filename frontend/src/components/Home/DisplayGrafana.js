@@ -2,7 +2,6 @@
 
 import React from 'react';
 import { FaCheck, FaExclamationCircle, FaExclamationTriangle } from "react-icons/fa";
-import { SiApacheairflow } from "react-icons/si";
 import {formatTime} from "../../helpers/Formatters";
 import {SplitView} from "../PatternflyComponents/Split/SplitView";
 import CardView from "../PatternflyComponents/Card/CardView";
@@ -12,7 +11,6 @@ import {Text6} from "../PatternflyComponents/Text/Text";
 
 export function DisplayGrafana({benchmarkConfigs}) {
 
-    const [isExpanded, setExpanded] = React.useState(true)
 
 
     const icons = {
@@ -23,17 +21,10 @@ export function DisplayGrafana({benchmarkConfigs}) {
 
     }
 
-    const onExpand = () => {
-        setExpanded(!isExpanded)
-    };
-
     const {  getGrafanaLink, getTimeFormat, status } = getGrafanaData(benchmarkConfigs)
 
     return (
         <CardView header={"Tasks Ran"}
-                  isExpanded={isExpanded}
-                  onExpand={onExpand}
-                  expandView={true}
                   body={ benchmarkConfigs && <ListView isPlain={true} list_view={
                                       [<SplitView splitValues={[
                                                 icons[status] || status,
