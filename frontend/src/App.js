@@ -11,8 +11,6 @@ import {useDispatch} from "react-redux";
 import HomeView from "./components/HomeView";
 import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
 import {NavBar} from "./components/NavBar/NavBar";
-import JenkinView from "./components/Platform/JenkinView";
-import JobView from "./components/Platform/JobView";
 
 
 export const App = () => {
@@ -39,9 +37,7 @@ export const App = () => {
         >
           <PageSection variant={PageSectionVariants.light} hasOverflowScroll={true} aria-label={"overflow false"}>
               <Switch>
-                  <Route path="/" exact><HomeView /></Route>
-                  <Route path="/jobs" exact><JobView /></Route>
-                  <Route path="/jenkins" exact><JenkinView /></Route>
+                  <Route path="/"><HomeView /></Route>
               </Switch>
           </PageSection>
         </Page>
