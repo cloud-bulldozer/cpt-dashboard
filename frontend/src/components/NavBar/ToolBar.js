@@ -32,12 +32,6 @@ export const ToolBar = () => {
         <ToolbarItem>
           <Link to="/" children={"Home"} style={linkStyle('home')} onClick={()=>setActive("home")}/>
         </ToolbarItem>
-        <ToolbarItem>
-          <Link to="/jobs" children={"Prow"} onClick={()=>setActive("jobs")} style={linkStyle('jobs')} />
-        </ToolbarItem>
-        <ToolbarItem>
-          <Link to="/jenkins" children={"Jenkins"} style={linkStyle('jenkins')} onClick={()=>setActive("jenkins")} />
-        </ToolbarItem>
     </>)
 
     const job_results = useSelector(state => state.jobs)
