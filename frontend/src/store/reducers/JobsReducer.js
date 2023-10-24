@@ -36,13 +36,15 @@ const GetSummary = (api_data) => {
     let success = 0;
     let failure = 0;
     let others = 0;
+    let duration = 0;
     api_data.forEach(item => {
         if(item.jobStatus.toLowerCase() === "success") success++
         else if(item.jobStatus.toLowerCase() === "failure") failure++;
         else others++;
+        duration += parseInt(item.jobDuration) ? parseInt(item.jobDuration) : 0;
     })
     const total = success + failure + others
-    return {success, failure, others, total}
+    return {success, failure, others, total, duration}
 }
 
 

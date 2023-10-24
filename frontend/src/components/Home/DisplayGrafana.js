@@ -7,6 +7,7 @@ import {SplitView} from "../PatternflyComponents/Split/SplitView";
 import CardView from "../PatternflyComponents/Card/CardView";
 import ListView from "../PatternflyComponents/List/ListView";
 import {Text6} from "../PatternflyComponents/Text/Text";
+import { SiApacheairflow } from "react-icons/si";
 
 
 export function DisplayGrafana({benchmarkConfigs}) {
@@ -30,7 +31,8 @@ export function DisplayGrafana({benchmarkConfigs}) {
                                                 icons[status] || status,
                                                 benchmarkConfigs.benchmark,
                                                 `( ${getTimeFormat} )`,
-                                                getGrafanaLink]}
+                                                getGrafanaLink,
+                                                getBuildLink(benchmarkConfigs)]}
                                       />]
                                   }
                   /> || <Text6 value={"No Results"} /> }
@@ -38,6 +40,18 @@ export function DisplayGrafana({benchmarkConfigs}) {
     )
 
 }
+
+const getBuildLink = (benchmarkConfigs) => {
+    var icon = "assets/images/jenkins-icon.svg"
+    if (benchmarkConfigs.ciSystem === "PROW") {
+        icon = "assets/images/prow-icon.png"
+    }
+    return <a href={benchmarkConfigs.build_url != '' && benchmarkConfigs.build_url || benchmarkConfigs.buildUrl} target={"_blank"}>
+    <img src={icon}
+        style={{width:'25px',height:'25px'}} />
+</a>
+}
+
 
 const getGrafanaData = (benchmarkConfigs) => {
     const grafanaURL = "https://grafana.rdu2.scalelab.redhat.com:3000/d/";
@@ -69,13 +83,13 @@ const getGrafanaData = (benchmarkConfigs) => {
                 dataSource = "&var-datasource=QE+Ingress-perf"
                 dashboardURL = dashboardIngress
             }
-        } else if(benchmarkConfigs.ci_system === "JENKINS") {
+        } else if(benchmarkConfigs.ciSystem === "JENKINS") {
             if (benchmarkConfigs.benchmark === "k8s-netperf") {
                 dataSource = "&var-datasource=k8s-netperf"
                 dashboardURL = dashboardNetPerf
             }
             if (benchmarkConfigs.benchmark === "ingress-perf") {
-                dataSource = "&var-datasource=AWS+Pro+-+Ingress+performance+-+nextgen"
+                dataSource = "&var-datasource=QE+Ingress-perf"
                 dashboardURL = dashboardIngress
             }
         }

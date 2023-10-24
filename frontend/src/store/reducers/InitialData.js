@@ -5,6 +5,7 @@ export const INITIAL_DATA = {
     failure: 0,
     total: 0,
     others: 0,
+    duration:0,
     benchmarks: ["All"],
     versions: ["All"],
     workers: ["All"],
