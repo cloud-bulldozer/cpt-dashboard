@@ -51,6 +51,7 @@ export default function InstallCard(props) {
                                 <li><u>Network Type</u>: {config.network_type  && config.network_type || config.networkType}</li>
                                 <li><u>Benchmark Status</u>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
                                 <li><u>Duration</u>: {formatTime(config.job_duration  && config.job_duration || config.jobDuration)}</li>
+                                <li><u>Test ID</u>: {config.uuid}</li>
                             </ul>
 
                             </CardBody></Card></GridItem>
