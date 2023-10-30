@@ -41,7 +41,7 @@ export const fetchJobsData = (startDate = '', endDate='') => async dispatch => {
         dispatch(setWaitForUpdate({waitForUpdate:true}))
     }
     try{
-         let api_data = await fetchAPI(buildUrl)
+        let api_data = await fetchAPI(buildUrl)
         api_data = JSON.parse(api_data)
         if(api_data){
             const results = api_data.results

@@ -39,8 +39,11 @@ export const SidePaneView = () => {
     }, [ ciSystem, platform, benchmark, version, workerCount, networkType, dispatch ])
 
     useEffect(() => {
-        if(startDate && endDate)
-            dispatch(fetchJobsData(startDate, endDate))
+        if(startDate || endDate){
+            let sDate = startDate || job_results.startDate
+            let eDate = endDate || job_results.endDate
+            dispatch(fetchJobsData(sDate, eDate))
+        }
     }, [startDate, endDate, dispatch])
 
 
