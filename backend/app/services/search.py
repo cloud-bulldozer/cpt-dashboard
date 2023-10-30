@@ -41,13 +41,13 @@ class ElasticService:
         else:
             self.es = AsyncElasticsearch(self.url)
 
-    async def post(self, query, indice=None):
+    async def post(self, query, indice=None,size=10000):
         if indice is None:
             indice = self.indice
         return await self.es.search(
             index=indice,
             body=jsonable_encoder(query),
-            size=10000)
+            size=size)
 
     async def close(self):
         await self.es.close()

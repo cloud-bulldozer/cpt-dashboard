@@ -65,7 +65,7 @@ async function getData(uuid) {
     if (hostname == "localhost") {
         var url = "http://localhost:8000/api/v1/"+endpoint+"/"+uuid;
     } else {
-        var url = window.location.protocol + '//' + window.location.hostname + "/api/"+endpoint+"/"+uuid;
+        var url = window.location.protocol + '//' + window.location.hostname + "/api/v1/"+endpoint+"/"+uuid;
     }
     const response = await fetch(url);
     const data = await response.json();
