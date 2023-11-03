@@ -96,7 +96,8 @@ const getGrafanaData = (benchmarkConfigs) => {
         const getGrafanaUrl = grafanaURL+dashboardURL+
                                  "&from="+startDate+"&to="+endDate+
                                  dataSource+"&var-platform="+benchmarkConfigs.platform+
-                                 "&var-uuid="+benchmarkConfigs.uuid
+                                 "&var-uuid="+benchmarkConfigs.uuid+
+                                 "&var-workload="+benchmarkConfigs.benchmark
         getTimeFormat =  status !== "upstream_failed" ?
                                       formatTime(benchmarkConfigs.job_duration  &&
                                                       benchmarkConfigs.job_duration || benchmarkConfigs.jobDuration)
