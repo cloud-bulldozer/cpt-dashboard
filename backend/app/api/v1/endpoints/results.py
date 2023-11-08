@@ -3,25 +3,18 @@ from typing import Dict, Iterable
 
 import httpx
 from fastapi import APIRouter, Request
+from fastapi.param_functions import Query, Path
 
-from app.services.airflow import AirflowService
 from app.services.search import ElasticService
 
 router = APIRouter()
 
-airflow_service = AirflowService()
-
-
-@router.get("/")
-def root(request: Request):
-    return {
-        "url"      : str(request.url),
-        "root_path": request.scope.get('root_path')
-    }
-
-
-@router.get('/api/v1/results/{ci}/{job_id}')
-async def results_for_job(ci: str, job_id: str):
+@router.get('/api/ocm/v1/jobs/{ci}/{job_id}',
+            summary="Returns the details of a specified Job.")
+async def results_for_job(
+                ci: str = Path(..., description="Name of the CI system tha tthe job belongs to.", examples=["PROW", "JENKINS"]),
+                job_id: str = Path(..., description="Unique identifier of the Jon, normally the UUID.", examples=["8b671d0b-8638-4423-b453-cc54b1caf529"]),
+                ):
     query = {
         "query": {
             "query_string": {
