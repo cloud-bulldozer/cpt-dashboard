@@ -44,13 +44,13 @@ export default function InstallCard(props) {
                     <GridItem rowSpan="1">
                         <Card><CardHeader><CardTitle>Cluster Metadata</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Release Binary</u>: {config.cluster_version  && config.cluster_version || config.ocpVersion}</li>
-                                <li><u>Cluster Name</u>: {config.cluster_name && config.cluster_name || config.clusterName}</li>
-                                <li><u>Cluster Type</u>: {config.cluster_type  && config.cluster_type || config.clusterType}</li>
-                                <li><u>Network Type</u>: {config.network_type  && config.network_type || config.networkType}</li>
-                                <li><u>Benchmark Status</u>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
-                                <li><u>Duration</u>: {formatTime(config.job_duration  && config.job_duration || config.jobDuration)}</li>
-                                <li><u>Test ID</u>: {config.uuid}</li>
+                                <li><div class="list-item-key">Release Binary</div>: {config.cluster_version  && config.cluster_version || config.ocpVersion}</li>
+                                <li><div class="list-item-key">Cluster Name</div>: {config.cluster_name && config.cluster_name || config.clusterName}</li>
+                                <li><div class="list-item-key">Cluster Type</div>: {config.cluster_type  && config.cluster_type || config.clusterType}</li>
+                                <li><div class="list-item-key">Network Type</div>: {config.network_type  && config.network_type || config.networkType}</li>
+                                <li><div class="list-item-key">Benchmark Status</div>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
+                                <li><div class="list-item-key">Duration</div>: {formatTime(config.job_duration  && config.job_duration || config.jobDuration)}</li>
+                                <li><div class="list-item-key">Test ID</div>: {config.uuid}</li>
                             </ul>
 
                             </CardBody></Card></GridItem>
@@ -58,18 +58,18 @@ export default function InstallCard(props) {
                     <GridItem span="6">
                         <Card><CardHeader><CardTitle>Node Types</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Master</u>: {config.master_type  && config.master_type || config.masterNodesType}</li>
-                                <li><u>Worker</u>: {config.worker_type  && config.worker_type || config.workerNodesType}</li>
-                                <li><u>Workload</u>: {config.workload_type && config.workload_type || config.benchmark}</li>
-                                <li><u>Infra</u>: {config.infra_type  && config.infra_type || config.infraNodesType}</li>
+                                <li><div class="list-item-key">Master</div>: {config.master_type  && config.master_type || config.masterNodesType}</li>
+                                <li><div class="list-item-key">Worker</div>: {config.worker_type  && config.worker_type || config.workerNodesType}</li>
+                                <li><div class="list-item-key">Workload</div>: {config.workload_type && config.workload_type || config.benchmark}</li>
+                                <li><div class="list-item-key">Infra</div>: {config.infra_type  && config.infra_type || config.infraNodesType}</li>
                             </ul>
                             </CardBody></Card></GridItem><GridItem span="6">
                         <Card><CardHeader><CardTitle>Node Counts</CardTitle></CardHeader>
                             <CardBody><ul>
-                                <li><u>Master</u>: {config.master_count  && config.master_count || config.masterNodesCount}</li>
-                                <li><u>Worker</u>: {config.worker_count  && config.worker_count || config.workerNodesCount}</li>
-                                <li><u>Infra</u>: {config.infra_count  && config.infra_count || config.infraNodesCount}</li>
-                                <li><u>Total Nodes</u>: {config.workload_count  && config.workload_count || config.totalNodesCount}</li>
+                                <li><div class="list-item-key">Master</div>: {config.master_count  && config.master_count || config.masterNodesCount}</li>
+                                <li><div class="list-item-key">Worker</div>: {config.worker_count  && config.worker_count || config.workerNodesCount}</li>
+                                <li><div class="list-item-key">Infra</div>: {config.infra_count  && config.infra_count || config.infraNodesCount}</li>
+                                <li><div class="list-item-key">Total Nodes</div>: {config.workload_count  && config.workload_count || config.totalNodesCount}</li>
                             </ul>
                             </CardBody></Card>
                     </GridItem>
