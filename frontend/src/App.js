@@ -6,11 +6,12 @@ import {
     PageSection,
     PageSectionVariants,
 } from '@patternfly/react-core';
-import {fetchJobsData} from "./store/Actions/ActionCreator";
+import {fetchOCPJobsData} from "./store/Actions/ActionCreator";
 import {useDispatch} from "react-redux";
-import HomeView from "./components/HomeView";
 import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
 import {NavBar} from "./components/NavBar/NavBar";
+import {HomeView} from "./components/Home/HomeView";
+import {OCPHome} from './components/OCP/OCPHome';
 
 
 export const App = () => {
@@ -18,7 +19,7 @@ export const App = () => {
 
     useEffect(() => {
           const fetchData = async () =>{
-              await dispatch(fetchJobsData())
+              await dispatch(fetchOCPJobsData())
           }
           fetchData()
     }, [dispatch])
@@ -37,7 +38,8 @@ export const App = () => {
         >
           <PageSection variant={PageSectionVariants.light} hasOverflowScroll={true} aria-label={"overflow false"}>
               <Switch>
-                  <Route path="/"><HomeView /></Route>
+                  <Route path="/home"><HomeView /></Route>
+                  <Route path="/ocp"><OCPHome /></Route>
               </Switch>
           </PageSection>
         </Page>

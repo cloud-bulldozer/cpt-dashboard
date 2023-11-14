@@ -1,6 +1,6 @@
 
 
-import './css/PlatformView.css';
+import '../css/PlatformView.css';
 import "@patternfly/react-core/dist/styles/base.css";
 import React from 'react';
 import {
@@ -10,12 +10,12 @@ import {
     PageSidebar,
     PageSidebarBody
 } from "@patternfly/react-core";
-import {DataDisplayView} from "./OCP/DataDisplayView";
-import {TopView} from "./OCP/TopView";
-import {SidePaneView} from "./OCP/SidePaneView";
+import {DataDisplayView} from "./DataDisplayView";
+import {TopView} from "./TopView";
+import {SidePaneView} from "./SidePaneView";
 
 
-export default function HomeView() {
+export function OCPHome() {
 
     const sidebar = (
     <PageSidebar theme={"light"}>

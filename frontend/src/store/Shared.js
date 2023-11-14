@@ -6,6 +6,8 @@ export const getUrl = () => {
 }
 
 export const BASE_URL = getUrl()
-export const OCP_JOBS_API_V1 = "/api/ocp/v1/jobs"
 
+export const OCP_JOBS_API_V1 = "/api/ocp/v1/jobs"
 export const OCP_GRAPH_API_V1 = "/api/ocp/v1/graph"
+
+export const CPT_JOBS_API_V1 = "/api/cpt/v1/jobs"

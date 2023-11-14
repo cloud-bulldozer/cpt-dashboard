@@ -15,9 +15,9 @@ export const NavBar = ({fixed=false}) => {
     return <>
         <Masthead>
             <MastheadMain>
-                <MastheadBrand href={"/"}>
+                <MastheadBrand href={"/home"}>
                     <Icon size={"xl"} >
-                        <Brand src={"logo.png"} alt="PatternFly"  />
+                        <Brand src={"logo.png"} alt="CPT-Dashboard"/>
                     </Icon>
                 </MastheadBrand>
             </MastheadMain>

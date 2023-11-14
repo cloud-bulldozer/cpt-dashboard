@@ -1,8 +1,10 @@
-import jobsReducer from "./JobsReducer";
+import ocpJobsReducer from "./OCPJobsReducer";
+import cptJobsReducer from "./CPTJobsReducer";
 import graphReducer from "./GraphReducer";
 
 
 export const rootReducer = {
-    'jobs': jobsReducer,
+    'ocpJobs': ocpJobsReducer,
+    'cptJobs': cptJobsReducer,
     'graph': graphReducer
 }

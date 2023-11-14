@@ -1,5 +1,5 @@
 
-export const INITIAL_DATA = {
+export const OCP_INITIAL_DATA = {
     initialState: true,
     success: 0,
     failure: 0,
@@ -26,11 +26,40 @@ export const INITIAL_DATA = {
     startDate: '',
     endDate: '',
     tableData : [{ name: "Benchmark", value: "benchmark" },
-                 {name:"ReleaseStream", value: "releaseStream"},
-                 {name: "WorkerCount", value: "workerNodesCount"},
-                 {name: "StartDate", value: "startDate"},
-                 {name: "EndDate", value: "endDate"},
-                 {name: "Status", value: "jobStatus"}],
+                {name:"ReleaseStream", value: "releaseStream"},
+                {name: "WorkerCount", value: "workerNodesCount"},
+                {name: "StartDate", value: "startDate"},
+                {name: "EndDate", value: "endDate"},
+                {name: "Status", value: "jobStatus"}],
+}
+
+export const CPT_INITIAL_DATA = {
+    initialState: true,
+    success: 0,
+    failure: 0,
+    total: 0,
+    others: 0,
+    benchmarks: ["All"],
+    products: ["All"],
+    ciSystems: ["All"],
+    statuses: ["All"],
+    selectedCiSystem: "All",
+    selectedProduct: "All",
+    selectedBenchmark: "All",
+    selectedJobStatus: "All",
+    waitForUpdate: false,
+    copyData: [],
+    data: [],
+    updatedTime: 'Loading',
+    error: null,
+    startDate: '',
+    endDate: '',
+    tableData : [{ name: "CI System", value: "ciSystem" },
+                {name:"Product", value: "product"},
+                {name: "Test Name", value: "benchmark"},
+                {name: "StartDate", value: "startDate"},
+                {name: "EndDate", value: "endDate"},
+                {name: "Status", value: "jobStatus"}],
 }
 
 export const GRAPH_INITIAL_DATA = {

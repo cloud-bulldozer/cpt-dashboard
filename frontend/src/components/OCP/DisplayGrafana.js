@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { FaCheck, FaExclamationCircle, FaExclamationTriangle } from "react-icons/fa";
 import {formatTime} from "../../helpers/Formatters";
@@ -7,7 +5,6 @@ import {SplitView} from "../PatternflyComponents/Split/SplitView";
 import CardView from "../PatternflyComponents/Card/CardView";
 import ListView from "../PatternflyComponents/List/ListView";
 import {Text6} from "../PatternflyComponents/Text/Text";
-import { SiApacheairflow } from "react-icons/si";
 
 
 export function DisplayGrafana({benchmarkConfigs}) {

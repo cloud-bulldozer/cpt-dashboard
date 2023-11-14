@@ -4,12 +4,11 @@ import {Text6} from "../PatternflyComponents/Text/Text";
 import {Badge, Page} from "@patternfly/react-core";
 import React from "react";
 import {InnerScrollContainer} from "@patternfly/react-table";
-import {BenchmarkResults} from "./BenchmarkResults";
 
 
 export const DataDisplayView = () => {
 
-    const job_results = useSelector(state => state.ocpJobs)
+    const job_results = useSelector(state => state.cptJobs)
 
     const getRows = () => {
         return job_results.data.map( items => {
@@ -34,7 +33,7 @@ export const DataDisplayView = () => {
                                                              rows={getRows()}
                                                              stickyHeader={true}
                                                              addExpandableRows={true}
-                                                             expandableComponent={BenchmarkResults}
+                                                            //  expandableComponent={BenchmarkResults}
                                                  />}
                 />
           </Page>
