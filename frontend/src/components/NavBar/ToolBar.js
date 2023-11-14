@@ -7,12 +7,12 @@ import {Link} from "react-router-dom";
 
 export const ToolBar = () => {
 
-    const [active, setActive] = useState('home')
+    const [active, setActive] = useState('ocp')
 
     useEffect(()=>{
         const path = window.location.href.split('/')
         let pathName = path[path.length-1]
-        if(pathName==='') pathName='home'
+        if(pathName==='') pathName='ocp'
         setActive(pathName)
     }, [])
 
@@ -30,7 +30,7 @@ export const ToolBar = () => {
 
     const NavItems = (<>
         <ToolbarItem>
-          <Link to="/" children={"Home"} style={linkStyle('home')} onClick={()=>setActive("home")}/>
+          <Link to="/" children={"OCP"} style={linkStyle('ocp')} onClick={()=>setActive("ocp")}/>
         </ToolbarItem>
     </>)
 
@@ -40,7 +40,7 @@ export const ToolBar = () => {
         <Toolbar id="toolbar" isFullHeight={true} isStatic={true}>
             <ToolbarGroup>
                 <ToolbarItem>
-                    <Text4 style={{color: '#FFFFFF'}} value="OCP PerfScale Dashboard" />
+                    <Text4 style={{color: '#FFFFFF'}} value="CPT-Dashboard" />
                 </ToolbarItem>
                 {NavItems}
                 <ToolbarItem align={{ default: 'alignRight' }}>

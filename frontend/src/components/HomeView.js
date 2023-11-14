@@ -1,6 +1,6 @@
 
 
-import './Platform/PlatformView.css';
+import './css/PlatformView.css';
 import "@patternfly/react-core/dist/styles/base.css";
 import React from 'react';
 import {
@@ -10,9 +10,9 @@ import {
     PageSidebar,
     PageSidebarBody
 } from "@patternfly/react-core";
-import {DataDisplayView} from "./Home/DataDisplayView";
-import {TopView} from "./Home/TopView";
-import {SidePaneView} from "./Home/SidePaneView";
+import {DataDisplayView} from "./OCP/DataDisplayView";
+import {TopView} from "./OCP/TopView";
+import {SidePaneView} from "./OCP/SidePaneView";
 
 
 export default function HomeView() {

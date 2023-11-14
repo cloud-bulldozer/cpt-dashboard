@@ -1,5 +1,5 @@
 
-import {BASE_URL, GRAPH_API_V1, JOBS_API_V2} from "../Shared";
+import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1} from "../Shared";
 import axios from "axios";
 import {
     errorCall,
@@ -18,7 +18,7 @@ export const fetchAPI = async (url, requestOptions = {}) => {
 
 export const fetchGraphData =  (uuid) => async dispatch =>{
     try {
-        let buildUrl = `${BASE_URL}${GRAPH_API_V1}/${uuid}`
+        let buildUrl = `${BASE_URL}${OCP_GRAPH_API_V1}/${uuid}`
         const api_data = await fetchAPI(buildUrl)
         if(api_data) dispatch(getUuidResults({ [uuid]: api_data }))
     }
@@ -35,7 +35,7 @@ export const fetchGraphData =  (uuid) => async dispatch =>{
 }
 
 export const fetchJobsData = (startDate = '', endDate='') => async dispatch => {
-    let buildUrl = `${BASE_URL}${JOBS_API_V2}`
+    let buildUrl = `${BASE_URL}${OCP_JOBS_API_V1}`
     if(startDate !== '' && endDate !== '') {
         buildUrl += `?start_date=${startDate}&end_date=${endDate}`
         dispatch(setWaitForUpdate({waitForUpdate:true}))

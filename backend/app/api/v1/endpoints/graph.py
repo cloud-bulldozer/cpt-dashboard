@@ -8,11 +8,12 @@ from json import loads
 import pandas as pd
 import datetime
 from app.services.search import ElasticService
+
 router = APIRouter()
 
 """
 """
-@router.get('/api/ocm/v1/graph/trend/{version}/{count}/{benchmark}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}')
 async def trend(benchmark: str,count: int,version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -53,7 +54,7 @@ async def trend(benchmark: str,count: int,version: str):
 diff_cpu - Will accept the version, prev_version , count, benchmark and namespace to diff trend CPU
 data.
 """
-@router.get('/api/ocm/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
 async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, prev_version: str):
     aTrend = await trend_cpu(namespace,benchmark,count,version)
     bTrend = await trend_cpu(namespace,benchmark,count,prev_version)
@@ -63,7 +64,7 @@ async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, pre
 trend_cpu - Will accept the version, count, benchmark and namespace to trend CPU
 data.
 """
-@router.get('/api/ocm/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
 async def trend_cpu(namespace: str, benchmark: str, count: int, version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -108,7 +109,7 @@ def parseCPUResults(data: dict):
         res.append(dat)
     return res
 
-@router.get('/api/ocm/v1/graph/{uuid}')
+@router.get('/api/ocp/v1/graph/{uuid}')
 async def graph(uuid: str):
     index = ""
     meta = await getMetadata(uuid)

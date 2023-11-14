@@ -2,7 +2,7 @@
 import {Table, Thead, Tr, Th, Tbody, Td, ExpandableRowContent} from '@patternfly/react-table';
 import {Puff} from "react-loading-icons";
 import React, {useEffect, useState} from "react";
-import {BenchmarkResults} from "../../Home/BenchmarkResults";
+import {BenchmarkResults} from "../../OCP/BenchmarkResults";
 
 
 export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false,

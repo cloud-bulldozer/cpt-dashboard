@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
 
-from app.api.api import ocm
+from app.api.api import ocp
 
 
 class ORJSONResponse(JSONResponse):
@@ -23,7 +23,7 @@ origins = [
 app = FastAPI(default_response_class=ORJSONResponse,
               docs_url="/docs",
               redoc_url=None,
-              title="Dashboard API Documentation",
+              title="CPT-Dashboard API Documentation",
               version="0.0.1",
               contact={
                 "name": "OCP PerfScale Jedi",
@@ -53,4 +53,4 @@ async def some_middleware(request: Request, call_next):
         request.scope['headers'] = [(k, v) for k, v in headers.items()]
     return await call_next(request)
 
-app.include_router(ocm)
+app.include_router(ocp)

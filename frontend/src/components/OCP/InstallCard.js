@@ -2,10 +2,9 @@ import React from 'react';
 import { Card, CardTitle, CardBody, CardFooter, CardHeader, CardExpandableContent } from '@patternfly/react-core';
 import { Grid, GridItem } from '@patternfly/react-core';
 import { Spinner } from '@patternfly/react-core';
-import { formatTime } from '../../../../helpers/Formatters'
+import { formatTime } from '../../helpers/Formatters'
 import { FaCheck, FaExclamationCircle,  FaExclamationTriangle } from "react-icons/fa";
-import { SiApacheairflow } from "react-icons/si";
-import {DisplayGrafana} from "../../../Home/DisplayGrafana";
+import { DisplayGrafana } from "./DisplayGrafana";
 
 
 export default function InstallCard(props) {

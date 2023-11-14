@@ -74,7 +74,7 @@ response_example ={
 
 unprocessable_example = {"error": "invalid date format, start_date must be less than end_date"}
 
-@router.get('/api/ocm/v1/jobs',
+@router.get('/api/ocp/v1/jobs',
             summary="Returns a job list",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
@@ -95,7 +95,7 @@ unprocessable_example = {"error": "invalid date format, start_date must be less 
                     }
                 }
             }
-        })
+        },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),
                 end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
                 pretty: bool = Query(False, description="Output contet in pretty format.")):
