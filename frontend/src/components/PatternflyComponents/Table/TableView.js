@@ -7,13 +7,6 @@ import {BenchmarkResults} from "../../OCP/BenchmarkResults";
 
 export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false,
                               addExpandableRows = false, expandableComponent: ExpandableComponent,  ...props  }) => {
-    /*
-        rows: {
-        dataset: {} // Complete data object
-        tableRows: {} // Table values that need to be displayed
-        }
-    */
-
 
     const [expand, setExpand] = useState(
         Object.assign({}, ...Object.keys(rows).map( (items, idx) => ({[idx]: false})))

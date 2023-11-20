@@ -2,7 +2,7 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
-from ..commons.common import getData
+from ...commons.ocp import getData
 from fastapi.param_functions import Query
 
 router = APIRouter()

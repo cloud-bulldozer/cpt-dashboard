@@ -15,12 +15,10 @@ import {
 } from "../reducers/CPTJobsReducer";
 import {getUuidResults, setGraphError} from "../reducers/GraphReducer";
 
-
 export const fetchAPI = async (url, requestOptions = {}) => {
     const response = await axios(url, requestOptions)
     return response.data
 }
-
 
 export const fetchGraphData =  (uuid) => async dispatch =>{
     try {
@@ -65,7 +63,6 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
                 }))
                 await dispatch(updateOCPMetaData({data: results}))
             }
-
         }
     }
     catch (e) {
@@ -78,9 +75,7 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
             console.log(error)
         }
         dispatch(setWaitForOCPUpdate({waitForUpdate:false}))
-
     }
-
 }
 
 export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch => {
@@ -95,20 +90,17 @@ export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch =
         if(api_data){
             const results = api_data.results
             if(results){
-                const benchmarks = GetBenchmarks(results)
-                const versions = GetVersions(results)
-                const platforms = GetPlatforms(results)
-                const workers = GetWorkers(results)
-                const networkTypes = GetNetworkTypes(results)
+                const testNames = GetTestNames(results)
+                const products = GetProducts(results)
                 const ciSystems = GetCiSystems(results)
+                const jobStatuses = GetStatuses(results)
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getCPTJobsData({
-                    data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
-                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                    data: results, testNames, products, waitForUpdate: false,
+                    jobStatuses, updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
                 }))
                 await dispatch(updateCPTMetaData({data: results}))
             }
-
         }
     }
     catch (e) {
@@ -121,11 +113,8 @@ export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch =
             console.log(error)
         }
         dispatch(setWaitForCPTUpdate({waitForUpdate:false}))
-
     }
-
 }
-
 
 const GetCiSystems = (api_data) => {
     return Array.from(new Set(api_data.map(item => {
@@ -145,7 +134,6 @@ export const GetBenchmarks = (api_data) => {
     }))).sort()
 }
 
-
 const GetPlatforms = (api_data) => {
     return Array.from(new Set(api_data.map(item => item.platform.toUpperCase().trim()))).sort()
 }
@@ -156,4 +144,19 @@ const GetWorkers = (api_data) => {
 
 const GetNetworkTypes = (api_data) => {
     return Array.from(new Set(api_data.map(item => item.networkType.toUpperCase().trim()))).sort()
+}
+
+const GetProducts = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.product.toUpperCase().trim()))).sort()
+}
+
+const GetStatuses = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.jobStatus.toUpperCase().trim()))).sort()
+}
+
+const GetTestNames = (api_data) => {
+    return Array.from(new Set(api_data.map(item => {
+        if(item.testName === null) return ''
+        else return item.testName.toLowerCase().trim()
+    }))).sort()
 }

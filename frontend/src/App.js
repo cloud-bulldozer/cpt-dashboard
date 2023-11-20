@@ -6,7 +6,7 @@ import {
     PageSection,
     PageSectionVariants,
 } from '@patternfly/react-core';
-import {fetchOCPJobsData} from "./store/Actions/ActionCreator";
+import {fetchOCPJobsData, fetchCPTJobsData} from "./store/Actions/ActionCreator";
 import {useDispatch} from "react-redux";
 import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
 import {NavBar} from "./components/NavBar/NavBar";
@@ -20,6 +20,7 @@ export const App = () => {
     useEffect(() => {
           const fetchData = async () =>{
               await dispatch(fetchOCPJobsData())
+              await dispatch(fetchCPTJobsData())
           }
           fetchData()
     }, [dispatch])

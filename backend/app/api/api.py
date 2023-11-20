@@ -1,12 +1,16 @@
 from fastapi import APIRouter
 
-from app.api.v1.endpoints import results
-from app.api.v1.endpoints import jobs
-from app.api.v1.endpoints import graph
+from app.api.v1.endpoints.ocp import results
+from app.api.v1.endpoints.ocp import ocpJobs
+from app.api.v1.endpoints.ocp import graph
+from app.api.v1.endpoints.cpt import cptJobs
 
-ocp = APIRouter()
+router = APIRouter()
 
 # OCP endopoints
-ocp.include_router(jobs.router, tags=['jobs'])
-ocp.include_router(results.router, tags=['jobs'])
-ocp.include_router(graph.router, tags=['graphs'])
+router.include_router(ocpJobs.router, tags=['ocp'])
+router.include_router(results.router, tags=['ocp'])
+router.include_router(graph.router, tags=['ocp.graphs'])
+
+# CPT endopoints
+router.include_router(cptJobs.router, tags=['cpt'])

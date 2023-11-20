@@ -31,9 +31,9 @@ export const SidePaneView = () => {
 
     const stackDetails = [
         {name: "CiSystem", onChange: setCiSystem, selectedValue: ciSystem, options: job_results.ciSystems},
-        {name: "Product", onChange: setProduct, selectedValue: product, options: ["OCP", "HybridCloudPlatforms"]},
-        {name: "Test Name", onChange: setBenchmark, selectedValue: benchmark, options: job_results.benchmarks },
-        {name: "Job Status", onChange: setJobStatus, selectedValue: jobStatus, options: ["Success", "Failure", "Other"] },
+        {name: "Product", onChange: setProduct, selectedValue: product, options: job_results.products},
+        {name: "Test Name", onChange: setBenchmark, selectedValue: benchmark, options: job_results.testNames },
+        {name: "Job Status", onChange: setJobStatus, selectedValue: jobStatus, options: job_results.jobStatuses },
     ]
 
     useEffect( ()=>{

@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
 
-from app.api.api import ocp
+from app.api.api import router
 
 
 class ORJSONResponse(JSONResponse):
@@ -53,4 +53,4 @@ async def some_middleware(request: Request, call_next):
         request.scope['headers'] = [(k, v) for k, v in headers.items()]
     return await call_next(request)
 
-app.include_router(ocp)
+app.include_router(router)
