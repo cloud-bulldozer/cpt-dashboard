@@ -28,7 +28,7 @@ async def results_for_job(
     if ci == "AIRFLOW":
         airflow = True
 
-    es = ElasticService(airflow=airflow)
+    es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query)
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]

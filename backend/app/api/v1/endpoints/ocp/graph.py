@@ -214,7 +214,7 @@ async def jobSummary(uuids: list):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -315,7 +315,7 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     runs = await es.post(query,size=0)
     await es.close()
     return runs
@@ -340,7 +340,7 @@ async def getBurnerResults(uuid: str, uuids: list, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -360,7 +360,7 @@ async def getResults(uuid: str, uuids: list, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -410,7 +410,7 @@ async def getMatchRuns(meta: dict, workerCount: False):
         }
 
     print(query)
-    es = ElasticService(airflow=False)
+    es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -430,7 +430,7 @@ async def getMetadata(uuid: str) :
         }
     }
     print(query)
-    es = ElasticService(airflow=False)
+    es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query)
     await es.close()
     meta = [item['_source'] for item in response["hits"]["hits"]]
