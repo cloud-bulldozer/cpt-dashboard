@@ -15,10 +15,11 @@ const getFilteredData = (data, selectedValue, keyValue) => {
     return data.filter(item => equalIgnoreCase(item[keyValue], selectedValue) || equalIgnoreCase(selectedValue, 'all') )
 }
 
-const GetUpdatedData = (data, testName, product, ciSystem, jobStatus) => {
+const GetUpdatedData = (data, testName, product, ciSystem, jobStatus, releaseStream) => {
     const filterValues = {
         "testName": testName, "product": product,
         "ciSystem": ciSystem, "jobStatus": jobStatus,
+        "releaseStream": releaseStream,
     }
     let filteredData = data
     for (let [keyName, value] of Object.entries(filterValues))
@@ -55,6 +56,7 @@ const jobsSlice = createSlice({
             state.products = ["All", ...action.payload.products]
             state.ciSystems = ["All", ...action.payload.ciSystems]
             state.jobStatuses = ["All", ...action.payload.jobStatuses]
+            state.releaseStreams = ["All", ...action.payload.releaseStreams]
             state.waitForUpdate = action.payload.waitForUpdate
             state.updatedTime = action.payload.updatedTime
             state.error = null
@@ -63,17 +65,18 @@ const jobsSlice = createSlice({
             state.endDate = action.payload.endDate
         },
         updateCPTDataFilter: (state, action) => {
-            const {ciSystem, testName, product, jobStatus} = action.payload
+            const {ciSystem, testName, product, jobStatus, releaseStream} = action.payload
             state.selectedTestName = testName
             state.selectedProduct = product
             state.selectedCiSystem = ciSystem
             state.selectedJobStatus = jobStatus
-            state.data = GetUpdatedData(original(state.copyData), testName, product, ciSystem, jobStatus)
+            state.selectedReleaseStream = releaseStream
+            state.data = GetUpdatedData(original(state.copyData), testName, product, ciSystem, jobStatus, releaseStream)
             Object.assign(state,  GetSummary(state.data))
         },
         updateCPTMetaData: (state, action) => {
             state.data = GetUpdatedData(action.payload.data, state.selectedTestName, state.selectedProduct,
-                state.selectedCiSystem, state.selectedJobStatus)
+                state.selectedCiSystem, state.selectedJobStatus, state.selectedReleaseStream)
             Object.assign(state,  GetSummary(state.data))
         },
         setWaitForCPTUpdate: (state, action) => {

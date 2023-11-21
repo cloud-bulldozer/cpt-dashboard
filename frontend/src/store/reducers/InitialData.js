@@ -43,10 +43,12 @@ export const CPT_INITIAL_DATA = {
     products: ["All"],
     ciSystems: ["All"],
     statuses: ["All"],
+    releaseStreams: ["All"],
     selectedCiSystem: "All",
     selectedProduct: "All",
     selectedTestName: "All",
     selectedJobStatus: "All",
+    selectedReleaseStream: "All",
     waitForUpdate: false,
     copyData: [],
     data: [],
@@ -61,7 +63,7 @@ export const CPT_INITIAL_DATA = {
                 {name: "Release Stream", value: "releaseStream"},
                 {name: "Start Date", value: "startDate"},
                 {name: "End Date", value: "endDate"},
-                {name: "Build URL", value: "buildURL"},
+                {name: "Build URL", value: "buildUrl"},
                 {name: "Status", value: "jobStatus"},],
 }
 

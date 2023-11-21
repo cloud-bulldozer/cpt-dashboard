@@ -94,10 +94,11 @@ export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch =
                 const products = GetProducts(results)
                 const ciSystems = GetCiSystems(results)
                 const jobStatuses = GetStatuses(results)
+                const releaseStreams = GetReleaseStreams(results)
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getCPTJobsData({
                     data: results, testNames, products, waitForUpdate: false,
-                    jobStatuses, updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                    jobStatuses, releaseStreams, updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
                 }))
                 await dispatch(updateCPTMetaData({data: results}))
             }
@@ -152,6 +153,10 @@ const GetProducts = (api_data) => {
 
 const GetStatuses = (api_data) => {
     return Array.from(new Set(api_data.map(item => item.jobStatus.toUpperCase().trim()))).sort()
+}
+
+const GetReleaseStreams = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.releaseStream.toUpperCase().trim()))).sort()
 }
 
 const GetTestNames = (api_data) => {

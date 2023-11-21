@@ -1,7 +1,7 @@
 import {useSelector} from "react-redux";
 import {TableView} from "../PatternflyComponents/Table/TableView";
 import {Text6} from "../PatternflyComponents/Text/Text";
-import {Badge, Page, Text} from "@patternfly/react-core";
+import {Badge, Page} from "@patternfly/react-core";
 import React from "react";
 import {InnerScrollContainer} from "@patternfly/react-table";
 
@@ -21,7 +21,10 @@ export const DataDisplayView = () => {
                     else
                         return <Badge style={{backgroundColor: '#FFEA6C'}} children={items[value.value]}/>
                 if(value.name === 'Build URL')
-                    return <Text href={items[value.value]}>Build Job</Text>
+                    return <a href={items[value.value]} target={"_blank"}>Job
+                            <img src="assets/images/fa-external-link-alt.svg"
+                                style={{width:'17px',height:'17px', 'margin-inline-start':'5px'}} />
+                            </a>
                 return <Text6 value={items[value.value]}/>
             })
             return {dataset: items, tableRows}
