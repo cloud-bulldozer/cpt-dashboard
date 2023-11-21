@@ -1,7 +1,20 @@
 from ....commons.ocp import getData
 from datetime import date
 
-
+################################################################
+# This will return a DataFrame from OCP required by the CPT
+#  endpoint, it contians the following columns:
+#   "ciSystem"
+#   "uuid"
+#   "releaseStream"
+#   "jobStatus"
+#   "buildUrl"
+#   "startDate"
+#   "endDate"
+#   "product"
+#   "version"
+#   "testName"
+################################################################
 async def ocpMapper(start_datetime: date, end_datetime: date):
     df = await getData(start_datetime, end_datetime)
     df.insert(len(df.columns), "product", "ocp")
