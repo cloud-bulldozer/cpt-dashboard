@@ -3,6 +3,7 @@ from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from ...commons.ocp import getData
+from ...commons import responses
 from fastapi.param_functions import Query
 
 router = APIRouter()
@@ -81,20 +82,8 @@ unprocessable_example = {"error": "invalid date format, start_date must be less 
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
             responses={
-            200: {
-                "content": {
-                    "application/json": {
-                        "example": response_example,
-                    }
-                },
-            },
-            422: {
-                "content": {
-                    "application/json": {
-                        "example": unprocessable_example
-                    }
-                }
-            }
+                200: responses.response_200(response_example),
+                422: responses.response_422(),
         },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),
                 end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
