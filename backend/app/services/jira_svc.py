@@ -13,3 +13,11 @@ class JiraService:
             url=self.url,
             access_token=self.pat
         )
+
+    def jql(self, query: str, fields="*all", expand=None, validate_query=None):
+        return self.svc.jql(
+            jql=query,
+            fields=fields,
+            expand=expand,
+            validate_query=validate_query
+        )
