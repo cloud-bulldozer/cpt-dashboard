@@ -1,5 +1,3 @@
-
-
 import React from 'react';
 import { FaCheck, FaExclamationCircle, FaExclamationTriangle } from "react-icons/fa";
 import {formatTime} from "../../helpers/Formatters";
@@ -7,7 +5,6 @@ import {SplitView} from "../PatternflyComponents/Split/SplitView";
 import CardView from "../PatternflyComponents/Card/CardView";
 import ListView from "../PatternflyComponents/List/ListView";
 import {Text6} from "../PatternflyComponents/Text/Text";
-import { SiApacheairflow } from "react-icons/si";
 
 
 export function DisplayGrafana({benchmarkConfigs}) {
@@ -56,7 +53,7 @@ const getBuildLink = (benchmarkConfigs) => {
 const getGrafanaData = (benchmarkConfigs) => {
     const grafanaURL = "https://grafana.rdu2.scalelab.redhat.com:3000/d/";
     const dashboardKubeBurner = "9qdKt3K4z/kube-burner-report-ocp-wrapper?orgId=1"
-    const dashboardIngress = "nlAhmRyVk/ingress-perf?orgId=1&var-termination=edge&" +
+    const dashboardIngress = "d6105ff8-bc26-4d64-951e-56da771b703d/ingress-perf?orgId=1&var-termination=edge&" +
                                     "var-termination=http&var-termination=passthrough&" +
                                     "var-termination=reencrypt&var-latency_metric=p99_lat_us" +
                                     "&var-compare_by=uuid.keyword"

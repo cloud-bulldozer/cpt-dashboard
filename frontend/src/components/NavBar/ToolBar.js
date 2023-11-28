@@ -7,12 +7,12 @@ import {Link} from "react-router-dom";
 
 export const ToolBar = () => {
 
-    const [active, setActive] = useState('home')
+    const [active, setActive] = useState('/home')
 
     useEffect(()=>{
         const path = window.location.href.split('/')
         let pathName = path[path.length-1]
-        if(pathName==='') pathName='home'
+        if(pathName==='') pathName='/home'
         setActive(pathName)
     }, [])
 
@@ -23,24 +23,26 @@ export const ToolBar = () => {
             styles['borderBottom'] = '2px solid red'
         }
         return styles
-
     }
 
 
 
     const NavItems = (<>
         <ToolbarItem>
-          <Link to="/" children={"Home"} style={linkStyle('home')} onClick={()=>setActive("home")}/>
+          <Link to="/home" children={"Home"} style={linkStyle('/home')} onClick={()=>setActive("/home")}/>
+        </ToolbarItem>
+        <ToolbarItem>
+          <Link to="/ocp" children={"OCP"} style={linkStyle('/ocp')} onClick={()=>setActive("/ocp")}/>
         </ToolbarItem>
     </>)
 
-    const job_results = useSelector(state => state.jobs)
+    const job_results = useSelector(state => state.ocpJobs)
 
     return <>
         <Toolbar id="toolbar" isFullHeight={true} isStatic={true}>
             <ToolbarGroup>
                 <ToolbarItem>
-                    <Text4 style={{color: '#FFFFFF'}} value="OCP PerfScale Dashboard" />
+                    <Text4 style={{color: '#FFFFFF'}} value="CPT-Dashboard" />
                 </ToolbarItem>
                 {NavItems}
                 <ToolbarItem align={{ default: 'alignRight' }}>

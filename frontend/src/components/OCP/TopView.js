@@ -4,6 +4,7 @@ import {
 } from "@patternfly/react-core";
 import CardView from "../PatternflyComponents/Card/CardView";
 import {Text4} from "../PatternflyComponents/Text/Text";
+import { formatTime } from '../../helpers/Formatters'
 import React from "react";
 import { useSelector } from "react-redux";
 import {Puff} from "react-loading-icons";
@@ -11,10 +12,10 @@ import {Puff} from "react-loading-icons";
 
 export const TopView = () => {
 
-    const job_results = useSelector(state => state.cptJobs)
+    const job_results = useSelector(state => state.ocpJobs)
 
-    const cardBody = [job_results.total, job_results.success, job_results.failure, job_results.others]
-    const cardHeader= ["No. Jobs", "Success", "Failure", "Others"]
+    const cardBody = [job_results.total, job_results.success, job_results.failure, job_results.others, job_results.duration]
+    const cardHeader= ["No. Jobs", "Success", "Failure", "Others", "Duration Running"]
 
 
 
@@ -25,7 +26,7 @@ export const TopView = () => {
                         <GridItem key={index}>
                             <CardView initialState={job_results.initialState}
                                       header={<Text4 value={<span>{item} {job_results.waitForUpdate && <Puff height={12} stroke="#0000FF" strokeOpacity={.125}/>}</span>} />}
-                                      body={ cardBody[index] } />
+                                      body={ item === "Duration Running" ? formatTime(cardBody[index]) : cardBody[index] } />
                         </GridItem> )
             }
         </Grid>

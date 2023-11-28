@@ -8,11 +8,12 @@ from json import loads
 import pandas as pd
 import datetime
 from app.services.search import ElasticService
+
 router = APIRouter()
 
 """
 """
-@router.get('/api/v1/graph/trend/{version}/{count}/{benchmark}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}')
 async def trend(benchmark: str,count: int,version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -53,7 +54,7 @@ async def trend(benchmark: str,count: int,version: str):
 diff_cpu - Will accept the version, prev_version , count, benchmark and namespace to diff trend CPU
 data.
 """
-@router.get('/api/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
 async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, prev_version: str):
     aTrend = await trend_cpu(namespace,benchmark,count,version)
     bTrend = await trend_cpu(namespace,benchmark,count,prev_version)
@@ -63,7 +64,7 @@ async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, pre
 trend_cpu - Will accept the version, count, benchmark and namespace to trend CPU
 data.
 """
-@router.get('/api/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
 async def trend_cpu(namespace: str, benchmark: str, count: int, version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -108,7 +109,7 @@ def parseCPUResults(data: dict):
         res.append(dat)
     return res
 
-@router.get('/api/v1/graph/{uuid}')
+@router.get('/api/ocp/v1/graph/{uuid}')
 async def graph(uuid: str):
     index = ""
     meta = await getMetadata(uuid)
@@ -213,7 +214,7 @@ async def jobSummary(uuids: list):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -314,7 +315,7 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     runs = await es.post(query,size=0)
     await es.close()
     return runs
@@ -339,7 +340,7 @@ async def getBurnerResults(uuid: str, uuids: list, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -359,7 +360,7 @@ async def getResults(uuid: str, uuids: list, index: str ):
         }
     }
     print(query)
-    es = ElasticService(airflow=False,index=index)
+    es = ElasticService(configpath="ocp.elasticsearch",index=index)
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -409,7 +410,7 @@ async def getMatchRuns(meta: dict, workerCount: False):
         }
 
     print(query)
-    es = ElasticService(airflow=False)
+    es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query)
     await es.close()
     runs = [item['_source'] for item in response["hits"]["hits"]]
@@ -429,7 +430,7 @@ async def getMetadata(uuid: str) :
         }
     }
     print(query)
-    es = ElasticService(airflow=False)
+    es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query)
     await es.close()
     meta = [item['_source'] for item in response["hits"]["hits"]]

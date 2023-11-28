@@ -9,7 +9,7 @@
 * pipenv
 
 Add `app` directory as a module that can be found by the Python importer.
-  
+
 ```shell
 export PYTHONPATH=$PWD
 ```

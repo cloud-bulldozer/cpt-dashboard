@@ -1,6 +1,6 @@
 
 import {createSlice, original} from "@reduxjs/toolkit";
-import {INITIAL_DATA} from "./InitialData";
+import {OCP_INITIAL_DATA} from "./InitialData";
 
 
 const equalIgnoreCase = (value1 , value2, ...args) => {
@@ -10,8 +10,6 @@ const equalIgnoreCase = (value1 , value2, ...args) => {
         return response
     }
     return value1 === value2;
-
-
 }
 
 
@@ -50,12 +48,11 @@ const GetSummary = (api_data) => {
 
 const jobsSlice = createSlice({
     initialState: {
-        ...INITIAL_DATA,
-
+        ...OCP_INITIAL_DATA,
     },
-    name: 'jenkins',
+    name: 'ocpES',
     reducers: {
-        getJobsData: (state, action) => {
+        getOCPJobsData: (state, action) => {
             state.initialState = false
             state.copyData = action.payload.data
             state.data = action.payload.data
@@ -72,7 +69,7 @@ const jobsSlice = createSlice({
             state.startDate = action.payload.startDate
             state.endDate = action.payload.endDate
         },
-        updateDataFilter: (state, action) => {
+        updateOCPDataFilter: (state, action) => {
             const {ciSystem, platform, benchmark, version, workerCount, networkType} = action.payload
             state.selectedBenchmark = benchmark
             state.selectedVersion = version
@@ -83,24 +80,24 @@ const jobsSlice = createSlice({
             state.data = GetUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, networkType, ciSystem)
             Object.assign(state,  GetSummary(state.data))
         },
-        updateMetaData: (state, action) => {
+        updateOCPMetaData: (state, action) => {
             state.data = GetUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
                 state.selectedVersion, state.selectedWorkerCount, state.selectedNetworkType, state.selectedCiSystem)
             Object.assign(state,  GetSummary(state.data))
         },
-        setWaitForUpdate: (state, action) => {
+        setWaitForOCPUpdate: (state, action) => {
             state.waitForUpdate = action.payload.waitForUpdate
         },
-        errorCall: (state, action) => {
+        errorOCPCall: (state, action) => {
             state.error = action.payload.error
         }
     }
 })
 export const {
-    getJobsData,
-    updateDataFilter,
-    setWaitForUpdate,
-    updateMetaData,
-    errorCall,
+    getOCPJobsData,
+    updateOCPDataFilter,
+    updateOCPMetaData,
+    setWaitForOCPUpdate,
+    errorOCPCall,
 } = jobsSlice.actions
 export default jobsSlice.reducer

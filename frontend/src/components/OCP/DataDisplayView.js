@@ -4,11 +4,12 @@ import {Text6} from "../PatternflyComponents/Text/Text";
 import {Badge, Page} from "@patternfly/react-core";
 import React from "react";
 import {InnerScrollContainer} from "@patternfly/react-table";
+import {BenchmarkResults} from "./BenchmarkResults";
 
 
 export const DataDisplayView = () => {
 
-    const job_results = useSelector(state => state.cptJobs)
+    const job_results = useSelector(state => state.ocpJobs)
 
     const getRows = () => {
         return job_results.data.map( items => {
@@ -20,11 +21,6 @@ export const DataDisplayView = () => {
                         return <Badge style={{backgroundColor: '#ff0000'}} children={items[value.value]}/>
                     else
                         return <Badge style={{backgroundColor: '#FFEA6C'}} children={items[value.value]}/>
-                if(value.name === 'Build URL')
-                    return <a href={items[value.value]} target={"_blank"}>Job
-                            <img src="assets/images/fa-external-link-alt.svg"
-                                style={{width:'17px',height:'17px', 'margin-inline-start':'5px'}} />
-                            </a>
                 return <Text6 value={items[value.value]}/>
             })
             return {dataset: items, tableRows}
@@ -37,7 +33,8 @@ export const DataDisplayView = () => {
                                                              columns={getColumnNames()}
                                                              rows={getRows()}
                                                              stickyHeader={true}
-                                                             addExpandableRows={false}
+                                                             addExpandableRows={true}
+                                                             expandableComponent={BenchmarkResults}
                                                  />}
                 />
           </Page>

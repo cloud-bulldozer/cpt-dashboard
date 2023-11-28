@@ -1,5 +1,5 @@
 import {Grid, GridItem} from "@patternfly/react-core";
-import InstallCard from "../Platform/Table/Cards/Install";
+import InstallCard from "./InstallCard";
 import React from "react";
 import {DisplayGraph} from "./DisplayGraph";
 
