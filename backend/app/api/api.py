@@ -4,6 +4,7 @@ from app.api.v1.endpoints.ocp import results
 from app.api.v1.endpoints.ocp import ocpJobs
 from app.api.v1.endpoints.ocp import graph
 from app.api.v1.endpoints.cpt import cptJobs
+from app.api.v1.endpoints.cpt import jira
 
 router = APIRouter()
 
@@ -14,3 +15,5 @@ router.include_router(graph.router, tags=['ocp.graphs'])
 
 # CPT endopoints
 router.include_router(cptJobs.router, tags=['cpt'])
+router.include_router(jira.router, tags=['cpt.jira'])
+
