@@ -1,6 +1,7 @@
 from ....commons.ocp import getData
 from datetime import date
 
+
 ################################################################
 # This will return a DataFrame from OCP required by the CPT
 #  endpoint, it contians the following columns:
@@ -27,10 +28,12 @@ async def ocpMapper(start_datetime: date, end_datetime: date):
 
 def dropColumns(df):
     df = df.drop(columns=['shortVersion', 'benchmark', 'platform', 'clusterType', 'masterNodesCount',
-                            'workerNodesCount', 'infraNodesCount', 'masterNodesType', 'workerNodesType',
-                            'infraNodesType', 'totalNodesCount', 'clusterName', 'ocpVersion', 'networkType',
-                            'buildTag', 'upstreamJob', 'upstreamJobBuild', 'executionDate', 'jobDuration', 'timestamp'])
+                          'workerNodesCount', 'infraNodesCount', 'masterNodesType', 'workerNodesType',
+                          'infraNodesType', 'totalNodesCount', 'clusterName', 'ocpVersion', 'networkType',
+                          'buildTag', 'upstreamJob', 'upstreamJobBuild', 'executionDate', 'jobDuration',
+                          'timestamp', 'jobType', 'isRehearse'])
     return df
+
 
 def getReleaseStream(row):
     if row["releaseStream"].__contains__("fast"):

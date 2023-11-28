@@ -57,10 +57,12 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
                 const workers = GetWorkers(results)
                 const networkTypes = GetNetworkTypes(results)
                 const ciSystems = GetCiSystems(results)
+                const jobTypes = GetJobType(results)
+                const rehearses = ["TRUE", "FALSE"]
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getOCPJobsData({
                     data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
-                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                    updatedTime, ciSystems, jobTypes, rehearses, startDate: api_data.startDate, endDate: api_data.endDate
                 }))
                 await dispatch(updateOCPMetaData({data: results}))
             }
@@ -166,4 +168,8 @@ const GetTestNames = (api_data) => {
         if(item.testName === null) return ''
         else return item.testName.toLowerCase().trim()
     }))).sort()
+}
+
+const GetJobType = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.jobType.toUpperCase().trim()))).sort()
 }
