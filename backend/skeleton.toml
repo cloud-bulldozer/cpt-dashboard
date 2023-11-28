@@ -7,3 +7,5 @@ password=
 [ocp-server]
 port=8000
 
+[jira]
+host_url=
