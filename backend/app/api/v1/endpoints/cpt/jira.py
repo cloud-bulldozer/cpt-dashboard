@@ -1,4 +1,4 @@
-from fastapi import Response, APIRouter, Query
+from fastapi import APIRouter, Query
 from app.services.jira_svc import JiraService
 
 router = APIRouter()
@@ -8,7 +8,7 @@ router = APIRouter()
     summary="Query Jira Issues",
 )
 async def query(
-        q: Query = Query(None, description="Jira query language string")
+        q: str = Query(None, description="Jira query language string")
 ):
     jira = JiraService()
     return jira.jql(q)
