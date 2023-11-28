@@ -9,7 +9,7 @@
 Create a configuration file, named **ocpperf** with the following key structure, and fill in the values:
 
 ```toml
-[elasticsearch]
+[<product>.elasticsearch]
 url=
 indice=
 username=
@@ -23,6 +23,20 @@ url=
 username=
 password=
 ```
+
+The elasticsearch configuration should be set up by product, that way each product can configure their own ES server.
+
+As an example for `OCP` the configuration looks like this:
+
+```toml
+[ocp.elasticsearch]
+url=
+indice=
+username=
+password=
+```
+
+Internally the API when serving the `/ocp` enpoints will use this connection.
 
 [TOML](https://toml.io/en/) is used above, but it also accepts YAML.
 
@@ -53,7 +67,7 @@ Build backend image.
       .
 
 
-### Run Backend 
+### Run Backend
 
 Run the backend container and attach source code as a writable volume.
 
