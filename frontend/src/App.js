@@ -39,7 +39,7 @@ export const App = () => {
         >
           <PageSection variant={PageSectionVariants.light} hasOverflowScroll={true} aria-label={"overflow false"}>
               <Switch>
-                  <Route path="/"><HomeView /></Route>
+                  <Route path="/" exact><HomeView /></Route>
                   <Route path="/home"><HomeView /></Route>
                   <Route path="/ocp"><OCPHome /></Route>
               </Switch>
