@@ -40,12 +40,13 @@ export const fetchGraphData =  (uuid) => async dispatch =>{
 
 export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch => {
     let buildUrl = `${BASE_URL}${OCP_JOBS_API_V1}`
+    dispatch(setWaitForOCPUpdate({waitForUpdate:true}))
     if(startDate !== '' && endDate !== '') {
         buildUrl += `?start_date=${startDate}&end_date=${endDate}`
-        dispatch(setWaitForOCPUpdate({waitForUpdate:true}))
     }
     try{
         let api_data = await fetchAPI(buildUrl)
+        dispatch(setWaitForOCPUpdate({waitForUpdate:false}))
         api_data = JSON.parse(api_data)
         if(api_data){
             const results = api_data.results
@@ -80,12 +81,13 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
 
 export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch => {
     let buildUrl = `${BASE_URL}${CPT_JOBS_API_V1}`
+    dispatch(setWaitForCPTUpdate({waitForUpdate:true}))
     if(startDate !== '' && endDate !== '') {
         buildUrl += `?start_date=${startDate}&end_date=${endDate}`
-        dispatch(setWaitForCPTUpdate({waitForUpdate:true}))
     }
     try{
         let api_data = await fetchAPI(buildUrl)
+        dispatch(setWaitForCPTUpdate({waitForUpdate:false}))
         api_data = JSON.parse(api_data)
         if(api_data){
             const results = api_data.results
