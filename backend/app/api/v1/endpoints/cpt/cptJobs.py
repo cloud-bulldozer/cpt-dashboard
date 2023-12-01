@@ -24,8 +24,8 @@ products = {
                 422: response_422(),
             },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),
-                end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
-                pretty: bool = Query(False, description="Output contet in pretty format.")):
+               end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
+               pretty: bool = Query(False, description="Output contet in pretty format.")):
     if start_date is None:
         start_date = datetime.utcnow().date()
         start_date = start_date - timedelta(days=5)

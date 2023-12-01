@@ -1,4 +1,4 @@
-from datetime import datetime, date
+from datetime import date
 import pandas as pd
 from app.services.search import ElasticService
 
@@ -32,9 +32,31 @@ async def getData(start_datetime: date, end_datetime: date):
     if len(jobs) == 0:
         return jobs
 
+    jobs["benchmark"] = jobs.apply(updateBenchmark, axis=1)
+    jobs["jobType"] = jobs.apply(jobType, axis=1)
+    jobs["isRehearse"] = jobs.apply(isRehearse, axis=1)
+
     cleanJobs = jobs[jobs['platform'] != ""]
 
     jbs = cleanJobs
     jbs['shortVersion'] = jbs['ocpVersion'].str.slice(0, 4)
 
     return jbs
+
+
+def updateBenchmark(row):
+    if row["upstreamJob"].__contains__("upgrade"):
+        return "upgrade-" + row["benchmark"]
+    return row["benchmark"]
+
+
+def jobType(row):
+    if row["upstreamJob"].__contains__("periodic"):
+        return "periodic"
+    return "pull request"
+
+
+def isRehearse(row):
+    if row["upstreamJob"].__contains__("rehearse"):
+        return "True"
+    return "False"

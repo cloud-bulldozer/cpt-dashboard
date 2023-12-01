@@ -32,6 +32,8 @@ export function OCPHome() {
     const [workerCount, setWorkerCount] = useState(searchParams.get("workerCount") || ocpJobs.selectedWorkerCount)
     const [networkType, setNetworkType] = useState(searchParams.get("networkType") || ocpJobs.selectedNetworkType)
     const [version, setVersion] = useState(searchParams.get("version") || ocpJobs.selectedVersion)
+    const [jobType, setJobType] = useState(searchParams.get("jobType") || ocpJobs.selectedJobType)
+    const [isRehearse, setRehearse] = useState(searchParams.get("isRehearse") || ocpJobs.selectedRehearse)
     const [startDate, setStartDate] = useState(searchParams.get("startDate")  || ocpJobs.startDate) || ""
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || ocpJobs.endDate) || ""
 
@@ -43,6 +45,8 @@ export function OCPHome() {
         {name: "Workers Count", onChange: setWorkerCount, value: workerCount, options:ocpJobs.workers },
         {name: "Network Type", onChange: setNetworkType, value: networkType, options:ocpJobs.networkTypes },
         {name: "Versions", onChange: setVersion, value: version, options: ocpJobs.versions},
+        {name: "Job Type", onChange: setJobType, value: jobType, options: ocpJobs.jobTypes},
+        {name: "Rehearse", onChange: setRehearse, value: isRehearse, options: ocpJobs.rehearses},
     ]
 
     useEffect(() => {
@@ -53,6 +57,8 @@ export function OCPHome() {
         if(version !== '') buildParams += `&version=${version}`
         if(workerCount !== '') buildParams += `&workerCount=${workerCount}`
         if(networkType !== '') buildParams += `&networkType=${networkType}`
+        if(jobType !== '') buildParams += `&jobType=${jobType}`
+        if(isRehearse !== '') buildParams += `&isRehearse=${isRehearse}`
         if(startDate !== '') buildParams += `&startDate=${startDate}`
         if(endDate !== '') buildParams += `&endDate=${endDate}`
         history.push(`/ocp?${buildParams.substring(1)}`, { replace: true });
@@ -60,8 +66,8 @@ export function OCPHome() {
     }, [history, ciSystem, platform, benchmark, version, workerCount, networkType, startDate, endDate])
 
     useEffect( ()=>{
-        dispatch(updateOCPDataFilter({ciSystem, platform, benchmark, version, workerCount, networkType}))
-    }, [ ciSystem, platform, benchmark, version, workerCount, networkType, dispatch ])
+        dispatch(updateOCPDataFilter({ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse}))
+    }, [ ciSystem, platform, benchmark, version, workerCount, networkType, , jobType, isRehearse, dispatch ])
 
     useEffect(() => {
         if(startDate || endDate){
