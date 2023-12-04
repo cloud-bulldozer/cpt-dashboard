@@ -11,15 +11,9 @@ from fastapi.param_functions import Query
 router = APIRouter()
 
 products = {
-<<<<<<< HEAD
-    "ocp": ocpMapper,
-}
-
-=======
             "ocp": ocpMapper,
             "hce": hceMapper
            }
->>>>>>> e154217 (Add Hybrid Cloud results to CPT Dashboard)
 
 @router.get('/api/cpt/v1/jobs',
             summary="Returns a job list from all the products.",
@@ -45,7 +39,6 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
     results = pd.DataFrame()
-<<<<<<< HEAD
     for product in products:
         try:
             df = await products[product](start_date, end_date)
@@ -54,11 +47,6 @@ async def jobs(start_date: date = Query(None, description="Start date for search
             print("Connection Error in mapper for product " + product)
         except:
             print("Unknown Error in mapper for product " + product)
-=======
-    for func in products.values():
-        df = await func(start_date, end_date)
-        results = pd.concat([results, df])
->>>>>>> 15985d6 (Remove print statement)
 
     response = {
         'startDate': start_date.__str__(),
