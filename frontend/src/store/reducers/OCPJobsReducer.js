@@ -17,11 +17,12 @@ const getFilteredData = (data, selectedValue, keyValue) => {
     return data.filter(item => equalIgnoreCase(item[keyValue], selectedValue) || equalIgnoreCase(selectedValue, 'all') )
 }
 
-const GetUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem) => {
+const GetUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse) => {
     const filterValues = {
         "platform": platform, "benchmark": benchmark,
         "shortVersion": version, "workerNodesCount": workerCount,
-        "networkType": networkType, "ciSystem": ciSystem
+        "networkType": networkType, "ciSystem": ciSystem,
+        "jobType": jobType, "isRehearse": isRehearse,
     }
     let filteredData = data
     for (let [keyName, value] of Object.entries(filterValues))
@@ -63,6 +64,8 @@ const jobsSlice = createSlice({
             state.workers = ["All", ...action.payload.workers]
             state.networkTypes = ["All", ...action.payload.networkTypes]
             state.ciSystems = ["All", ...action.payload.ciSystems]
+            state.jobTypes = ["All", ...action.payload.jobTypes]
+            state.rehearses = ["All", ...action.payload.rehearses]
             state.updatedTime = action.payload.updatedTime
             state.error = null
             Object.assign(state,  GetSummary(state.data))
@@ -70,19 +73,22 @@ const jobsSlice = createSlice({
             state.endDate = action.payload.endDate
         },
         updateOCPDataFilter: (state, action) => {
-            const {ciSystem, platform, benchmark, version, workerCount, networkType} = action.payload
+            const {ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse} = action.payload
             state.selectedBenchmark = benchmark
             state.selectedVersion = version
             state.selectedPlatform = platform
             state.selectedNetworkType = networkType
             state.selectedWorkerCount = workerCount
             state.selectedCiSystem = ciSystem
-            state.data = GetUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, networkType, ciSystem)
+            state.selectedJobType = jobType
+            state.selectedRehearse = isRehearse
+            state.data = GetUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse)
             Object.assign(state,  GetSummary(state.data))
         },
         updateOCPMetaData: (state, action) => {
             state.data = GetUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
-                state.selectedVersion, state.selectedWorkerCount, state.selectedNetworkType, state.selectedCiSystem)
+                state.selectedVersion, state.selectedWorkerCount, state.selectedNetworkType, state.selectedCiSystem,
+                state.selectedJobType, state.selectedRehearse)
             Object.assign(state,  GetSummary(state.data))
         },
         setWaitForOCPUpdate: (state, action) => {

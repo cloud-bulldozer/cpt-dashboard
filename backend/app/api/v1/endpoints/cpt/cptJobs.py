@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from .maps.ocp import ocpMapper
+from .maps.hce import hceMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 
@@ -11,6 +12,7 @@ router = APIRouter()
 
 products = {
             "ocp": ocpMapper,
+            "hce": hceMapper
            }
 
 @router.get('/api/cpt/v1/jobs',
@@ -24,8 +26,8 @@ products = {
                 422: response_422(),
             },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),
-                end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
-                pretty: bool = Query(False, description="Output contet in pretty format.")):
+               end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
+               pretty: bool = Query(False, description="Output contet in pretty format.")):
     if start_date is None:
         start_date = datetime.utcnow().date()
         start_date = start_date - timedelta(days=5)
@@ -37,9 +39,14 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
     results = pd.DataFrame()
-    for func in products.values():
-        df = await func(start_date, end_date)
-        results = pd.concat([results, df])
+    for product in products:
+        try:
+            df = await products[product](start_date, end_date)
+            results = pd.concat([results, df])
+        except ConnectionError:
+            print("Connection Error in mapper for product " + product)
+        except:
+            print("Unknown Error in mapper for product " + product)
 
     response = {
         'startDate': start_date.__str__(),
