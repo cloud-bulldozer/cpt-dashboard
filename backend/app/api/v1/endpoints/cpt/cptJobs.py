@@ -4,15 +4,16 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from .maps.ocp import ocpMapper
+from .maps.hce import hceMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 
 router = APIRouter()
 
 products = {
-    "ocp": ocpMapper,
-}
-
+            "ocp": ocpMapper,
+            "hce": hceMapper
+           }
 
 @router.get('/api/cpt/v1/jobs',
             summary="Returns a job list from all the products.",

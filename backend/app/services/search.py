@@ -11,6 +11,7 @@ class ElasticService:
     def __init__(self,configpath="",index=""):
         self.cfg = config.get_config()
         self.url = self.cfg.get(configpath+'.url')
+        self.esUser = None
         if index == "":
             self.indice = self.cfg.get(configpath+'.indice')
         else:
@@ -19,7 +20,6 @@ class ElasticService:
                 self.cfg.is_set(configpath+'.password'):
             self.esUser = self.cfg.get(configpath+'.username')
             self.esPass = self.cfg.get(configpath+'.password')
-
         if self.esUser :
             self.es = AsyncElasticsearch(
                     self.url,
@@ -28,7 +28,7 @@ class ElasticService:
                     http_auth=(self.esUser,self.esPass)
             )
         else:
-            self.es = AsyncElasticsearch(self.url)
+            self.es = AsyncElasticsearch(self.url, verify_certs=False)
 
     async def post(self, query, indice=None,size=10000):
         if indice is None:
