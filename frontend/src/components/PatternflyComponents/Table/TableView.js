@@ -2,6 +2,8 @@
 import {Table, Thead, Tr, Th, Tbody, Td, ExpandableRowContent} from '@patternfly/react-table';
 import {Puff} from "react-loading-icons";
 import React, {useEffect, useState} from "react";
+import {getFormattedDate} from "../../../helpers/Formatters";
+
 
 
 export const TableView = ({columns , rows = [], initialState = true, stickyHeader=false,
@@ -29,7 +31,7 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
         return <Tbody>
                     { rows &&
                       rows.map( (item, index)=> <Tr key={index}>
-                          {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
+                          {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{ columns[idx] === "Start Date" || columns[idx] === "End Date" ? getFormattedDate(value) : value }</Td> )}
                           </Tr>
                       )
                     }
@@ -46,7 +48,7 @@ export const TableView = ({columns , rows = [], initialState = true, stickyHeade
                                   isExpanded: expand[index],
                                   onToggle: handleToggle
                               }} />
-                              {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{value}</Td> )}
+                              {item.tableRows.map( (value, idx) => <Td dataLabel={columns[idx]} key={idx}>{ columns[idx] === "Start Date" || columns[idx] === "End Date" ? getFormattedDate(value) : value }</Td> )}
                         </Tr>
                         <Tr isExpanded={expand[index]}>
                               <Td dataLabel={columns[index]} noPadding colSpan={columns.length + 1}>

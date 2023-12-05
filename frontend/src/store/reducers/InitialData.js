@@ -30,10 +30,10 @@ export const OCP_INITIAL_DATA = {
     startDate: '',
     endDate: '',
     tableData : [{ name: "Benchmark", value: "benchmark" },
-                {name:"ReleaseStream", value: "releaseStream"},
-                {name: "WorkerCount", value: "workerNodesCount"},
-                {name: "StartDate", value: "startDate"},
-                {name: "EndDate", value: "endDate"},
+                {name:"Release Stream", value: "releaseStream"},
+                {name: "Worker Count", value: "workerNodesCount"},
+                {name: "Start Date", value: "startDate"},
+                {name: "End Date", value: "endDate"},
                 {name: "Status", value: "jobStatus"}],
 }
 
