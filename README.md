@@ -197,3 +197,23 @@ For the specialized view, Teams will need to provide most of the code for it:
      * Written in Python
      * Using fastAPI
      * Document endpoints with swagger
+
+## Internal process
+
+For the purpose of adding new configuration and authentication credentials to the API, plase follow the steps below
+
+* Create a new Jira ticket under the `PERFSCALE` namespace
+* In the name of the ticket please set up `[Dashboard]` at the start
+* Include in the epic `PERFSCALE-2250`
+* Include the complete configuration to add, example:
+
+  ```toml
+  [<product>.elasticsearch]
+  url=https://real.es.com
+  indice=mydata
+  username=admin
+  password=password123
+  ```
+
+* Assing the ticket to `vzepedam@redhat.com`
+* Add as watcher `jtaleric@redhat.com`
