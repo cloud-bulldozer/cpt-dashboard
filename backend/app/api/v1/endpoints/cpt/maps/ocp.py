@@ -3,35 +3,14 @@ from datetime import date
 
 
 ################################################################
-# This will return a DataFrame from OCP required by the CPT
-#  endpoint, it contians the following columns:
-#   "ciSystem"
-#   "uuid"
-#   "releaseStream"
-#   "jobStatus"
-#   "buildUrl"
-#   "startDate"
-#   "endDate"
-#   "product"
-#   "version"
-#   "testName"
+# This will return a DataFrame from OCP required by the CPT endpoint
 ################################################################
-async def ocpMapper(start_datetime: date, end_datetime: date):
-    df = await getData(start_datetime, end_datetime)
+async def ocpMapper(start_datetime: date, end_datetime: date, configpath: str):
+    df = await getData(start_datetime, end_datetime, configpath)
     df.insert(len(df.columns), "product", "ocp")
     df["releaseStream"] = df.apply(getReleaseStream, axis=1)
     df["version"] = df["shortVersion"]
     df["testName"] = df["benchmark"]
-    df = dropColumns(df)
-    return df
-
-
-def dropColumns(df):
-    df = df.drop(columns=['shortVersion', 'benchmark', 'platform', 'clusterType', 'masterNodesCount',
-                          'workerNodesCount', 'infraNodesCount', 'masterNodesType', 'workerNodesType',
-                          'infraNodesType', 'totalNodesCount', 'clusterName', 'ocpVersion', 'networkType',
-                          'buildTag', 'upstreamJob', 'upstreamJobBuild', 'executionDate', 'jobDuration',
-                          'timestamp', 'jobType', 'isRehearse'])
     return df
 
 

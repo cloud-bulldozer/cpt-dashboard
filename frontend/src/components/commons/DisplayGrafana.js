@@ -60,9 +60,12 @@ const getGrafanaData = (benchmarkConfigs) => {
     const dashboardNetPerf = "wINGhybVz/k8s-netperf?orgId=1&var-samples=3&var-service=All&" +
                                     "var-parallelism=All&var-profile=All&var-messageSize=All&" +
                                     "var-driver=netperf&var-hostNetwork=true&var-hostNetwork=false"
+    const quayDashboard = "7nkJIoXVk/quay-dashboard-v2?orgId=1&var-api_endpoints_datasource=Quay%20QE%20-%20quay-vegeta&" +
+                            "var-quay_push_pull_datasource=Quay%20QE%20-%20quay-push-pull"
     let status = null;
     let getTimeFormat = null;
     let getGrafanaLink = null;
+    let getGrafanaUrl = null;
     if(benchmarkConfigs){
         const startDate = new Date((benchmarkConfigs.start_date  && benchmarkConfigs.start_date) || benchmarkConfigs.startDate).valueOf()
         const endDate = new Date((benchmarkConfigs.end_date  && benchmarkConfigs.end_date) || benchmarkConfigs.endDate).valueOf()
@@ -90,11 +93,19 @@ const getGrafanaData = (benchmarkConfigs) => {
                 dashboardURL = dashboardIngress
             }
         }
-        const getGrafanaUrl = grafanaURL+dashboardURL+
-                                 "&from="+startDate+"&to="+endDate+
-                                 dataSource+"&var-platform="+benchmarkConfigs.platform+
-                                 "&var-uuid="+benchmarkConfigs.uuid+
-                                 "&var-workload="+benchmarkConfigs.benchmark
+        if (benchmarkConfigs.benchmark === "quay-load-test") {
+            getGrafanaUrl = grafanaURL+quayDashboard+
+                            "&from="+startDate+"&to="+endDate+
+                            "&var-uuid="+benchmarkConfigs.uuid+"&var-baseline_uuid="+benchmarkConfigs.uuid
+
+        } else {
+            getGrafanaUrl = grafanaURL+dashboardURL+
+                                "&from="+startDate+"&to="+endDate+
+                                dataSource+"&var-platform="+benchmarkConfigs.platform+
+                                "&var-uuid="+benchmarkConfigs.uuid+
+                                "&var-workload="+benchmarkConfigs.benchmark
+        }
+
         getTimeFormat =  status !== "upstream_failed" ?
                                       formatTime(benchmarkConfigs.job_duration  &&
                                                       benchmarkConfigs.job_duration || benchmarkConfigs.jobDuration)

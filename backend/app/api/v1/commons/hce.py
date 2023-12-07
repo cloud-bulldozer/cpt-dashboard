@@ -3,7 +3,7 @@ import pandas as pd
 from app.services.search import ElasticService
 
 
-async def getData(start_datetime: date, end_datetime: date):
+async def getData(start_datetime: date, end_datetime: date, configpath: str):
     query = {
         "query": {
             "bool": {
@@ -20,7 +20,7 @@ async def getData(start_datetime: date, end_datetime: date):
     query['query']['bool']['filter']['range']['date']['lte'] = str(end_datetime)
     query['query']['bool']['filter']['range']['date']['gte'] = str(start_datetime)
 
-    es = ElasticService(configpath="hce.elasticsearch")
+    es = ElasticService(configpath=configpath)
     response = await es.post(query)
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]

@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 
-@router.get('/api/ocp/v1/jobs',
+@router.get('/api/v1/quay/jobs',
             summary="Returns a job list",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
@@ -25,7 +25,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
                 pretty: bool = Query(False, description="Output contet in pretty format.")):
     if start_date is None:
         start_date = datetime.utcnow().date()
-        start_date = start_date - timedelta(days=5)
+        start_date = start_date - timedelta(days=7)
 
     if end_date is None:
         end_date = datetime.utcnow().date()
@@ -33,7 +33,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
     if start_date > end_date:
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
-    results = await getData(start_date, end_date, 'ocp.elasticsearch')
+    results = await getData(start_date, end_date, 'quay.elasticsearch')
 
     response = {
         'startDate': start_date.__str__(),
