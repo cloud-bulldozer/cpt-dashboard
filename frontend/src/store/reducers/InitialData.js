@@ -75,3 +75,8 @@ export const GRAPH_INITIAL_DATA = {
     uuid_results: {},
     graphError: false,
 }
+
+export const QUAY_GRAPH_INITIAL_DATA = {
+    uuid_results: {},
+    graphError: false,
+}

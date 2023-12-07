@@ -15,10 +15,19 @@ export const BenchmarkResults = ({dataset, isExpanded}) => {
                     </GridItem>
                     <GridItem span={"6"}>
                       <DisplayGraph uuid={ dataset.uuid }
-                                    benchmark={dataset.benchmark}
-                                     />
+                                    resultKey={'apiResults'}
+                                    heading={"Quay API Status Codes"} />
                     </GridItem>
-
+                    <GridItem span={"6"}>
+                      <DisplayGraph uuid={ dataset.uuid }
+                                    resultKey={'imageResults'}
+                                    heading={"Quay Image Status Codes"} />
+                    </GridItem>
+                    <GridItem span={"6"}>
+                      <DisplayGraph uuid={ dataset.uuid }
+                                    resultKey={'latencyResults'}
+                                    heading={"Quay Latencies"} />
+                    </GridItem>
                 </Grid>
             ) || <>NO Data</>
         }

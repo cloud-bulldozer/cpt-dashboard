@@ -1,5 +1,5 @@
 
-import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1} from "../Shared";
+import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1} from "../Shared";
 import axios from "axios";
 import {
     errorOCPCall,
@@ -13,7 +13,14 @@ import {
     setWaitForCPTUpdate,
     updateCPTMetaData
 } from "../reducers/CPTJobsReducer";
+import {
+    errorQuayCall,
+    getQuayJobsData,
+    setWaitForQuayUpdate,
+    updateQuayMetaData
+} from "../reducers/QuayJobsReducer";
 import {getUuidResults, setGraphError} from "../reducers/GraphReducer";
+import {getQuayUuidResults, setQuayGraphError} from "../reducers/QuayGraphReducer";
 
 export const fetchAPI = async (url, requestOptions = {}) => {
     const response = await axios(url, requestOptions)
@@ -34,6 +41,24 @@ export const fetchGraphData =  (uuid) => async dispatch =>{
         } else {
             console.error('Axios Error:', error);
             dispatch(setGraphError({error: error.response.data.details}))
+        }
+    }
+}
+
+export const fetchQuayGraphData =  (uuid) => async dispatch =>{
+    try {
+        let buildUrl = `${BASE_URL}${QUAY_GRAPH_API_V1}/${uuid}`
+        const api_data = await fetchAPI(buildUrl)
+        if(api_data) dispatch(getQuayUuidResults({ [uuid]: api_data }))
+    }
+    catch (error){
+        if (axios.isAxiosError(error)) {
+            console.error('Axios Error:', error);
+            console.error('Request:', error.request);
+            console.error('Response:', error.response);
+        } else {
+            console.error('Axios Error:', error);
+            dispatch(setQuayGraphError({error: error.response.data.details}))
         }
     }
 }
@@ -78,6 +103,46 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
             console.log(error)
         }
         dispatch(setWaitForOCPUpdate({waitForUpdate:false}))
+    }
+}
+
+export const fetchQuayJobsData = (startDate = '', endDate='') => async dispatch => {
+    let buildUrl = `${BASE_URL}${QUAY_JOBS_API_V1}`
+    dispatch(setWaitForQuayUpdate({waitForUpdate:true}))
+    if(startDate !== '' && endDate !== '') {
+        buildUrl += `?start_date=${startDate}&end_date=${endDate}`
+    }
+    try{
+        let api_data = await fetchAPI(buildUrl)
+        dispatch(setWaitForQuayUpdate({waitForUpdate:false}))
+        api_data = JSON.parse(api_data)
+        if(api_data){
+            const results = api_data.results
+            if(results){
+                const benchmarks = GetBenchmarks(results)
+                const versions = GetVersions(results)
+                const platforms = GetPlatforms(results)
+                const workers = GetWorkers(results)
+                const ciSystems = GetCiSystems(results)
+                const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
+                await dispatch(getQuayJobsData({
+                    data: results, benchmarks, versions, waitForUpdate: false, platforms, workers,
+                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                }))
+                await dispatch(updateQuayMetaData({data: results}))
+            }
+        }
+    }
+    catch (e) {
+        const error = e
+        if(error.response){
+            await dispatch(errorQuayCall({error: error.response.data.error}))
+            alert(error.response.data.error)
+        }
+        else{
+            console.log(error)
+        }
+        dispatch(setWaitForQuayUpdate({waitForUpdate:false}))
     }
 }
 

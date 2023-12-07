@@ -1,4 +1,5 @@
 from datetime import datetime,timedelta
+from app.api.v1.commons.utils import getMetadata
 import trio
 import semver
 from fastapi import APIRouter
@@ -6,7 +7,6 @@ import io
 import pprint
 from json import loads
 import pandas as pd
-import datetime
 from app.services.search import ElasticService
 
 router = APIRouter()
@@ -112,7 +112,7 @@ def parseCPUResults(data: dict):
 @router.get('/api/ocp/v1/graph/{uuid}')
 async def graph(uuid: str):
     index = ""
-    meta = await getMetadata(uuid)
+    meta = await getMetadata(uuid, 'ocp.elasticsearch')
     print(meta)
     metrics = []
     if meta["benchmark"] == "k8s-netperf" :
@@ -418,23 +418,6 @@ async def getMatchRuns(meta: dict, workerCount: False):
     for run in runs :
         uuids.append(run["uuid"])
     return uuids
-
-async def getMetadata(uuid: str) :
-    index = "perf_scale_ci"
-    query = {
-        "query": {
-            "query_string": {
-                "query": (
-                    f'uuid: "{uuid}"')
-            }
-        }
-    }
-    print(query)
-    es = ElasticService(configpath="ocp.elasticsearch")
-    response = await es.post(query)
-    await es.close()
-    meta = [item['_source'] for item in response["hits"]["hits"]]
-    return meta[0]
 
 """
     [ {
