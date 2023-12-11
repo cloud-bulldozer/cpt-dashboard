@@ -17,7 +17,7 @@ products = {
             "hce": hceMapper
            }
 
-@router.get('/api/cpt/v1/jobs',
+@router.get('/api/v1/cpt/jobs',
             summary="Returns a job list from all the products.",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \

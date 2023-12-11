@@ -10,7 +10,7 @@ router = APIRouter()
 
 
 
-@router.get('/api/ocp/v1/jobs',
+@router.get('/api/v1/ocp/jobs',
             summary="Returns a job list",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
