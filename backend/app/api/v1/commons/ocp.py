@@ -25,13 +25,13 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]
     jobs = pd.json_normalize(tasks)
-    jobs[['masterNodesCount', 'workerNodesCount',
-          'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
-    jobs.fillna('', inplace=True)
 
     if len(jobs) == 0:
         return jobs
-
+    
+    jobs[['masterNodesCount', 'workerNodesCount',
+          'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
+    jobs.fillna('', inplace=True)
     jobs["benchmark"] = jobs.apply(updateBenchmark, axis=1)
     jobs["jobType"] = jobs.apply(jobType, axis=1)
     jobs["isRehearse"] = jobs.apply(isRehearse, axis=1)
