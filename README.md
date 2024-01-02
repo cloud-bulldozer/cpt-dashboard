@@ -91,7 +91,7 @@ Build frontend image.
 ```sh
 $ podman build \
     --tag ocpp-front \
-    --file frontend-dev.containerfile \
+    --file frontend.containerfile \
     .
 ```
 
