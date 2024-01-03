@@ -1,6 +1,8 @@
 FROM quay.io/centos/centos:stream9
 
-ENV PATH=/root/.local/bin:$PATH \
+ENV HOME=/backend
+
+ENV PATH=$HOME/.local/bin:$PATH \
     LANG=C.UTF-8 \
     PYTHONPATH=/backend
 
@@ -23,6 +25,7 @@ RUN pip install --user poetry && \
     pip install --user dash && \
     pip install --no-cache-dir -r requirements.txt
 
+RUN touch ocpperf.yaml && chmod 777 ocpperf.yaml
+RUN chgrp -R 0 $HOME && chmod -R g=u $HOME
+
 ENTRYPOINT ["/bin/bash", "./scripts/start.sh"]
-
-
