@@ -48,7 +48,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         except ConnectionError:
             print("Connection Error in mapper for product " + product)
         except:
-            print("Unknown Error in mapper for product " + product)
+            print("Date range returned no values or Unknown error in mapper for product " + product)
 
     response = {
         'startDate': start_date.__str__(),

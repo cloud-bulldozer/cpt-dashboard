@@ -35,11 +35,18 @@ async def jobs(start_date: date = Query(None, description="Start date for search
 
     results = await getData(start_date, end_date, 'quay.elasticsearch')
 
-    response = {
-        'startDate': start_date.__str__(),
-        'endDate': end_date.__str__(),
-        'results': results.to_dict('records')
-    }
+    if len(results) >= 1 :
+        response = {
+            'startDate': start_date.__str__(),
+            'endDate': end_date.__str__(),
+            'results': results.to_dict('records')
+        }
+    else :
+        response = {
+            'startDate': start_date.__str__(),
+            'endDate': end_date.__str__(),
+            'results': []
+        }
 
     if pretty:
         json_str = json.dumps(response, indent=4)
