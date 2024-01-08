@@ -10,15 +10,14 @@ from app.api.v1.endpoints.quay import quayGraphs
 
 router = APIRouter()
 
-# OCP endopoints
+# OCP endpoints
 router.include_router(ocpJobs.router, tags=['ocp'])
 router.include_router(results.router, tags=['ocp'])
 router.include_router(graph.router, tags=['ocp.graphs'])
 
-# CPT endopoints
+# CPT endpoints
 router.include_router(cptJobs.router, tags=['cpt'])
 router.include_router(jira.router, tags=['cpt.jira'])
-
 
 # Quay endpoints
 router.include_router(quayJobs.router, tags=['quay'])
