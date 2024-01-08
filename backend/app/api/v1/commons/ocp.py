@@ -3,7 +3,7 @@ import pandas as pd
 from app.services.search import ElasticService
 
 
-async def getData(start_datetime: date, end_datetime: date):
+async def getData(start_datetime: date, end_datetime: date, configpath: str):
     query = {
         "query": {
             "bool": {
@@ -20,21 +20,21 @@ async def getData(start_datetime: date, end_datetime: date):
     query['query']['bool']['filter']['range']['timestamp']['lte'] = str(end_datetime)
     query['query']['bool']['filter']['range']['timestamp']['gte'] = str(start_datetime)
 
-    es = ElasticService(configpath="ocp.elasticsearch")
+    es = ElasticService(configpath=configpath)
     response = await es.post(query)
     await es.close()
     tasks = [item['_source'] for item in response["hits"]["hits"]]
     jobs = pd.json_normalize(tasks)
-    jobs[['masterNodesCount', 'workerNodesCount',
-          'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
-    jobs.fillna('', inplace=True)
-
     if len(jobs) == 0:
         return jobs
 
+    jobs[['masterNodesCount', 'workerNodesCount',
+          'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
+    jobs.fillna('', inplace=True)
     jobs["benchmark"] = jobs.apply(updateBenchmark, axis=1)
     jobs["jobType"] = jobs.apply(jobType, axis=1)
     jobs["isRehearse"] = jobs.apply(isRehearse, axis=1)
+    jobs["jobStatus"] = jobs.apply(updateStatus, axis=1)
 
     cleanJobs = jobs[jobs['platform'] != ""]
 
@@ -42,6 +42,10 @@ async def getData(start_datetime: date, end_datetime: date):
     jbs['shortVersion'] = jbs['ocpVersion'].str.slice(0, 4)
 
     return jbs
+
+
+def updateStatus(row):
+    return row["jobStatus"].lower()
 
 
 def updateBenchmark(row):

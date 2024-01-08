@@ -6,12 +6,13 @@ import {
     PageSection,
     PageSectionVariants,
 } from '@patternfly/react-core';
-import {fetchOCPJobsData, fetchCPTJobsData} from "./store/Actions/ActionCreator";
+import {fetchOCPJobsData, fetchCPTJobsData, fetchQuayJobsData} from "./store/Actions/ActionCreator";
 import {useDispatch} from "react-redux";
 import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
 import {NavBar} from "./components/NavBar/NavBar";
 import {HomeView} from "./components/Home/HomeView";
 import {OCPHome} from './components/OCP/OCPHome';
+import {QuayHome} from './components/Quay/QuayHome';
 
 
 export const App = () => {
@@ -21,6 +22,7 @@ export const App = () => {
           const fetchData = async () =>{
               await dispatch(fetchOCPJobsData())
               await dispatch(fetchCPTJobsData())
+              await dispatch(fetchQuayJobsData())
           }
           fetchData()
     }, [dispatch])
@@ -42,6 +44,7 @@ export const App = () => {
                   <Route path="/" exact><HomeView /></Route>
                   <Route path="/home"><HomeView /></Route>
                   <Route path="/ocp"><OCPHome /></Route>
+                  <Route path="/quay"><QuayHome /></Route>
               </Switch>
           </PageSection>
         </Page>

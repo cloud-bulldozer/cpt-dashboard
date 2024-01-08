@@ -1,4 +1,5 @@
 from datetime import datetime,timedelta
+from app.api.v1.commons.utils import getMetadata
 import trio
 import semver
 from fastapi import APIRouter
@@ -6,14 +7,13 @@ import io
 import pprint
 from json import loads
 import pandas as pd
-import datetime
 from app.services.search import ElasticService
 
 router = APIRouter()
 
 """
 """
-@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}')
+@router.get('/api/v1/ocp/graph/trend/{version}/{count}/{benchmark}')
 async def trend(benchmark: str,count: int,version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -54,7 +54,7 @@ async def trend(benchmark: str,count: int,version: str):
 diff_cpu - Will accept the version, prev_version , count, benchmark and namespace to diff trend CPU
 data.
 """
-@router.get('/api/ocp/v1/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/v1/ocp/graph/trend/{version}/{prev_version}/{count}/{benchmark}/cpu/{namespace}')
 async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, prev_version: str):
     aTrend = await trend_cpu(namespace,benchmark,count,version)
     bTrend = await trend_cpu(namespace,benchmark,count,prev_version)
@@ -64,7 +64,7 @@ async def diff_cpu(namespace: str, benchmark: str, count: int, version: str, pre
 trend_cpu - Will accept the version, count, benchmark and namespace to trend CPU
 data.
 """
-@router.get('/api/ocp/v1/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
+@router.get('/api/v1/ocp/graph/trend/{version}/{count}/{benchmark}/cpu/{namespace}')
 async def trend_cpu(namespace: str, benchmark: str, count: int, version: str):
     index = "ripsaw-kube-burner*"
     meta = {}
@@ -109,10 +109,10 @@ def parseCPUResults(data: dict):
         res.append(dat)
     return res
 
-@router.get('/api/ocp/v1/graph/{uuid}')
+@router.get('/api/v1/ocp/graph/{uuid}')
 async def graph(uuid: str):
     index = ""
-    meta = await getMetadata(uuid)
+    meta = await getMetadata(uuid, 'ocp.elasticsearch')
     print(meta)
     metrics = []
     if meta["benchmark"] == "k8s-netperf" :
@@ -418,23 +418,6 @@ async def getMatchRuns(meta: dict, workerCount: False):
     for run in runs :
         uuids.append(run["uuid"])
     return uuids
-
-async def getMetadata(uuid: str) :
-    index = "perf_scale_ci"
-    query = {
-        "query": {
-            "query_string": {
-                "query": (
-                    f'uuid: "{uuid}"')
-            }
-        }
-    }
-    print(query)
-    es = ElasticService(configpath="ocp.elasticsearch")
-    response = await es.post(query)
-    await es.close()
-    meta = [item['_source'] for item in response["hits"]["hits"]]
-    return meta[0]
 
 """
     [ {

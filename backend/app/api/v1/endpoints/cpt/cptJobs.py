@@ -4,6 +4,7 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from .maps.ocp import ocpMapper
+from .maps.quay import quayMapper
 from .maps.hce import hceMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
@@ -12,10 +13,11 @@ router = APIRouter()
 
 products = {
             "ocp": ocpMapper,
+            "quay": quayMapper,
             "hce": hceMapper
            }
 
-@router.get('/api/cpt/v1/jobs',
+@router.get('/api/v1/cpt/jobs',
             summary="Returns a job list from all the products.",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
@@ -41,12 +43,12 @@ async def jobs(start_date: date = Query(None, description="Start date for search
     results = pd.DataFrame()
     for product in products:
         try:
-            df = await products[product](start_date, end_date)
-            results = pd.concat([results, df])
+            df = await products[product](start_date, end_date, f'{product}.elasticsearch')
+            results = pd.concat([results, df.loc[:, ["ciSystem", "uuid", "releaseStream", "jobStatus", "buildUrl", "startDate", "endDate", "product", "version", "testName"]]])
         except ConnectionError:
             print("Connection Error in mapper for product " + product)
         except:
-            print("Unknown Error in mapper for product " + product)
+            print("Date range returned no values or Unknown error in mapper for product " + product)
 
     response = {
         'startDate': start_date.__str__(),

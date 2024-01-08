@@ -75,7 +75,7 @@ $ podman run \
     --interactive \
     --tty \
     --volume "$PWD/app:/backend/app:z" \
-    --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml"
+    --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml" \
     --publish 8000:8000 \
     ocpp-back /backend/scripts/start-reload.sh
 ```
@@ -91,7 +91,7 @@ Build frontend image.
 ```sh
 $ podman build \
     --tag ocpp-front \
-    --file frontend-dev.containerfile \
+    --file frontend.containerfile \
     .
 ```
 
@@ -159,7 +159,7 @@ A team using a different backend will need to provide the code to enable utiliza
 
 ##### Endpoint
 
-Steps for adding the data to the result of `/api/cpt/v1/jobs` endpoint
+Steps for adding the data to the result of `/api/v1/cpt/jobs` endpoint
 
 1. Create a custom mapper that will query your data backend and do the appropriate transformations for the data to match the fields described above.
 This Mapper should always receive:
@@ -168,7 +168,7 @@ This Mapper should always receive:
 This mapper should return
    * A pandas DataFrame
 
-2. In the `/api/cpt/v1/jobs` endpoint add the entry to the [`products`](https://github.com/cloud-bulldozer/cpt-dashboard/blob/1ce837ae17e0d3fa63f59c751078990b018905dc/backend/app/api/v1/endpoints/cpt/cptJobs.py#L12) dictionary that has the different data sources configured, the endpoint should query all configured mappers and append the resulting DataFrames to the overall response.
+2. In the `/api/v1/cpt/jobs` endpoint add the entry to the [`products`](https://github.com/cloud-bulldozer/cpt-dashboard/blob/1ce837ae17e0d3fa63f59c751078990b018905dc/backend/app/api/v1/endpoints/cpt/cptJobs.py#L12) dictionary that has the different data sources configured, the endpoint should query all configured mappers and append the resulting DataFrames to the overall response.
 
 ##### Frontend
 
