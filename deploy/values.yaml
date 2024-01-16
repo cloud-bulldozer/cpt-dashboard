@@ -1,0 +1,35 @@
+imagePullSecrets: []
+nameOverride: ""
+fullnameOverride: "dashboard"
+replicaCount: 1
+
+ingress:
+  enabled: true
+  hostName: dashboard
+  baseDomain: apps.sailplane.perf.lab.eng.rdu2.redhat.com
+
+elasticsearch:
+  # Use existing secret
+  existingSecretName: "dashboard-secret"
+
+frontend:
+  image:
+    repository: quay.io/cloud-bulldozer/frontend
+    tag: latest
+  resources: {}
+  securityContext:
+    privileged: true
+    allowPrivilegeEscalation: true
+
+backend:
+  image:
+    repository: quay.io/cloud-bulldozer/backend
+    tag: latest
+  resources: {}
+  securityContext: {}
+
+podAnnotations:
+  alpha.image.policy.openshift.io/resolve-names: '*'
+
+podSecurityContext: {}
+  # fsGroup: 2000
