@@ -34,6 +34,13 @@ export function OCPHome() {
     const [version, setVersion] = useState(searchParams.get("version") || ocpJobs.selectedVersion)
     const [jobType, setJobType] = useState(searchParams.get("jobType") || ocpJobs.selectedJobType)
     const [isRehearse, setRehearse] = useState(searchParams.get("isRehearse") || ocpJobs.selectedRehearse)
+    const [ipsec, setIpsec] = useState(searchParams.get("ipsec") || ocpJobs.selectedIpsec)
+    const [fips, setFips] = useState(searchParams.get("fips") || ocpJobs.selectedFips)
+    const [encrypted, setEncrypted] = useState(searchParams.get("encrypted") || ocpJobs.selectedEncrypted)
+    const [encryptionType, setEncryptionType] = useState(searchParams.get("encryptionType") || ocpJobs.selectedEncryptionType)
+    const [publish, setPublish] = useState(searchParams.get("publish") || ocpJobs.selectedPublish)
+    const [computeArch, setComputeArch] = useState(searchParams.get("computeArch") || ocpJobs.selectedComputeArch)
+    const [controlPlaneArch, setControlPlaneArch] = useState(searchParams.get("controlPlaneArch") || ocpJobs.selectedControlPlaneArch)
     const [startDate, setStartDate] = useState(searchParams.get("startDate")  || ocpJobs.startDate) || ""
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || ocpJobs.endDate) || ""
 
@@ -47,6 +54,13 @@ export function OCPHome() {
         {name: "Versions", onChange: setVersion, value: version, options: ocpJobs.versions},
         {name: "Job Type", onChange: setJobType, value: jobType, options: ocpJobs.jobTypes},
         {name: "Rehearse", onChange: setRehearse, value: isRehearse, options: ocpJobs.rehearses},
+        {name: "Has IPSEC", onChange: setIpsec, value: ipsec, options: ocpJobs.allIpsec},
+        {name: "FIPS Enabled", onChange: setFips, value: fips, options: ocpJobs.allFips},
+        {name: "Is Encrypted", onChange: setEncrypted, value: encrypted, options: ocpJobs.allEncrypted},
+        {name: "Encryption Type", onChange: setEncryptionType, value: encryptionType, options: ocpJobs.encryptionTypes},
+        {name: "Control Plane Access", onChange: setPublish, value: publish, options: ocpJobs.allPublish},
+        {name: "Compute Architecture", onChange: setComputeArch, value: computeArch, options: ocpJobs.computeArchs},
+        {name: "Control Plane Architecture", onChange: setControlPlaneArch, value: controlPlaneArch, options: ocpJobs.controlPlaneArchs},
     ]
 
     useEffect(() => {
@@ -59,15 +73,26 @@ export function OCPHome() {
         if(networkType !== '') buildParams += `&networkType=${networkType}`
         if(jobType !== '') buildParams += `&jobType=${jobType}`
         if(isRehearse !== '') buildParams += `&isRehearse=${isRehearse}`
+        if(ipsec !== '') buildParams += `&ipsec=${ipsec}`
+        if(fips !== '') buildParams += `&fips=${fips}`
+        if(encrypted !== '') buildParams += `&encrypted=${encrypted}`
+        if(encryptionType !== '') buildParams += `&encryptionType=${encryptionType}`
+        if(publish !== '') buildParams += `&publish=${publish}`
+        if(computeArch !== '') buildParams += `&computeArch=${computeArch}`
+        if(controlPlaneArch !== '') buildParams += `&controlPlaneArch=${controlPlaneArch}`
         if(startDate !== '') buildParams += `&startDate=${startDate}`
         if(endDate !== '') buildParams += `&endDate=${endDate}`
         history.push(`/ocp?${buildParams.substring(1)}`, { replace: true });
 
-    }, [history, ciSystem, platform, benchmark, version, workerCount, networkType, startDate, endDate])
+    }, [history, ciSystem, platform, benchmark, version, workerCount, networkType,
+        jobType, isRehearse, ipsec, fips, encrypted, encryptionType, publish,
+        computeArch, controlPlaneArch, startDate, endDate])
 
     useEffect( ()=>{
-        dispatch(updateOCPDataFilter({ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse}))
-    }, [ ciSystem, platform, benchmark, version, workerCount, networkType, , jobType, isRehearse, dispatch ])
+        dispatch(updateOCPDataFilter({ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse,
+                    ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch}))
+    }, [ ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse,
+        ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, dispatch ])
 
     useEffect(() => {
         if(startDate || endDate){

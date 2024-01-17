@@ -31,10 +31,16 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     jobs[['masterNodesCount', 'workerNodesCount',
           'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
     jobs.fillna('', inplace=True)
-    jobs["benchmark"] = jobs.apply(updateBenchmark, axis=1)
-    jobs["jobType"] = jobs.apply(jobType, axis=1)
-    jobs["isRehearse"] = jobs.apply(isRehearse, axis=1)
-    jobs["jobStatus"] = jobs.apply(updateStatus, axis=1)
+    jobs[['ipsec', 'fips', 'encrypted',
+          'publish', 'computeArch', 'controlPlaneArch']] = jobs[['ipsec', 'fips', 'encrypted',
+                                                                 'publish', 'computeArch', 'controlPlaneArch']].replace(r'^\s*$', "N/A", regex=True)
+    jobs['encryptionType'] = jobs.apply(fillEncryptionType, axis=1)
+    jobs['benchmark'] = jobs.apply(updateBenchmark, axis=1)
+    jobs['platform'] = jobs.apply(clasifyAWSJobs, axis=1)
+    jobs['jobType'] = jobs.apply(jobType, axis=1)
+    jobs['isRehearse'] = jobs.apply(isRehearse, axis=1)
+    jobs['jobStatus'] = jobs.apply(updateStatus, axis=1)
+    jobs['build'] = jobs.apply(getBuild, axis=1)
 
     cleanJobs = jobs[jobs['platform'] != ""]
 
@@ -64,3 +70,26 @@ def isRehearse(row):
     if row["upstreamJob"].__contains__("rehearse"):
         return "True"
     return "False"
+
+
+def clasifyAWSJobs(row):
+    if row["upstreamJob"].__contains__("rosa-hcp"):
+        return "AWS ROSA-HCP"
+    if row["clusterType"].__contains__("rosa"):
+        return "AWS ROSA"
+    return row["platform"]
+
+
+def getBuild(row):
+    releaseStream = row["releaseStream"] + "-"
+    ocpVersion = row["ocpVersion"]
+    return ocpVersion.replace(releaseStream, "")
+
+
+def fillEncryptionType(row):
+    if row["encrypted"] == "N/A":
+        return "N/A"
+    elif row["encrypted"] == "false":
+        return "None"
+    else:
+        return row["encryptionType"]

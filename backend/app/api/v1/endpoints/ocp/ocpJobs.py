@@ -35,7 +35,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
 
     results = await getData(start_date, end_date, 'ocp.elasticsearch')
 
-    if len(results) >= 1 :
+    if len(results) >= 1:
         response = {
             'startDate': start_date.__str__(),
             'endDate': end_date.__str__(),
