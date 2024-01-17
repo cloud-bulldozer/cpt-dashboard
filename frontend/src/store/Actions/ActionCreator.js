@@ -84,10 +84,18 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
                 const ciSystems = GetCiSystems(results)
                 const jobTypes = GetJobType(results)
                 const rehearses = ["TRUE", "FALSE"]
+                const allIpsec = ["TRUE", "FALSE"]
+                const allFips = ["TRUE", "FALSE"]
+                const allEncrypted = ["TRUE", "FALSE"]
+                const encryptionTypes = GetEncryptionTypes(results)
+                const allPublish = GetPublish(results)
+                const computeArchs = GetComputeArchs(results)
+                const controlPlaneArchs = GetControlPlaneArchs(results)
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getOCPJobsData({
                     data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
-                    updatedTime, ciSystems, jobTypes, rehearses, startDate: api_data.startDate, endDate: api_data.endDate
+                    updatedTime, ciSystems, jobTypes, rehearses, allIpsec, allFips, allEncrypted, encryptionTypes,
+                    allPublish, computeArchs, controlPlaneArchs, startDate: api_data.startDate, endDate: api_data.endDate
                 }))
                 await dispatch(updateOCPMetaData({data: results}))
             }
@@ -237,4 +245,20 @@ const GetTestNames = (api_data) => {
 
 const GetJobType = (api_data) => {
     return Array.from(new Set(api_data.map(item => item.jobType.toUpperCase().trim()))).sort()
+}
+
+const GetEncryptionTypes = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.encryptionType.toUpperCase().trim()))).sort()
+}
+
+const GetPublish = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.publish.toUpperCase().trim()))).sort()
+}
+
+const GetComputeArchs = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.computeArch.toUpperCase().trim()))).sort()
+}
+
+const GetControlPlaneArchs = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.controlPlaneArch.toUpperCase().trim()))).sort()
 }

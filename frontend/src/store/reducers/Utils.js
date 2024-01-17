@@ -24,12 +24,16 @@ const getCPTUpdatedData = (data, testName, product, ciSystem, jobStatus, release
     return filteredData
 }
 
-const getOCPUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse) => {
+const getOCPUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse,
+                            ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch) => {
     const filterValues = {
         "platform": platform, "benchmark": benchmark,
         "shortVersion": version, "workerNodesCount": workerCount,
         "networkType": networkType, "ciSystem": ciSystem,
         "jobType": jobType, "isRehearse": isRehearse,
+        "ipsec": ipsec, "fips": fips, "encrypted": encrypted,
+        "encryptionType": encryptionType, "publish": publish,
+        "computeArch": computeArch, "controlPlaneArch": controlPlaneArch,
     }
     let filteredData = data
     for (let [keyName, value] of Object.entries(filterValues))
