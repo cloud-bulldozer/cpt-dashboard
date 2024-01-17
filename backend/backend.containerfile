@@ -15,7 +15,7 @@ WORKDIR /backend
 
 EXPOSE 8000
 
-RUN dnf install -y pip
+RUN dnf install -y pip gcc python3-devel gcc-c++
 
 RUN pip install --user poetry && \
     poetry export -f requirements.txt -o requirements.txt && \
