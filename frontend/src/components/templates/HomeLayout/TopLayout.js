@@ -7,13 +7,17 @@ import PuffLoad from "../../PatternflyComponents/Spinners/PuffLoad";
 import {Text4} from "../../PatternflyComponents/Text/Text";
 import CardView from "../../PatternflyComponents/Card/CardView";
 import PropTypes from "prop-types";
+import { formatTime } from "../../../helpers/Formatters";
 
 
 export const TopLayout = ({topHeadersData  = []}) => {
 
-    const displayText = (textValue, loading) => {
+    const displayText = (title, textValue, loading) => {
         const load = loading? <PuffLoad /> : ""
-        const value = <span>{textValue} {load}</span>
+        let value = <span>{textValue} {load}</span>
+        if (title === 'Duration Running') {
+            value = <span>{formatTime(textValue)} {load}</span>
+        }
         return  <Text4 style={{color:"black"}} value={ value } />
     }
 
@@ -24,7 +28,7 @@ export const TopLayout = ({topHeadersData  = []}) => {
                     return <GridItem key={index}
                                      children={<CardView initialState={false}
                                                          header={<Text4 value={item.title} />}
-                                                         body={displayText(item.value, item.loading )} />}  />
+                                                         body={displayText(item.title, item.value, item.loading )} />}  />
                 } )
             }
         </Grid>

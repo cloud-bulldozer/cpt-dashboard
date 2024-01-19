@@ -55,7 +55,7 @@ export default function InstallCard(props) {
                                 <li><span class="list-item-key">FIPS Enabled</span>: {config.fips}</li>
                                 <li><span class="list-item-key">Is Encrypted</span>: {config.encrypted}</li>
                                 <li><span class="list-item-key">Encryption Type</span>: {config.encryptionType}</li>
-                                <li><span class="list-item-key">Control Planen Access</span>: {config.publish}</li>
+                                <li><span class="list-item-key">Control Plane Access</span>: {config.publish}</li>
                                 <li><span class="list-item-key">Control Plane Arch.</span>: {config.controlPlaneArch}</li>
                                 <li><span class="list-item-key">Compute Nodes Arch.</span>: {config.computeArch}</li>
                             </ul>
