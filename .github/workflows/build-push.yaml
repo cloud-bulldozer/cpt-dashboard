@@ -1,0 +1,50 @@
+name: Build and Push Image
+on: [ push ]
+
+jobs:
+  build:
+    name: Build and push image
+    runs-on: ubuntu-20.04
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Build Frontend Image
+      id: build-front
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: frontend
+        context: frontend 
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./frontend/frontend.containerfile
+
+    - name: Push frontend image to quay.io
+      id: push-front-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-front.outputs.image }}
+        tags: ${{ steps.build-front.outputs.tags }}
+        registry: quay.io/cloud-bulldozer
+        username: ${{ secrets.QUAY_USER }}
+        password: ${{ secrets.QUAY_TOKEN }}
+
+    - name: Build Backend Image
+      id: build-back
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: backend
+        context: backend
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./backend/backend.containerfile
+
+    - name: Push backend image to quay.io
+      id: push-back-to-quay
+      uses: redhat-actions/push-to-registry@v2
+      with:
+        image: ${{ steps.build-back.outputs.image }}
+        tags: ${{ steps.build-back.outputs.tags }}
+        registry: quay.io/cloud-bulldozer
+        username: ${{ secrets.QUAY_USER }}
+        password: ${{ secrets.QUAY_TOKEN }}
