@@ -4,7 +4,7 @@ from app.services.jira_svc import JiraService
 router = APIRouter()
 
 @router.get(
-    '/api/cpt/v1/jira',
+    '/api/v1/jira',
     summary="Query Jira Issues",
 )
 async def query(

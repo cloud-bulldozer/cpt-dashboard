@@ -4,7 +4,7 @@ from app.api.v1.endpoints.ocp import results
 from app.api.v1.endpoints.ocp import ocpJobs
 from app.api.v1.endpoints.ocp import graph
 from app.api.v1.endpoints.cpt import cptJobs
-from app.api.v1.endpoints.cpt import jira
+from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.quay import quayJobs
 from app.api.v1.endpoints.quay import quayGraphs
 
