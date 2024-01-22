@@ -17,8 +17,10 @@ router.include_router(graph.router, tags=['ocp.graphs'])
 
 # CPT endpoints
 router.include_router(cptJobs.router, tags=['cpt'])
-router.include_router(jira.router, tags=['cpt.jira'])
 
 # Quay endpoints
 router.include_router(quayJobs.router, tags=['quay'])
 router.include_router(quayGraphs.router, tags=['quay'])
+
+# Jira endpoints
+router.include_router(jira.router, tags=['jira'])

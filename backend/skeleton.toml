@@ -8,4 +8,5 @@ password=
 port=8000
 
 [jira]
-host_url=
+url=
+personal_access_token=
