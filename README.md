@@ -228,5 +228,5 @@ For the purpose of adding new configuration and authentication credentials to th
   password=password123
   ```
 
-* Assing the ticket to `vzepedam@redhat.com`
+* Assign the ticket to `vzepedam@redhat.com`
 * Add as watcher `jtaleric@redhat.com`
