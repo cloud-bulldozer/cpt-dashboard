@@ -18,11 +18,17 @@ password=
 [ocp-server]
 port=8000
 
+[jira]
+url=
+personal_access_token=
+
 [airflow]
 url=
 username=
 password=
 ```
+
+[TOML](https://toml.io/en/) is used above, but it also accepts YAML.
 
 The elasticsearch configuration should be set up by product, that way each product can configure their own ES server.
 
@@ -38,7 +44,14 @@ password=
 
 Internally the API when serving the `/ocp` enpoints will use this connection.
 
-[TOML](https://toml.io/en/) is used above, but it also accepts YAML.
+The `jira` table requires a `url` key and a `personal_access_token` key. The `url` is a string value that points to the URL address of your Jira resource. The [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) is a string value that is the credential issued to authenticate and authorize this application with your Jira resource. 
+
+```toml
+[jira]
+url=""
+personal_access_token=""
+```
+
 
 ## Development on System
 
@@ -215,5 +228,5 @@ For the purpose of adding new configuration and authentication credentials to th
   password=password123
   ```
 
-* Assing the ticket to `vzepedam@redhat.com`
+* Assign the ticket to `vzepedam@redhat.com`
 * Add as watcher `jtaleric@redhat.com`
