@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from .maps.ocp import ocpMapper
 from .maps.quay import quayMapper
 from .maps.hce import hceMapper
+from .maps.rhoai import rhoaiNotebooksPerformanceMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 
@@ -14,7 +15,8 @@ router = APIRouter()
 products = {
             "ocp": ocpMapper,
             "quay": quayMapper,
-            "hce": hceMapper
+            "hce": hceMapper,
+            "rhoai": rhoaiNotebooksPerformanceMapper,
            }
 
 @router.get('/api/v1/cpt/jobs',

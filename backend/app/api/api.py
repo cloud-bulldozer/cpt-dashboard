@@ -8,6 +8,8 @@ from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.quay import quayJobs
 from app.api.v1.endpoints.quay import quayGraphs
 
+from app.api.v1.endpoints.rhoai import jobs as rhoaiJobs
+
 router = APIRouter()
 
 # OCP endpoints
@@ -24,3 +26,6 @@ router.include_router(quayGraphs.router, tags=['quay'])
 
 # Jira endpoints
 router.include_router(jira.router, tags=['jira'])
+
+# RHOAI endpoints
+router.include_router(rhoaiJobs.router, tags=['rhoai'])
