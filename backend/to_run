@@ -1,0 +1,7 @@
+podman run \
+    --interactive \
+    --tty \
+    --volume "$PWD/app:/backend/app:z" \
+    --volume "$PWD/ocpperf.toml:/backend/ocpperf.toml:z" \
+    --publish 8000:8000 \
+    ocpp-back /backend/scripts/start-reload.sh
