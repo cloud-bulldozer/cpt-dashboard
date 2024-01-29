@@ -1,4 +1,4 @@
-from elasticsearch import AsyncElasticsearch
+from elasticsearch import AsyncElasticsearch, Elasticsearch
 from fastapi.encoders import jsonable_encoder
 
 from app import config
@@ -29,6 +29,12 @@ class ElasticService:
                     verify_certs=False,
                     http_auth=(self.esUser,self.esPass)
             )
+            self.sync_es = Elasticsearch(
+                    self.url,
+                    use_ssl=False,
+                    verify_certs=False,
+                    http_auth=(self.esUser,self.esPass)
+            )
         else:
             self.es = AsyncElasticsearch(self.url, verify_certs=False)
 
@@ -36,6 +42,14 @@ class ElasticService:
         if indice is None:
             indice = self.indice
         return await self.es.search(
+            index=indice,
+            body=jsonable_encoder(query),
+            size=size, request_timeout=60)
+
+    def sync_post(self, query, indice=None,size=10000):
+        if indice is None:
+            indice = self.indice
+        return self.sync_es.search(
             index=indice,
             body=jsonable_encoder(query),
             size=size, request_timeout=60)
