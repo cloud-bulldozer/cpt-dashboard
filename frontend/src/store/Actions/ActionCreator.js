@@ -1,5 +1,5 @@
 
-import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1} from "../Shared";
+import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1, RHOAI_API_V1} from "../Shared";
 import axios from "axios";
 import {
     errorOCPCall,
@@ -261,4 +261,53 @@ const GetComputeArchs = (api_data) => {
 
 const GetControlPlaneArchs = (api_data) => {
     return Array.from(new Set(api_data.map(item => item.controlPlaneArch.toUpperCase().trim()))).sort()
+}
+
+export const fetchRHOAIJobsData = (startDate = '', endDate='') => async dispatch => {
+    let buildUrl = `${BASE_URL}${RHOAI_API_V1}`
+
+    dispatch(setWaitForOCPUpdate({waitForUpdate:true}))
+
+    if (startDate !== '' && endDate !== '') {
+        buildUrl += `&start_date=${startDate}&end_date=${endDate}`
+    }
+
+    try {
+        let api_data = await fetchAPI(buildUrl)
+        dispatch(setWaitForOCPUpdate({waitForUpdate:false}))
+
+        if (api_data){
+            const results = api_data.results
+            if (results){
+
+                const benchmarks = GetBenchmarks(results)
+                const versions = GetVersions(results)
+                const platforms = GetPlatforms(results)
+                const workers = GetWorkers(results)
+                const networkTypes = GetNetworkTypes(results)
+                const ciSystems = GetCiSystems(results)
+                const jobTypes = GetJobType(results)
+                const rehearses = ["TRUE", "FALSE"]
+                const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
+
+                await dispatch(getOCPJobsData({
+                    data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
+                    updatedTime, ciSystems, jobTypes, rehearses, startDate: api_data.startDate, endDate: api_data.endDate
+                }))
+
+                await dispatch(updateOCPMetaData({data: results}))
+            }
+        }
+    }
+    catch (e) {
+        const error = e
+        if(error.response){
+            await dispatch(errorOCPCall({error: error.response.data.error}))
+            alert(error.response.data.error)
+        }
+        else{
+            console.log(error)
+        }
+        dispatch(setWaitForOCPUpdate({waitForUpdate:false}))
+    }
 }

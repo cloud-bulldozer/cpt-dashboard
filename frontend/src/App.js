@@ -6,7 +6,7 @@ import {
     PageSection,
     PageSectionVariants,
 } from '@patternfly/react-core';
-import {fetchOCPJobsData, fetchCPTJobsData, fetchQuayJobsData} from "./store/Actions/ActionCreator";
+import {fetchOCPJobsData, fetchCPTJobsData, fetchQuayJobsData, fetchRHOAIJobsData} from "./store/Actions/ActionCreator";
 import {useDispatch} from "react-redux";
 import {Route, Switch, BrowserRouter as Router} from "react-router-dom";
 import {NavBar} from "./components/NavBar/NavBar";
@@ -23,6 +23,7 @@ export const App = () => {
               await dispatch(fetchOCPJobsData())
               await dispatch(fetchCPTJobsData())
               await dispatch(fetchQuayJobsData())
+              await dispatch(fetchRHOAIJobsData())
           }
           fetchData()
     }, [dispatch])
