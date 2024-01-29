@@ -3,6 +3,8 @@ from fastapi.encoders import jsonable_encoder
 
 from app import config
 
+import urllib3
+urllib3.disable_warnings()
 
 class ElasticService:
     # todo add bulkhead pattern
