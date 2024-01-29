@@ -20,9 +20,9 @@ export const App = () => {
 
     useEffect(() => {
           const fetchData = async () =>{
-              await dispatch(fetchOCPJobsData())
-              await dispatch(fetchCPTJobsData())
-              await dispatch(fetchQuayJobsData())
+              //await dispatch(fetchOCPJobsData())
+              //await dispatch(fetchCPTJobsData())
+              //await dispatch(fetchQuayJobsData())
               await dispatch(fetchRHOAIJobsData())
           }
           fetchData()
