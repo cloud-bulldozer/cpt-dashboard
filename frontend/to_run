@@ -1,0 +1,6 @@
+podman run \
+    --interactive \
+    --tty \
+    --volume "$PWD:/app:z" \
+    --publish 3000:3000 \
+    ocpp-front "$@"
