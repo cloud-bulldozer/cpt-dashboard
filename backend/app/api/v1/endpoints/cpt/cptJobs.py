@@ -49,8 +49,9 @@ async def jobs(start_date: date = Query(None, description="Start date for search
             results = pd.concat([results, df.loc[:, ["ciSystem", "uuid", "releaseStream", "jobStatus", "buildUrl", "startDate", "endDate", "product", "version", "testName"]]])
         except ConnectionError:
             print("Connection Error in mapper for product " + product)
-        except:
-            print("Date range returned no values or Unknown error in mapper for product " + product)
+        except Exception as e: # DANGEROUS
+            print("Date range returned no values or Unknown error in mapper for product " + product + " | " + str(e))
+            raise e
 
     response = {
         'startDate': start_date.__str__(),
