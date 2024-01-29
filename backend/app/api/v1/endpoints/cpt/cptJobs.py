@@ -13,9 +13,9 @@ from fastapi.param_functions import Query
 router = APIRouter()
 
 products = {
-            "ocp": ocpMapper,
-            "quay": quayMapper,
-            "hce": hceMapper,
+            #"ocp": ocpMapper,
+            #"quay": quayMapper,
+            #"hce": hceMapper,
             "rhoai": rhoaiNotebooksPerformanceMapper,
            }
 
