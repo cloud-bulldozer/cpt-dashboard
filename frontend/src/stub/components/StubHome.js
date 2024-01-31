@@ -21,15 +21,14 @@ export function StubHome() {
     const [startDate, setStartDate] = useState(searchParams.get("startDate")  || stubData.startDate) || ""
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || stubData.endDate) || ""
 
-    const preloadFilters = (filters) => {
-        let results = {}
-        for (const [key, value] of Object.entries(filters)) {
-            results[value.name] = value.items[0]
-        }
-        return results
-    }
 
-    const [buildComponents, setBuildComponents] = useState(() => preloadFilters(stubData.filtersData))
+    const [buildComponents, setBuildComponents] = useState(() => {
+        let results = {}
+         for (const value of Object.values(stubData.filtersData)) {
+            results[value.name] = value.items[0]
+         }
+        return results
+    })
 
     const updateSetBuildComponents = (key, value) => {
         setBuildComponents(buildComponents=>({...buildComponents, [key]: value}))
@@ -40,8 +39,8 @@ export function StubHome() {
             {name: "DateComponent", options: [], onChange: null, value: null, startDate: startDate,  endDate: endDate, setStartDate: setStartDate, setEndDate: setEndDate},
         ];
 
-        for (const [key, value] of Object.entries(stubData.filtersData)) {
-            components.push({name: value.display, value: buildComponents[value.name], onChange: updateSetBuildComponents, options: value.items, isKeypair: true})
+        for (const value of Object.values(stubData.filtersData)) {
+            components.push({name: value.display, keyName:value.name, value: buildComponents[value.name], onChange: updateSetBuildComponents, options: value.items, isKeypair: true})
         }
         return components
     }
@@ -75,9 +74,12 @@ export function StubHome() {
 
 
     return (
-        <HomeLayout initialState={stubData.initialState}
-        sidebarComponents={sidebarComponents}
-        tableMetaData={stubData.tableData} tableData={stubData.data}
+        <>
+            <HomeLayout initialState={stubData.initialState}
+            sidebarComponents={sidebarComponents}
+            tableMetaData={stubData.tableData} tableData={stubData.data}
         />
+        </>
+
         );
     }
