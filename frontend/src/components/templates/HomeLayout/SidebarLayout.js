@@ -9,7 +9,6 @@ import PropTypes from "prop-types";
 export const SidebarLayout = ({sidebarComponents}) => {
 
     const DisplayDate = ({startDate, endDate, setStartDate,  setEndDate}) => {
-        console.log(startDate)
         const dateView = (name, dateValue, onChange) => {
             return <Stack>
                         <StackItem children={<Text4 value={name}/>}/>
@@ -42,7 +41,7 @@ export const SidebarLayout = ({sidebarComponents}) => {
                     return <StackItem key={index}
                                       children={<CardView initialState={false}
                                                           header={<Text4 value={component.name} />}
-                                          body={<FormSelectViewKeyPair options={component.options}
+                                          body={<FormSelectViewKeyPair name={component.keyName} options={component.options}
                                                                 onChange={component.onChange}
                                                                 selectedValue={component.value}
                                           />}
