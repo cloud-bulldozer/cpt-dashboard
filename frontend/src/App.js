@@ -13,6 +13,8 @@ import {NavBar} from "./components/NavBar/NavBar";
 import {HomeView} from "./components/Home/HomeView";
 import {OCPHome} from './components/OCP/OCPHome';
 import {QuayHome} from './components/Quay/QuayHome';
+import {StubHome} from './stub/components/StubHome';
+import {fetchStubData} from "./stub/store/actions/ActionCreator";
 
 
 export const App = () => {
@@ -23,6 +25,7 @@ export const App = () => {
               await dispatch(fetchOCPJobsData())
               await dispatch(fetchCPTJobsData())
               await dispatch(fetchQuayJobsData())
+              await dispatch(fetchStubData())
           }
           fetchData()
     }, [dispatch])
@@ -45,6 +48,7 @@ export const App = () => {
                   <Route path="/home"><HomeView /></Route>
                   <Route path="/ocp"><OCPHome /></Route>
                   <Route path="/quay"><QuayHome /></Route>
+                  <Route path="/stub"><StubHome /></Route>
               </Switch>
           </PageSection>
         </Page>

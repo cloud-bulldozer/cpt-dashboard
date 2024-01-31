@@ -2,7 +2,7 @@ import {Split, Stack, StackItem} from "@patternfly/react-core";
 import {Text4} from "../../PatternflyComponents/Text/Text";
 import {DatePickerView} from "../../PatternflyComponents/Date/DatePickerView";
 import CardView from "../../PatternflyComponents/Card/CardView";
-import {FormSelectView} from "../../PatternflyComponents/Form/FormSelectView";
+import {FormSelectView, FormSelectViewKeyPair} from "../../PatternflyComponents/Form/FormSelectView";
 import PropTypes from "prop-types";
 
 
@@ -38,7 +38,17 @@ export const SidebarLayout = ({sidebarComponents}) => {
                         />
                     } />
                 }
-                else{
+                else if(component.isKeypair) {
+                    return <StackItem key={index}
+                                      children={<CardView initialState={false}
+                                                          header={<Text4 value={component.name} />}
+                                          body={<FormSelectViewKeyPair options={component.options}
+                                                                onChange={component.onChange}
+                                                                selectedValue={component.value}
+                                          />}
+                               />} />
+               }
+                else {
                      return <StackItem key={index}
                                        children={<CardView initialState={false}
                                                            header={<Text4 value={component.name} />}

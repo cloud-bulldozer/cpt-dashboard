@@ -562,7 +562,7 @@ def stub_filters():
         'benchmark': 'Benchmark',
         'workerNodesCount': 'Workers Count',
         'networkType': 'Network Type',
-        'version': 'Versions',
+        'shortVersion': 'Versions',
         'jobType': 'Job Type',
         'isRehearse': 'Rehearse',
         'ipsec': 'Has IPSEC',

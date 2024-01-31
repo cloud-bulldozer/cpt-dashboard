@@ -20,7 +20,6 @@ router = APIRouter()
 async def jobs(pretty: bool = Query(False, description="Output contet in pretty format.")):
     results = stub_results()["results"]
     dfItem = pd.json_normalize(results)
-    print(dfItem)
 
     response = {
         'startDate': datetime.utcnow().date().__str__(),
