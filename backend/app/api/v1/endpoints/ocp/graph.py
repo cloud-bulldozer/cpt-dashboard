@@ -74,9 +74,12 @@ async def trend_cpu(namespace: str, benchmark: str, count: int, version: str):
     if count > 50 :
         meta['masterNodesType'] = "m6a.4xlarge"
         meta['workerNodesType'] = "m5.xlarge"
-    else:
+    elif count <= 24 and count > 20 :
         meta['masterNodesType'] = "m6a.xlarge"
         meta['workerNodesType'] = "m6a.xlarge"
+    else :
+        meta['masterNodesType'] = "m5.2large"
+        meta['workerNodesType'] = "m5.xlarge"
     meta['workerNodesCount'] = count
     meta['platform'] = "AWS"
     meta['ocpVersion']= version
