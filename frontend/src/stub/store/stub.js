@@ -10,4 +10,5 @@ export const STUB_INITIAL_DATA = {
     endDate: '',
     tableData : [],
     filtersData: {},
+    selectedValues: {},
 }

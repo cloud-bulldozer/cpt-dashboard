@@ -22,7 +22,7 @@ export function StubHome() {
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || stubData.endDate) || ""
 
 
-    const [buildComponents, setBuildComponents] = useState(() => {
+    const [builtSidebarComponents, setBuiltSidebarComponents] = useState(() => {
         let results = {}
          for (const value of Object.values(stubData.filtersData)) {
             results[value.name] = value.items[0]
@@ -30,8 +30,8 @@ export function StubHome() {
         return results
     })
 
-    const updateSetBuildComponents = (key, value) => {
-        setBuildComponents(buildComponents=>({...buildComponents, [key]: value}))
+    const updateSetBuiltSidebarComponents = (key, value) => {
+        setBuiltSidebarComponents(builtSidebarComponents=>({...builtSidebarComponents, [key]: value}))
     }
 
     function buildSideBarComponents() {
@@ -40,7 +40,7 @@ export function StubHome() {
         ];
 
         for (const value of Object.values(stubData.filtersData)) {
-            components.push({name: value.display, keyName:value.name, value: buildComponents[value.name], onChange: updateSetBuildComponents, options: value.items, isKeypair: true})
+            components.push({name: value.display, keyName:value.name, value: builtSidebarComponents[value.name], onChange: updateSetBuiltSidebarComponents, options: value.items, isKeypair: true})
         }
         return components
     }
@@ -51,13 +51,15 @@ export function StubHome() {
         let buildParams = ''
         if(startDate !== '') buildParams += `&startDate=${startDate}`
         if(endDate !== '') buildParams += `&endDate=${endDate}`
+        for (let [key, value] of Object.entries(builtSidebarComponents)) {
+            if(value !== '') buildParams += `&${key}=${value}`
+        }
         history.push(`/stub?${buildParams.substring(1)}`, { replace: true });
-
-    }, [history, startDate, endDate])
+    }, [history, startDate, endDate, builtSidebarComponents])
 
     useEffect( ()=>{
-        dispatch(updateStubDataFilter({}))
-    }, [ dispatch ])
+        dispatch(updateStubDataFilter({ builtSidebarComponents }))
+    }, [ builtSidebarComponents, dispatch ])
 
     useEffect(() => {
         if(startDate || endDate){

@@ -22,10 +22,16 @@ const jobsSlice = createSlice({
             state.filtersData = action.payload.filtersData
         },
         updateStubDataFilter: (state, action) => {
-            state.data = getStubUpdatedData(original(state.copyData))
+            const { builtSidebarComponents } = action.payload
+            if (builtSidebarComponents !== undefined) {
+                for (let [key, value] of Object.entries(builtSidebarComponents)) {
+                    state.selectedValues[key] = value
+                }
+                state.data = getStubUpdatedData(original(state.copyData), builtSidebarComponents)
+            }
         },
         updateStubMetaData: (state, action) => {
-            state.data = getStubUpdatedData(action.payload.data)
+            state.data = getStubUpdatedData(action.payload.data, state.selectedValues)
         },
         setWaitForStubUpdate: (state, action) => {
             state.waitForUpdate = action.payload.waitForUpdate
