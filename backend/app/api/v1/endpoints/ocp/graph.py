@@ -218,9 +218,9 @@ async def jobSummary(uuids: list):
     }
     print(query)
     es = ElasticService(configpath="ocp.elasticsearch",index=index)
-    response = await es.post(query)
+    response = await es.post(query=query)
     await es.close()
-    runs = [item['_source'] for item in response["hits"]["hits"]]
+    runs = [item['_source'] for item in response]
     return runs
 
 async def processBurner(data: dict) :
@@ -344,9 +344,9 @@ async def getBurnerResults(uuid: str, uuids: list, index: str ):
     }
     print(query)
     es = ElasticService(configpath="ocp.elasticsearch",index=index)
-    response = await es.post(query)
+    response = await es.post(query=query)
     await es.close()
-    runs = [item['_source'] for item in response["hits"]["hits"]]
+    runs = [item['_source'] for item in response]
     return runs
 
 async def getResults(uuid: str, uuids: list, index: str ):
@@ -364,9 +364,9 @@ async def getResults(uuid: str, uuids: list, index: str ):
     }
     print(query)
     es = ElasticService(configpath="ocp.elasticsearch",index=index)
-    response = await es.post(query)
+    response = await es.post(query=query)
     await es.close()
-    runs = [item['_source'] for item in response["hits"]["hits"]]
+    runs = [item['_source'] for item in response]
     return runs
 
 async def getMatchRuns(meta: dict, workerCount: False):
@@ -414,9 +414,9 @@ async def getMatchRuns(meta: dict, workerCount: False):
 
     print(query)
     es = ElasticService(configpath="ocp.elasticsearch")
-    response = await es.post(query)
+    response = await es.post(query=query)
     await es.close()
-    runs = [item['_source'] for item in response["hits"]["hits"]]
+    runs = [item['_source'] for item in response]
     uuids = []
     for run in runs :
         uuids.append(run["uuid"])
