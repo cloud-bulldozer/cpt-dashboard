@@ -41,8 +41,18 @@ indice=
 username=
 password=
 ```
+If you also have an archived internal instance that keeps track of older data, it can be specified with '.internal' suffix. Example of our `OCP` internal archived instance's configuration.
+```toml
+[ocp.elasticsearch.internal]
+url=
+indice=
+# [optional] common prefix for all indexes
+prefix=
+username=
+password=
+```
 
-Internally the API when serving the `/ocp` enpoints will use this connection.
+Internally the API when serving the `/ocp` enpoints will use this connection. Also it is suggested to create indexes with same name in the archived instances too to avoid further complications.
 
 The `jira` table requires a `url` key and a `personal_access_token` key. The `url` is a string value that points to the URL address of your Jira resource. The [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) is a string value that is the credential issued to authenticate and authorize this application with your Jira resource. 
 

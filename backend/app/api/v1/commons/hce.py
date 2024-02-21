@@ -17,13 +17,11 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
             }
         }
     }
-    query['query']['bool']['filter']['range']['date']['lte'] = str(end_datetime)
-    query['query']['bool']['filter']['range']['date']['gte'] = str(start_datetime)
 
     es = ElasticService(configpath=configpath)
-    response = await es.post(query)
+    response = await es.post(query=query, start_date=start_datetime, end_date=end_datetime, timestamp_field='date')
     await es.close()
-    tasks = [item['_source'] for item in response["hits"]["hits"]]
+    tasks = [item['_source'] for item in response]
     jobs = pd.json_normalize(tasks)
     jobs[['group']] = jobs[['group']].fillna(0)
     jobs.fillna('', inplace=True)
