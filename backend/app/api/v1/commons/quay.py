@@ -30,28 +30,10 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     jobs[['masterNodesCount', 'workerNodesCount',
           'infraNodesCount', 'totalNodesCount']] = jobs[['masterNodesCount', 'workerNodesCount', 'infraNodesCount', 'totalNodesCount']].fillna(0)
     jobs.fillna('', inplace=True)
-    jobs[['ipsec', 'fips', 'encrypted',
-          'publish', 'computeArch', 'controlPlaneArch']] = jobs[['ipsec', 'fips', 'encrypted',
-                                                                 'publish', 'computeArch', 'controlPlaneArch']].replace(r'^\s*$', "N/A", regex=True)
-    jobs['encryptionType'] = jobs.apply(fillEncryptionType, axis=1)
     jobs['benchmark'] = jobs.apply(utils.updateBenchmark, axis=1)
     jobs['platform'] = jobs.apply(utils.clasifyAWSJobs, axis=1)
-    jobs['jobType'] = jobs.apply(utils.jobType, axis=1)
-    jobs['isRehearse'] = jobs.apply(utils.isRehearse, axis=1)
     jobs['jobStatus'] = jobs.apply(utils.updateStatus, axis=1)
     jobs['build'] = jobs.apply(utils.getBuild, axis=1)
+    jobs['shortVersion'] = jobs['ocpVersion'].str.slice(0, 4)
 
-    cleanJobs = jobs[jobs['platform'] != ""]
-
-    jbs = cleanJobs
-    jbs['shortVersion'] = jbs['ocpVersion'].str.slice(0, 4)
-
-    return jbs
-
-def fillEncryptionType(row):
-    if row["encrypted"] == "N/A":
-        return "N/A"
-    elif row["encrypted"] == "false":
-        return "None"
-    else:
-        return row["encryptionType"]
+    return jobs[jobs['platform'] != ""]

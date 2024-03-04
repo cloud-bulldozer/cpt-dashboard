@@ -2,8 +2,8 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
-from ...commons.ocp import getData
-from ...commons.example_responses import ocp_200_response, response_422
+from ...commons.quay import getData
+from ...commons.example_responses import quay_200_response, response_422
 from fastapi.param_functions import Query
 
 router = APIRouter()
@@ -17,7 +17,7 @@ router = APIRouter()
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
             responses={
-                200: ocp_200_response(),
+                200: quay_200_response(),
                 422: response_422(),
         },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),

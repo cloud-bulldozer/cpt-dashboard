@@ -128,14 +128,18 @@ export const fetchQuayJobsData = (startDate = '', endDate='') => async dispatch 
             const results = api_data.results
             if(results){
                 const benchmarks = GetBenchmarks(results)
-                const versions = GetVersions(results)
+                const releaseStreams = GetReleaseStreams(results)
                 const platforms = GetPlatforms(results)
                 const workers = GetWorkers(results)
+                const hitSizes = GetHitSizes(results)
+                const concurrencies = GetConcurrencies(results)
+                const imagePushPulls = GetImagePushPulls(results)
                 const ciSystems = GetCiSystems(results)
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getQuayJobsData({
-                    data: results, benchmarks, versions, waitForUpdate: false, platforms, workers,
-                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                    data: results, benchmarks, releaseStreams, waitForUpdate: false, platforms, workers,
+                    hitSizes, concurrencies, imagePushPulls, updatedTime, ciSystems, startDate: api_data.startDate, 
+                    endDate: api_data.endDate
                 }))
                 await dispatch(updateQuayMetaData({data: results}))
             }
@@ -218,6 +222,18 @@ const GetPlatforms = (api_data) => {
 
 const GetWorkers = (api_data) => {
     return Array.from(new Set(api_data.map(item => parseInt(item.workerNodesCount)))).sort((a, b) => a-b)
+}
+
+const GetHitSizes = (api_data) => {
+    return Array.from(new Set(api_data.map(item => parseInt(item.hitSize)))).sort((a, b) => a-b)
+}
+
+const GetConcurrencies = (api_data) => {
+    return Array.from(new Set(api_data.map(item => parseInt(item.concurrency)))).sort((a, b) => a-b)
+}
+
+const GetImagePushPulls = (api_data) => {
+    return Array.from(new Set(api_data.map(item => parseInt(item.imagePushPulls)))).sort((a, b) => a-b)
 }
 
 const GetNetworkTypes = (api_data) => {

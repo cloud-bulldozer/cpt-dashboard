@@ -30,7 +30,10 @@ export function QuayHome() {
     const [platform, setPlatform] = useState(searchParams.get("platform") || quayJobs.selectedPlatform)
     const [benchmark, setBenchmark] = useState(searchParams.get("benchmark") || quayJobs.selectedBenchmark)
     const [workerCount, setWorkerCount] = useState(searchParams.get("workerCount") || quayJobs.selectedWorkerCount)
-    const [version, setVersion] = useState(searchParams.get("version") || quayJobs.selectedVersion)
+    const [releaseStream, setReleaseStream] = useState(searchParams.get("releaseStream") || quayJobs.selectedReleaseStream)
+    const [hitSize, setHitSize] = useState(searchParams.get("hitSize") || quayJobs.selectedHitSize)
+    const [concurrency, setConcurrency] = useState(searchParams.get('concurrency') || quayJobs.selectedConcurrency)
+    const [imagePushPulls, setImagePushPulls] = useState(searchParams.get('imagePushPulls') || quayJobs.selectedImagePushPulls)
     const [startDate, setStartDate] = useState(searchParams.get("startDate")  || quayJobs.startDate) || ""
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || quayJobs.endDate) || ""
 
@@ -39,8 +42,11 @@ export function QuayHome() {
         {name: "Ci System", onChange: setCiSystem, value: ciSystem, options: quayJobs.ciSystems},
         {name: "Platform", onChange: setPlatform, value: platform, options: quayJobs.platforms},
         {name: "Benchmark", onChange: setBenchmark, value: benchmark, options:quayJobs.benchmarks },
-        {name: "Versions", onChange: setVersion, value: version, options: quayJobs.versions},
-        {name: "Workers Count", onChange: setWorkerCount, value: workerCount, options:quayJobs.workers }
+        {name: "Release Streams", onChange: setReleaseStream, value: releaseStream, options: quayJobs.releaseStreams},
+        {name: "Workers Count", onChange: setWorkerCount, value: workerCount, options:quayJobs.workers },
+        {name: "Hit Size", onChange: setHitSize, value: hitSize, options:quayJobs.hitSizes },
+        {name: "Concurrency", onChange: setConcurrency, value: concurrency, options:quayJobs.concurrencies },
+        {name: "Image Push/Pulls", onChange: setImagePushPulls, value: imagePushPulls, options:quayJobs.imagePushPulls }
     ]
 
     useEffect(() => {
@@ -48,17 +54,20 @@ export function QuayHome() {
         if(ciSystem !== '') buildParams += `&ciSystem=${ciSystem}`
         if(platform !== '') buildParams += `&platform=${platform}`
         if(benchmark !== '') buildParams += `&benchmark=${benchmark}`
-        if(version !== '') buildParams += `&version=${version}`
+        if(releaseStream !== '') buildParams += `&releaseStream=${releaseStream}`
         if(workerCount !== '') buildParams += `&workerCount=${workerCount}`
+        if(hitSize !== '') buildParams += `&hitSize=${hitSize}`
+        if(concurrency !== '') buildParams += `&concurrency=${concurrency}`
+        if(imagePushPulls !== '') buildParams += `&imagePushPulls=${imagePushPulls}`
         if(startDate !== '') buildParams += `&startDate=${startDate}`
         if(endDate !== '') buildParams += `&endDate=${endDate}`
         history.push(`/quay?${buildParams.substring(1)}`, { replace: true });
 
-    }, [history, ciSystem, platform, benchmark, version, workerCount, startDate, endDate])
+    }, [history, ciSystem, platform, benchmark, releaseStream, workerCount, hitSize, concurrency, imagePushPulls, startDate, endDate])
 
     useEffect( ()=>{
-        dispatch(updateQuayDataFilter({ciSystem, platform, benchmark, version, workerCount}))
-    }, [ ciSystem, platform, benchmark, version, workerCount, dispatch ])
+        dispatch(updateQuayDataFilter({ciSystem, platform, benchmark, releaseStream, workerCount, hitSize, concurrency, imagePushPulls}))
+    }, [ ciSystem, platform, benchmark, releaseStream, workerCount, hitSize, concurrency, imagePushPulls, dispatch ])
 
     useEffect(() => {
         if(startDate || endDate){
@@ -77,9 +86,8 @@ export function QuayHome() {
     return (
         <HomeLayout initialState={quayJobs.initialState}
                     topHeadersData={topHeadersData} sidebarComponents={sidebarComponents}
-                    tableMetaData={quayJobs.tableData} tableData={quayJobs.data}
+                    tableMetaData={quayJobs.tableData} tableData={quayJobs.data} 
                     expandableComponent={BenchmarkResults} addExpandableRows={true}
-
         />
     );
 }

@@ -96,7 +96,7 @@ const getGrafanaData = (benchmarkConfigs) => {
         if (benchmarkConfigs.benchmark === "quay-load-test") {
             getGrafanaUrl = grafanaURL+quayDashboard+
                             "&from="+startDate+"&to="+endDate+
-                            "&var-uuid="+benchmarkConfigs.uuid+"&var-baseline_uuid="+benchmarkConfigs.uuid
+                            "&var-uuid="+benchmarkConfigs.uuid
 
         } else {
             getGrafanaUrl = grafanaURL+dashboardURL+

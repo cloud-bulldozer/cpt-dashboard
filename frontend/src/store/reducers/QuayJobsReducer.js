@@ -1,10 +1,10 @@
 import {createSlice, original} from "@reduxjs/toolkit";
-import {OCP_INITIAL_DATA} from "./InitialData";
-import { getOCPUpdatedData, getOCPSummary } from './Utils';
+import {QUAY_INITIAL_DATA} from "./InitialData";
+import { getQuayUpdatedData, getQuaySummary } from './Utils';
 
 const jobsSlice = createSlice({
     initialState: {
-        ...OCP_INITIAL_DATA,
+        ...QUAY_INITIAL_DATA,
     },
     name: 'quayES',
     reducers: {
@@ -13,31 +13,38 @@ const jobsSlice = createSlice({
             state.copyData = action.payload.data
             state.data = action.payload.data
             state.benchmarks = ["All", ...action.payload.benchmarks]
-            state.versions = ["All", ...action.payload.versions]
+            state.releaseStreams = ["All", ...action.payload.releaseStreams]
             state.waitForUpdate = action.payload.waitForUpdate
             state.platforms = ["All", ...action.payload.platforms]
             state.workers = ["All", ...action.payload.workers]
+            state.hitSizes = ["All", ...action.payload.hitSizes]
+            state.concurrencies = ["All", ...action.payload.concurrencies]
+            state.imagePushPulls = ["All", ...action.payload.imagePushPulls]
             state.ciSystems = ["All", ...action.payload.ciSystems]
             state.updatedTime = action.payload.updatedTime
             state.error = null
-            Object.assign(state,  getOCPSummary(state.data))
+            Object.assign(state,  getQuaySummary(state.data))
             state.startDate = action.payload.startDate
             state.endDate = action.payload.endDate
         },
         updateQuayDataFilter: (state, action) => {
-            const {ciSystem, platform, benchmark, version, workerCount} = action.payload
+            const {ciSystem, platform, benchmark, releaseStream, workerCount, hitSize, concurrency, imagePushPulls} = action.payload
             state.selectedBenchmark = benchmark
-            state.selectedVersion = version
+            state.selectedReleaseStream = releaseStream
             state.selectedPlatform = platform
             state.selectedWorkerCount = workerCount
             state.selectedCiSystem = ciSystem
-            state.data = getOCPUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, 'all', ciSystem, 'all', 'all')
-            Object.assign(state,  getOCPSummary(state.data))
+            state.selectedHitSize = hitSize
+            state.selectedConcurrency = concurrency
+            state.selectedImagePushPulls = imagePushPulls
+            state.data = getQuayUpdatedData(original(state.copyData), platform, benchmark, releaseStream, workerCount, ciSystem, hitSize, concurrency, imagePushPulls)
+            Object.assign(state,  getQuaySummary(state.data))
         },
         updateQuayMetaData: (state, action) => {
-            state.data = getOCPUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
-                state.selectedVersion, state.selectedWorkerCount, 'all', state.selectedCiSystem, 'all', 'all')
-            Object.assign(state,  getOCPSummary(state.data))
+            state.data = getQuayUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
+                state.selectedReleaseStream, state.selectedWorkerCount, state.selectedCiSystem, state.selectedHitSize,
+                state.selectedConcurrency, state.selectedImagePushPulls)
+            Object.assign(state,  getQuaySummary(state.data))
         },
         setWaitForQuayUpdate: (state, action) => {
             state.waitForUpdate = action.payload.waitForUpdate
