@@ -42,6 +42,20 @@ const getOCPUpdatedData = (data, platform, benchmark, version, workerCount, netw
     return filteredData
 }
 
+const getQuayUpdatedData = (data, platform, benchmark, releaseStream, workerCount, ciSystem, hitSize, concurrency, imagePushPull) => {
+    const filterValues = {
+    "platform": platform, "benchmark": benchmark,
+    "releaseStream": releaseStream, "workerNodesCount": workerCount,
+    "ciSystem": ciSystem, "hitSize": hitSize, "concurrency": concurrency,
+    "imagePushPull": imagePushPull,
+    }
+    let filteredData = data
+    for (let [keyName, value] of Object.entries(filterValues))
+    filteredData = getFilteredData(filteredData, value, keyName)
+
+    return filteredData
+}
+
 const getCPTSummary = (api_data) => {
     let success = 0;
     let failure = 0;
@@ -70,5 +84,21 @@ const getOCPSummary = (api_data) => {
     return {success, failure, others, total, duration}
 }
 
+const getQuaySummary = (api_data) => {
+    let success = 0;
+    let failure = 0;
+    let others = 0;
+    let duration = 0;
+    api_data.forEach(item => {
+        if(item.jobStatus.toLowerCase() === "success") success++
+        else if(item.jobStatus.toLowerCase() === "failure") failure++;
+        else others++;
+        duration += parseInt(item.jobDuration) ? parseInt(item.jobDuration) : 0;
+    })
+    const total = success + failure + others
 
-export { getCPTUpdatedData, getOCPUpdatedData, getCPTSummary, getOCPSummary };
+    return { success, failure, others, total, duration };
+}
+
+
+export { getCPTUpdatedData, getOCPUpdatedData, getQuayUpdatedData, getCPTSummary, getOCPSummary, getQuaySummary };

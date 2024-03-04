@@ -4,7 +4,7 @@ import { Grid, GridItem } from '@patternfly/react-core';
 import { Spinner } from '@patternfly/react-core';
 import { formatTime } from '../../helpers/Formatters'
 import { FaCheck, FaExclamationCircle,  FaExclamationTriangle } from "react-icons/fa";
-import { DisplayGrafana } from "./DisplayGrafana";
+import { DisplayGrafana } from "../commons/DisplayGrafana";
 
 
 export default function InstallCard(props) {
@@ -51,13 +51,6 @@ export default function InstallCard(props) {
                                 <li><span class="list-item-key">Benchmark Status</span>: {icons[config.job_status  && config.job_status || config.jobStatus] || config.job_status  && config.job_status || config.jobStatus}</li>
                                 <li><span class="list-item-key">Duration</span>: {formatTime(config.job_duration  && config.job_duration || config.jobDuration)}</li>
                                 <li><span class="list-item-key">Test ID</span>: {config.uuid}</li>
-                                <li><span class="list-item-key">Has IPSEC</span>: {config.ipsec}</li>
-                                <li><span class="list-item-key">FIPS Enabled</span>: {config.fips}</li>
-                                <li><span class="list-item-key">Is Encrypted</span>: {config.encrypted}</li>
-                                <li><span class="list-item-key">Encryption Type</span>: {config.encryptionType}</li>
-                                <li><span class="list-item-key">Control Plane Access</span>: {config.publish}</li>
-                                <li><span class="list-item-key">Control Plane Arch.</span>: {config.controlPlaneArch}</li>
-                                <li><span class="list-item-key">Compute Nodes Arch.</span>: {config.computeArch}</li>
                             </ul>
                             </CardBody></Card></GridItem>
                     <DisplayGrafana benchmarkConfigs={ config } />
