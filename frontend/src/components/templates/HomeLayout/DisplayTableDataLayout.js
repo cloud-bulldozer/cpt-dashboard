@@ -10,10 +10,8 @@ export const DisplayTableDataLayout = ({initialState, tableMetaData, tableData, 
                                        expandableComponent}) => {
 
    const getRows = () => {
-       console.log(tableData)
         return  tableData && tableData.map( items => {
             const tableRows = tableMetaData.map( metadata => {
-                console.log(items[metadata.value])
                 if(metadata.name === 'Status')
                     if(items[metadata.value].toLowerCase() === "success")
                         return <Badge style={{backgroundColor: '#008000'}} children={items[metadata.value]} />

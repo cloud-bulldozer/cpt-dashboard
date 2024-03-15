@@ -71,4 +71,4 @@ const getOCPSummary = (api_data) => {
 }
 
 
-export { getCPTUpdatedData, getOCPUpdatedData, getCPTSummary, getOCPSummary };
+export { getFilteredData, getCPTUpdatedData, getOCPUpdatedData, getCPTSummary, getOCPSummary };

@@ -3,6 +3,7 @@ import cptJobsReducer from "./CPTJobsReducer";
 import quayJobsReducer from "./QuayJobsReducer";
 import graphReducer from "./GraphReducer";
 import quayGraphReducer from "./QuayGraphReducer";
+import StubReducer from "../../stub/store/reducers/StubReducer";
 
 
 export const rootReducer = {
@@ -11,4 +12,5 @@ export const rootReducer = {
     'quayJobs': quayJobsReducer,
     'graph': graphReducer,
     'quayGraph': quayGraphReducer,
+    'stubData': StubReducer,
 }

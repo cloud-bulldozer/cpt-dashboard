@@ -26,6 +26,19 @@ export const ToolBar = () => {
   // Selectors for both ocpJobs and quayJobs
   const ocpJobResults = useSelector((state) => state.ocpJobs);
   const quayJobResults = useSelector((state) => state.quayJobs);
+  const stubResults = useSelector((state) => state.stubData);
+
+  const lastUpdated = (value) => {
+    if (value === "/ocp") {
+      return ocpJobResults.updatedTime
+    } else if (value === "/quay") {
+      return quayJobResults.updatedTime
+    } else if (value === "/stub") {
+      return stubResults.updatedTime
+    } else {
+      return ocpJobResults.updatedTime
+    }
+  }
 
   const NavItems = (
     <>
@@ -54,6 +67,15 @@ export const ToolBar = () => {
           onClick={() => setActive("/quay")}
         />
       </ToolbarItem>
+      {/* Nav link for stub page */}
+      <ToolbarItem>
+        <Link
+          to="/stub"
+          children={"Stub"}
+          style={linkStyle("/stub")}
+          onClick={() => setActive("/stub")}
+        />
+      </ToolbarItem>
     </>
   );
 
@@ -70,7 +92,7 @@ export const ToolBar = () => {
             <Text4
               style={{ color: "#FFFFFF" }}
               value={`Last Updated Time | ${
-                active === "/ocp" ? ocpJobResults.updatedTime : quayJobResults.updatedTime
+                lastUpdated(active)
               }`}
             />
           </ToolbarItem>

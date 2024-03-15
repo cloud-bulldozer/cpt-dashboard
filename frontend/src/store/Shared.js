@@ -14,3 +14,5 @@ export const CPT_JOBS_API_V1 = "/api/v1/cpt/jobs"
 
 export const QUAY_JOBS_API_V1 = "/api/v1/quay/jobs"
 export const QUAY_GRAPH_API_V1 = "/api/v1/quay/graph"
+
+export const STUB_JOBS_API_V1 = "/api/v1/stub/jobs"
