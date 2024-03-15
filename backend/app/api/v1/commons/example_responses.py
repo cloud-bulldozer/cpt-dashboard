@@ -81,8 +81,49 @@ ocp_response_example ={
     ]
 }
 
+quay_response_example ={
+    "startDate": "2023-09-20",
+    "endDate": "2023-09-20",
+    "results": [
+        {
+            "ciSystem": "PROW",
+            "uuid": "CPT-e3865b03-ce78-454a-becb-b79aeb806a6b",
+            "releaseStream": "stable-3.10",
+            "platform": "AWS",
+            "clusterType": "self-managed",
+            "benchmark": "quay-load-test",
+            "hitSize": 100,
+            "concurrency": 50,
+            "imagePushPulls": 10,
+            "masterNodesCount": 3,
+            "workerNodesCount": 252,
+            "infraNodesCount": 3,
+            "masterNodesType": "m6a.8xlarge",
+            "workerNodesType": "m5.2xlarge",
+            "infraNodesType": "r5.4xlarge",
+            "totalNodesCount": 258,
+            "clusterName": "quaytest-123sffdf",
+            "ocpVersion": "4.14.0-0.nightly-2023-09-15-233408",
+            "networkType": "OVNKubernetes",
+            "buildTag": "1704299395064795136",
+            "jobStatus": "success",
+            "buildUrl": "https://example.com/1704299395064795136",
+            "upstreamJob": "quay-pipeline",
+            "executionDate": "2023-09-20T02:14:07Z",
+            "jobDuration": "5261",
+            "startDate": "2023-09-20T02:14:07Z",
+            "endDate": "2023-09-20T03:41:48Z",
+            "timestamp": "2023-09-20T02:14:07Z",
+            "shortVersion": "4.14"
+        },
+    ]
+}
+
 def ocp_200_response():
     return response_200(ocp_response_example)
+
+def quay_200_response():
+    return response_200(quay_response_example)
 
 cpt_response_example ={
   "startDate": "2023-11-18",

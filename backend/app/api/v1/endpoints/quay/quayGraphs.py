@@ -291,13 +291,14 @@ async def getMatchRuns(meta: dict):
                     "query_string": {
                 "query": (
                     f'benchmark: "{meta["benchmark"]}$"'
+                    f' AND hitSize: "{meta["hitSize"]}"'
+                    f' AND concurrency: "{meta["concurrency"]}"'
+                    f' AND imagePushPulls: "{meta["imagePushPulls"]}"'
                     f' AND workerNodesType: "{meta["workerNodesType"]}"'
                     f' AND masterNodesType: "{meta["masterNodesType"]}"'
                     f' AND masterNodesCount: "{meta["masterNodesCount"]}"'
                     f' AND workerNodesCount: "{meta["workerNodesCount"]}"'
-                    f' AND platform: "{meta["platform"]}"'
                     f' AND releaseStream: "{meta["releaseStream"]}"'
-                    f' AND ocpVersion: {version}*'
                     f' AND jobStatus: success'
                     )
                 }
