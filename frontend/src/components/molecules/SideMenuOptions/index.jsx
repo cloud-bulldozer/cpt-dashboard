@@ -1,31 +1,46 @@
-import { Nav, NavItem, NavList } from "@patternfly/react-core";
+import * as CONSTANTS from "@/assets/constants/SidemenuConstants";
 
-import React from "react";
+import { Nav, NavItem, NavList } from "@patternfly/react-core";
+import { useDispatch, useSelector } from "react-redux";
+import { useLocation, useNavigate } from "react-router-dom";
+
+import { setActiveItem } from "@/actions/sideMenuActions";
+import { useEffect } from "react";
 
 const sideMenuOptions = [
   {
-    id: 0,
+    id: CONSTANTS.HOME_NAV,
     key: "home",
     displayName: "Home",
   },
   {
-    id: 1,
+    id: CONSTANTS.OCP_NAV,
     key: "ocp",
     displayName: "OCP",
   },
   {
-    id: 2,
+    id: CONSTANTS.QUAY_NAV,
     key: "quay",
     displayName: "Quay",
   },
 ];
 
 const MenuOptions = () => {
-  const [activeItem, setActiveItem] = React.useState(0);
-  const onSelect = (_event, itemId) => {
-    const item = itemId;
-    setActiveItem(item);
+  const dispatch = useDispatch();
+  const { pathname } = useLocation();
+  const activeMenuItem = useSelector((state) => state.sidemenu.activeMenuItem);
+
+  const onSelect = (_event, item) => {
+    dispatch(setActiveItem(item.itemId));
   };
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (pathname) {
+      const currPath = pathname.replace(/^.*[/]([^/]+)[/]*$/, "$1");
+
+      dispatch(setActiveItem(currPath));
+    }
+  }, [dispatch, pathname]);
 
   return (
     <>
@@ -36,7 +51,8 @@ const MenuOptions = () => {
               <NavItem
                 key={option.key}
                 itemId={option.id}
-                isActive={activeItem === option.id}
+                isActive={activeMenuItem === option.id}
+                onClick={() => navigate(option.key)}
               >
                 {option.displayName}
               </NavItem>

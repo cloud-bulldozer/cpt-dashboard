@@ -4,7 +4,8 @@ import MenuOptions from "@/components/molecules/SideMenuOptions/index";
 import { useSelector } from "react-redux";
 
 const SideMenu = () => {
-  const isSideMenuOpen = true;
+  const isSideMenuOpen = useSelector((state) => state.sidemenu.isSidebarOpen);
+
   return (
     <PageSidebar isSidebarOpen={isSideMenuOpen} id="vertical-sidebar">
       <PageSidebarBody>
