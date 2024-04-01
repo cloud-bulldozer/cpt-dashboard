@@ -13,15 +13,16 @@ import { useDispatch, useSelector } from "react-redux";
 
 import { BarsIcon } from "@patternfly/react-icons";
 import logo from "@/assets//logo.png";
-
-// import { toggleSideMenu } from "../../../reducer/HeaderReducer";
+import { showToast } from "@/actions/toastActions";
+import { toggleSideMenu } from "@/actions/sideMenuActions";
 
 const Header = () => {
-  const isSideMenuOpen = true;
+  const isSideMenuOpen = useSelector((state) => state.sidemenu.isSidebarOpen);
 
-  // const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const onSidebarToggle = () => {
-    // dispatch(toggleSideMenu());
+    dispatch(toggleSideMenu(false));
+    dispatch(showToast("success", "Hello"));
   };
   return (
     <Masthead>

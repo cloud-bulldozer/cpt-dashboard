@@ -1,5 +1,45 @@
+import {
+  Alert,
+  AlertActionCloseButton,
+  AlertGroup,
+  AlertVariant,
+} from "@patternfly/react-core";
+import { useDispatch, useSelector } from "react-redux";
+
+import { hideToast } from "@/actions/toastActions";
+
 const ToastComponent = () => {
-  return <>hello</>;
+  const { alerts } = useSelector((state) => state.toast);
+  const dispatch = useDispatch();
+
+  const removeToast = (key) => {
+    dispatch(hideToast(key));
+  };
+  return (
+    <AlertGroup isToast>
+      {alerts.map((item) => (
+        <Alert
+          variant={AlertVariant[item.variant]}
+          title={item.title}
+          key={item.key}
+          timeout={true}
+          onTimeout={() => removeToast(item.key)}
+          actionClose={
+            <AlertActionCloseButton
+              title={item.title}
+              variantLabel={`${item.variant} alert`}
+              onClose={() => removeToast(item.key)}
+            />
+          }
+        >
+          {item?.message &&
+            item?.message.split("\n").map((i) => {
+              return <p key={i}>{i}</p>;
+            })}
+        </Alert>
+      ))}
+    </AlertGroup>
+  );
 };
 
 export default ToastComponent;
