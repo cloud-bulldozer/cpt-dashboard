@@ -32,14 +32,14 @@ const Header = () => {
           aria-label="Global navigation"
           isSidebarOpen={isSideMenuOpen}
           onSidebarToggle={onSidebarToggle}
-          id="fill-nav-toggle"
+          id="nav-toggle"
         >
           <BarsIcon />
         </PageToggleButton>
       </MastheadToggle>
       <MastheadMain>
         <MastheadBrand href="/">
-          <Brand src={logo} className="header-logo" alt="kraken Logo" />
+          <Brand src={logo} className="header-logo" alt="ocp Logo" />
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>

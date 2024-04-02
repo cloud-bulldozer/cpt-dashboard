@@ -1,3 +1,4 @@
+import HomeReducer from "./homeReducer";
 import LoadingReducer from "./loadingReducer";
 import SideMenuReducer from "./sideMenuReducer";
 import ToastReducer from "./toastReducer";
@@ -7,4 +8,5 @@ export default combineReducers({
   loading: LoadingReducer,
   toast: ToastReducer,
   sidemenu: SideMenuReducer,
+  cpt: HomeReducer,
 });
