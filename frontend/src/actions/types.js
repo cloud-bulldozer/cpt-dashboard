@@ -9,3 +9,6 @@ export const CLEAR_TOAST = "CLEAR_TOAST";
 /* Sidemenu */
 export const SET_ACTIVE_MENU_ITEM = "SET_ACTIVE_MENU_ITEM";
 export const TOGGLE_SIDE_MENU = "TOGGLE_SIDE_MENU";
+
+/* OCP Jobs */
+export const SET_OCP_JOBS_DATA = "SET_OCP_JOBS_DATA";

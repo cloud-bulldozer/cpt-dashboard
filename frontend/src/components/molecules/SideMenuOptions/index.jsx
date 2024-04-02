@@ -27,15 +27,16 @@ const sideMenuOptions = [
 
 const MenuOptions = () => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { pathname } = useLocation();
   const activeMenuItem = useSelector((state) => state.sidemenu.activeMenuItem);
 
   const onSelect = (_event, item) => {
     dispatch(setActiveItem(item.itemId));
   };
-  const navigate = useNavigate();
+
   useEffect(() => {
-    if (pathname) {
+    if (pathname !== "/") {
       const currPath = pathname.replace(/^.*[/]([^/]+)[/]*$/, "$1");
 
       dispatch(setActiveItem(currPath));

@@ -15,7 +15,7 @@ const SideMenuReducer = (state = initialState, action = {}) => {
         activeMenuItem: payload,
       };
     case TOGGLE_SIDE_MENU:
-      return { ...state, isSideMenuOpen: payload };
+      return { ...state, isSideMenuOpen: false };
     default:
       return state;
   }
