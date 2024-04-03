@@ -4,15 +4,38 @@ import TableRows from "../../molecules/TableRows";
 import { uid } from "@/utils/helper.js";
 
 const TableLayout = (props) => {
-  const { tableData, tableColumns } = props;
+  const {
+    tableData,
+    tableColumns,
+    activeSortIndex,
+    activeSortDir,
+    setActiveSortIndex,
+    setActiveSortDir,
+  } = props;
 
-  const columns = tableColumns?.map((item) => item.value);
+  const getSortParams = (columnIndex) => ({
+    sortBy: {
+      index: activeSortIndex,
+      direction: activeSortDir,
+      defaultDirection: "asc",
+    },
+    onSort: (_event, index, direction) => {
+      setActiveSortIndex(index);
+      setActiveSortDir(direction);
+    },
+    columnIndex,
+  });
+
   return (
     <Table isStriped>
       <Thead>
         <Tr>
           {tableColumns?.length > 0 &&
-            tableColumns.map((col) => <Th key={uid()}>{col.name}</Th>)}
+            tableColumns.map((col, idx) => (
+              <Th key={uid()} sort={getSortParams(idx)}>
+                {col.name}
+              </Th>
+            ))}
         </Tr>
       </Thead>
       <Tbody>

@@ -15,19 +15,28 @@ const initialState = {
     { name: "End Date", value: "endDate" },
     { name: "Status", value: "jobStatus" },
   ],
+  activeSortDir: null,
+  activeSortIndex: null,
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
   switch (type) {
-    case TYPES.SET_OCP_JOBS_DATA:
+    case TYPES.SET_CPT_JOBS_DATA:
       return {
         ...state,
-        results: payload.results,
+        results: payload,
+      };
+    case TYPES.SET_CPT_DATE_FILTER:
+      return {
+        ...state,
         start_date: payload.startDate,
         end_date: payload.endDate,
       };
-
+    case TYPES.SET_CPT_SORT_INDEX:
+      return { ...state, activeSortIndex: payload };
+    case TYPES.SET_CPT_SORT_DIR:
+      return { ...state, activeSortDir: payload };
     default:
       return state;
   }
