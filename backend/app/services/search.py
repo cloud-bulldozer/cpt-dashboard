@@ -50,13 +50,13 @@ class ElasticService:
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
                 return await self.prev_es.search(
-                    index=self.prev_index,
+                    index=self.prev_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
             else:
                 self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                 return await self.new_es.search(
-                    index=self.new_index,
+                    index=self.new_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
         else:
@@ -76,7 +76,7 @@ class ElasticService:
                             query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(start_date)
                         if start_date is None:
                             response = await self.prev_es.search(
-                                index=self.prev_index,
+                                index=self.prev_index+"*",
                                 body=jsonable_encoder(query),
                                 size=size)
                             previous_results = response['hits']['hits']
@@ -95,7 +95,7 @@ class ElasticService:
                             query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)
                     if end_date is None:
                         response = await self.new_es.search(
-                            index=self.new_index,
+                            index=self.new_index+"*",
                             body=jsonable_encoder(query),
                             size=size)
                         new_results = response['hits']['hits']
@@ -109,7 +109,7 @@ class ElasticService:
                         return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size)
                     else:
                         response = await self.new_es.search(
-                            index=self.new_index,
+                            index=self.new_index+"*",
                             body=jsonable_encoder(query),
                             size=size)
                         return response['hits']['hits']
@@ -119,13 +119,13 @@ class ElasticService:
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
                     response = await self.prev_es.search(
-                        index=self.prev_index,
+                        index=self.prev_index+"*",
                         body=jsonable_encoder(query),
                         size=size)
                     previous_results = response['hits']['hits']
                 self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                 response = await self.new_es.search(
-                    index=self.new_index,
+                    index=self.new_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
                 new_results = response['hits']['hits']
