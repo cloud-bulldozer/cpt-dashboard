@@ -17,6 +17,7 @@ const initialState = {
   ],
   activeSortDir: null,
   activeSortIndex: null,
+  tableData: [],
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
@@ -37,6 +38,8 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_CPT_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_CPT_INIT_JOBS:
+      return { ...state, tableData: payload };
     default:
       return state;
   }
