@@ -6,6 +6,7 @@ import {
 } from "@patternfly/react-icons";
 import { formatDateTime, uid } from "@/utils/helper.js";
 
+import PropTypes from "prop-types";
 import { Td } from "@patternfly/react-table";
 
 const TableCell = (props) => {
@@ -51,4 +52,16 @@ const BuildURLCell = (props) => (
   </Button>
 );
 
+StatusCell.propTypes = {
+  item: PropTypes.object,
+  col: PropTypes.object,
+};
+TableCell.propTypes = {
+  item: PropTypes.object,
+  col: PropTypes.object,
+};
+BuildURLCell.propTypes = {
+  item: PropTypes.object,
+  col: PropTypes.object,
+};
 export default TableCell;
