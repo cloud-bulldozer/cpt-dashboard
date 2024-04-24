@@ -15,9 +15,20 @@ const initialState = {
     { name: "End Date", value: "endDate" },
     { name: "Status", value: "jobStatus" },
   ],
+  tableFilters: [
+    { name: "Product", value: "product" },
+    { name: "CI System", value: "ciSystem" },
+    { name: "Test Name", value: "testName" },
+    { name: "Status", value: "jobStatus" },
+    { name: "Release Stream", value: "releaseStream" },
+  ],
+  filterData: [],
   activeSortDir: null,
   activeSortIndex: null,
   tableData: [],
+  categoryFilterValue: "",
+  filterOptions: [],
+  appliedFilters: [],
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
@@ -31,8 +42,8 @@ const HomeReducer = (state = initialState, action = {}) => {
     case TYPES.SET_CPT_DATE_FILTER:
       return {
         ...state,
-        start_date: payload.startDate,
-        end_date: payload.endDate,
+        start_date: payload.start_date,
+        end_date: payload.end_date,
       };
     case TYPES.SET_CPT_SORT_INDEX:
       return { ...state, activeSortIndex: payload };
@@ -40,6 +51,12 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortDir: payload };
     case TYPES.SET_CPT_INIT_JOBS:
       return { ...state, tableData: payload };
+    case TYPES.SET_CPT_FILTER_DATA:
+      return { ...state, filterData: payload };
+    case TYPES.SET_CATEGORY_FILTER:
+      return { ...state, categoryFilterValue: payload };
+    case TYPES.SET_FILTER_OPTIONS:
+      return { ...state, filterOptions: payload };
     default:
       return state;
   }

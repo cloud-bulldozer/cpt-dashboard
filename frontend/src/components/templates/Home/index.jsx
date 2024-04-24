@@ -12,13 +12,20 @@ import {
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 
 const Home = () => {
   const dispatch = useDispatch();
 
-  const { results, tableColumns, activeSortDir, activeSortIndex, tableData } =
-    useSelector((state) => state.cpt);
+  const {
+    results,
+    tableColumns,
+    activeSortDir,
+    activeSortIndex,
+    tableData,
+    filterOptions,
+  } = useSelector((state) => state.cpt);
 
   useEffect(() => {
     dispatch(fetchOCPJobsData());
@@ -58,6 +65,8 @@ const Home = () => {
 
   return (
     <>
+      {filterOptions?.length > 0 && <TableFilter />}
+
       <TableLayout
         tableData={tableData}
         tableColumns={tableColumns}
