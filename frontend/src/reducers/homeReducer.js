@@ -28,7 +28,8 @@ const initialState = {
   tableData: [],
   categoryFilterValue: "",
   filterOptions: [],
-  appliedFilters: [],
+  appliedFilters: {},
+  filteredResults: [],
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
@@ -57,6 +58,10 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, categoryFilterValue: payload };
     case TYPES.SET_FILTER_OPTIONS:
       return { ...state, filterOptions: payload };
+    case TYPES.SET_APPLIED_FILTERS:
+      return { ...state, appliedFilters: payload };
+    case TYPES.SET_FILTERED_DATA:
+      return { ...state, filteredResults: payload };
     default:
       return state;
   }
