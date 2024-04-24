@@ -30,6 +30,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
           end_date: response.data.endDate,
         },
       });
+      dispatch(applyFilters());
       dispatch(sortTable());
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
       dispatch(buildFilterData());
@@ -47,7 +48,7 @@ const getSortableRowValues = (result, tableColumns) => {
 
 export const sortTable = () => (dispatch, getState) => {
   const { activeSortDir, activeSortIndex, tableColumns } = getState().cpt;
-  const results = [...getState().cpt.results];
+  const results = [...getState().cpt.filteredResults];
   try {
     if (activeSortIndex) {
       const sortedResults = results.sort((a, b) => {
@@ -88,7 +89,7 @@ export const setCPTSortDir = (direction) => ({
 });
 
 export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
-  const results = [...getState().cpt.results];
+  const results = [...getState().cpt.filteredResults];
 
   dispatch({
     type: TYPES.SET_CPT_INIT_JOBS,
@@ -132,3 +133,80 @@ export const setCatFilters = (category) => (dispatch, getState) => {
     payload: list,
   });
 };
+
+export const setAppliedFilters =
+  (selectedOption, navigate) => (dispatch, getState) => {
+    const { categoryFilterValue, filterData } = getState().cpt;
+    const appliedFilters = { ...getState().cpt.appliedFilters };
+
+    const category = filterData.filter(
+      (item) => item.name === categoryFilterValue
+    )[0].key;
+    appliedFilters[category] = selectedOption;
+
+    dispatch({
+      type: TYPES.SET_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    buildQueryString(appliedFilters, navigate);
+    dispatch(applyFilters());
+  };
+
+export const removeAppliedFilters =
+  (filterKey, navigate) => (dispatch, getState) => {
+    const appliedFilters = { ...getState().cpt.appliedFilters };
+    delete appliedFilters[filterKey];
+    dispatch({
+      type: TYPES.SET_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    buildQueryString(appliedFilters, navigate);
+    dispatch(applyFilters());
+  };
+
+export const buildQueryString = (appliedFilters, navigate) => {
+  const queryString = new URLSearchParams(appliedFilters).toString();
+  navigate({
+    pathname: window.location.pathname,
+    search: `?${queryString}`,
+  });
+
+  // navigate({
+  //   pathname: "listing",
+  //   search: createSearchParams({
+  //       foo: "bar"
+  //   }).toString()
+  // });
+};
+export const applyFilters = () => (dispatch, getState) => {
+  const { appliedFilters } = getState().cpt;
+
+  const results = [...getState().cpt.results];
+
+  const isFilterApplied =
+    Object.keys(appliedFilters).length > 0 &&
+    !Object.values(appliedFilters).includes("");
+
+  let filtered = [];
+  if (isFilterApplied) {
+    filtered = results.filter((el) => {
+      for (const key in appliedFilters) {
+        if (el[key] !== appliedFilters[key]) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }
+
+  dispatch({
+    type: TYPES.SET_FILTERED_DATA,
+    payload: isFilterApplied ? filtered : results,
+  });
+  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+};
+
+export const setFilterFromURL = (searchParams) => ({
+  type: TYPES.SET_APPLIED_FILTERS,
+  payload: Object.fromEntries(searchParams),
+});

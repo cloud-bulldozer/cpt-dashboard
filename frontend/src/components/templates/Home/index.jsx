@@ -6,6 +6,7 @@ import {
   fetchOCPJobsData,
   setCPTSortDir,
   setCPTSortIndex,
+  setFilterFromURL,
   sliceTableRows,
   sortTable,
 } from "@/actions/homeActions.js";
@@ -14,12 +15,13 @@ import { useDispatch, useSelector } from "react-redux";
 
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { useSearchParams } from "react-router-dom";
 
 const Home = () => {
   const dispatch = useDispatch();
-
+  const [searchParams] = useSearchParams();
   const {
-    results,
+    filteredResults,
     tableColumns,
     activeSortDir,
     activeSortIndex,
@@ -31,6 +33,9 @@ const Home = () => {
     dispatch(fetchOCPJobsData());
   }, [dispatch]);
 
+  useEffect(() => {
+    dispatch(setFilterFromURL(searchParams));
+  }, []);
   //Sorting
   const setActiveSortDir = (dir) => {
     dispatch(setCPTSortDir(dir));
@@ -79,7 +84,7 @@ const Home = () => {
         onSetPage={onSetPage}
         page={page}
         perPage={perPage}
-        totalItems={results.length}
+        totalItems={filteredResults.length}
       />
     </>
   );
