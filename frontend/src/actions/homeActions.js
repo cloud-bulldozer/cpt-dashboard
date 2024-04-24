@@ -12,8 +12,10 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
     const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, {
       params: {
         pretty: true,
-        ...(start_date && start_date),
-        ...(end_date && end_date),
+        start_date: "2024-04-21",
+        end_date: "2024-04-22",
+        // ...(start_date && start_date),
+        // ...(end_date && end_date),
       },
     });
     if (response?.data?.results?.length > 0) {
@@ -30,6 +32,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       });
       dispatch(sortTable());
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+      dispatch(buildFilterData());
     }
   } catch (error) {
     dispatch(showFailureToast());
@@ -90,5 +93,42 @@ export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
   dispatch({
     type: TYPES.SET_CPT_INIT_JOBS,
     payload: results.slice(startIdx, endIdx),
+  });
+};
+
+export const buildFilterData = () => (dispatch, getState) => {
+  const results = [...getState().cpt.results];
+
+  const tableFilters = [...getState().cpt.tableFilters];
+
+  const filterData = [];
+  for (const filter of tableFilters) {
+    const key = filter.value;
+    let obj = {
+      name: filter.name,
+      key,
+      value: [...new Set(results.map((item) => item[key])), "ALL"],
+    };
+    filterData.push(obj);
+  }
+  dispatch({
+    type: TYPES.SET_CPT_FILTER_DATA,
+    payload: filterData,
+  });
+  dispatch(setCatFilters(tableFilters[0].name));
+};
+
+export const setCatFilters = (category) => (dispatch, getState) => {
+  const filterData = [...getState().cpt.filterData];
+  const options = filterData.filter((item) => item.name === category)[0].value;
+  const list = options.map((item) => ({ name: item, value: item }));
+
+  dispatch({
+    type: TYPES.SET_CATEGORY_FILTER,
+    payload: category,
+  });
+  dispatch({
+    type: TYPES.SET_FILTER_OPTIONS,
+    payload: list,
   });
 };
