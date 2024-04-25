@@ -27,3 +27,30 @@ export const formatDateTime = (dateTimeStamp) => {
     timeStyle: "short",
   }).format(dateObj);
 };
+
+/**
+ * Build the url with query params*
+ * @function
+ * @param {Object} queryObj - Query
+ * @return {string} - update the url with the query string
+ */
+
+export const appendQueryString = (queryObj, navigate) => {
+  const queryString = new URLSearchParams(queryObj).toString();
+  navigate({
+    pathname: window.location.pathname,
+    search: `?${queryString}`,
+  });
+};
+
+export const formatDate = (date) => {
+  let d = new Date(date),
+    month = "" + (d.getMonth() + 1),
+    day = "" + d.getDate(),
+    year = d.getFullYear();
+
+  if (month.length < 2) month = "0" + month;
+  if (day.length < 2) day = "0" + day;
+
+  return [year, month, day].join("-");
+};

@@ -21,10 +21,11 @@ const SelectBox = (props) => {
   const toggle = (toggleRef) => (
     <MenuToggle
       ref={toggleRef}
+      icon={props?.icon}
       onClick={onToggleClick}
       isExpanded={isOpen}
       style={{
-        width: "200px",
+        width: props.width,
       }}
     >
       {props.selected}
@@ -57,5 +58,7 @@ SelectBox.propTypes = {
   options: PropTypes.array,
   onChange: PropTypes.func,
   selected: PropTypes.string,
+  width: PropTypes.string,
+  icon: PropTypes.any,
 };
 export default SelectBox;
