@@ -3,6 +3,7 @@ import * as TYPES from "@/actions/types.js";
 
 import API from "@/utils/axiosInstance";
 import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
+import { appendQueryString } from "@/utils/helper";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchOCPJobsData = () => async (dispatch, getState) => {
@@ -12,10 +13,10 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
     const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, {
       params: {
         pretty: true,
+        // ...(start_date && { start_date }),
+        // ...(end_date && { end_date }),
         start_date: "2024-04-21",
         end_date: "2024-04-22",
-        // ...(start_date && start_date),
-        // ...(end_date && end_date),
       },
     });
     if (response?.data?.results?.length > 0) {
@@ -148,7 +149,7 @@ export const setAppliedFilters =
       type: TYPES.SET_APPLIED_FILTERS,
       payload: appliedFilters,
     });
-    buildQueryString(appliedFilters, navigate);
+    appendQueryString(appliedFilters, navigate);
     dispatch(applyFilters());
   };
 
@@ -160,24 +161,10 @@ export const removeAppliedFilters =
       type: TYPES.SET_APPLIED_FILTERS,
       payload: appliedFilters,
     });
-    buildQueryString(appliedFilters, navigate);
+    appendQueryString(appliedFilters, navigate);
     dispatch(applyFilters());
   };
 
-export const buildQueryString = (appliedFilters, navigate) => {
-  const queryString = new URLSearchParams(appliedFilters).toString();
-  navigate({
-    pathname: window.location.pathname,
-    search: `?${queryString}`,
-  });
-
-  // navigate({
-  //   pathname: "listing",
-  //   search: createSearchParams({
-  //       foo: "bar"
-  //   }).toString()
-  // });
-};
 export const applyFilters = () => (dispatch, getState) => {
   const { appliedFilters } = getState().cpt;
 
@@ -210,3 +197,14 @@ export const setFilterFromURL = (searchParams) => ({
   type: TYPES.SET_APPLIED_FILTERS,
   payload: Object.fromEntries(searchParams),
 });
+
+export const setDateFilter = (start_date, end_date) => (dispatch) => {
+  dispatch({
+    type: TYPES.SET_CPT_DATE_FILTER,
+    payload: {
+      start_date,
+      end_date,
+    },
+  });
+  dispatch(fetchOCPJobsData());
+};
