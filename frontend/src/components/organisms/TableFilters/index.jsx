@@ -8,24 +8,14 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
-import {
-  removeAppliedFilters,
-  setAppliedFilters,
-  setCatFilters,
-  setDateFilter,
-} from "@/actions/homeActions";
-import { useDispatch, useSelector } from "react-redux";
 
 import DatePicker from "react-date-picker";
 import { FilterIcon } from "@patternfly/react-icons";
+import PropTypes from "prop-types";
 import SelectBox from "@/components/molecules/SelectBox";
 import { formatDate } from "@/utils/helper";
-import { useNavigate } from "react-router-dom";
 
-const TableFilter = () => {
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-
+const TableFilter = (props) => {
   const {
     tableFilters,
     categoryFilterValue,
@@ -34,31 +24,22 @@ const TableFilter = () => {
     appliedFilters,
     start_date,
     end_date,
-  } = useSelector((state) => state.cpt);
+    onCategoryChange,
+    onOptionsChange,
+    deleteItem,
+    startDateChangeHandler,
+    endDateChangeHandler,
+  } = props;
 
   const category = filterData.filter(
     (item) => item.name === categoryFilterValue
   )[0].key;
-  const onCategoryChange = (_event, value) => {
-    dispatch(setCatFilters(value));
-  };
-  const onOptionsChange = (_event, value) => {
-    dispatch(setAppliedFilters(value, navigate));
-  };
-  const deleteItem = (key) => {
-    dispatch(removeAppliedFilters(key, navigate));
-  };
+
   const getFilterName = (key) => {
     const filter = tableFilters.find((item) => item.value === key);
     return filter.name;
   };
 
-  const startDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(date, key, navigate));
-  };
-  const endDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(key, date, navigate));
-  };
   return (
     <>
       <Toolbar id="filter-toolbar">
@@ -91,7 +72,7 @@ const TableFilter = () => {
               value={start_date}
             />
           </ToolbarItem>
-          <ToolbarItem>to</ToolbarItem>
+          <ToolbarItem className="to-text">to</ToolbarItem>
           <ToolbarItem>
             <DatePicker
               onChange={(date) =>
@@ -114,4 +95,18 @@ const TableFilter = () => {
   );
 };
 
+TableFilter.propTypes = {
+  tableFilters: PropTypes.array,
+  categoryFilterValue: PropTypes.string,
+  filterOptions: PropTypes.array,
+  filterData: PropTypes.array,
+  appliedFilters: PropTypes.object,
+  start_date: PropTypes.string,
+  end_date: PropTypes.string,
+  onCategoryChange: PropTypes.func,
+  onOptionsChange: PropTypes.func,
+  deleteItem: PropTypes.func,
+  startDateChangeHandler: PropTypes.func,
+  endDateChangeHandler: PropTypes.func,
+};
 export default TableFilter;
