@@ -25,6 +25,7 @@ import { useNavigate } from "react-router-dom";
 const TableFilter = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+
   const {
     tableFilters,
     categoryFilterValue,
@@ -34,6 +35,7 @@ const TableFilter = () => {
     start_date,
     end_date,
   } = useSelector((state) => state.cpt);
+
   const category = filterData.filter(
     (item) => item.name === categoryFilterValue
   )[0].key;
@@ -52,10 +54,10 @@ const TableFilter = () => {
   };
 
   const startDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(date, key));
+    dispatch(setDateFilter(date, key, navigate));
   };
   const endDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(key, date));
+    dispatch(setDateFilter(key, date, navigate));
   };
   return (
     <>
@@ -102,11 +104,12 @@ const TableFilter = () => {
           </ToolbarItem>
         </ToolbarContent>
       </Toolbar>
-      {Object.keys(appliedFilters).map((key) => (
-        <Chip key={key} onClick={() => deleteItem(key)}>
-          {getFilterName(key)} : {appliedFilters[key]}
-        </Chip>
-      ))}
+      {Object.keys(appliedFilters).length > 0 &&
+        Object.keys(appliedFilters).map((key) => (
+          <Chip key={key} onClick={() => deleteItem(key)}>
+            {getFilterName(key)} : {appliedFilters[key]}
+          </Chip>
+        ))}
     </>
   );
 };

@@ -20,6 +20,7 @@ import { useSearchParams } from "react-router-dom";
 const Home = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
+
   const {
     filteredResults,
     tableColumns,
@@ -30,12 +31,19 @@ const Home = () => {
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
-    dispatch(fetchOCPJobsData());
-  }, [dispatch]);
+    if (searchParams.size > 0) {
+      // date filter is set in fetchOCPJobsData()
+      searchParams.delete("start_date");
+      searchParams.delete("end_date");
+
+      const params = Object.fromEntries(searchParams);
+      dispatch(setFilterFromURL(params));
+    }
+  }, []);
 
   useEffect(() => {
-    dispatch(setFilterFromURL(searchParams));
-  }, []);
+    dispatch(fetchOCPJobsData());
+  }, [dispatch]);
   //Sorting
   const setActiveSortDir = (dir) => {
     dispatch(setCPTSortDir(dir));
