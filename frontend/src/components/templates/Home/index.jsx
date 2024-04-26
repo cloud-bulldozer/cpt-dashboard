@@ -4,22 +4,27 @@ import {
 } from "@/assets/constants/paginationConstants";
 import {
   fetchOCPJobsData,
+  removeAppliedFilters,
+  setAppliedFilters,
   setCPTSortDir,
   setCPTSortIndex,
+  setCatFilters,
+  setDateFilter,
   setFilterFromURL,
   sliceTableRows,
   sortTable,
 } from "@/actions/homeActions.js";
 import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
-import { useSearchParams } from "react-router-dom";
 
 const Home = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
+  const navigate = useNavigate();
 
   const {
     filteredResults,
@@ -28,6 +33,12 @@ const Home = () => {
     activeSortIndex,
     tableData,
     filterOptions,
+    tableFilters,
+    categoryFilterValue,
+    filterData,
+    appliedFilters,
+    start_date,
+    end_date,
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
@@ -75,10 +86,41 @@ const Home = () => {
     [dispatch]
   );
   // Pagination helper
-
+  // Filter Helper
+  const onCategoryChange = (_event, value) => {
+    dispatch(setCatFilters(value));
+  };
+  const onOptionsChange = (_event, value) => {
+    dispatch(setAppliedFilters(value, navigate));
+  };
+  const deleteItem = (key) => {
+    dispatch(removeAppliedFilters(key, navigate));
+  };
+  const startDateChangeHandler = (date, key) => {
+    dispatch(setDateFilter(date, key, navigate));
+  };
+  const endDateChangeHandler = (date, key) => {
+    dispatch(setDateFilter(key, date, navigate));
+  };
+  // Filter Helper
   return (
     <>
-      {filterOptions?.length > 0 && <TableFilter />}
+      {tableFilters?.length > 0 && filterOptions?.length > 0 && (
+        <TableFilter
+          tableFilters={tableFilters}
+          filterOptions={filterOptions}
+          categoryFilterValue={categoryFilterValue}
+          filterData={filterData}
+          appliedFilters={appliedFilters}
+          start_date={start_date}
+          end_date={end_date}
+          onCategoryChange={onCategoryChange}
+          onOptionsChange={onOptionsChange}
+          deleteItem={deleteItem}
+          startDateChangeHandler={startDateChangeHandler}
+          endDateChangeHandler={endDateChangeHandler}
+        />
+      )}
 
       <TableLayout
         tableData={tableData}

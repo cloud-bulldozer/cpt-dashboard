@@ -22,12 +22,14 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
     if (response?.data?.results?.length > 0) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
+      //on initial load startDate and endDate are empty, so from response append to url
+      const searchParams = new URLSearchParams(window.location.search);
+      if (!searchParams.has("start_date") || !searchParams.has("end_date")) {
+        searchParams.set("start_date", startDate);
+        searchParams.set("end_date", endDate);
+        window.history.pushState({}, "", `?${searchParams.toString()}`);
+      }
 
-      window.history.pushState(
-        {},
-        "",
-        `?start_date=${startDate}&end_date=${endDate}`
-      );
       dispatch({
         type: TYPES.SET_CPT_JOBS_DATA,
         payload: response.data.results,
@@ -166,14 +168,15 @@ export const removeAppliedFilters =
   (filterKey, navigate) => (dispatch, getState) => {
     const appliedFilters = { ...getState().cpt.appliedFilters };
     const { start_date, end_date } = getState().cpt;
+    const name = filterKey;
+    // eslint-disable-next-line no-unused-vars
+    const { [name]: removedProperty, ...remainingObject } = appliedFilters;
 
-    delete appliedFilters[filterKey]; //find to remove key
-    //let { [filterKey], ...newObject } = { ...params };
     dispatch({
       type: TYPES.SET_APPLIED_FILTERS,
-      payload: appliedFilters,
+      payload: remainingObject,
     });
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    appendQueryString({ ...remainingObject, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
