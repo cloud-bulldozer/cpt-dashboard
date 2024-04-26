@@ -20,6 +20,14 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       },
     });
     if (response?.data?.results?.length > 0) {
+      const startDate = response.data.startDate,
+        endDate = response.data.endDate;
+
+      window.history.pushState(
+        {},
+        "",
+        `?start_date=${startDate}&end_date=${endDate}`
+      );
       dispatch({
         type: TYPES.SET_CPT_JOBS_DATA,
         payload: response.data.results,
@@ -27,8 +35,8 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       dispatch({
         type: TYPES.SET_CPT_DATE_FILTER,
         payload: {
-          start_date: response.data.startDate,
-          end_date: response.data.endDate,
+          start_date: startDate,
+          end_date: endDate,
         },
       });
       dispatch(applyFilters());
@@ -109,7 +117,7 @@ export const buildFilterData = () => (dispatch, getState) => {
     let obj = {
       name: filter.name,
       key,
-      value: [...new Set(results.map((item) => item[key])), "ALL"],
+      value: [...new Set(results.map((item) => item[key]))],
     };
     filterData.push(obj);
   }
@@ -137,7 +145,8 @@ export const setCatFilters = (category) => (dispatch, getState) => {
 
 export const setAppliedFilters =
   (selectedOption, navigate) => (dispatch, getState) => {
-    const { categoryFilterValue, filterData } = getState().cpt;
+    const { categoryFilterValue, filterData, start_date, end_date } =
+      getState().cpt;
     const appliedFilters = { ...getState().cpt.appliedFilters };
 
     const category = filterData.filter(
@@ -149,19 +158,22 @@ export const setAppliedFilters =
       type: TYPES.SET_APPLIED_FILTERS,
       payload: appliedFilters,
     });
-    appendQueryString(appliedFilters, navigate);
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
 export const removeAppliedFilters =
   (filterKey, navigate) => (dispatch, getState) => {
     const appliedFilters = { ...getState().cpt.appliedFilters };
-    delete appliedFilters[filterKey];
+    const { start_date, end_date } = getState().cpt;
+
+    delete appliedFilters[filterKey]; //find to remove key
+    //let { [filterKey], ...newObject } = { ...params };
     dispatch({
       type: TYPES.SET_APPLIED_FILTERS,
       payload: appliedFilters,
     });
-    appendQueryString(appliedFilters, navigate);
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
@@ -195,16 +207,22 @@ export const applyFilters = () => (dispatch, getState) => {
 
 export const setFilterFromURL = (searchParams) => ({
   type: TYPES.SET_APPLIED_FILTERS,
-  payload: Object.fromEntries(searchParams),
+  payload: searchParams,
 });
 
-export const setDateFilter = (start_date, end_date) => (dispatch) => {
-  dispatch({
-    type: TYPES.SET_CPT_DATE_FILTER,
-    payload: {
-      start_date,
-      end_date,
-    },
-  });
-  dispatch(fetchOCPJobsData());
-};
+export const setDateFilter =
+  (start_date, end_date, navigate) => (dispatch, getState) => {
+    const appliedFilters = getState().cpt.appliedFilters;
+
+    dispatch({
+      type: TYPES.SET_CPT_DATE_FILTER,
+      payload: {
+        start_date,
+        end_date,
+      },
+    });
+
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+
+    dispatch(fetchOCPJobsData());
+  };
