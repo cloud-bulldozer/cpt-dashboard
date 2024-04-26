@@ -13,10 +13,10 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
     const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, {
       params: {
         pretty: true,
-        // ...(start_date && { start_date }),
-        // ...(end_date && { end_date }),
-        start_date: "2024-04-21",
-        end_date: "2024-04-22",
+        ...(start_date && { start_date }),
+        ...(end_date && { end_date }),
+        // start_date: "2024-04-21",
+        // end_date: "2024-04-22",
       },
     });
     if (response?.data?.results?.length > 0) {
