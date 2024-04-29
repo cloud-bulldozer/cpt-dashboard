@@ -24,5 +24,3 @@ RUN pip install --user poetry && \
     pip install --no-cache-dir -r requirements.txt
 
 ENTRYPOINT ["/bin/bash", "./scripts/start.sh"]
-
-

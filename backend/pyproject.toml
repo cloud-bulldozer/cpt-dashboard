@@ -22,6 +22,7 @@ aiohttp = "^3.7.4"
 httpx = "^0.18.1"
 orjson = "^3.5.3"
 atlassian-python-api = "^3.41.9"
+python-keycloak = "^3.12.0"
 
 [tool.poetry.dev-dependencies]
 watchgod = "^0.7"
