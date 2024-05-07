@@ -1,0 +1,5 @@
+pytest
+playwright
+pytest-playwright
+allure-pytest
+# pytest-reporter-html1
