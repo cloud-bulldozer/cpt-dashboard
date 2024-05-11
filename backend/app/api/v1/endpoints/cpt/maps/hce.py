@@ -15,8 +15,8 @@ from datetime import date
 #   "version"
 #   "testName"
 ################################################################
-async def hceMapper(start_datetime: date, end_datetime: date, configpath: str):
-    df = await getData(start_datetime, end_datetime, configpath)
+async def hceMapper(start_datetime: date, end_datetime: date):
+    df = await getData(start_datetime, end_datetime, f'hce.elasticsearch')
     df["releaseStream"] = "Nightly"
     df["ciSystem"] = "Jenkins"
     df["testName"] = df["product"] + ":" + df["test"]
