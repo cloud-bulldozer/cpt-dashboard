@@ -6,6 +6,7 @@ from fastapi import APIRouter
 from .maps.ocp import ocpMapper
 from .maps.quay import quayMapper
 from .maps.hce import hceMapper
+from .maps.telco import telcoMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 
@@ -14,7 +15,8 @@ router = APIRouter()
 products = {
             "ocp": ocpMapper,
             "quay": quayMapper,
-            "hce": hceMapper
+            "hce": hceMapper,
+            "telco": telcoMapper,
            }
 
 @router.get('/api/v1/cpt/jobs',
@@ -43,7 +45,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
     results = pd.DataFrame()
     for product in products:
         try:
-            df = await products[product](start_date, end_date, f'{product}.elasticsearch')
+            df = await products[product](start_date, end_date)
             results = pd.concat([results, df.loc[:, ["ciSystem", "uuid", "releaseStream", "jobStatus", "buildUrl", "startDate", "endDate", "product", "version", "testName"]]])
         except ConnectionError:
             print("Connection Error in mapper for product " + product)
