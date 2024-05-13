@@ -80,5 +80,7 @@ TableLayout.propTypes = {
   perPage: PropTypes.number,
   onPerPageSelect: PropTypes.func,
   onSetPage: PropTypes.func,
+  setPage: PropTypes.func,
+  setPerPage: PropTypes.func,
 };
 export default TableLayout;

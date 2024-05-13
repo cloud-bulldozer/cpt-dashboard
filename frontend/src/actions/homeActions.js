@@ -1,8 +1,12 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
+import {
+  DEFAULT_PER_PAGE,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
+
 import API from "@/utils/axiosInstance";
-import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
 import { appendQueryString } from "@/utils/helper";
 import { showFailureToast } from "@/actions/toastActions";
 
@@ -43,6 +47,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       });
       dispatch(applyFilters());
       dispatch(sortTable());
+      dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
       dispatch(buildFilterData());
     }
@@ -205,6 +210,7 @@ export const applyFilters = () => (dispatch, getState) => {
     type: TYPES.SET_FILTERED_DATA,
     payload: isFilterApplied ? filtered : results,
   });
+  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
 };
 
@@ -229,3 +235,13 @@ export const setDateFilter =
 
     dispatch(fetchOCPJobsData());
   };
+
+export const setPage = (pageNo) => ({
+  type: TYPES.SET_PAGE,
+  payload: pageNo,
+});
+
+export const setPageOptions = (page, perPage) => ({
+  type: TYPES.SET_PAGE_OPTIONS,
+  payload: { page, perPage },
+});

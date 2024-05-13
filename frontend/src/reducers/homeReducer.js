@@ -1,5 +1,10 @@
 import * as TYPES from "@/actions/types";
 
+import {
+  DEFAULT_PER_PAGE,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
+
 const initialState = {
   results: [],
   start_date: "",
@@ -30,6 +35,8 @@ const initialState = {
   filterOptions: [],
   appliedFilters: {},
   filteredResults: [],
+  page: START_PAGE,
+  perPage: DEFAULT_PER_PAGE,
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
@@ -62,6 +69,10 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, appliedFilters: payload };
     case TYPES.SET_FILTERED_DATA:
       return { ...state, filteredResults: payload };
+    case TYPES.SET_PAGE:
+      return { ...state, page: payload };
+    case TYPES.SET_PAGE_OPTIONS:
+      return { ...state, page: payload.page, perPage: payload.perPage };
     default:
       return state;
   }
