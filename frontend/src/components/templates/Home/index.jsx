@@ -1,5 +1,6 @@
 import {
   fetchOCPJobsData,
+  filterFromSummary,
   removeAppliedFilters,
   setAppliedFilters,
   setCPTSortDir,
@@ -7,6 +8,7 @@ import {
   setCatFilters,
   setDateFilter,
   setFilterFromURL,
+  setOtherSummaryFilter,
   setPage,
   setPageOptions,
   sliceTableRows,
@@ -16,6 +18,7 @@ import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
+import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 
@@ -39,6 +42,7 @@ const Home = () => {
     end_date,
     page,
     perPage,
+    summary,
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
@@ -102,9 +106,26 @@ const Home = () => {
   const endDateChangeHandler = (date, key) => {
     dispatch(setDateFilter(key, date, navigate));
   };
+  const removeStatusFilter = () => {
+    dispatch(removeAppliedFilters("jobStatus", navigate));
+  };
+  const applyStatusFilter = (value) => {
+    dispatch(filterFromSummary("jobStatus", value, navigate));
+  };
+  const applyOtherFilter = () => {
+    dispatch(removeAppliedFilters("jobStatus", navigate));
+    dispatch(setOtherSummaryFilter());
+  };
   // Filter Helper
   return (
     <>
+      <MetricsTab
+        totalItems={filteredResults.length}
+        summary={summary}
+        removeStatusFilter={removeStatusFilter}
+        applyStatusFilter={applyStatusFilter}
+        applyOtherFilter={applyOtherFilter}
+      />
       {tableFilters?.length > 0 && filterOptions?.length > 0 && (
         <TableFilter
           tableFilters={tableFilters}

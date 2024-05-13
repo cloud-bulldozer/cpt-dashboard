@@ -47,6 +47,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       });
       dispatch(applyFilters());
       dispatch(sortTable());
+      dispatch(getCPTSummary());
       dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
       dispatch(buildFilterData());
@@ -169,6 +170,32 @@ export const setAppliedFilters =
     dispatch(applyFilters());
   };
 
+export const filterFromSummary =
+  (category, value, navigate) => (dispatch, getState) => {
+    const { start_date, end_date } = getState().cpt;
+    const appliedFilters = { ...getState().cpt.appliedFilters };
+    appliedFilters[category] = value;
+    dispatch({
+      type: TYPES.SET_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
+  };
+export const setOtherSummaryFilter = () => (dispatch, getState) => {
+  const filteredResults = [...getState().cpt.filteredResults];
+  const keyWordArr = ["SUCCESS", "FAILURE"];
+  const data = filteredResults.filter(
+    (item) => !keyWordArr.includes(item.jobStatus)
+  );
+  dispatch({
+    type: TYPES.SET_FILTERED_DATA,
+    payload: data,
+  });
+  dispatch(getCPTSummary());
+  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+};
 export const removeAppliedFilters =
   (filterKey, navigate) => (dispatch, getState) => {
     const appliedFilters = { ...getState().cpt.appliedFilters };
@@ -210,6 +237,7 @@ export const applyFilters = () => (dispatch, getState) => {
     type: TYPES.SET_FILTERED_DATA,
     payload: isFilterApplied ? filtered : results,
   });
+  dispatch(getCPTSummary());
   dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
 };
@@ -245,3 +273,24 @@ export const setPageOptions = (page, perPage) => ({
   type: TYPES.SET_PAGE_OPTIONS,
   payload: { page, perPage },
 });
+
+const findItemCount = (data, key, value) => {
+  return data.reduce(function (n, item) {
+    return n + (item[key].toLowerCase() === value);
+  }, 0);
+};
+export const getCPTSummary = () => (dispatch, getState) => {
+  const results = [...getState().cpt.filteredResults];
+
+  const keyWordArr = ["success", "failure"];
+  const othersCount = results.reduce(function (n, item) {
+    return n + !keyWordArr.includes(item.jobStatus?.toLowerCase());
+  }, 0);
+
+  const successCount = findItemCount(results, "jobStatus", "success");
+  const failureCount = findItemCount(results, "jobStatus", "failure");
+  dispatch({
+    type: TYPES.SET_CPT_SUMMARY,
+    payload: { successCount, failureCount, othersCount },
+  });
+};

@@ -37,6 +37,7 @@ const initialState = {
   filteredResults: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  summary: {},
 };
 
 const HomeReducer = (state = initialState, action = {}) => {
@@ -73,6 +74,8 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, page: payload };
     case TYPES.SET_PAGE_OPTIONS:
       return { ...state, page: payload.page, perPage: payload.perPage };
+    case TYPES.SET_CPT_SUMMARY:
+      return { ...state, summary: payload };
     default:
       return state;
   }
