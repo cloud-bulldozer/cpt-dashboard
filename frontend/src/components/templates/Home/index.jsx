@@ -1,8 +1,4 @@
 import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
-import {
   fetchOCPJobsData,
   removeAppliedFilters,
   setAppliedFilters,
@@ -11,10 +7,12 @@ import {
   setCatFilters,
   setDateFilter,
   setFilterFromURL,
+  setPage,
+  setPageOptions,
   sliceTableRows,
   sortTable,
 } from "@/actions/homeActions.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -39,16 +37,21 @@ const Home = () => {
     appliedFilters,
     start_date,
     end_date,
+    page,
+    perPage,
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
     if (searchParams.size > 0) {
-      // date filter is set in fetchOCPJobsData()
+      // date filter is set apart
+      const startDate = searchParams.get("start_date");
+      const endDate = searchParams.get("end_date");
+
       searchParams.delete("start_date");
       searchParams.delete("end_date");
-
       const params = Object.fromEntries(searchParams);
       dispatch(setFilterFromURL(params));
+      dispatch(setDateFilter(startDate, endDate, navigate));
     }
   }, []);
 
@@ -67,20 +70,17 @@ const Home = () => {
   };
   // Sorting
   // Pagination Helper
-  const [perPage, setPerPage] = useState(DEFAULT_PER_PAGE);
-  const [page, setPage] = useState(START_PAGE);
 
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
-      setPage(newPage);
+      dispatch(setPage(newPage));
       dispatch(sliceTableRows(startIdx, endIdx));
     },
     [dispatch]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
-      setPerPage(newPerPage);
-      setPage(newPage);
+      dispatch(setPageOptions(newPage, newPerPage));
       dispatch(sliceTableRows(startIdx, endIdx));
     },
     [dispatch]
