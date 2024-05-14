@@ -5,6 +5,7 @@ import {
   DEFAULT_PER_PAGE,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
+import { calculateMetrics, getFilteredData, sortTable } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
 import { appendQueryString } from "@/utils/helper";
@@ -46,7 +47,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
         },
       });
       dispatch(applyFilters());
-      dispatch(sortTable());
+      dispatch(sortTable("cpt"));
       dispatch(getCPTSummary());
       dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
@@ -56,43 +57,6 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
     dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
-};
-
-const getSortableRowValues = (result, tableColumns) => {
-  const tableKeys = tableColumns.map((item) => item.value);
-  return tableKeys.map((key) => result[key]);
-};
-
-export const sortTable = () => (dispatch, getState) => {
-  const { activeSortDir, activeSortIndex, tableColumns } = getState().cpt;
-  const results = [...getState().cpt.filteredResults];
-  try {
-    if (activeSortIndex) {
-      const sortedResults = results.sort((a, b) => {
-        const aValue = getSortableRowValues(a, tableColumns)[activeSortIndex];
-        const bValue = getSortableRowValues(b, tableColumns)[activeSortIndex];
-        if (typeof aValue === "number") {
-          if (activeSortDir === "asc") {
-            return aValue - bValue;
-          }
-          return bValue - aValue;
-        } else {
-          if (activeSortDir === "asc") {
-            return aValue.localeCompare(bValue);
-          }
-          return bValue.localeCompare(aValue);
-        }
-      });
-      dispatch({
-        type: TYPES.SET_CPT_JOBS_DATA,
-        payload: sortedResults,
-      });
-      dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
-    }
-  } catch (error) {
-    console.log(error);
-    dispatch(showFailureToast());
-  }
 };
 
 export const setCPTSortIndex = (index) => ({
@@ -221,17 +185,7 @@ export const applyFilters = () => (dispatch, getState) => {
     Object.keys(appliedFilters).length > 0 &&
     !Object.values(appliedFilters).includes("");
 
-  let filtered = [];
-  if (isFilterApplied) {
-    filtered = results.filter((el) => {
-      for (const key in appliedFilters) {
-        if (el[key] !== appliedFilters[key]) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }
+  const filtered = getFilteredData(appliedFilters, results);
 
   dispatch({
     type: TYPES.SET_FILTERED_DATA,
@@ -274,23 +228,12 @@ export const setPageOptions = (page, perPage) => ({
   payload: { page, perPage },
 });
 
-const findItemCount = (data, key, value) => {
-  return data.reduce(function (n, item) {
-    return n + (item[key].toLowerCase() === value);
-  }, 0);
-};
 export const getCPTSummary = () => (dispatch, getState) => {
   const results = [...getState().cpt.filteredResults];
 
-  const keyWordArr = ["success", "failure"];
-  const othersCount = results.reduce(function (n, item) {
-    return n + !keyWordArr.includes(item.jobStatus?.toLowerCase());
-  }, 0);
-
-  const successCount = findItemCount(results, "jobStatus", "success");
-  const failureCount = findItemCount(results, "jobStatus", "failure");
+  const countObj = calculateMetrics(results);
   dispatch({
     type: TYPES.SET_CPT_SUMMARY,
-    payload: { successCount, failureCount, othersCount },
+    payload: countObj,
   });
 };

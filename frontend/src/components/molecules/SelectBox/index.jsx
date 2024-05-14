@@ -57,7 +57,7 @@ const SelectBox = (props) => {
 SelectBox.propTypes = {
   options: PropTypes.array,
   onChange: PropTypes.func,
-  selected: PropTypes.string,
+  selected: PropTypes.any,
   width: PropTypes.string,
   icon: PropTypes.any,
 };

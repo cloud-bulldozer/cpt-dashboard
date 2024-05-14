@@ -54,3 +54,12 @@ export const formatDate = (date) => {
 
   return [year, month, day].join("-");
 };
+
+export const appendDateFilter = (startDate, endDate) => {
+  const searchParams = new URLSearchParams(window.location.search);
+  if (!searchParams.has("start_date") || !searchParams.has("end_date")) {
+    searchParams.set("start_date", startDate);
+    searchParams.set("end_date", endDate);
+    window.history.pushState({}, "", `?${searchParams.toString()}`);
+  }
+};

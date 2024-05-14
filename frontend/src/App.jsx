@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./components/templates/Home";
 import MainLayout from "./containers/MainLayout";
+import OCP from "./components/templates/OCP";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 
@@ -20,7 +21,7 @@ function App() {
           <Route element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path={APP_ROUTES.HOME} element={<Home />} />
-            <Route path={APP_ROUTES.OCP} element={<Home />} />
+            <Route path={APP_ROUTES.OCP} element={<OCP />} />
             <Route path={APP_ROUTES.QUAY} element={<Home />} />
           </Route>
         </Routes>
