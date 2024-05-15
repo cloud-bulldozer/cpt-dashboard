@@ -21,6 +21,7 @@ const TableLayout = (props) => {
     onSetPage,
     onPerPageSelect,
     totalItems,
+    addExpansion,
   } = props;
 
   const getSortParams = (columnIndex) => ({
@@ -42,6 +43,8 @@ const TableLayout = (props) => {
       <Table isStriped>
         <Thead>
           <Tr>
+            {addExpansion && <Th screenReaderText="Row expansion" />}
+
             {tableColumns?.length > 0 &&
               tableColumns.map((col, idx) => (
                 <Th key={uid()} sort={getSortParams(idx)}>
@@ -50,8 +53,12 @@ const TableLayout = (props) => {
               ))}
           </Tr>
         </Thead>
-        <Tbody>
-          <TableRows rows={tableData} columns={tableColumns} />
+        <Tbody isExpanded={addExpansion && true}>
+          <TableRows
+            rows={tableData}
+            columns={tableColumns}
+            addExpansion={addExpansion}
+          />
         </Tbody>
       </Table>
       <RenderPagination
@@ -82,5 +89,6 @@ TableLayout.propTypes = {
   onSetPage: PropTypes.func,
   setPage: PropTypes.func,
   setPerPage: PropTypes.func,
+  addExpansion: PropTypes.bool,
 };
 export default TableLayout;

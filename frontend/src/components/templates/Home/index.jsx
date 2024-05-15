@@ -157,6 +157,7 @@ const Home = () => {
         page={page}
         perPage={perPage}
         totalItems={filteredResults.length}
+        addExpansion={false}
       />
     </>
   );

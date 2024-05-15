@@ -20,7 +20,7 @@ import { showFailureToast } from "@/actions/toastActions";
 export const fetchOCPJobs = () => async (dispatch, getState) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().cpt;
+    const { start_date, end_date } = getState().ocp;
     const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, {
       params: {
         pretty: true,
@@ -35,7 +35,6 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
       appendDateFilter();
-
       dispatch({
         type: TYPES.SET_OCP_JOBS_DATA,
         payload: response.data.results,
@@ -154,7 +153,7 @@ export const removeAppliedFilters =
 
 export const setDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
-    const appliedFilters = getState().cpt.appliedFilters;
+    const appliedFilters = getState().ocp.appliedFilters;
 
     dispatch({
       type: TYPES.SET_OCP_DATE_FILTER,
@@ -174,6 +173,33 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
+export const filterFromSummary =
+  (category, value, navigate) => (dispatch, getState) => {
+    const { start_date, end_date } = getState().ocp;
+    const appliedFilters = { ...getState().ocp.appliedFilters };
+    appliedFilters[category] = value;
+    dispatch({
+      type: TYPES.SET_OCP_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
+  };
+
+export const setOtherSummaryFilter = () => (dispatch, getState) => {
+  const filteredResults = [...getState().ocp.filteredResults];
+  const keyWordArr = ["SUCCESS", "FAILURE"];
+  const data = filteredResults.filter(
+    (item) => !keyWordArr.includes(item.jobStatus)
+  );
+  dispatch({
+    type: TYPES.SET_OCP_FILTERED_DATA,
+    payload: data,
+  });
+  dispatch(getOCPSummary());
+  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+};
 export const getOCPSummary = () => (dispatch, getState) => {
   const results = [...getState().ocp.filteredResults];
 

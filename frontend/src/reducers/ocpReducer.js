@@ -33,6 +33,7 @@ const initialState = {
     { name: "Control Plane Access", value: "publish" },
     { name: "Compute Architecture", value: "computeArch" },
     { name: "Control Plane Architecture", value: "controlPlaneArch" },
+    { name: "Status", value: "jobStatus" },
   ],
   activeSortDir: null,
   activeSortIndex: null,

@@ -1,5 +1,6 @@
 import {
   fetchOCPJobs,
+  filterFromSummary,
   removeAppliedFilters,
   setAppliedFilters,
   setDateFilter,
@@ -7,6 +8,7 @@ import {
   setOCPCatFilters,
   setOCPSortDir,
   setOCPSortIndex,
+  setOtherSummaryFilter,
   setPage,
   setPageOptions,
   sliceOCPTableRows,
@@ -90,14 +92,14 @@ const OCP = () => {
   // Pagination helper
   /* Summary Tab Filter*/
   const removeStatusFilter = () => {
-    // dispatch(removeAppliedFilters("jobStatus", navigate));
+    dispatch(removeAppliedFilters("jobStatus", navigate));
   };
   const applyStatusFilter = (value) => {
-    //dispatch(filterFromSummary("jobStatus", value, navigate));
+    dispatch(filterFromSummary("jobStatus", value, navigate));
   };
   const applyOtherFilter = () => {
-    // dispatch(removeAppliedFilters("jobStatus", navigate));
-    // dispatch(setOtherSummaryFilter());
+    dispatch(removeAppliedFilters("jobStatus", navigate));
+    dispatch(setOtherSummaryFilter());
   };
 
   /* Filter helper */
@@ -158,6 +160,7 @@ const OCP = () => {
         page={page}
         perPage={perPage}
         totalItems={filteredResults.length}
+        addExpansion={true}
       />
     </>
   );
