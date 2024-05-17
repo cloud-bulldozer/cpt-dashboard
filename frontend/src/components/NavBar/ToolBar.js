@@ -23,9 +23,10 @@ export const ToolBar = () => {
     return styles;
   };
 
-  // Selectors for both ocpJobs and quayJobs
+  // Selectors for OCP, Quay and Telco jobs
   const ocpJobResults = useSelector((state) => state.ocpJobs);
   const quayJobResults = useSelector((state) => state.quayJobs);
+  const telcoJobResults = useSelector((state) => state.telcoJobs);
 
   const NavItems = (
     <>
@@ -45,13 +46,20 @@ export const ToolBar = () => {
           onClick={() => setActive("/ocp")}
         />
       </ToolbarItem>
-      {/* New Quay ToolbarItem */}
       <ToolbarItem>
         <Link
           to="/quay"
           children={"Quay"}
           style={linkStyle("/quay")}
           onClick={() => setActive("/quay")}
+        />
+      </ToolbarItem>
+      <ToolbarItem>
+        <Link
+          to="/telco"
+          children={"Telco"}
+          style={linkStyle("/telco")}
+          onClick={() => setActive("/telco")}
         />
       </ToolbarItem>
     </>
@@ -70,7 +78,11 @@ export const ToolBar = () => {
             <Text4
               style={{ color: "#FFFFFF" }}
               value={`Last Updated Time | ${
-                active === "/ocp" ? ocpJobResults.updatedTime : quayJobResults.updatedTime
+                active === "/ocp"
+                  ? ocpJobResults.updatedTime
+                  : active === "/quay"
+                  ? quayJobResults.updatedTime
+                  : telcoJobResults.updatedTime
               }`}
             />
           </ToolbarItem>

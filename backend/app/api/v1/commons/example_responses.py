@@ -124,17 +124,21 @@ telco_response_example ={
     "endDate": "2023-09-20",
     "results": [
         {
+            "uuid": "4de79cb7a1b071bce282e8d0ce2006c7",
+            "encryptedData": "gAAAAABmR0NYcO6AZo4nGjkT1IBVeoD=",
             "ciSystem": "Jenkins",
-            "uuid": "2cc5d4ca895ca5d84cab0fd7923db93b",
-            "encrypted": "gAAAAABmQALtP0g5UPMsOjQw46tZ-aBz77yl-8QNI4jwLfIEV1POnOlA1ny89cp3Nrik3OzpNwXrWO3K4ZwtOliTfk0SO5NkNZHY8reJhvOVJBGFEw2enyjRaHp9hIaJdE0Vrfuqt_NjiYX-vOZo0Sjc84R76LvxjAC6f_urceGGZICH36IkT2g=",
-            "releaseStream": "Release Candidate",
+            "benchmark": "deployment",
+            "shortVersion": "4.16",
+            "ocpVersion": "4.16.0-0.nightly-2024-05-16-092402",
+            "releaseStream": "Nightly",
+            "nodeName": "kni-qe-66",
+            "cpu": "Intel(R) Xeon? Gold 5423N",
+            "formal": "true",
+            "startDate": "2024-05-16 19:39:48+00:00",
+            "endDate": "2024-05-16 20:41:48+00:00",
+            "buildUrl": "https://ci-jenkins-csb-kniqe.apps.ocp-c1.prod.psi.redhat.com/job/ocp-far-edge-vran-tests/10506",
             "jobStatus": "success",
-            "buildUrl": "https://ci-jenkins-csb-kniqe.apps.ocp-c1.prod.psi.redhat.com/job/ocp-far-edge-vran-tests/532",
-            "startDate": "2024-05-09 14:10:51+00:00",
-            "endDate": "2024-05-09 14:43:51+00:00",
-            "product": "telco",
-            "version": "4.16",
-            "testName": "reboot"
+            "jobDuration": 3720
         },
     ]
 }
