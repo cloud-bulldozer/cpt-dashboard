@@ -1,0 +1,26 @@
+/* Loading */
+export const LOADING = "LOADING";
+export const COMPLETED = "COMPLETED";
+
+/* Toast */
+export const SHOW_TOAST = "SHOW_TOAST";
+export const CLEAR_TOAST = "CLEAR_TOAST";
+
+/* Sidemenu */
+export const SET_ACTIVE_MENU_ITEM = "SET_ACTIVE_MENU_ITEM";
+export const TOGGLE_SIDE_MENU = "TOGGLE_SIDE_MENU";
+
+/* CPT Jobs */
+export const SET_CPT_JOBS_DATA = "SET_CPT_JOBS_DATA";
+export const SET_CPT_DATE_FILTER = "SET_CPT_DATE_FILTER";
+export const SET_CPT_SORT_DIR = "SET_CPT_SORT_DIR";
+export const SET_CPT_SORT_INDEX = "SET_CPT_SORT_INDEX";
+export const SET_CPT_INIT_JOBS = "SET_CPT_INIT_JOBS";
+export const SET_CPT_FILTER_DATA = "SET_CPT_FILTER_DATA";
+export const SET_CATEGORY_FILTER = "SET_CATEGORY_FILTER";
+export const SET_FILTER_OPTIONS = "SET_FILTER_OPTIONS";
+export const SET_FILTERED_DATA = "SET_FILTERED_DATA";
+export const SET_APPLIED_FILTERS = "SET_APPLIED_FILTERS";
+export const SET_PAGE = "SET_PAGE";
+export const SET_PAGE_OPTIONS = "SET_PAGE_OPTIONS";
+export const SET_CPT_SUMMARY = "SET_CPT_SUMMARY";
