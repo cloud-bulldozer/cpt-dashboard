@@ -4,6 +4,7 @@ import quayJobsReducer from "./QuayJobsReducer";
 import telcoJobsReducer from "./TelcoJobsReducer";
 import graphReducer from "./GraphReducer";
 import quayGraphReducer from "./QuayGraphReducer";
+import telcoGraphReducer from "./TelcoGraphReducer";
 
 
 export const rootReducer = {
@@ -13,4 +14,5 @@ export const rootReducer = {
     'telcoJobs': telcoJobsReducer,
     'graph': graphReducer,
     'quayGraph': quayGraphReducer,
+    'telcoGraph': telcoGraphReducer,
 }

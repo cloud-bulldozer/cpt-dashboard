@@ -1,5 +1,5 @@
 
-import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1, TELCO_JOBS_API_V1} from "../Shared";
+import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1, TELCO_JOBS_API_V1, TELCO_GRAPH_API_V1} from "../Shared";
 import axios from "axios";
 import {
     errorOCPCall,
@@ -27,6 +27,7 @@ import {
 } from "../reducers/TelcoJobsReducer";
 import {getUuidResults, setGraphError} from "../reducers/GraphReducer";
 import {getQuayUuidResults, setQuayGraphError} from "../reducers/QuayGraphReducer";
+import {getTelcoUuidResults, setTelcoGraphError} from "../reducers/TelcoGraphReducer";
 
 export const fetchAPI = async (url, requestOptions = {}) => {
     const response = await axios(url, requestOptions)
@@ -65,6 +66,24 @@ export const fetchQuayGraphData =  (uuid) => async dispatch =>{
         } else {
             console.error('Axios Error:', error);
             dispatch(setQuayGraphError({error: error.response.data.details}))
+        }
+    }
+}
+
+export const fetchTelcoGraphData =  (uuid, encryptedData) => async dispatch =>{
+    try {
+        let buildUrl = `${BASE_URL}${TELCO_GRAPH_API_V1}/${uuid}/${encryptedData}`
+        const api_data = await fetchAPI(buildUrl)
+        if(api_data) dispatch(getTelcoUuidResults({ [uuid]: api_data }))
+    }
+    catch (error){
+        if (axios.isAxiosError(error)) {
+            console.error('Axios Error:', error);
+            console.error('Request:', error.request);
+            console.error('Response:', error.response);
+        } else {
+            console.error('Axios Error:', error);
+            dispatch(setTelcoGraphError({error: error.response.data.details}))
         }
     }
 }

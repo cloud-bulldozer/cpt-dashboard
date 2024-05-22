@@ -1,38 +1,61 @@
-import {PlotlyView} from "../ReactGraphs/plotly/PlotlyView";
-import React, {useEffect} from "react";
-import {useDispatch, useSelector} from "react-redux";
+import { PlotlyView } from "../ReactGraphs/plotly/PlotlyView";
+import React, { useEffect, useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
 import CardView from "../PatternflyComponents/Card/CardView";
-import {Text6} from "../PatternflyComponents/Text/Text";
-import {SplitView} from "../PatternflyComponents/Split/SplitView";
-import {Spinner} from "@patternfly/react-core";
-import {fetchGraphData} from "../../store/Actions/ActionCreator";
+import { Text6 } from "../PatternflyComponents/Text/Text";
+import { SplitView } from "../PatternflyComponents/Split/SplitView";
+import { Spinner } from "@patternfly/react-core";
+import { fetchTelcoGraphData } from "../../store/Actions/ActionCreator";
 
+export const DisplayGraph = ({ uuid, encryptedData, benchmark, heading }) => {
+    const [isExpanded, setExpanded] = useState(true);
+    const onExpand = () => setExpanded(!isExpanded);
 
-export const DisplayGraph = ({uuid, benchmark}) => {
-
-    const [isExpanded, setExpanded] = React.useState(true)
-    const onExpand = () => setExpanded(!isExpanded)
-
-    const dispatch = useDispatch()
-    const job_results = useSelector(state => state.graph)
-    const graphData = job_results.uuid_results[uuid]
+    const dispatch = useDispatch();
+    const jobResults = useSelector(state => state.telcoGraph);
 
     useEffect(() => {
-            dispatch(fetchGraphData(uuid))
-    }, [dispatch, uuid])
+        dispatch(fetchTelcoGraphData(uuid, encryptedData));
+    }, [dispatch, uuid, encryptedData]);
 
-    const getGraphBody = () => {
-        return (job_results.graphError && <Text6 value={job_results.graphError}/>) ||
-               (graphData && <PlotlyView data={graphData} />) ||
-               <SplitView splitValues={[<Spinner issvg={"true"} />, <Text6 value="Awaiting Results"/>]} />
-    }
+    const graphData = jobResults.uuid_results[uuid];
 
-    return <>
-            <CardView header={(benchmark && benchmark) || <Text6 value={"Graph Result"} />}
-                      body={ getGraphBody() }
-                      isExpanded={isExpanded}
-                      expandView={true}
-                      onExpand={onExpand}
-            />
+    const getGraphBody = (key = null) => {
+        const benchmarkGraph = graphData && graphData[benchmark];
+        const dataForKey = key === null ? benchmarkGraph : benchmarkGraph?.[key];
+
+        return jobResults.graphError
+            ? <Text6 value={jobResults.graphError} />
+            : dataForKey
+                ? <PlotlyView data={dataForKey} />
+                : <SplitView splitValues={[<Spinner isSVG="true" />, <Text6 value="Awaiting Results" />]} />;
+    };
+
+    const renderCard = (key, customHeading) => (
+        <CardView
+            header={customHeading || heading || <Text6 value="Graph Result" />}
+            body={getGraphBody(key)}
+            isExpanded={isExpanded}
+            expandView={true}
+            onExpand={onExpand}
+        />
+    );
+
+    return (
+        <>
+            {benchmark === 'oslat' || benchmark === 'cyclictest' ? (
+                <>
+                    {renderCard('number_of_nines', `${benchmark} results`)}
+                    {renderCard('max_latency', `${benchmark} results`)}
+                </>
+            ) : benchmark === 'deployment' ? (
+                <>
+                    {renderCard('total_minutes', `${benchmark} results`)}
+                    {renderCard('total_reboot_count', `${benchmark} results`)}
+                </>
+            ) : (
+                renderCard(null, `${benchmark} results`)
+            )}
         </>
-}
+    );
+};
