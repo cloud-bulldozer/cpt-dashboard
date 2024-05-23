@@ -57,7 +57,7 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
             'formal': test_data['formal'],
             "startDate": str(start_time_utc),
             "endDate": str(end_time_utc),
-            "buildUrl": jenkins_url + str(test_data['cluster_artifacts']['ref']['jenkins_build']),
+            "buildUrl": jenkins_url + "/" + str(test_data['cluster_artifacts']['ref']['jenkins_build']),
             "jobStatus": "success",
             "jobDuration": execution_time_seconds,
         })
