@@ -7,6 +7,7 @@ from app.api.v1.endpoints.cpt import cptJobs
 from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.quay import quayJobs
 from app.api.v1.endpoints.quay import quayGraphs
+from app.api.v1.endpoints.telco import telcoJobs
 
 router = APIRouter()
 
@@ -21,6 +22,9 @@ router.include_router(cptJobs.router, tags=['cpt'])
 # Quay endpoints
 router.include_router(quayJobs.router, tags=['quay'])
 router.include_router(quayGraphs.router, tags=['quay'])
+
+# Telco endpoints
+router.include_router(telcoJobs.router, tags=['telco'])
 
 # Jira endpoints
 router.include_router(jira.router, tags=['jira'])

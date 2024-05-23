@@ -119,11 +119,34 @@ quay_response_example ={
     ]
 }
 
+telco_response_example ={
+    "startDate": "2023-09-20",
+    "endDate": "2023-09-20",
+    "results": [
+        {
+            "ciSystem": "Jenkins",
+            "uuid": "2cc5d4ca895ca5d84cab0fd7923db93b",
+            "encrypted": "gAAAAABmQALtP0g5UPMsOjQw46tZ-aBz77yl-8QNI4jwLfIEV1POnOlA1ny89cp3Nrik3OzpNwXrWO3K4ZwtOliTfk0SO5NkNZHY8reJhvOVJBGFEw2enyjRaHp9hIaJdE0Vrfuqt_NjiYX-vOZo0Sjc84R76LvxjAC6f_urceGGZICH36IkT2g=",
+            "releaseStream": "Release Candidate",
+            "jobStatus": "success",
+            "buildUrl": "https://ci-jenkins-xxx.com/job/your-tests/532",
+            "startDate": "2024-05-09 14:10:51+00:00",
+            "endDate": "2024-05-09 14:43:51+00:00",
+            "product": "telco",
+            "version": "4.16",
+            "testName": "reboot"
+        },
+    ]
+}
+
 def ocp_200_response():
     return response_200(ocp_response_example)
 
 def quay_200_response():
     return response_200(quay_response_example)
+
+def telco_200_response():
+    return response_200(telco_response_example)
 
 cpt_response_example ={
   "startDate": "2023-11-18",

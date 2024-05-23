@@ -1,6 +1,6 @@
 # OpenShift Performance Dashboard
 
-## Elasticsearch configuration
+## Backend configuration
 
 ### Requires
 
@@ -11,6 +11,13 @@ Create a configuration file, named **ocpperf** with the following key structure,
 ```toml
 [<product>.elasticsearch]
 url=
+indice=
+username=
+password=
+
+[<product>.splunk]
+host=
+port=
 indice=
 username=
 password=
@@ -30,9 +37,9 @@ password=
 
 [TOML](https://toml.io/en/) is used above, but it also accepts YAML.
 
-The elasticsearch configuration should be set up by product, that way each product can configure their own ES server.
+The backend configuration should be set up by product and its data store type, that way each product can configure their own backend server.
 
-As an example for `OCP` the configuration looks like this:
+As an example for `OCP` with its ES configuration looks like this:
 
 ```toml
 [ocp.elasticsearch]
@@ -41,6 +48,7 @@ indice=
 username=
 password=
 ```
+**Note: The below applies only for the elastic search at the moment**  
 If you also have an archived internal instance that keeps track of older data, it can be specified with '.internal' suffix. Example of our `OCP` internal archived instance's configuration.
 ```toml
 [ocp.elasticsearch.internal]
@@ -136,7 +144,7 @@ $ podman run \
     ocpp-front
 ```
 
-## Integrating to the dashboard
+## ES Integration to the dashboard
 
 To integrate into our dashboard we provide a default set of fields that teams should adhere to. That set would be the one used to display a high level Homepage for all the teams.
 
