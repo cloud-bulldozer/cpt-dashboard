@@ -10,6 +10,7 @@ from app.api.v1.endpoints.quay import quayGraphs
 from app.api.v1.endpoints.telco import telcoJobs
 from app.api.v1.endpoints.telco import telcoGraphs
 
+
 router = APIRouter()
 
 # OCP endpoints

@@ -136,7 +136,7 @@ telco_response_example ={
             "formal": "true",
             "startDate": "2024-05-16 19:39:48+00:00",
             "endDate": "2024-05-16 20:41:48+00:00",
-            "buildUrl": "https://ci-jenkins-csb-kniqe.apps.ocp-c1.prod.psi.redhat.com/job/ocp-far-edge-vran-tests/10506",
+            "buildUrl": "https://xxx.jenkins.redhat.com/job/your-jobs/23",
             "jobStatus": "success",
             "jobDuration": 3720
         },

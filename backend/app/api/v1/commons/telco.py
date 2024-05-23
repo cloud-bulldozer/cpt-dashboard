@@ -1,5 +1,6 @@
 from datetime import date
 import pandas as pd
+from app import config
 from app.services.splunk import SplunkService
 import app.api.v1.commons.hasher as hasher
 from datetime import datetime, timezone
@@ -8,7 +9,11 @@ import app.api.v1.commons.utils as utils
 
 async def getData(start_datetime: date, end_datetime: date, configpath: str):
     test_types = ["oslat", "cyclictest", "cpu_util", "deployment", "ptp", "reboot", "rfc-2544"]
-    jenkins_url = "https://ci-jenkins-csb-kniqe.apps.ocp-c1.prod.psi.redhat.com/job/ocp-far-edge-vran-tests/"
+    cfg = config.get_config()
+    try:
+        jenkins_url = cfg.get('telco.config.job_url')
+    except Exception as e:
+        print(f"Error reading telco configuration: {e}")
     test_type_execution_times = {
         "oslat": 3720,
         "cyclictest": 3720,

@@ -93,14 +93,14 @@ class ElasticService:
                         query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(new_start_date)
                         if end_date:
                             query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)
-                    if end_date is None:
-                        response = await self.new_es.search(
-                            index=self.new_index+"*",
-                            body=jsonable_encoder(query),
-                            size=size)
-                        new_results = response['hits']['hits']
-                    else:
-                        new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size)
+                        if end_date is None:
+                            response = await self.new_es.search(
+                                index=self.new_index+"*",
+                                body=jsonable_encoder(query),
+                                size=size)
+                            new_results = response['hits']['hits']
+                        else:
+                            new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size)
                     return await self.remove_duplicates(previous_results + new_results)
                 else:
                     if start_date and end_date:

@@ -45,13 +45,13 @@ export const DisplayGraph = ({ uuid, encryptedData, benchmark, heading }) => {
         <>
             {benchmark === 'oslat' || benchmark === 'cyclictest' ? (
                 <>
-                    {renderCard('number_of_nines', `${benchmark} results`)}
-                    {renderCard('max_latency', `${benchmark} results`)}
+                    {renderCard('number_of_nines', `${benchmark} number of nines results`)}
+                    {renderCard('max_latency', `${benchmark} latency results`)}
                 </>
             ) : benchmark === 'deployment' ? (
                 <>
-                    {renderCard('total_minutes', `${benchmark} results`)}
-                    {renderCard('total_reboot_count', `${benchmark} results`)}
+                    {renderCard('total_minutes', `${benchmark} timing results`)}
+                    {renderCard('total_reboot_count', `${benchmark} reboot count results`)}
                 </>
             ) : (
                 renderCard(null, `${benchmark} results`)
