@@ -53,11 +53,14 @@ const TableLayout = (props) => {
               ))}
           </Tr>
         </Thead>
-        <Tbody isExpanded={addExpansion && true}>
+        <Tbody isExpanded={addExpansion}>
           <TableRows
             rows={tableData}
             columns={tableColumns}
             addExpansion={addExpansion}
+            isRunExpanded={props?.isRunExpanded}
+            setRunExpanded={props?.setRunExpanded}
+            graphData={props?.graphData}
           />
         </Tbody>
       </Table>

@@ -46,6 +46,7 @@ const initialState = {
   appliedFilters: {},
   filteredResults: [],
   summary: {},
+  graphData: [],
 };
 
 const OCPReducer = (state = initialState, action = {}) => {
@@ -85,6 +86,8 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, filteredResults: payload };
     case TYPES.SET_OCP_APPLIED_FILTERS:
       return { ...state, appliedFilters: payload };
+    case TYPES.SET_OCP_GRAPH_DATA:
+      return { ...state, graphData: [...state.graphData, payload] };
     default:
       return state;
   }

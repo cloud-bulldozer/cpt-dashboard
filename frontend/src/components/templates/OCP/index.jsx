@@ -1,4 +1,5 @@
 import {
+  fetchGraphData,
   fetchOCPJobs,
   filterFromSummary,
   removeAppliedFilters,
@@ -13,7 +14,7 @@ import {
   setPageOptions,
   sliceOCPTableRows,
 } from "@/actions/ocpActions.js";
-import { useCallback, useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -42,6 +43,7 @@ const OCP = () => {
     appliedFilters,
     start_date,
     end_date,
+    graphData,
   } = useSelector((state) => state.ocp);
 
   useEffect(() => {
@@ -119,7 +121,24 @@ const OCP = () => {
   const endDateChangeHandler = (date, key) => {
     dispatch(setDateFilter(key, date, navigate));
   };
+  //Row expansion
+  const [expandedRunNames, setExpandedRunNames] = useState([]);
+  const setRunExpanded = (run, isExpanding = true) => {
+    setExpandedRunNames((prevExpanded) => {
+      const otherExpandedRunNames = prevExpanded.filter((r) => r !== run.uuid);
+      return isExpanding
+        ? [...otherExpandedRunNames, run.uuid]
+        : otherExpandedRunNames;
+    });
+    if (isExpanding) {
+      dispatch(fetchGraphData(run.uuid));
+    }
+  };
 
+  const isRunExpanded = useCallback(
+    (run) => expandedRunNames.includes(run.uuid),
+    [expandedRunNames]
+  );
   return (
     <>
       <MetricsTab
@@ -161,6 +180,9 @@ const OCP = () => {
         perPage={perPage}
         totalItems={filteredResults.length}
         addExpansion={true}
+        isRunExpanded={isRunExpanded}
+        setRunExpanded={setRunExpanded}
+        graphData={graphData}
       />
     </>
   );

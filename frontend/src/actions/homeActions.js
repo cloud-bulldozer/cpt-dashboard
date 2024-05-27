@@ -5,10 +5,10 @@ import {
   DEFAULT_PER_PAGE,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
+import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import { calculateMetrics, getFilteredData, sortTable } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { appendQueryString } from "@/utils/helper";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchOCPJobsData = () => async (dispatch, getState) => {
@@ -28,12 +28,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
-      const searchParams = new URLSearchParams(window.location.search);
-      if (!searchParams.has("start_date") || !searchParams.has("end_date")) {
-        searchParams.set("start_date", startDate);
-        searchParams.set("end_date", endDate);
-        window.history.pushState({}, "", `?${searchParams.toString()}`);
-      }
+      appendDateFilter(startDate, endDate);
 
       dispatch({
         type: TYPES.SET_CPT_JOBS_DATA,

@@ -34,7 +34,7 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
-      appendDateFilter();
+      appendDateFilter(startDate, endDate);
       dispatch({
         type: TYPES.SET_OCP_JOBS_DATA,
         payload: response.data.results,
@@ -200,6 +200,7 @@ export const setOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
 };
+
 export const getOCPSummary = () => (dispatch, getState) => {
   const results = [...getState().ocp.filteredResults];
 
@@ -208,4 +209,22 @@ export const getOCPSummary = () => (dispatch, getState) => {
     type: TYPES.SET_OCP_SUMMARY,
     payload: countObj,
   });
+};
+
+export const fetchGraphData = (uuid) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+
+    const response = await API.get(`${API_ROUTES.OCP_GRAPH_API_V1}/${uuid}`);
+
+    if (response.status === 200) {
+      dispatch({
+        type: TYPES.SET_OCP_GRAPH_DATA,
+        payload: { uuid, data: response.data },
+      });
+    }
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.COMPLETED });
 };
