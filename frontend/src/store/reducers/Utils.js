@@ -56,6 +56,22 @@ const getQuayUpdatedData = (data, platform, benchmark, releaseStream, workerCoun
     return filteredData
 }
 
+const getTelcoUpdatedData = (data, benchmark, version, releaseStream, ciSystem, formal, nodeName, cpu) => {
+    const filterValues = {
+    "cpu": cpu, "benchmark": benchmark, "shortVersion": version, 
+    "releaseStream": releaseStream, "formal": formal, "ciSystem": ciSystem, 
+    "nodeName": nodeName,
+    }
+    let filteredData = data
+    console.log(filteredData)
+    for (let [keyName, value] of Object.entries(filterValues))
+    filteredData = getFilteredData(filteredData, value, keyName)
+    console.log(filterValues)
+    console.log(filteredData)
+
+    return filteredData
+}
+
 const getCPTSummary = (api_data) => {
     let success = 0;
     let failure = 0;
@@ -100,5 +116,20 @@ const getQuaySummary = (api_data) => {
     return { success, failure, others, total, duration };
 }
 
+const getTelcoSummary = (api_data) => {
+    let success = 0;
+    let failure = 0;
+    let others = 0;
+    let duration = 0;
+    api_data.forEach(item => {
+        if(item.jobStatus.toLowerCase() === "success") success++
+        else if(item.jobStatus.toLowerCase() === "failure") failure++;
+        else others++;
+        duration += parseInt(item.jobDuration) ? parseInt(item.jobDuration) : 0;
+    })
+    const total = success + failure + others
 
-export { getCPTUpdatedData, getOCPUpdatedData, getQuayUpdatedData, getCPTSummary, getOCPSummary, getQuaySummary };
+    return { success, failure, others, total, duration };
+}
+
+export { getCPTUpdatedData, getOCPUpdatedData, getQuayUpdatedData, getTelcoUpdatedData, getCPTSummary, getOCPSummary, getQuaySummary, getTelcoSummary };

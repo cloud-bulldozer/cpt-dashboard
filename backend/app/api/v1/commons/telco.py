@@ -4,6 +4,7 @@ from app import config
 from app.services.splunk import SplunkService
 import app.api.v1.commons.hasher as hasher
 from datetime import datetime, timezone
+import app.api.v1.commons.utils as utils
 
 
 async def getData(start_datetime: date, end_datetime: date, configpath: str):
@@ -40,18 +41,25 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
         start_timestamp = end_timestamp - execution_time_seconds
         start_time_utc = datetime.fromtimestamp(start_timestamp, tz=timezone.utc)
         end_time_utc = datetime.fromtimestamp(end_timestamp, tz=timezone.utc)
+        kernel = test_data['kernel'] if 'kernel' in test_data else "Undefined"
 
         mapped_list.append({
             "uuid": hash_digest,
             "encryptedData": encrypted_data.decode('utf-8'),
             "ciSystem": "Jenkins",
-            "testName": test_data['test_type'],
-            "version": test_data['ocp_version'],
-            "releaseStream": test_data['ocp_build'],
+            "benchmark": test_data['test_type'],
+            "kernel": kernel,
+            "shortVersion": test_data['ocp_version'],
+            "ocpVersion": test_data['ocp_build'],
+            "releaseStream": utils.getReleaseStream({'releaseStream': test_data['ocp_build']}),
+            "nodeName": test_data['node_name'],
+            "cpu": test_data['cpu'],
+            'formal': test_data['formal'],
             "startDate": str(start_time_utc),
             "endDate": str(end_time_utc),
-            "buildUrl": jenkins_url + "/" + str(test_data['cluster_artifacts']['ref']['jenkins_build']),
-            "jobStatus": "success"
+            "buildUrl": jenkins_url + str(test_data['cluster_artifacts']['ref']['jenkins_build']),
+            "jobStatus": "success",
+            "jobDuration": execution_time_seconds,
         })
 
     jobs = pd.json_normalize(mapped_list)

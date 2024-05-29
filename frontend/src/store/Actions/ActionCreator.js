@@ -1,5 +1,5 @@
 
-import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1} from "../Shared";
+import {BASE_URL, OCP_GRAPH_API_V1, OCP_JOBS_API_V1, CPT_JOBS_API_V1, QUAY_JOBS_API_V1, QUAY_GRAPH_API_V1, TELCO_JOBS_API_V1} from "../Shared";
 import axios from "axios";
 import {
     errorOCPCall,
@@ -19,6 +19,12 @@ import {
     setWaitForQuayUpdate,
     updateQuayMetaData
 } from "../reducers/QuayJobsReducer";
+import {
+    errorTelcoCall,
+    getTelcoJobsData,
+    setWaitForTelcoUpdate,
+    updateTelcoMetaData
+} from "../reducers/TelcoJobsReducer";
 import {getUuidResults, setGraphError} from "../reducers/GraphReducer";
 import {getQuayUuidResults, setQuayGraphError} from "../reducers/QuayGraphReducer";
 
@@ -158,6 +164,48 @@ export const fetchQuayJobsData = (startDate = '', endDate='') => async dispatch 
     }
 }
 
+export const fetchTelcoJobsData = (startDate = '', endDate='') => async dispatch => {
+    let buildUrl = `${BASE_URL}${TELCO_JOBS_API_V1}`
+    dispatch(setWaitForTelcoUpdate({waitForUpdate:true}))
+    if(startDate !== '' && endDate !== '') {
+        buildUrl += `?start_date=${startDate}&end_date=${endDate}`
+    }
+    try{
+        let api_data = await fetchAPI(buildUrl)
+        dispatch(setWaitForTelcoUpdate({waitForUpdate:false}))
+        api_data = JSON.parse(api_data)
+        if(api_data){
+            const results = api_data.results
+            if(results){
+                const benchmarks = GetBenchmarks(results)
+                const versions = GetVersions(results)
+                const releaseStreams = GetReleaseStreams(results)
+                const ciSystems = GetCiSystems(results)
+                const formals = GetFormals(results)
+                const nodeNames = GetNodeNames(results)
+                const cpus = GetCpus(results)
+                const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
+                await dispatch(getTelcoJobsData({
+                    data: results, benchmarks, versions, releaseStreams, waitForUpdate: false, formals, nodeNames, cpus,
+                    updatedTime, ciSystems, startDate: api_data.startDate, endDate: api_data.endDate
+                }))
+                await dispatch(updateTelcoMetaData({data: results}))
+            }
+        }
+    }
+    catch (e) {
+        const error = e
+        if(error.response){
+            await dispatch(errorTelcoCall({error: error.response.data.error}))
+            alert(error.response.data.error)
+        }
+        else{
+            console.log(error)
+        }
+        dispatch(setWaitForTelcoUpdate({waitForUpdate:false}))
+    }
+}
+
 export const fetchCPTJobsData = (startDate = '', endDate='') => async dispatch => {
     let buildUrl = `${BASE_URL}${CPT_JOBS_API_V1}`
     dispatch(setWaitForCPTUpdate({waitForUpdate:true}))
@@ -206,7 +254,7 @@ const GetCiSystems = (api_data) => {
 }
 
 export const GetVersions = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.shortVersion.toLowerCase().trim()))).sort()
+    return Array.from(new Set(api_data.map(item => item.shortVersion).filter(shortVersion => shortVersion !== null && shortVersion !== "").map(shortVersion => shortVersion.toUpperCase().trim()))).sort(); 
 }
 
 export const GetBenchmarks = (api_data) => {
@@ -249,7 +297,19 @@ const GetStatuses = (api_data) => {
 }
 
 const GetReleaseStreams = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.releaseStream.toUpperCase().trim()))).sort()
+    return Array.from(new Set(api_data.map(item => item.releaseStream).filter(releaseStream => releaseStream !== null && releaseStream !== "").map(releaseStream => releaseStream.toUpperCase().trim()))).sort(); 
+}
+
+const GetFormals = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.formal).filter(formal => formal !== null && formal !== "").map(formal => formal.toUpperCase().trim()))).sort(); 
+}
+
+const GetNodeNames = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.nodeName).filter(nodeName => nodeName !== null && nodeName !== "").map(nodeName => nodeName.toUpperCase().trim()))).sort(); 
+}
+
+const GetCpus = (api_data) => {
+    return Array.from(new Set(api_data.map(item => item.cpu).filter(cpu => cpu !== null && cpu !== "").map(cpu => cpu.toUpperCase().trim()))).sort(); 
 }
 
 const GetTestNames = (api_data) => {

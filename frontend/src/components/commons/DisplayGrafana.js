@@ -5,6 +5,7 @@ import {SplitView} from "../PatternflyComponents/Split/SplitView";
 import CardView from "../PatternflyComponents/Card/CardView";
 import ListView from "../PatternflyComponents/List/ListView";
 import {Text6} from "../PatternflyComponents/Text/Text";
+import { getBuildLink } from './commons';
 
 
 export function DisplayGrafana({benchmarkConfigs}) {
@@ -37,18 +38,6 @@ export function DisplayGrafana({benchmarkConfigs}) {
     )
 
 }
-
-const getBuildLink = (benchmarkConfigs) => {
-    var icon = "assets/images/jenkins-icon.svg"
-    if (benchmarkConfigs.ciSystem === "PROW") {
-        icon = "assets/images/prow-icon.png"
-    }
-    return <a href={benchmarkConfigs.build_url != '' && benchmarkConfigs.build_url || benchmarkConfigs.buildUrl} target={"_blank"}>
-    <img src={icon}
-        style={{width:'25px',height:'25px'}} />
-</a>
-}
-
 
 const getGrafanaData = (benchmarkConfigs) => {
     const grafanaURL = "https://grafana.rdu2.scalelab.redhat.com:3000/d/";
