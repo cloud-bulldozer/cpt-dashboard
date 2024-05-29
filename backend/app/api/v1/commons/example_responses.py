@@ -136,7 +136,7 @@ telco_response_example ={
             "formal": "true",
             "startDate": "2024-05-16 19:39:48+00:00",
             "endDate": "2024-05-16 20:41:48+00:00",
-            "buildUrl": "https://xxx.jenkins.redhat.com/job/your-jobs/23",
+            "buildUrl": "https://ci-jenkins-xxx.com/job/your-tests/532",
             "jobStatus": "success",
             "jobDuration": 3720
         },
