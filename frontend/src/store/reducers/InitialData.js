@@ -172,3 +172,8 @@ export const QUAY_GRAPH_INITIAL_DATA = {
     uuid_results: {},
     graphError: false,
 }
+
+export const TELCO_GRAPH_INITIAL_DATA = {
+    uuid_results: {},
+    graphError: false,
+}
