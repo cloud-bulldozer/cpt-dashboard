@@ -29,6 +29,11 @@ port=8000
 url=
 personal_access_token=
 
+[horreum]
+url=
+username=
+password=
+
 [airflow]
 url=
 username=
@@ -62,12 +67,29 @@ password=
 
 Internally the API when serving the `/ocp` enpoints will use this connection. Also it is suggested to create indexes with same name in the archived instances too to avoid further complications.
 
-The `jira` table requires a `url` key and a `personal_access_token` key. The `url` is a string value that points to the URL address of your Jira resource. The [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) is a string value that is the credential issued to authenticate and authorize this application with your Jira resource. 
+The `jira` configuration requires a `url` key and a `personal_access_token` key. The `url` is a string value that points to the URL address of your Jira resource. The [Personal Access Token](https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html) is a string value that is the credential issued to authenticate and authorize this application with your Jira resource.
 
 ```toml
 [jira]
 url=""
 personal_access_token=""
+```
+
+The `horreum` configuration requires the `url` of a running Horreum server,
+along with the `username` and `password` to be used to authenticate Horreum
+queries.
+
+All `GET` calls to `/api/v1/horreum/api/{path}` will be passed through to
+Horreum, including query parameters, and Horreum's response will be returned
+to the caller. For example, `GET /api/v1/horreum/api/test/{id}` will return the
+same response as directly calling `GET {horreum.url}/api/test/{id}` with the
+configured Horreum credentials.
+
+```toml
+[horreum]
+url="http://localhost:8080"
+username="user"
+password="secret"
 ```
 
 

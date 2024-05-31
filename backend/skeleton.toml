@@ -10,3 +10,8 @@ port=8000
 [jira]
 url=
 personal_access_token=
+
+[horreum]
+url=
+username=
+password=
