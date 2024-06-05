@@ -1,5 +1,7 @@
-import json
+import orjson
 from app import config
+from multiprocessing import Pool, cpu_count
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from splunklib import client, results
 
 
@@ -31,7 +33,7 @@ class SplunkService:
         except Exception as e:
             print(f"Error connecting to splunk: {e}")
             return None
-    
+
     async def query(self, query, searchList='', max_results=10000):
         """
         Query data from splunk server using splunk lib sdk
@@ -41,40 +43,36 @@ class SplunkService:
             OPTIONAL: searchList (string): additional query parameters for index
         """
         query["count"] = max_results
+
         # If additional search parameters are provided, include those in searchindex
-        if(searchList != ''):
-            # Run a one-shot search and display the results using the results reader:
-            try:
-                searchindex = "search index={} {}".format(self.indice, searchList)
-                oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
-            except Exception as e:
-                print('Error querying splunk: {}'.format(e))
-                return None
-        else:
-            try:
-                searchindex = "search index={}".format(self.indice)
-                oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
-            except Exception as e:
-                print('Error querying splunk: {}'.format(e))
-                return None
-        
+        searchindex = "search index={} {}".format(self.indice, searchList) if searchList else "search index={}".format(self.indice)
+        try:
+            oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
+        except Exception as e:
+            print('Error querying splunk: {}'.format(e))
+            return None
+
         # Get the results and display them using the JSONResultsReader
-        records_reader = results.JSONResultsReader(oneshotsearch_results)
         res_array = []
-        for record in records_reader:
+        async for record in self._stream_results(oneshotsearch_results):
             try:
                 res_array.append({
-                    'data': json.loads(record['_raw']),
+                    'data': orjson.loads(record['_raw']),
                     'host': record['host'],
                     'source': record['source'],
                     'sourcetype': record['sourcetype'],
                     'bucket': record['_bkt'],
                     'serial': record['_serial'],
                     'timestamp': record['_indextime']
-                    })
+                })
             except Exception as e:
-                print('Error on including Splunk record query in results array: {}'.format(e))
+                print(f'Error on including Splunk record query in results array: {e}')
+
         return res_array
+    
+    async def _stream_results(self, oneshotsearch_results):
+        for record in results.JSONResultsReader(oneshotsearch_results):
+            yield record
     
     async def close(self):
         """Closes splunk client connections"""

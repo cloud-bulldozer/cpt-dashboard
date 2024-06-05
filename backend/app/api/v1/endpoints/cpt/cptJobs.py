@@ -1,4 +1,6 @@
 import json
+import asyncio
+import multiprocessing
 from fastapi import Response
 import pandas as pd
 from datetime import datetime, timedelta, date
@@ -42,20 +44,15 @@ async def jobs(start_date: date = Query(None, description="Start date for search
     if start_date > end_date:
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
-    results = pd.DataFrame()
-    for product in products:
-        try:
-            df = await products[product](start_date, end_date)
-            results = pd.concat([results, df.loc[:, ["ciSystem", "uuid", "releaseStream", "jobStatus", "buildUrl", "startDate", "endDate", "product", "version", "testName"]]])
-        except ConnectionError:
-            print("Connection Error in mapper for product " + product)
-        except:
-            print("Date range returned no values or Unknown error in mapper for product " + product)
+    results_df = pd.DataFrame()
+    with multiprocessing.Pool() as pool:
+        results = [pool.apply(fetch_product, args=(product, start_date, end_date)) for product in products]
+        results_df = pd.concat(results)
 
     response = {
         'startDate': start_date.__str__(),
         'endDate': end_date.__str__(),
-        'results': results.to_dict('records')
+        'results': results_df.to_dict('records')
     }
 
     if pretty:
@@ -64,3 +61,16 @@ async def jobs(start_date: date = Query(None, description="Start date for search
 
     jsonstring = json.dumps(response)
     return jsonstring
+
+async def fetch_product_async(product, start_date, end_date):
+    try:
+        df = await products[product](start_date, end_date)
+        return df.loc[:, ["ciSystem", "uuid", "releaseStream", "jobStatus", "buildUrl", "startDate", "endDate", "product", "version", "testName"]] if len(df) != 0 else df
+    except ConnectionError:
+        print("Connection Error in mapper for product " + product)
+    except Exception as e:
+        print(f"Error in mapper for product {product}: {e}")
+        return pd.DataFrame()
+
+def fetch_product(product, start_date, end_date):
+    return asyncio.run(fetch_product_async(product, start_date, end_date))

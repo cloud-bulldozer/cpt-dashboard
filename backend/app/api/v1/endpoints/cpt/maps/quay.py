@@ -7,6 +7,8 @@ from datetime import date
 #####################################################################
 async def quayMapper(start_datetime: date, end_datetime: date):
     df = await getData(start_datetime, end_datetime, f'quay.elasticsearch')
+    if len(df) == 0:
+        return df
     df.insert(len(df.columns), "product", "quay")
     df["version"] = df["releaseStream"]
     df["testName"] = df["benchmark"]
