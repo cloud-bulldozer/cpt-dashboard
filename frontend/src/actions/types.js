@@ -1,7 +1,8 @@
 /* Loading */
 export const LOADING = "LOADING";
 export const COMPLETED = "COMPLETED";
-
+export const GRAPH_LOADING = "GRAPH_LOADING";
+export const GRAPH_COMPLETED = "GRAPH_COMPLETED";
 /* Toast */
 export const SHOW_TOAST = "SHOW_TOAST";
 export const CLEAR_TOAST = "CLEAR_TOAST";

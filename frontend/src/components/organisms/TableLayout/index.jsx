@@ -61,6 +61,7 @@ const TableLayout = (props) => {
             isRunExpanded={props?.isRunExpanded}
             setRunExpanded={props?.setRunExpanded}
             graphData={props?.graphData}
+            type={props.type}
           />
         </Tbody>
       </Table>
@@ -93,5 +94,7 @@ TableLayout.propTypes = {
   setPage: PropTypes.func,
   setPerPage: PropTypes.func,
   addExpansion: PropTypes.bool,
+  graphData: PropTypes.array,
+  type: PropTypes.string,
 };
 export default TableLayout;

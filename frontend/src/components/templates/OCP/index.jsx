@@ -183,6 +183,7 @@ const OCP = () => {
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
+        type={"ocp"}
       />
     </>
   );

@@ -47,6 +47,34 @@ const initialState = {
   filteredResults: [],
   summary: {},
   graphData: [],
+  clusterMetaData: [
+    { name: "Release Binary", value: "releaseStream" },
+    { name: "Cluster Name", value: "clusterName" },
+    { name: "Cluster Type", value: "clusterType" },
+    { name: "Network Type", value: "networkType" },
+    { name: "Benchmark Status", value: "jobStatus" },
+    { name: "Job Duration", value: "jobDuration" },
+    { name: "Job Type", value: "jobType" },
+    { name: "Rehearse", value: "isRehearse" },
+    { name: "Has IPSEC", value: "ipsec" },
+    { name: "FIPS Enabled", value: "fips" },
+    { name: "Is Encrypted", value: "encrypted" },
+    { name: "Control Plane Access", value: "publish" },
+    { name: "Compute Architecture", value: "computeArch" },
+    { name: "Control Plane Architecture", value: "controlPlaneArch" },
+  ],
+  nodeKeys: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesType" },
+    { name: "Infra", value: "infraNodesType" },
+    { name: "Workload", value: "benchmark" },
+  ],
+  nodeCount: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesCount" },
+    { name: "Infra", value: "infraNodesCount" },
+    { name: "Total", value: "totalNodesCount" },
+  ],
 };
 
 const OCPReducer = (state = initialState, action = {}) => {

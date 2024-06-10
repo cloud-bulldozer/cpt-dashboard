@@ -158,6 +158,7 @@ const Home = () => {
         perPage={perPage}
         totalItems={filteredResults.length}
         addExpansion={false}
+        state={"cpt"}
       />
     </>
   );
