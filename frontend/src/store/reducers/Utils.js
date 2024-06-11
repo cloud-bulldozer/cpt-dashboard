@@ -63,11 +63,8 @@ const getTelcoUpdatedData = (data, benchmark, version, releaseStream, ciSystem, 
     "nodeName": nodeName,
     }
     let filteredData = data
-    console.log(filteredData)
     for (let [keyName, value] of Object.entries(filterValues))
     filteredData = getFilteredData(filteredData, value, keyName)
-    console.log(filterValues)
-    console.log(filteredData)
 
     return filteredData
 }

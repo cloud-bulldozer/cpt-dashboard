@@ -1,6 +1,7 @@
 import json
 import asyncio
-import multiprocessing
+from concurrent.futures import ProcessPoolExecutor, as_completed
+from multiprocessing import cpu_count
 from fastapi import Response
 import pandas as pd
 from datetime import datetime, timedelta, date
@@ -45,9 +46,15 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
     results_df = pd.DataFrame()
-    with multiprocessing.Pool() as pool:
-        results = [pool.apply(fetch_product, args=(product, start_date, end_date)) for product in products]
-        results_df = pd.concat(results)
+    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+        futures = {executor.submit(fetch_product, product, start_date, end_date): product for product in products}
+        for future in as_completed(futures):
+            product = futures[future]
+            try:
+                result = future.result()
+                results_df = pd.concat([results_df, result])
+            except Exception as e:
+                print(f"Error fetching data for product {product}: {e}")
 
     response = {
         'startDate': start_date.__str__(),
