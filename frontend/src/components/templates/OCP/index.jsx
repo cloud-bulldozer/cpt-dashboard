@@ -12,9 +12,10 @@ import {
   setOtherSummaryFilter,
   setPage,
   setPageOptions,
+  setTableColumns,
   sliceOCPTableRows,
 } from "@/actions/ocpActions.js";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -46,6 +47,13 @@ const OCP = () => {
     graphData,
   } = useSelector((state) => state.ocp);
 
+  const modifidedTableFilters = useMemo(
+    () =>
+      tableFilters.filter(
+        (item) => item.value !== "endDate" && item.value !== "startDate"
+      ),
+    [tableFilters]
+  );
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -139,6 +147,9 @@ const OCP = () => {
     (run) => expandedRunNames.includes(run.uuid),
     [expandedRunNames]
   );
+  const setColumns = (value, isAdding) => {
+    dispatch(setTableColumns(value, isAdding));
+  };
   return (
     <>
       <MetricsTab
@@ -151,7 +162,7 @@ const OCP = () => {
 
       {tableFilters?.length > 0 && filterOptions?.length > 0 && (
         <TableFilter
-          tableFilters={tableFilters}
+          tableFilters={modifidedTableFilters}
           filterOptions={filterOptions}
           categoryFilterValue={categoryFilterValue}
           filterData={filterData}
@@ -163,6 +174,9 @@ const OCP = () => {
           deleteItem={deleteItem}
           startDateChangeHandler={startDateChangeHandler}
           endDateChangeHandler={endDateChangeHandler}
+          type={"ocp"}
+          showColumnMenu={true}
+          setColumns={setColumns}
         />
       )}
 

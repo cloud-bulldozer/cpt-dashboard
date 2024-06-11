@@ -232,3 +232,20 @@ export const fetchGraphData = (uuid) => async (dispatch, getState) => {
   }
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
+
+export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
+  let tableColumns = [...getState().ocp.tableColumns];
+  const tableFilters = getState().ocp.tableFilters;
+
+  if (isAdding) {
+    const filterObj = tableFilters.find((item) => item.value === key);
+    tableColumns.push(filterObj);
+  } else {
+    tableColumns = tableColumns.filter((item) => item.value !== key);
+  }
+
+  dispatch({
+    type: TYPES.SET_OCP_COLUMNS,
+    payload: tableColumns,
+  });
+};

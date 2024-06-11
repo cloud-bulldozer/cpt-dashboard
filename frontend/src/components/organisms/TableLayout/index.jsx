@@ -96,5 +96,7 @@ TableLayout.propTypes = {
   addExpansion: PropTypes.bool,
   graphData: PropTypes.array,
   type: PropTypes.string,
+  isRunExpanded: PropTypes.func,
+  setRunExpanded: PropTypes.func,
 };
 export default TableLayout;

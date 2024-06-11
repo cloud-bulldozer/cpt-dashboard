@@ -22,6 +22,8 @@ const initialState = {
     { name: "CI System", value: "ciSystem" },
     { name: "Platform", value: "platform" },
     { name: "Benchmark", value: "benchmark" },
+    { name: "Release Stream", value: "releaseStream" },
+    { name: "Build", value: "build" },
     { name: "Worker Count", value: "workerNodesCount" },
     { name: "Network Type", value: "networkType" },
     { name: "Versions", value: "shortVersion" },
@@ -34,6 +36,8 @@ const initialState = {
     { name: "Compute Architecture", value: "computeArch" },
     { name: "Control Plane Architecture", value: "controlPlaneArch" },
     { name: "Status", value: "jobStatus" },
+    { name: "Start Date", value: "startDate" },
+    { name: "End Date", value: "endDate" },
   ],
   activeSortDir: null,
   activeSortIndex: null,
@@ -116,6 +120,8 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, appliedFilters: payload };
     case TYPES.SET_OCP_GRAPH_DATA:
       return { ...state, graphData: [...state.graphData, payload] };
+    case TYPES.SET_OCP_COLUMNS:
+      return { ...state, tableColumns: payload };
     default:
       return state;
   }

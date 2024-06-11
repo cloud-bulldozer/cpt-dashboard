@@ -9,6 +9,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 
+import ColumnMenuFilter from "@/components/molecules/ColumnMenuFilter";
 import DatePicker from "react-date-picker";
 import { FilterIcon } from "@patternfly/react-icons";
 import PropTypes from "prop-types";
@@ -29,6 +30,9 @@ const TableFilter = (props) => {
     deleteItem,
     startDateChangeHandler,
     endDateChangeHandler,
+    type,
+    showColumnMenu,
+    setColumns,
   } = props;
 
   const category = filterData.filter(
@@ -83,6 +87,11 @@ const TableFilter = (props) => {
               value={end_date}
             />
           </ToolbarItem>
+          {showColumnMenu && (
+            <ToolbarItem>
+              <ColumnMenuFilter type={type} setColumns={setColumns} />
+            </ToolbarItem>
+          )}
         </ToolbarContent>
       </Toolbar>
       {Object.keys(appliedFilters).length > 0 &&
@@ -108,5 +117,8 @@ TableFilter.propTypes = {
   deleteItem: PropTypes.func,
   startDateChangeHandler: PropTypes.func,
   endDateChangeHandler: PropTypes.func,
+  type: PropTypes.string,
+  showColumnMenu: PropTypes.bool,
+  setColumns: PropTypes.func,
 };
 export default TableFilter;

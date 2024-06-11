@@ -9,8 +9,6 @@ import { uid } from "@/utils/helper.js";
 const TableRows = (props) => {
   const { rows, columns, addExpansion } = props;
 
-  const details = true;
-
   return (
     rows?.length > 0 &&
     rows.map((item, rowIndex) => {
@@ -19,20 +17,13 @@ const TableRows = (props) => {
           <Tr key={uid()}>
             {addExpansion && (
               <Td
-                expand={
-                  details
-                    ? {
-                        rowIndex,
-                        isExpanded: props?.isRunExpanded(item),
-                        onToggle: () =>
-                          props?.setRunExpanded(
-                            item,
-                            !props?.isRunExpanded(item)
-                          ),
-                        expandId: "expandable-row",
-                      }
-                    : undefined
-                }
+                expand={{
+                  rowIndex,
+                  isExpanded: props?.isRunExpanded(item),
+                  onToggle: () =>
+                    props?.setRunExpanded(item, !props?.isRunExpanded(item)),
+                  expandId: `expandable-row${uid()}`,
+                }}
               />
             )}
 

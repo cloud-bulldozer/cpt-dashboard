@@ -141,6 +141,8 @@ const Home = () => {
           deleteItem={deleteItem}
           startDateChangeHandler={startDateChangeHandler}
           endDateChangeHandler={endDateChangeHandler}
+          type={"cpt"}
+          showColumnMenu={false}
         />
       )}
 
