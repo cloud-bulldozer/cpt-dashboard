@@ -9,7 +9,6 @@ import PropTypes from "prop-types";
 export const SidebarLayout = ({sidebarComponents}) => {
 
     const DisplayDate = ({startDate, endDate, setStartDate,  setEndDate}) => {
-        console.log(startDate)
         const dateView = (name, dateValue, onChange) => {
             return <Stack>
                         <StackItem children={<Text4 value={name}/>}/>
