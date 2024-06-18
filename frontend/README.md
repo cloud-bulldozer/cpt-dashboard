@@ -1,72 +1,69 @@
-# frontend
-
-## Development in a container
 
 
 
-## Available Scripts
+# Openshift Performance Dashbaord
 
-In the project directory, you can run:
+## Dashboard directory structure
 
-### `yarn start`
+### [`src`](src/)
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in the browser.
+The CPT Dashboard Javascript source plus additional CSS/LESS and artifacts.
 
-The page will reload if you make edits.\
-You will also see any lint errors in the console.
+#### [`src/assets`](src/assets/)
 
-### `yarn test`
+Assets placed in the `src/assets/images` directory are only referenced within component or layout definitions and are packaged in the generated `***.js` file during the build process.
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+#### [`src/modules`](src/modules/)
 
-### `yarn build`
+`modules` directory has all containers (patent layouts) and components (react components).
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+#### [`src/utils`](src/utils/)
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+The `utils` directory has all helper/utility scripts.
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+#### [`src/reducers`](src/reducers)
 
-### `yarn eject`
+Contains functions that manage store via actions 
 
-**Note: this is a one-way operation. Once you `eject`, you can’t go back!**
+## Cloning and Running the Application Locally 
 
-If you aren’t satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+- Install [Node.js](https://nodejs.org) 
+- Clone the [CPT Dashboard code](https://github.com/cloud-bulldozer/cpt-dashboard) to a local file system
+- Install all the npm packages
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you’re on your own.
+Type the following command to install all npm packages 
 
-You don’t have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn’t feel obligated to use this feature. However we understand that this tool wouldn’t be useful if you couldn’t customize it when you are ready for it.
+```bash
+$ npm install
+```
 
-## Learn More
+In order to run the application use the following command 
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+```bash
+$ npm run dev
+```
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+The application runs on http://localhost:3000 in the default browser.
 
-### Code Splitting
+## Build
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+To build the application run the following command
 
-### Analyzing the Bundle Size
+```bash
+$ npm run build
+```
+This will generate the `build` folder in the root directory, which contains packaged files such as `***.js`, `***.css`, and `index.html`.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+Then, copy the `build` folder to the proper place on the server for deployment.
 
-### Making a Progressive Web App
+## Template
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+This application is based on v5 of PatternFly which is a production-ready UI solution for admin interfaces. For more information regarding the foundation and template of the application, please visit [PatternFly](https://www.patternfly.org/get-started/develop) 
 
-### Advanced Configuration
+## Resources
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+- [Vite](https://vitejs.dev/guide/)   
 
-### Deployment
+- [ReactJS](https://reactjs.org/) 
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
-
-### `yarn build` fails to minify
-
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+- [React-Redux](https://github.com/reduxjs/react-redux)
