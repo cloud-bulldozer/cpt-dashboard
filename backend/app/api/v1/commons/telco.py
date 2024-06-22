@@ -5,6 +5,7 @@ from app.services.splunk import SplunkService
 import app.api.v1.commons.hasher as hasher
 from datetime import datetime, timezone
 import app.api.v1.commons.utils as utils
+import app.api.v1.endpoints.telco.telcoGraphs as telcoGraphs
 
 
 async def getData(start_datetime: date, end_datetime: date, configpath: str):
@@ -36,6 +37,7 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     for each_response in response:
         end_timestamp = int(each_response['timestamp'])
         test_data = each_response['data']
+        threshold = await telcoGraphs.process_json(test_data, True)
         hash_digest, encrypted_data = hasher.hash_encrypt_json(each_response)
         execution_time_seconds = test_type_execution_times.get(test_data['test_type'], 0)
         start_timestamp = end_timestamp - execution_time_seconds
@@ -58,7 +60,7 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
             "startDate": str(start_time_utc),
             "endDate": str(end_time_utc),
             "buildUrl": jenkins_url + "/" + str(test_data['cluster_artifacts']['ref']['jenkins_build']),
-            "jobStatus": "success",
+            "jobStatus": "failure" if (threshold != 0) else "success",
             "jobDuration": execution_time_seconds,
         })
 
