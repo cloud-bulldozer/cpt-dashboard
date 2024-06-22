@@ -25,7 +25,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
                 pretty: bool = Query(False, description="Output content in pretty format.")):
     if start_date is None:
         start_date = datetime.utcnow().date()
-        start_date = start_date - timedelta(days=7)
+        start_date = start_date - timedelta(days=5)
 
     if end_date is None:
         end_date = datetime.utcnow().date()
