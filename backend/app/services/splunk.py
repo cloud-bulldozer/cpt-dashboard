@@ -1,7 +1,5 @@
 import orjson
 from app import config
-from multiprocessing import Pool, cpu_count
-from concurrent.futures import ProcessPoolExecutor, as_completed
 from splunklib import client, results
 
 

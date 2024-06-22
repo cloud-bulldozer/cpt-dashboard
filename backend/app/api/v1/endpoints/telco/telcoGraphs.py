@@ -25,7 +25,7 @@ async def process_json(json_data: dict):
 
 def process_ptp(json_data: str):
    nic = json_data["nic"]
-   ptp4l_max_offset = json_data["ptp4l_max_offset"]
+   ptp4l_max_offset = json_data.get("ptp4l_max_offset", 0)
    if "mellanox" in nic.lower():
       defined_offset_threshold = 200
    else:
@@ -38,8 +38,8 @@ def process_ptp(json_data: str):
       "ptp": [
          {
             "name": "Data Points",
-            "x": ["ptp4l_max_offset"],
-            "y": [ptp4l_max_offset],
+            "x": ["-inf", "ptp4l_max_offset", "inf"],
+            "y": [0, ptp4l_max_offset, 0],
             "mode": "markers",
             "marker": {
                "size": 10,
@@ -47,16 +47,16 @@ def process_ptp(json_data: str):
             "error_y": {
                "type": "data",
                "symmetric": "false",
-               "array": [0],
-               "arrayminus": [minus_offset]
+               "array": [0, 0, 0],
+               "arrayminus": [0, minus_offset, 0]
             },
             
          },
          {
             "name": "Threshold",
-            "x": ["ptp4l_max_offset"],
-            "y": [defined_offset_threshold],
-            "mode": "lines+markers",
+            "x": ["-inf", "ptp4l_max_offset", "inf"],
+            "y": [defined_offset_threshold, defined_offset_threshold, defined_offset_threshold],
+            "mode": "lines",
             "line": {
                "dash": 'dot',
                "width": 3,
@@ -78,8 +78,8 @@ def process_reboot(json_data: str):
    defined_threshold = 20
    reboot_type = json_data["reboot_type"]
    for each_iteration in json_data["Iterations"]:
-      max_minutes = max(max_minutes, each_iteration["total_minutes"])
-      avg_minutes += each_iteration["total_minutes"]
+      max_minutes = max(max_minutes, each_iteration.get("total_minutes", 0))
+      avg_minutes += each_iteration.get("total_minutes", 0)
    avg_minutes /= len(json_data["Iterations"])
    if max_minutes > defined_threshold:
       minus_max_minutes = max_minutes - defined_threshold
@@ -108,7 +108,7 @@ def process_reboot(json_data: str):
             "name": "Threshold",
             "x": [reboot_type + "_" + "max_minutes", reboot_type + "_" + "avg_minutes"],
             "y": [defined_threshold, defined_threshold],
-            "mode": "lines+markers",
+            "mode": "lines",
             "marker": {
                "size": 15,
             },
@@ -131,9 +131,9 @@ def process_cpu_util(json_data: str):
       if each_scenario["scenario_name"] == "steadyworkload":
          for each_type in each_scenario["types"]:
             if each_type["type_name"] == "total":
-               total_max_cpu = each_type["max_cpu"]
+               total_max_cpu = each_type.get("max_cpu", 0)
                break
-         total_avg_cpu = each_scenario["avg_cpu_total"]
+         total_avg_cpu = each_scenario.get("avg_cpu_total", 0)
          break
    if total_max_cpu > defined_threshold:
       minus_max_cpu = total_max_cpu - defined_threshold
@@ -162,7 +162,7 @@ def process_cpu_util(json_data: str):
             "name": "Threshold",
             "x": ["total_max_cpu", "total_avg_cpu"],
             "y": [defined_threshold, defined_threshold],
-            "mode": "lines+markers",
+            "mode": "lines",
             "marker": {
                "size": 15,
             },
@@ -176,7 +176,7 @@ def process_cpu_util(json_data: str):
    }
 
 def process_rfc_2544(json_data: str):
-   max_delay = json_data["max_delay"]
+   max_delay = json_data.get("max_delay", 0)
    defined_delay_threshold = 30.0
    minus_max_delay = 0.0
    if max_delay > defined_delay_threshold:
@@ -185,8 +185,8 @@ def process_rfc_2544(json_data: str):
    return {
       "rfc-2544": [
          {
-            "x": ["max_delay"],
-            "y": [max_delay],
+            "x": ["-inf", "max_delay", "inf"],
+            "y": [0, max_delay, 0],
             "mode": "markers",
             "marker": {
                "size": 10,
@@ -195,16 +195,16 @@ def process_rfc_2544(json_data: str):
             "error_y": {
                "type": "data",
                "symmetric": "false",
-               "array": [0],
-               "arrayminus": [minus_max_delay]
+               "array": [0, 0, 0],
+               "arrayminus": [0, minus_max_delay, 0]
             },
             "type": "scatter",
          },
          {
-            "x": ["max_delay"],
-            "y": [defined_delay_threshold],
+            "x": ["-inf", "max_delay", "inf"],
+            "y": [defined_delay_threshold, defined_delay_threshold, defined_delay_threshold],
             "name": "Threshold",
-            "mode": "lines+markers",
+            "mode": "lines",
             "marker": {
                "size": 15,
             },
@@ -228,8 +228,8 @@ def process_cyclictest(json_data: str):
    }
 
 def process_deployment(json_data: str):
-   total_minutes = json_data["total_minutes"]
-   reboot_count = json_data["reboot_count"]
+   total_minutes = json_data.get("total_minutes", 0)
+   reboot_count = json_data.get("reboot_count", 0)
    defined_total_minutes_threshold = 180
    defined_total_reboot_count = 3
    minus_total_minutes = 0.0
@@ -244,8 +244,8 @@ def process_deployment(json_data: str):
          "total_minutes": [
             {
                "name": "Data Points",
-               "x": ["total_minutes"],
-               "y": [total_minutes],
+               "x": ["-inf", "total_minutes", "inf"],
+               "y": [0, total_minutes, 0],
                "mode": "markers",
                "marker": {
                   "size": 10,
@@ -253,16 +253,16 @@ def process_deployment(json_data: str):
                "error_y": {
                   "type": "data",
                   "symmetric": "false",
-                  "array": [0],
-                  "arrayminus": [minus_total_minutes]
+                  "array": [0, 0, 0],
+                  "arrayminus": [0, minus_total_minutes, 0]
                },
                "type": "scatter",
             },
             {
                "name": "Threshold",
-               "x": ["total_minutes"],
-               "y": [defined_total_minutes_threshold],
-               "mode": "lines+markers",
+               "x": ["-inf", "total_minutes", "inf"],
+               "y": [defined_total_minutes_threshold, defined_total_minutes_threshold, defined_total_minutes_threshold],
+               "mode": "lines",
                "marker": {
                   "size": 15,
                },
@@ -276,8 +276,8 @@ def process_deployment(json_data: str):
          "total_reboot_count": [
             {
                "name": "Data Points",
-               "x": ["reboot_count"],
-               "y": [reboot_count],
+               "x": ["-inf", "reboot_count", "inf"],
+               "y": [0, reboot_count, 0],
                "mode": "markers",
                "marker": {
                   "size": 10,
@@ -285,16 +285,16 @@ def process_deployment(json_data: str):
                "error_y": {
                   "type": "data",
                   "symmetric": "false",
-                  "array": [0],
-                  "arrayminus": [minus_total_reboot_count]
+                  "array": [0, 0, 0],
+                  "arrayminus": [0, minus_total_reboot_count, 0]
                },
                "type": "scatter",
             },
             {
                "name": "Threshold",
-               "x": ["reboot_count"],
-               "y": [defined_total_reboot_count],
-               "mode": "lines+markers",
+               "x": ["-inf", "reboot_count", "inf"],
+               "y": [defined_total_reboot_count, defined_total_reboot_count, defined_total_reboot_count],
+               "mode": "lines",
                "marker": {
                   "size": 15,
                },
@@ -315,8 +315,8 @@ def get_oslat_or_cyclictest(json_data: str):
    defined_latency_threshold = 20
    defined_number_of_nines_threshold = 100
    for each_test_unit in json_data["test_units"]:
-      max_latency = max(max_latency, each_test_unit["max_latency"])
-      min_number_of_nines = min(min_number_of_nines, each_test_unit["number_of_nines"])
+      max_latency = max(max_latency, each_test_unit.get("max_latency", 0))
+      min_number_of_nines = min(min_number_of_nines, each_test_unit.get("number_of_nines", 0))
    if max_latency > defined_latency_threshold:
       minus_max_latency = max_latency - defined_latency_threshold
 
@@ -324,8 +324,8 @@ def get_oslat_or_cyclictest(json_data: str):
          "number_of_nines": [
             {
                "name": "Data Points",
-               "x": ["min_number_of_nines"],
-               "y": [min_number_of_nines],
+               "x": ["-inf", "min_number_of_nines", "inf"],
+               "y": [0, min_number_of_nines, 0],
                "mode": "markers",
                "marker": {
                   "size": 10,
@@ -333,16 +333,16 @@ def get_oslat_or_cyclictest(json_data: str):
                "error_y": {
                   "type": "data",
                   "symmetric": "false",
-                  "array": [0],
-                  "arrayminus": [min_number_of_nines - defined_number_of_nines_threshold]
+                  "array": [0, 0, 0],
+                  "arrayminus": [0, min_number_of_nines - defined_number_of_nines_threshold, 0]
                },
                "type": "scatter",
             },
             {
                "name": "Threshold",
-               "x": ["min_number_of_nines"],
-               "y": [defined_number_of_nines_threshold],
-               "mode": "lines+markers",
+               "x": ["-inf", "min_number_of_nines", "inf"],
+               "y": [defined_number_of_nines_threshold, defined_number_of_nines_threshold, defined_number_of_nines_threshold],
+               "mode": "lines",
                "marker": {
                   "size": 15,
                },
@@ -356,8 +356,8 @@ def get_oslat_or_cyclictest(json_data: str):
          "max_latency": [
             {
                "name": "Data Points",
-               "x": ["max_latency"],
-               "y": [max_latency],
+               "x": ["-inf", "max_latency", "inf"],
+               "y": [0, max_latency, 0],
                "mode": "markers",
                "marker": {
                   "size": 10,
@@ -365,16 +365,16 @@ def get_oslat_or_cyclictest(json_data: str):
                "error_y": {
                   "type": "data",
                   "symmetric": "false",
-                  "array": [0],
-                  "arrayminus": [minus_max_latency]
+                  "array": [0, 0, 0],
+                  "arrayminus": [0, minus_max_latency, 0]
                },
                "type": "scatter",
             },
             {
                "name": "Threshold",
-               "x": ["max_latency"],
-               "y": [defined_latency_threshold],
-               "mode": "lines+markers",
+               "x": ["-inf", "max_latency", "inf"],
+               "y": [defined_latency_threshold, defined_latency_threshold, defined_latency_threshold],
+               "mode": "lines",
                "marker": {
                   "size": 15,
                },
