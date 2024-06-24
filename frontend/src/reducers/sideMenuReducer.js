@@ -1,4 +1,4 @@
-import * as CONSTANTS from "@/assets/constants/SidemenuConstants";
+import * as CONSTANTS from "../assets/constants/SidemenuConstants";
 
 import { SET_ACTIVE_MENU_ITEM, TOGGLE_SIDE_MENU } from "../actions/types";
 

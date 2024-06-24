@@ -14,12 +14,12 @@ import {
   setPageOptions,
   setTableColumns,
   sliceOCPTableRows,
-} from "@/actions/ocpActions.js";
+} from "../../../actions/ocpActions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import MetricsTab from "@//components/organisms/MetricsTab";
+import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { sortTable } from "@/actions/commonActions.js";
