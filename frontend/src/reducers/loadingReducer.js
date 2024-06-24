@@ -1,7 +1,13 @@
-import { COMPLETED, LOADING } from "@/actions/types";
+import {
+  COMPLETED,
+  GRAPH_COMPLETED,
+  GRAPH_LOADING,
+  LOADING,
+} from "@/actions/types";
 
 const initialState = {
   isLoading: false,
+  isGraphLoading: true,
 };
 
 const LoadingReducer = (state = initialState, action = {}) => {
@@ -11,6 +17,11 @@ const LoadingReducer = (state = initialState, action = {}) => {
       return { ...state, isLoading: true };
     case COMPLETED:
       return { ...state, isLoading: false };
+    case GRAPH_LOADING:
+      return { ...state, isGraphLoading: true };
+    case GRAPH_COMPLETED:
+      return { ...state, isGraphLoading: false };
+
     default:
       return state;
   }

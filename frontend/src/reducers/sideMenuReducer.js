@@ -1,4 +1,4 @@
-import * as CONSTANTS from "@/assets/constants/SidemenuConstants";
+import * as CONSTANTS from "../assets/constants/SidemenuConstants";
 
 import { SET_ACTIVE_MENU_ITEM, TOGGLE_SIDE_MENU } from "../actions/types";
 
@@ -15,7 +15,7 @@ const SideMenuReducer = (state = initialState, action = {}) => {
         activeMenuItem: payload,
       };
     case TOGGLE_SIDE_MENU:
-      return { ...state, isSideMenuOpen: false };
+      return { ...state, isSideMenuOpen: payload };
     default:
       return state;
   }
