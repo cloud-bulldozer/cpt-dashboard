@@ -10,6 +10,7 @@ from .maps.ocp import ocpMapper
 from .maps.quay import quayMapper
 from .maps.hce import hceMapper
 from .maps.telco import telcoMapper
+from .maps.ocm import ocmMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 
@@ -20,7 +21,9 @@ products = {
             "quay": quayMapper,
             "hce": hceMapper,
             "telco": telcoMapper,
+            "ocm": ocmMapper,
            }
+
 
 @router.get('/api/v1/cpt/jobs',
             summary="Returns a job list from all the products.",
@@ -69,6 +72,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
     jsonstring = json.dumps(response)
     return jsonstring
 
+
 async def fetch_product_async(product, start_date, end_date):
     try:
         df = await products[product](start_date, end_date)
@@ -78,6 +82,7 @@ async def fetch_product_async(product, start_date, end_date):
     except Exception as e:
         print(f"Error in mapper for product {product}: {e}")
         return pd.DataFrame()
+
 
 def fetch_product(product, start_date, end_date):
     return asyncio.run(fetch_product_async(product, start_date, end_date))
