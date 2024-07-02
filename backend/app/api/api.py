@@ -10,6 +10,7 @@ from app.api.v1.endpoints.quay import quayJobs
 from app.api.v1.endpoints.quay import quayGraphs
 from app.api.v1.endpoints.telco import telcoJobs
 from app.api.v1.endpoints.telco import telcoGraphs
+from app.api.v1.endpoints.ocm import ocmJobs
 
 
 router = APIRouter()
@@ -35,3 +36,6 @@ router.include_router(jira.router, tags=['jira'])
 
 # Horreum endpoint
 router.include_router(horreum.router, tags=['horreum'])
+
+# OCM endpoint
+router.include_router(ocmJobs.router, tags=['ocm'])
