@@ -29,6 +29,7 @@ const jobsSlice = createSlice({
             state.allPublish = ["All", ...action.payload.allPublish]
             state.computeArchs = ["All", ...action.payload.computeArchs]
             state.controlPlaneArchs = ["All", ...action.payload.controlPlaneArchs]
+            state.jobStatuses = ["All", ...action.payload.jobStatuses]
             state.updatedTime = action.payload.updatedTime
             state.error = null
             Object.assign(state,  getOCPSummary(state.data))
@@ -37,7 +38,7 @@ const jobsSlice = createSlice({
         },
         updateOCPDataFilter: (state, action) => {
             const {ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse,
-                   ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch} = action.payload
+                   ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, jobStatus} = action.payload
             state.selectedBenchmark = benchmark
             state.selectedVersion = version
             state.selectedPlatform = platform
@@ -53,15 +54,17 @@ const jobsSlice = createSlice({
             state.selectedPublish = publish
             state.selectedComputeArch = computeArch
             state.selectedControlPlaneArch = controlPlaneArch
+            state.selectedJobStatus = jobStatus
             state.data = getOCPUpdatedData(original(state.copyData), platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse,
-                         ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch)
+                         ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, jobStatus)
             Object.assign(state,  getOCPSummary(state.data))
         },
         updateOCPMetaData: (state, action) => {
             state.data = getOCPUpdatedData(action.payload.data, state.selectedPlatform, state.selectedBenchmark,
                 state.selectedVersion, state.selectedWorkerCount, state.selectedNetworkType, state.selectedCiSystem,
                 state.selectedJobType, state.selectedRehearse, state.selectedIpsec, state.selectedFips, state.selectedEncrypted,
-                state.selectedEncryptionType, state.selectedPublish, state.selectedComputeArch, state.selectedControlPlaneArch)
+                state.selectedEncryptionType, state.selectedPublish, state.selectedComputeArch, state.selectedControlPlaneArch,
+                state.selectedJobStatus)
             Object.assign(state,  getOCPSummary(state.data))
         },
         setWaitForOCPUpdate: (state, action) => {

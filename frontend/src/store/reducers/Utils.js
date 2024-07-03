@@ -25,7 +25,7 @@ const getCPTUpdatedData = (data, testName, product, ciSystem, jobStatus, release
 }
 
 const getOCPUpdatedData = (data, platform, benchmark, version, workerCount, networkType, ciSystem, jobType, isRehearse,
-                            ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch) => {
+                            ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, jobStatus) => {
     const filterValues = {
         "platform": platform, "benchmark": benchmark,
         "shortVersion": version, "workerNodesCount": workerCount,
@@ -34,6 +34,7 @@ const getOCPUpdatedData = (data, platform, benchmark, version, workerCount, netw
         "ipsec": ipsec, "fips": fips, "encrypted": encrypted,
         "encryptionType": encryptionType, "publish": publish,
         "computeArch": computeArch, "controlPlaneArch": controlPlaneArch,
+        "jobStatus": jobStatus,
     }
     let filteredData = data
     for (let [keyName, value] of Object.entries(filterValues))
@@ -58,8 +59,8 @@ const getQuayUpdatedData = (data, platform, benchmark, releaseStream, workerCoun
 
 const getTelcoUpdatedData = (data, benchmark, version, releaseStream, ciSystem, formal, nodeName, cpu) => {
     const filterValues = {
-    "cpu": cpu, "benchmark": benchmark, "shortVersion": version, 
-    "releaseStream": releaseStream, "formal": formal, "ciSystem": ciSystem, 
+    "cpu": cpu, "benchmark": benchmark, "shortVersion": version,
+    "releaseStream": releaseStream, "formal": formal, "ciSystem": ciSystem,
     "nodeName": nodeName,
     }
     let filteredData = data

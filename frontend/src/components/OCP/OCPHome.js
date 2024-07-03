@@ -41,6 +41,7 @@ export function OCPHome() {
     const [publish, setPublish] = useState(searchParams.get("publish") || ocpJobs.selectedPublish)
     const [computeArch, setComputeArch] = useState(searchParams.get("computeArch") || ocpJobs.selectedComputeArch)
     const [controlPlaneArch, setControlPlaneArch] = useState(searchParams.get("controlPlaneArch") || ocpJobs.selectedControlPlaneArch)
+    const [jobStatus, setjobStatus] = useState(searchParams.get("jobStatus") || ocpJobs.selectedJobStatus)
     const [startDate, setStartDate] = useState(searchParams.get("startDate")  || ocpJobs.startDate) || ""
     const [endDate, setEndDate] = useState(searchParams.get("endDate") || ocpJobs.endDate) || ""
 
@@ -61,6 +62,7 @@ export function OCPHome() {
         {name: "Control Plane Access", onChange: setPublish, value: publish, options: ocpJobs.allPublish},
         {name: "Compute Architecture", onChange: setComputeArch, value: computeArch, options: ocpJobs.computeArchs},
         {name: "Control Plane Architecture", onChange: setControlPlaneArch, value: controlPlaneArch, options: ocpJobs.controlPlaneArchs},
+        {name: "Job Status", onChange: setjobStatus, value: jobStatus, options: ocpJobs.jobStatuses},
     ]
 
     useEffect(() => {
@@ -80,19 +82,20 @@ export function OCPHome() {
         if(publish !== '') buildParams += `&publish=${publish}`
         if(computeArch !== '') buildParams += `&computeArch=${computeArch}`
         if(controlPlaneArch !== '') buildParams += `&controlPlaneArch=${controlPlaneArch}`
+        if(jobStatus !== '') buildParams += `&jobStatus=${jobStatus}`
         if(startDate !== '') buildParams += `&startDate=${startDate}`
         if(endDate !== '') buildParams += `&endDate=${endDate}`
         history.push(`/ocp?${buildParams.substring(1)}`, { replace: true });
 
     }, [history, ciSystem, platform, benchmark, version, workerCount, networkType,
         jobType, isRehearse, ipsec, fips, encrypted, encryptionType, publish,
-        computeArch, controlPlaneArch, startDate, endDate])
+        computeArch, controlPlaneArch, jobStatus, startDate, endDate])
 
     useEffect( ()=>{
         dispatch(updateOCPDataFilter({ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse,
-                    ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch}))
+                    ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, jobStatus}))
     }, [ ciSystem, platform, benchmark, version, workerCount, networkType, jobType, isRehearse,
-        ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, dispatch ])
+        ipsec, fips, encrypted, encryptionType, publish, computeArch, controlPlaneArch, jobStatus, dispatch ])
 
     useEffect(() => {
         if(startDate || endDate){
