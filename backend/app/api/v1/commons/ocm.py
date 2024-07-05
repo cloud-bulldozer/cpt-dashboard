@@ -28,8 +28,9 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
 
     if 'buildUrl' not in jobs.columns:
         jobs.insert(len(jobs.columns), "buildUrl", "")
+    if 'ciSystem' not in jobs.columns:
+        jobs.insert(len(jobs.columns), "ciSystem", "")
     jobs.fillna('', inplace=True)
-    jobs['ciSystem'] = jobs.apply(fillCiSystem, axis=1)
     jobs['jobStatus'] = jobs.apply(convertJobStatus, axis=1)
     return jobs
 
