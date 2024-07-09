@@ -23,6 +23,11 @@ const sideMenuOptions = [
     key: "quay",
     displayName: "Quay",
   },
+  {
+    id: CONSTANTS.TELCO_NAV,
+    key: "telco",
+    displayName: "Telco",
+  },
 ];
 
 const MenuOptions = () => {

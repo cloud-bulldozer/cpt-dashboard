@@ -84,7 +84,7 @@ export const buildFilterData = () => (dispatch, getState) => {
     let obj = {
       name: filter.name,
       key,
-      value: [...new Set(results.map((item) => item[key]))],
+      value: [...new Set(results.map((item) => item[key]?.toLowerCase()))],
     };
     filterData.push(obj);
   }

@@ -15,7 +15,7 @@ export const sortTable = (currState) => (dispatch, getState) => {
   const { activeSortDir, activeSortIndex, tableColumns } =
     getState()[currState];
   try {
-    if (activeSortIndex) {
+    if (activeSortIndex !== null && typeof activeSortIndex !== "undefined") {
       const sortedResults = results.sort((a, b) => {
         const aValue = getSortableRowValues(a, tableColumns)[activeSortIndex];
         const bValue = getSortableRowValues(b, tableColumns)[activeSortIndex];
@@ -31,7 +31,7 @@ export const sortTable = (currState) => (dispatch, getState) => {
           return bValue.localeCompare(aValue);
         }
       });
-      sortedTableRows(currState, sortedResults);
+      dispatch(sortedTableRows(currState, sortedResults));
     }
   } catch (error) {
     console.log(error);
@@ -41,7 +41,7 @@ export const sortTable = (currState) => (dispatch, getState) => {
 const sortedTableRows = (currState, sortedResults) => (dispatch) => {
   if (currState === "cpt") {
     dispatch({
-      type: TYPES.SET_CPT_JOBS_DATA,
+      type: TYPES.SET_FILTERED_DATA,
       payload: sortedResults,
     });
     dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
@@ -49,7 +49,7 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
   }
   if (currState === "ocp") {
     dispatch({
-      type: TYPES.SET_OCP_JOBS_DATA,
+      type: TYPES.SET_OCP_FILTERED_DATA,
       payload: sortedResults,
     });
     dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
