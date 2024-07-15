@@ -9,6 +9,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import { calculateMetrics, getFilteredData, sortTable } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchOCPJobsData = () => async (dispatch, getState) => {
@@ -110,42 +111,59 @@ export const setCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const setAppliedFilters =
-  (selectedOption, navigate) => (dispatch, getState) => {
-    const { categoryFilterValue, filterData, start_date, end_date } =
-      getState().cpt;
-    const appliedFilters = { ...getState().cpt.appliedFilters };
+export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+  const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
+  for (const key in params) {
+    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
+  }
+  dispatch({
+    type: TYPES.SET_SELECTED_FILTERS,
+    payload: selectedFilters,
+  });
+};
+export const setSelectedFilter =
+  (selectedCategory, selectedOption) => (dispatch, getState) => {
+    const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
 
-    const category = filterData.filter(
-      (item) => item.name === categoryFilterValue
-    )[0].key;
-    appliedFilters[category] = selectedOption;
+    const obj = selectedFilters.find((i) => i.name === selectedCategory);
+    selectedOption = selectedOption?.toString()?.toLowerCase();
+    const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
 
+    if (objValue.includes(selectedOption)) {
+      const arr = objValue.filter((selection) => selection !== selectedOption);
+      obj.value = arr;
+    } else {
+      obj.value = [...obj.value, selectedOption];
+    }
     dispatch({
-      type: TYPES.SET_APPLIED_FILTERS,
-      payload: appliedFilters,
+      type: TYPES.SET_SELECTED_FILTERS,
+      payload: selectedFilters,
     });
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
   };
 
-export const filterFromSummary =
-  (category, value, navigate) => (dispatch, getState) => {
-    const { start_date, end_date } = getState().cpt;
-    const appliedFilters = { ...getState().cpt.appliedFilters };
-    appliedFilters[category] = value;
-    dispatch({
-      type: TYPES.SET_APPLIED_FILTERS,
-      payload: appliedFilters,
-    });
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
-  };
+export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+  const { selectedFilters, start_date, end_date } = getState().cpt;
+
+  const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
+
+  const appliedFilters = {};
+  appliedFilterArr.forEach((item) => {
+    appliedFilters[item["name"]] = item.value;
+  });
+
+  dispatch({
+    type: TYPES.SET_APPLIED_FILTERS,
+    payload: appliedFilters,
+  });
+  appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  dispatch(applyFilters());
+};
+
 export const setOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().cpt.filteredResults];
-  const keyWordArr = ["SUCCESS", "FAILURE"];
+  const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus)
+    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
   );
   dispatch({
     type: TYPES.SET_FILTERED_DATA,
@@ -156,18 +174,25 @@ export const setOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
 };
 export const removeAppliedFilters =
-  (filterKey, navigate) => (dispatch, getState) => {
-    const appliedFilters = { ...getState().cpt.appliedFilters };
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    const appliedFilters = cloneDeep(getState().cpt.appliedFilters);
     const { start_date, end_date } = getState().cpt;
-    const name = filterKey;
-    // eslint-disable-next-line no-unused-vars
-    const { [name]: removedProperty, ...remainingObject } = appliedFilters;
 
+    const index = appliedFilters[filterKey]
+      ?.toString()
+      ?.toLowerCase()
+      .indexOf(filterValue);
+    if (index >= 0) {
+      appliedFilters[filterKey].splice(index, 1);
+      if (appliedFilters[filterKey].length === 0) {
+        delete appliedFilters[filterKey];
+      }
+    }
     dispatch({
       type: TYPES.SET_APPLIED_FILTERS,
-      payload: remainingObject,
+      payload: appliedFilters,
     });
-    appendQueryString({ ...remainingObject, start_date, end_date }, navigate);
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
@@ -178,9 +203,11 @@ export const applyFilters = () => (dispatch, getState) => {
 
   const isFilterApplied =
     Object.keys(appliedFilters).length > 0 &&
-    !Object.values(appliedFilters).includes("");
+    Object.values(appliedFilters).flat().length > 0;
 
-  const filtered = getFilteredData(appliedFilters, results);
+  const filtered = isFilterApplied
+    ? getFilteredData(appliedFilters, results)
+    : results;
 
   dispatch({
     type: TYPES.SET_FILTERED_DATA,

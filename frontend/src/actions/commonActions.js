@@ -111,10 +111,10 @@ export const getFilteredData = (appliedFilters, results) => {
   if (isFilterApplied) {
     filtered = results.filter((el) => {
       for (const key in appliedFilters) {
-        if (
-          el[key]?.toString()?.toLowerCase() !==
-          appliedFilters[key]?.toString()?.toLowerCase()
-        ) {
+        const valueMap = appliedFilters[key]?.map((i) =>
+          i?.toString()?.toLowerCase()
+        );
+        if (!valueMap.includes(el[key]?.toString()?.toLowerCase())) {
           return false;
         }
       }

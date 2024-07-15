@@ -4,6 +4,7 @@ import "./index.less";
 
 import {
   Chip,
+  ChipGroup,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -12,6 +13,7 @@ import {
 import ColumnMenuFilter from "@/components/molecules/ColumnMenuFilter";
 import DatePicker from "react-date-picker";
 import { FilterIcon } from "@patternfly/react-icons";
+import MultiSelectBox from "@/components/molecules/MultiSelectBox";
 import PropTypes from "prop-types";
 import SelectBox from "@/components/molecules/SelectBox";
 import { formatDate } from "@/utils/helper";
@@ -33,39 +35,48 @@ const TableFilter = (props) => {
     type,
     showColumnMenu,
     setColumns,
+    selectedFilters,
+    updateSelectedFilter,
   } = props;
 
-  const category = filterData.filter(
-    (item) => item.name === categoryFilterValue
-  )[0].key;
+  const category =
+    filterData?.length > 0 &&
+    filterData.filter((item) => item.name === categoryFilterValue)[0].key;
 
   const getFilterName = (key) => {
-    const filter = tableFilters.find((item) => item.value === key);
+    const filter =
+      tableFilters?.length > 0 &&
+      tableFilters?.find((item) => item.value === key);
     return filter.name;
   };
 
   return (
     <>
       <Toolbar id="filter-toolbar">
-        <ToolbarContent className="field-filter">
-          <ToolbarItem style={{ marginInlineEnd: 0 }}>
-            <SelectBox
-              options={tableFilters}
-              onChange={onCategoryChange}
-              selected={categoryFilterValue}
-              icon={<FilterIcon />}
-              width={"200px"}
-            />
-          </ToolbarItem>
-          <ToolbarItem>
-            <SelectBox
-              options={filterOptions}
-              onChange={onOptionsChange}
-              selected={appliedFilters[category] ?? "Select a value"}
-              width={"300px"}
-            />
-          </ToolbarItem>
-        </ToolbarContent>
+        {tableFilters?.length > 0 && filterOptions?.length > 0 && (
+          <ToolbarContent className="field-filter">
+            <ToolbarItem style={{ marginInlineEnd: 0 }}>
+              <SelectBox
+                options={tableFilters}
+                onChange={onCategoryChange}
+                selected={categoryFilterValue}
+                icon={<FilterIcon />}
+                width={"200px"}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <MultiSelectBox
+                options={filterOptions}
+                onChange={updateSelectedFilter}
+                applyMethod={onOptionsChange}
+                currCategory={category}
+                selected={selectedFilters?.find((i) => i.name === category)}
+                width={"300px"}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        )}
+
         <ToolbarContent className="date-filter">
           <ToolbarItem>
             <DatePicker
@@ -96,9 +107,14 @@ const TableFilter = (props) => {
       </Toolbar>
       {Object.keys(appliedFilters).length > 0 &&
         Object.keys(appliedFilters).map((key) => (
-          <Chip key={key} onClick={() => deleteItem(key)}>
-            {getFilterName(key)} : {appliedFilters[key]}
-          </Chip>
+          <ChipGroup key={key} numChips={4}>
+            {getFilterName(key)} :
+            {appliedFilters[key].map((i) => (
+              <Chip onClick={() => deleteItem(key, i)} key={i}>
+                {i}
+              </Chip>
+            ))}
+          </ChipGroup>
         ))}
     </>
   );
@@ -120,5 +136,7 @@ TableFilter.propTypes = {
   type: PropTypes.string,
   showColumnMenu: PropTypes.bool,
   setColumns: PropTypes.func,
+  selectedFilters: PropTypes.array,
+  updateSelectedFilter: PropTypes.func,
 };
 export default TableFilter;
