@@ -42,26 +42,30 @@ const MultiSelectBox = (props) => {
         innerRef={toggleRef}
         isExpanded={isOpen}
         style={{
-          width: "300px",
+          width: props.width,
           height: "36px",
         }}
       >
         {Array.isArray(props.selected.value) &&
         props.selected.value.length > 0 ? (
-          <ChipGroup numChips={2}>
-            {props.selected.value.map((selection, index) => (
-              <Chip
-                key={index}
-                readOnly
-                //   onClick={(ev) => {
-                //     ev.stopPropagation();
-                //     onSelect(selection);
-                //   }}
-              >
-                {selection}
-              </Chip>
-            ))}
-          </ChipGroup>
+          <TextInputGroup>
+            <TextInputGroupMain>
+              <ChipGroup numChips={2}>
+                {props.selected.value.map((selection, index) => (
+                  <Chip
+                    key={index}
+                    isReadOnly={true}
+                    //   onClick={(ev) => {
+                    //     ev.stopPropagation();
+                    //     onSelect(selection);
+                    //   }}
+                  >
+                    {selection}
+                  </Chip>
+                ))}
+              </ChipGroup>
+            </TextInputGroupMain>
+          </TextInputGroup>
         ) : (
           <TextInputGroup>
             <TextInputGroupMain value={"Select a value"} />
@@ -94,7 +98,7 @@ const MultiSelectBox = (props) => {
               {...option}
               ref={null}
             >
-              {option.name}
+              {option.value}
             </SelectOption>
           ))}
         </SelectList>
@@ -109,5 +113,6 @@ MultiSelectBox.propTypes = {
   selected: PropTypes.array,
   applyMethod: PropTypes.func,
   currCategory: PropTypes.string,
+  width: PropTypes.string,
 };
 export default MultiSelectBox;

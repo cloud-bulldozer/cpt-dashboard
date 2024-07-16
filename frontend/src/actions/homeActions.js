@@ -47,7 +47,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       dispatch(getCPTSummary());
       dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
       dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
-      dispatch(buildFilterData());
+      //  dispatch(buildFilterData());
     }
   } catch (error) {
     dispatch(showFailureToast());
@@ -75,7 +75,7 @@ export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
 };
 
 export const buildFilterData = () => (dispatch, getState) => {
-  const results = [...getState().cpt.results];
+  const results = [...getState().cpt.filteredResults];
 
   const tableFilters = [...getState().cpt.tableFilters];
 
@@ -89,6 +89,7 @@ export const buildFilterData = () => (dispatch, getState) => {
     };
     filterData.push(obj);
   }
+
   dispatch({
     type: TYPES.SET_CPT_FILTER_DATA,
     payload: filterData,
@@ -216,6 +217,7 @@ export const applyFilters = () => (dispatch, getState) => {
   dispatch(getCPTSummary());
   dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(buildFilterData());
 };
 
 export const setFilterFromURL = (searchParams) => ({
