@@ -116,11 +116,12 @@ export const fetchOCPJobsData = (startDate = '', endDate='') => async dispatch =
                 const allPublish = GetPublish(results)
                 const computeArchs = GetComputeArchs(results)
                 const controlPlaneArchs = GetControlPlaneArchs(results)
+                const jobStatuses = GetStatuses(results)
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getOCPJobsData({
                     data: results, benchmarks, versions, waitForUpdate: false, platforms, workers, networkTypes,
                     updatedTime, ciSystems, jobTypes, rehearses, allIpsec, allFips, allEncrypted, encryptionTypes,
-                    allPublish, computeArchs, controlPlaneArchs, startDate: api_data.startDate, endDate: api_data.endDate
+                    allPublish, computeArchs, controlPlaneArchs, jobStatuses, startDate: api_data.startDate, endDate: api_data.endDate
                 }))
                 await dispatch(updateOCPMetaData({data: results}))
             }
@@ -163,7 +164,7 @@ export const fetchQuayJobsData = (startDate = '', endDate='') => async dispatch 
                 const updatedTime = new Date().toLocaleString().replace(', ', ' ').toString();
                 await dispatch(getQuayJobsData({
                     data: results, benchmarks, releaseStreams, waitForUpdate: false, platforms, workers,
-                    hitSizes, concurrencies, imagePushPulls, updatedTime, ciSystems, startDate: api_data.startDate, 
+                    hitSizes, concurrencies, imagePushPulls, updatedTime, ciSystems, startDate: api_data.startDate,
                     endDate: api_data.endDate
                 }))
                 await dispatch(updateQuayMetaData({data: results}))
@@ -273,7 +274,7 @@ const GetCiSystems = (api_data) => {
 }
 
 export const GetVersions = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.shortVersion).filter(shortVersion => shortVersion !== null && shortVersion !== "").map(shortVersion => shortVersion.toUpperCase().trim()))).sort(); 
+    return Array.from(new Set(api_data.map(item => item.shortVersion).filter(shortVersion => shortVersion !== null && shortVersion !== "").map(shortVersion => shortVersion.toUpperCase().trim()))).sort();
 }
 
 export const GetBenchmarks = (api_data) => {
@@ -316,19 +317,19 @@ const GetStatuses = (api_data) => {
 }
 
 const GetReleaseStreams = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.releaseStream).filter(releaseStream => releaseStream !== null && releaseStream !== "").map(releaseStream => releaseStream.toUpperCase().trim()))).sort(); 
+    return Array.from(new Set(api_data.map(item => item.releaseStream).filter(releaseStream => releaseStream !== null && releaseStream !== "").map(releaseStream => releaseStream.toUpperCase().trim()))).sort();
 }
 
 const GetFormals = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.formal).filter(formal => formal !== null && formal !== "").map(formal => formal.toUpperCase().trim()))).sort(); 
+    return Array.from(new Set(api_data.map(item => item.formal).filter(formal => formal !== null && formal !== "").map(formal => formal.toUpperCase().trim()))).sort();
 }
 
 const GetNodeNames = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.nodeName).filter(nodeName => nodeName !== null && nodeName !== "").map(nodeName => nodeName.toUpperCase().trim()))).sort(); 
+    return Array.from(new Set(api_data.map(item => item.nodeName).filter(nodeName => nodeName !== null && nodeName !== "").map(nodeName => nodeName.toUpperCase().trim()))).sort();
 }
 
 const GetCpus = (api_data) => {
-    return Array.from(new Set(api_data.map(item => item.cpu).filter(cpu => cpu !== null && cpu !== "").map(cpu => cpu.toUpperCase().trim()))).sort(); 
+    return Array.from(new Set(api_data.map(item => item.cpu).filter(cpu => cpu !== null && cpu !== "").map(cpu => cpu.toUpperCase().trim()))).sort();
 }
 
 const GetTestNames = (api_data) => {
