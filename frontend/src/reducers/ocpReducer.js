@@ -143,7 +143,7 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, graphData: [...state.graphData, payload] };
     case TYPES.SET_OCP_COLUMNS:
       return { ...state, tableColumns: payload };
-    case TYPES.SET_SELECTED_FILTERS:
+    case TYPES.SET_SELECTED_OCP_FILTERS:
       return { ...state, selectedFilters: payload };
     default:
       return state;

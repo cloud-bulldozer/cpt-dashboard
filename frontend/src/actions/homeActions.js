@@ -6,7 +6,14 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
-import { calculateMetrics, getFilteredData, sortTable } from "./commonActions";
+import {
+  buildFilterData,
+  calculateMetrics,
+  deleteAppliedFilters,
+  getFilteredData,
+  getSelectedFilter,
+  sortTable,
+} from "./commonActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
@@ -21,8 +28,6 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
         pretty: true,
         ...(start_date && { start_date }),
         ...(end_date && { end_date }),
-        // start_date: "2024-04-21",
-        // end_date: "2024-04-22",
       },
     });
     if (response?.data?.results?.length > 0) {
@@ -44,10 +49,7 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       });
       dispatch(applyFilters());
       dispatch(sortTable("cpt"));
-      dispatch(getCPTSummary());
-      dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-      dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
-      //  dispatch(buildFilterData());
+      dispatch(tableReCalcValues());
     }
   } catch (error) {
     dispatch(showFailureToast());
@@ -72,29 +74,6 @@ export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
     type: TYPES.SET_CPT_INIT_JOBS,
     payload: results.slice(startIdx, endIdx),
   });
-};
-
-export const buildFilterData = () => (dispatch, getState) => {
-  const results = [...getState().cpt.filteredResults];
-
-  const tableFilters = [...getState().cpt.tableFilters];
-
-  const filterData = [];
-  for (const filter of tableFilters) {
-    const key = filter.value;
-    let obj = {
-      name: filter.name,
-      key,
-      value: [...new Set(results.map((item) => item[key]?.toLowerCase()))],
-    };
-    filterData.push(obj);
-  }
-
-  dispatch({
-    type: TYPES.SET_CPT_FILTER_DATA,
-    payload: filterData,
-  });
-  dispatch(setCatFilters(tableFilters[0].name));
 };
 
 export const setCatFilters = (category) => (dispatch, getState) => {
@@ -123,19 +102,10 @@ export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
   });
 };
 export const setSelectedFilter =
-  (selectedCategory, selectedOption) => (dispatch, getState) => {
-    const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
-
-    const obj = selectedFilters.find((i) => i.name === selectedCategory);
-    selectedOption = selectedOption?.toString()?.toLowerCase();
-    const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
-
-    if (objValue.includes(selectedOption)) {
-      const arr = objValue.filter((selection) => selection !== selectedOption);
-      obj.value = arr;
-    } else {
-      obj.value = [...obj.value, selectedOption];
-    }
+  (selectedCategory, selectedOption) => (dispatch) => {
+    const selectedFilters = dispatch(
+      getSelectedFilter(selectedCategory, selectedOption, "cpt")
+    );
     dispatch({
       type: TYPES.SET_SELECTED_FILTERS,
       payload: selectedFilters,
@@ -170,25 +140,16 @@ export const setOtherSummaryFilter = () => (dispatch, getState) => {
     type: TYPES.SET_FILTERED_DATA,
     payload: data,
   });
-  dispatch(getCPTSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(tableReCalcValues());
 };
 export const removeAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
-    const appliedFilters = cloneDeep(getState().cpt.appliedFilters);
     const { start_date, end_date } = getState().cpt;
 
-    const index = appliedFilters[filterKey]
-      ?.toString()
-      ?.toLowerCase()
-      .indexOf(filterValue);
-    if (index >= 0) {
-      appliedFilters[filterKey].splice(index, 1);
-      if (appliedFilters[filterKey].length === 0) {
-        delete appliedFilters[filterKey];
-      }
-    }
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "cpt")
+    );
+
     dispatch({
       type: TYPES.SET_APPLIED_FILTERS,
       payload: appliedFilters,
@@ -212,12 +173,10 @@ export const applyFilters = () => (dispatch, getState) => {
 
   dispatch({
     type: TYPES.SET_FILTERED_DATA,
-    payload: isFilterApplied ? filtered : results,
+    payload: filtered,
   });
-  dispatch(getCPTSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
-  dispatch(buildFilterData());
+  dispatch(tableReCalcValues());
+  dispatch(buildFilterData("cpt"));
 };
 
 export const setFilterFromURL = (searchParams) => ({
@@ -260,4 +219,10 @@ export const getCPTSummary = () => (dispatch, getState) => {
     type: TYPES.SET_CPT_SUMMARY,
     payload: countObj,
   });
+};
+
+export const tableReCalcValues = () => (dispatch) => {
+  dispatch(getCPTSummary());
+  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
 };
