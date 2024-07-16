@@ -28,7 +28,7 @@ const TableCell = (props) => {
 
 const StatusCell = (props) => {
   const { item, col } = props;
-  return item[col.value] === "success" ? (
+  return item[col.value]?.toLowerCase() === "success" ? (
     <Label color="green" icon={<CheckCircleIcon />}>
       Success
     </Label>

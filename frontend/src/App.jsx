@@ -6,6 +6,9 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./components/templates/Home";
 import MainLayout from "./containers/MainLayout";
+import OCP from "./components/templates/OCP";
+import Quay from "./components/templates/Quay";
+import Telco from "./components/templates/Telco";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 
@@ -20,8 +23,9 @@ function App() {
           <Route element={<MainLayout />}>
             <Route index element={<Home />} />
             <Route path={APP_ROUTES.HOME} element={<Home />} />
-            <Route path={APP_ROUTES.OCP} element={<Home />} />
-            <Route path={APP_ROUTES.QUAY} element={<Home />} />
+            <Route path={APP_ROUTES.OCP} element={<OCP />} />
+            <Route path={APP_ROUTES.QUAY} element={<Quay />} />
+            <Route path={APP_ROUTES.TELCO} element={<Telco />} />
           </Route>
         </Routes>
       </BrowserRouter>

@@ -1,5 +1,6 @@
 import HomeReducer from "./homeReducer";
 import LoadingReducer from "./loadingReducer";
+import OCPReducer from "./ocpReducer";
 import SideMenuReducer from "./sideMenuReducer";
 import ToastReducer from "./toastReducer";
 import { combineReducers } from "redux";
@@ -9,4 +10,5 @@ export default combineReducers({
   toast: ToastReducer,
   sidemenu: SideMenuReducer,
   cpt: HomeReducer,
+  ocp: OCPReducer,
 });
