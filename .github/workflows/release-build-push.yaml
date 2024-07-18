@@ -3,7 +3,9 @@ name: Release Build and Push Image
 on:
   push:
     tags:
-      - "*" 
+      - "*"
+    branches:
+      - main
 
 jobs:
   build:
