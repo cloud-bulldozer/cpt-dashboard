@@ -107,7 +107,7 @@ const Home = () => {
   };
   const deleteItem = (key, value) => {
     dispatch(removeAppliedFilters(key, value, navigate));
-    updateSelectedFilter(key, value);
+    updateSelectedFilter(key, value, false);
   };
   const startDateChangeHandler = (date, key) => {
     dispatch(setDateFilter(date, key, navigate));
@@ -121,21 +121,21 @@ const Home = () => {
       appliedFilters["jobStatus"].length > 0
     ) {
       appliedFilters["jobStatus"].forEach((element) => {
-        updateSelectedFilter("jobStatus", element);
+        updateSelectedFilter("jobStatus", element, true);
         dispatch(removeAppliedFilters("jobStatus", element, navigate));
       });
     }
   };
   const applyStatusFilter = (value) => {
-    updateSelectedFilter("jobStatus", value);
+    updateSelectedFilter("jobStatus", value, true);
     dispatch(setAppliedFilters(navigate));
   };
   const applyOtherFilter = () => {
     removeStatusFilter();
     dispatch(setOtherSummaryFilter());
   };
-  const updateSelectedFilter = (category, value) => {
-    dispatch(setSelectedFilter(category, value));
+  const updateSelectedFilter = (category, value, isFromMetrics) => {
+    dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
   // Filter Helper
   return (

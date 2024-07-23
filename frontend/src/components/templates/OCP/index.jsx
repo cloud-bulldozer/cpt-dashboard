@@ -114,21 +114,21 @@ const OCP = () => {
       appliedFilters["jobStatus"].length > 0
     ) {
       appliedFilters["jobStatus"].forEach((element) => {
-        updateSelectedFilter("jobStatus", element);
+        updateSelectedFilter("jobStatus", element, true);
         dispatch(removeAppliedFilters("jobStatus", element, navigate));
       });
     }
   };
   const applyStatusFilter = (value) => {
-    updateSelectedFilter("jobStatus", value);
+    updateSelectedFilter("jobStatus", value, true);
     dispatch(setAppliedFilters(navigate));
   };
   const applyOtherFilter = () => {
     removeStatusFilter();
     dispatch(setOtherSummaryFilter());
   };
-  const updateSelectedFilter = (category, value) => {
-    dispatch(setSelectedFilter(category, value));
+  const updateSelectedFilter = (category, value, isFromMetrics = false) => {
+    dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
 
   /* Filter helper */

@@ -132,9 +132,9 @@ export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
   });
 };
 export const setSelectedFilter =
-  (selectedCategory, selectedOption) => (dispatch) => {
+  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
     const selectedFilters = dispatch(
-      getSelectedFilter(selectedCategory, selectedOption, "ocp")
+      getSelectedFilter(selectedCategory, selectedOption, "ocp", isFromMetrics)
     );
     dispatch({
       type: TYPES.SET_SELECTED_OCP_FILTERS,

@@ -157,18 +157,23 @@ export const deleteAppliedFilters =
   };
 
 export const getSelectedFilter =
-  (selectedCategory, selectedOption, currState) => (dispatch, getState) => {
+  (selectedCategory, selectedOption, currState, isFromMetrics) =>
+  (dispatch, getState) => {
     const selectedFilters = cloneDeep(getState()[currState].selectedFilters);
 
     const obj = selectedFilters.find((i) => i.name === selectedCategory);
     selectedOption = selectedOption?.toString()?.toLowerCase();
+
     const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
 
     if (objValue.includes(selectedOption)) {
       const arr = objValue.filter((selection) => selection !== selectedOption);
       obj.value = arr;
     } else {
-      obj.value = [...obj.value, selectedOption];
+      obj.value = isFromMetrics
+        ? [selectedOption]
+        : [...obj.value, selectedOption];
     }
+
     return selectedFilters;
   };
