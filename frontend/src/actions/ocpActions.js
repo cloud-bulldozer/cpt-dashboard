@@ -1,5 +1,5 @@
 import * as API_ROUTES from "@/utils/apiConstants";
-import * as TYPES from "@/actions/types.js";
+import * as TYPES from "./types.js";
 
 import {
   DEFAULT_PER_PAGE,
@@ -9,13 +9,15 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   buildFilterData,
   calculateMetrics,
+  deleteAppliedFilters,
   getFilteredData,
+  getSelectedFilter,
   sortTable,
-} from "@/actions/commonActions.js";
+} from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { getAppliedFilters } from "./commonActions";
-import { showFailureToast } from "@/actions/toastActions";
+import { cloneDeep } from "lodash";
+import { showFailureToast } from "./toastActions";
 
 export const fetchOCPJobs = () => async (dispatch, getState) => {
   try {
@@ -26,8 +28,6 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
         pretty: true,
         ...(start_date && { start_date }),
         ...(end_date && { end_date }),
-        // start_date: "2024-04-21",
-        // end_date: "2024-04-22",
       },
     });
     if (response?.data?.results?.length > 0) {
@@ -48,10 +48,7 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
       });
       dispatch(applyFilters());
       dispatch(sortTable("ocp"));
-      dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-      dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
-      dispatch(buildFilterData("ocp"));
-      dispatch(getOCPSummary());
+      dispatch(tableReCalcValues());
     }
   } catch (error) {
     dispatch(showFailureToast());
@@ -112,42 +109,66 @@ export const applyFilters = () => (dispatch, getState) => {
     Object.keys(appliedFilters).length > 0 &&
     !Object.values(appliedFilters).includes("");
 
-  const filtered = getFilteredData(appliedFilters, results);
+  const filtered = isFilterApplied
+    ? getFilteredData(appliedFilters, results)
+    : results;
 
   dispatch({
     type: TYPES.SET_OCP_FILTERED_DATA,
-    payload: isFilterApplied ? filtered : results,
+    payload: filtered,
   });
-  dispatch(getOCPSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(tableReCalcValues());
+  dispatch(buildFilterData("ocp"));
 };
 
-export const setAppliedFilters =
-  (selectedOption, navigate) => (dispatch, getState) => {
-    const appliedFilters = dispatch(getAppliedFilters("ocp", selectedOption));
+export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+  const selectedFilters = cloneDeep(getState().ocp.selectedFilters);
+  for (const key in params) {
+    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
+  }
+  dispatch({
+    type: TYPES.SET_SELECTED_OCP_FILTERS,
+    payload: selectedFilters,
+  });
+};
+export const setSelectedFilter =
+  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
+    const selectedFilters = dispatch(
+      getSelectedFilter(selectedCategory, selectedOption, "ocp", isFromMetrics)
+    );
+    dispatch({
+      type: TYPES.SET_SELECTED_OCP_FILTERS,
+      payload: selectedFilters,
+    });
+  };
+export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+  const { start_date, end_date, selectedFilters } = getState().ocp;
+  const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
+
+  const appliedFilters = {};
+  appliedFilterArr.forEach((item) => {
+    appliedFilters[item["name"]] = item.value;
+  });
+
+  dispatch({
+    type: TYPES.SET_OCP_APPLIED_FILTERS,
+    payload: appliedFilters,
+  });
+  appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  dispatch(applyFilters());
+};
+
+export const removeAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "ocp")
+    );
     const { start_date, end_date } = getState().ocp;
     dispatch({
       type: TYPES.SET_OCP_APPLIED_FILTERS,
       payload: appliedFilters,
     });
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
-  };
-
-export const removeAppliedFilters =
-  (filterKey, navigate) => (dispatch, getState) => {
-    const appliedFilters = { ...getState().ocp.appliedFilters };
-    const { start_date, end_date } = getState().ocp;
-    const name = filterKey;
-    // eslint-disable-next-line no-unused-vars
-    const { [name]: removedProperty, ...remainingObject } = appliedFilters;
-
-    dispatch({
-      type: TYPES.SET_OCP_APPLIED_FILTERS,
-      payload: remainingObject,
-    });
-    appendQueryString({ ...remainingObject, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
@@ -173,32 +194,17 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
-export const filterFromSummary =
-  (category, value, navigate) => (dispatch, getState) => {
-    const { start_date, end_date } = getState().ocp;
-    const appliedFilters = { ...getState().ocp.appliedFilters };
-    appliedFilters[category] = value;
-    dispatch({
-      type: TYPES.SET_OCP_APPLIED_FILTERS,
-      payload: appliedFilters,
-    });
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
-  };
-
 export const setOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().ocp.filteredResults];
-  const keyWordArr = ["SUCCESS", "FAILURE"];
+  const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus)
+    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
   );
   dispatch({
     type: TYPES.SET_OCP_FILTERED_DATA,
     payload: data,
   });
-  dispatch(getOCPSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(tableReCalcValues());
 };
 
 export const getOCPSummary = () => (dispatch, getState) => {
@@ -248,4 +254,9 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
     type: TYPES.SET_OCP_COLUMNS,
     payload: tableColumns,
   });
+};
+export const tableReCalcValues = () => (dispatch) => {
+  dispatch(getOCPSummary());
+  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
 };

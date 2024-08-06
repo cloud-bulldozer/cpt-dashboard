@@ -26,6 +26,7 @@ const SelectBox = (props) => {
       isExpanded={isOpen}
       style={{
         width: props.width,
+        height: "36px",
       }}
     >
       {props.selected}

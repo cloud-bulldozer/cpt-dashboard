@@ -1,7 +1,6 @@
 import {
   fetchGraphData,
   fetchOCPJobs,
-  filterFromSummary,
   removeAppliedFilters,
   setAppliedFilters,
   setDateFilter,
@@ -12,9 +11,11 @@ import {
   setOtherSummaryFilter,
   setPage,
   setPageOptions,
+  setSelectedFilter,
+  setSelectedFilterFromUrl,
   setTableColumns,
   sliceOCPTableRows,
-} from "../../../actions/ocpActions";
+} from "@/actions/ocpActions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -45,6 +46,7 @@ const OCP = () => {
     start_date,
     end_date,
     graphData,
+    selectedFilters,
   } = useSelector((state) => state.ocp);
 
   const modifidedTableFilters = useMemo(
@@ -63,7 +65,12 @@ const OCP = () => {
       searchParams.delete("start_date");
       searchParams.delete("end_date");
       const params = Object.fromEntries(searchParams);
-      dispatch(setFilterFromURL(params));
+      const obj = {};
+      for (const key in params) {
+        obj[key] = params[key].split(",");
+      }
+      dispatch(setFilterFromURL(obj));
+      dispatch(setSelectedFilterFromUrl(params));
       dispatch(setDateFilter(startDate, endDate, navigate));
     }
   }, []);
@@ -102,14 +109,26 @@ const OCP = () => {
   // Pagination helper
   /* Summary Tab Filter*/
   const removeStatusFilter = () => {
-    dispatch(removeAppliedFilters("jobStatus", navigate));
+    if (
+      Array.isArray(appliedFilters["jobStatus"]) &&
+      appliedFilters["jobStatus"].length > 0
+    ) {
+      appliedFilters["jobStatus"].forEach((element) => {
+        updateSelectedFilter("jobStatus", element, true);
+        dispatch(removeAppliedFilters("jobStatus", element, navigate));
+      });
+    }
   };
   const applyStatusFilter = (value) => {
-    dispatch(filterFromSummary("jobStatus", value, navigate));
+    updateSelectedFilter("jobStatus", value, true);
+    dispatch(setAppliedFilters(navigate));
   };
   const applyOtherFilter = () => {
-    dispatch(removeAppliedFilters("jobStatus", navigate));
+    removeStatusFilter();
     dispatch(setOtherSummaryFilter());
+  };
+  const updateSelectedFilter = (category, value, isFromMetrics = false) => {
+    dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
 
   /* Filter helper */
@@ -117,11 +136,12 @@ const OCP = () => {
   const onCategoryChange = (_event, value) => {
     dispatch(setOCPCatFilters(value));
   };
-  const onOptionsChange = (_event, value) => {
-    dispatch(setAppliedFilters(value, navigate));
+  const onOptionsChange = () => {
+    dispatch(setAppliedFilters(navigate));
   };
-  const deleteItem = (key) => {
-    dispatch(removeAppliedFilters(key, navigate));
+  const deleteItem = (key, value) => {
+    dispatch(removeAppliedFilters(key, value, navigate));
+    updateSelectedFilter(key, value);
   };
   const startDateChangeHandler = (date, key) => {
     dispatch(setDateFilter(date, key, navigate));
@@ -160,25 +180,25 @@ const OCP = () => {
         applyOtherFilter={applyOtherFilter}
       />
 
-      {tableFilters?.length > 0 && filterOptions?.length > 0 && (
-        <TableFilter
-          tableFilters={modifidedTableFilters}
-          filterOptions={filterOptions}
-          categoryFilterValue={categoryFilterValue}
-          filterData={filterData}
-          appliedFilters={appliedFilters}
-          start_date={start_date}
-          end_date={end_date}
-          onCategoryChange={onCategoryChange}
-          onOptionsChange={onOptionsChange}
-          deleteItem={deleteItem}
-          startDateChangeHandler={startDateChangeHandler}
-          endDateChangeHandler={endDateChangeHandler}
-          type={"ocp"}
-          showColumnMenu={true}
-          setColumns={setColumns}
-        />
-      )}
+      <TableFilter
+        tableFilters={modifidedTableFilters}
+        filterOptions={filterOptions}
+        categoryFilterValue={categoryFilterValue}
+        filterData={filterData}
+        appliedFilters={appliedFilters}
+        start_date={start_date}
+        end_date={end_date}
+        onCategoryChange={onCategoryChange}
+        onOptionsChange={onOptionsChange}
+        deleteItem={deleteItem}
+        startDateChangeHandler={startDateChangeHandler}
+        endDateChangeHandler={endDateChangeHandler}
+        type={"ocp"}
+        showColumnMenu={true}
+        setColumns={setColumns}
+        selectedFilters={selectedFilters}
+        updateSelectedFilter={updateSelectedFilter}
+      />
 
       <TableLayout
         tableData={tableData}

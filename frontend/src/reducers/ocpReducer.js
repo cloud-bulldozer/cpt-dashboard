@@ -79,6 +79,27 @@ const initialState = {
     { name: "Infra", value: "infraNodesCount" },
     { name: "Total", value: "totalNodesCount" },
   ],
+  selectedFilters: [
+    { name: "ciSystem", value: [] },
+    { name: "platform", value: [] },
+    { name: "benchmark", value: [] },
+    { name: "releaseStream", value: [] },
+    { name: "build", value: [] },
+    { name: "workerNodesCount", value: [] },
+    { name: "networkType", value: [] },
+    { name: "shortVersion", value: [] },
+    { name: "jobType", value: [] },
+    { name: "isRehearse", value: [] },
+    { name: "ipsec", value: [] },
+    { name: "fips", value: [] },
+    { name: "encrypted", value: [] },
+    { name: "publish", value: [] },
+    { name: "computeArch", value: [] },
+    { name: "controlPlaneArch", value: [] },
+    { name: "jobStatus", value: [] },
+    { name: "startDate", value: [] },
+    { name: "endDate", value: [] },
+  ],
 };
 
 const OCPReducer = (state = initialState, action = {}) => {
@@ -122,6 +143,8 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, graphData: [...state.graphData, payload] };
     case TYPES.SET_OCP_COLUMNS:
       return { ...state, tableColumns: payload };
+    case TYPES.SET_SELECTED_OCP_FILTERS:
+      return { ...state, selectedFilters: payload };
     default:
       return state;
   }

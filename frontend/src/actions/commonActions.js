@@ -1,9 +1,10 @@
 import * as TYPES from "@/actions/types.js";
 
+import { setCatFilters, sliceTableRows } from "./homeActions";
 import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
 
 import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
-import { sliceTableRows } from "./homeActions";
+import { cloneDeep } from "lodash";
 
 const getSortableRowValues = (result, tableColumns) => {
   const tableKeys = tableColumns.map((item) => item.value);
@@ -75,7 +76,8 @@ export const calculateMetrics = (results) => {
 };
 
 export const buildFilterData = (currState) => (dispatch, getState) => {
-  const results = [...getState()[currState].results];
+  const results = [...getState()[currState].filteredResults];
+  const categoryFilterValue = getState()[currState].categoryFilterValue;
 
   const tableFilters = [...getState()[currState].tableFilters];
 
@@ -85,11 +87,19 @@ export const buildFilterData = (currState) => (dispatch, getState) => {
     let obj = {
       name: filter.name,
       key,
-      value: [...new Set(results.map((item) => item[key]))],
+      value: [
+        ...new Set(results.map((item) => item[key]?.toString()?.toLowerCase())),
+      ],
     };
     filterData.push(obj);
   }
-  dispatch(setFilterData(filterData, currState, tableFilters[0].name));
+  dispatch(
+    setFilterData(
+      filterData,
+      currState,
+      categoryFilterValue || tableFilters[0].name
+    )
+  );
 };
 
 const setFilterData = (filterData, currState, activeFilter) => (dispatch) => {
@@ -99,6 +109,12 @@ const setFilterData = (filterData, currState, activeFilter) => (dispatch) => {
       payload: filterData,
     });
     dispatch(setOCPCatFilters(activeFilter));
+  } else if (currState === "cpt") {
+    dispatch({
+      type: TYPES.SET_CPT_FILTER_DATA,
+      payload: filterData,
+    });
+    dispatch(setCatFilters(activeFilter));
   }
 };
 
@@ -111,10 +127,10 @@ export const getFilteredData = (appliedFilters, results) => {
   if (isFilterApplied) {
     filtered = results.filter((el) => {
       for (const key in appliedFilters) {
-        if (
-          el[key]?.toString()?.toLowerCase() !==
-          appliedFilters[key]?.toString()?.toLowerCase()
-        ) {
+        const valueMap = appliedFilters[key]?.map((i) =>
+          i?.toString()?.toLowerCase()
+        );
+        if (!valueMap.includes(el[key]?.toString()?.toLowerCase())) {
           return false;
         }
       }
@@ -124,15 +140,40 @@ export const getFilteredData = (appliedFilters, results) => {
   return filtered;
 };
 
-export const getAppliedFilters =
-  (currState, selectedOption) => (dispatch, getState) => {
-    const { categoryFilterValue, filterData } = getState()[currState];
-    const appliedFilters = { ...getState()[currState].appliedFilters };
+export const deleteAppliedFilters =
+  (filterKey, filterValue, currState) => (dispatch, getState) => {
+    const appliedFilters = cloneDeep(getState()[currState].appliedFilters);
 
-    const category = filterData.filter(
-      (item) => item.name === categoryFilterValue
-    )[0].key;
-    appliedFilters[category] = selectedOption;
-
+    const index = appliedFilters[filterKey].indexOf(
+      filterValue?.toString()?.toLowerCase()
+    );
+    if (index >= 0) {
+      appliedFilters[filterKey].splice(index, 1);
+      if (appliedFilters[filterKey].length === 0) {
+        delete appliedFilters[filterKey];
+      }
+    }
     return appliedFilters;
+  };
+
+export const getSelectedFilter =
+  (selectedCategory, selectedOption, currState, isFromMetrics) =>
+  (dispatch, getState) => {
+    const selectedFilters = cloneDeep(getState()[currState].selectedFilters);
+
+    const obj = selectedFilters.find((i) => i.name === selectedCategory);
+    selectedOption = selectedOption?.toString()?.toLowerCase();
+
+    const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
+
+    if (objValue.includes(selectedOption)) {
+      const arr = objValue.filter((selection) => selection !== selectedOption);
+      obj.value = arr;
+    } else {
+      obj.value = isFromMetrics
+        ? [selectedOption]
+        : [...obj.value, selectedOption];
+    }
+
+    return selectedFilters;
   };

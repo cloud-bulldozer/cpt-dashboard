@@ -34,6 +34,13 @@ const initialState = {
   categoryFilterValue: "",
   filterOptions: [],
   appliedFilters: {},
+  selectedFilters: [
+    { name: "releaseStream", value: [] },
+    { name: "product", value: [] },
+    { name: "ciSystem", value: [] },
+    { name: "testName", value: [] },
+    { name: "jobStatus", value: [] },
+  ],
   filteredResults: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
@@ -76,6 +83,8 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, page: payload.page, perPage: payload.perPage };
     case TYPES.SET_CPT_SUMMARY:
       return { ...state, summary: payload };
+    case TYPES.SET_SELECTED_FILTERS:
+      return { ...state, selectedFilters: payload };
     default:
       return state;
   }
