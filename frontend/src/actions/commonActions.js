@@ -1,6 +1,6 @@
 import * as TYPES from "@/actions/types.js";
 
-import { setCatFilters, sliceTableRows } from "./homeActions";
+import { setCatFilters, sliceCPTTableRows } from "./homeActions";
 import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
 
 import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
@@ -45,7 +45,7 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+    dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "ocp") {

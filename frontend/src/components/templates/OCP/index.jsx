@@ -9,12 +9,9 @@ import {
   setOCPSortDir,
   setOCPSortIndex,
   setOtherSummaryFilter,
-  setPage,
-  setPageOptions,
   setSelectedFilter,
   setSelectedFilterFromUrl,
   setTableColumns,
-  sliceOCPTableRows,
 } from "@/actions/ocpActions";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -91,22 +88,22 @@ const OCP = () => {
   };
   // Sorting
 
-  // Pagination Helper
-  const onSetPage = useCallback(
-    (_evt, newPage, _perPage, startIdx, endIdx) => {
-      dispatch(setPage(newPage));
-      dispatch(sliceOCPTableRows(startIdx, endIdx));
-    },
-    [dispatch]
-  );
-  const onPerPageSelect = useCallback(
-    (_evt, newPerPage, newPage, startIdx, endIdx) => {
-      dispatch(setPageOptions(newPage, newPerPage));
-      dispatch(sliceOCPTableRows(startIdx, endIdx));
-    },
-    [dispatch]
-  );
-  // Pagination helper
+  // // Pagination Helper
+  // const onSetPage = useCallback(
+  //   (_evt, newPage, _perPage, startIdx, endIdx) => {
+  //     dispatch(setPage(newPage));
+  //     dispatch(sliceOCPTableRows(startIdx, endIdx));
+  //   },
+  //   [dispatch]
+  // );
+  // const onPerPageSelect = useCallback(
+  //   (_evt, newPerPage, newPage, startIdx, endIdx) => {
+  //     dispatch(setPageOptions(newPage, newPerPage));
+  //     dispatch(sliceOCPTableRows(startIdx, endIdx));
+  //   },
+  //   [dispatch]
+  // );
+  // // Pagination helper
   /* Summary Tab Filter*/
   const removeStatusFilter = () => {
     if (
@@ -208,8 +205,6 @@ const OCP = () => {
         setActiveSortDir={setActiveSortDir}
         setActiveSortIndex={setActiveSortIndex}
         handleOnSort={handleOnSort}
-        onPerPageSelect={onPerPageSelect}
-        onSetPage={onSetPage}
         page={page}
         perPage={perPage}
         totalItems={filteredResults.length}

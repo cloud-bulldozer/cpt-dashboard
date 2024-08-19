@@ -2,26 +2,20 @@ import {
   fetchOCPJobsData,
   removeAppliedFilters,
   setAppliedFilters,
-  setCPTSortDir,
-  setCPTSortIndex,
   setCatFilters,
   setDateFilter,
   setFilterFromURL,
   setOtherSummaryFilter,
-  setPage,
-  setPageOptions,
   setSelectedFilter,
   setSelectedFilterFromUrl,
-  sliceTableRows,
 } from "@/actions/homeActions.js";
-import { useCallback, useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
-import { sortTable } from "@/actions/commonActions";
+import { useEffect } from "react";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -69,35 +63,6 @@ const Home = () => {
   useEffect(() => {
     dispatch(fetchOCPJobsData());
   }, [dispatch]);
-  //Sorting
-  const setActiveSortDir = (dir) => {
-    dispatch(setCPTSortDir(dir));
-  };
-  const setActiveSortIndex = (index) => {
-    dispatch(setCPTSortIndex(index));
-  };
-  const handleOnSort = () => {
-    dispatch(sortTable("cpt"));
-  };
-  // Sorting
-
-  // Pagination Helper
-  const onSetPage = useCallback(
-    (_evt, newPage, _perPage, startIdx, endIdx) => {
-      dispatch(setPage(newPage));
-      dispatch(sliceTableRows(startIdx, endIdx));
-    },
-    [dispatch]
-  );
-  const onPerPageSelect = useCallback(
-    (_evt, newPerPage, newPage, startIdx, endIdx) => {
-      dispatch(setPageOptions(newPage, newPerPage));
-      dispatch(sliceTableRows(startIdx, endIdx));
-    },
-    [dispatch]
-  );
-  // Pagination helper
-
   // Filter Helper
   const onCategoryChange = (_event, value) => {
     dispatch(setCatFilters(value));
@@ -172,16 +137,11 @@ const Home = () => {
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
-        setActiveSortDir={setActiveSortDir}
-        setActiveSortIndex={setActiveSortIndex}
-        handleOnSort={handleOnSort}
-        onPerPageSelect={onPerPageSelect}
-        onSetPage={onSetPage}
         page={page}
         perPage={perPage}
         totalItems={filteredResults.length}
         addExpansion={false}
-        state={"cpt"}
+        type={"cpt"}
       />
     </>
   );

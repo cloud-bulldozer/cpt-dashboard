@@ -56,12 +56,12 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
-export const setPage = (pageNo) => ({
+export const setOCPPage = (pageNo) => ({
   type: TYPES.SET_OCP_PAGE,
   payload: pageNo,
 });
 
-export const setPageOptions = (page, perPage) => ({
+export const setOCPPageOptions = (page, perPage) => ({
   type: TYPES.SET_OCP_PAGE_OPTIONS,
   payload: { page, perPage },
 });
@@ -257,6 +257,6 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
 };
 export const tableReCalcValues = () => (dispatch) => {
   dispatch(getOCPSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(setOCPPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
 };

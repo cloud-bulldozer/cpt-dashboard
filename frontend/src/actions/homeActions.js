@@ -67,7 +67,7 @@ export const setCPTSortDir = (direction) => ({
   payload: direction,
 });
 
-export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
+export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
   const results = [...getState().cpt.filteredResults];
 
   dispatch({
@@ -201,12 +201,12 @@ export const setDateFilter =
     dispatch(fetchOCPJobsData());
   };
 
-export const setPage = (pageNo) => ({
+export const setCPTPage = (pageNo) => ({
   type: TYPES.SET_PAGE,
   payload: pageNo,
 });
 
-export const setPageOptions = (page, perPage) => ({
+export const setCPTPageOptions = (page, perPage) => ({
   type: TYPES.SET_PAGE_OPTIONS,
   payload: { page, perPage },
 });
@@ -223,6 +223,6 @@ export const getCPTSummary = () => (dispatch, getState) => {
 
 export const tableReCalcValues = () => (dispatch) => {
   dispatch(getCPTSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setCPTPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
 };
