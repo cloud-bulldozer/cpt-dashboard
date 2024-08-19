@@ -6,14 +6,22 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
+import {
+  buildFilterData,
+  calculateMetrics,
+  deleteAppliedFilters,
+  getFilteredData,
+  getSelectedFilter,
+} from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchQuayJobsData = () => async (dispatch, getState) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().cpt;
+    const { start_date, end_date } = getState().quay;
     const response = await API.get(API_ROUTES.QUAY_JOBS_API_V1, {
       params: {
         pretty: true,
@@ -43,6 +51,7 @@ export const fetchQuayJobsData = () => async (dispatch, getState) => {
           end_date: endDate,
         },
       });
+      dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }
   } catch (error) {
@@ -78,7 +87,137 @@ export const sliceQuayTableRows =
       payload: results.slice(startIdx, endIdx),
     });
   };
+
+export const setQuayCatFilters = (category) => (dispatch, getState) => {
+  const filterData = [...getState().quay.filterData];
+  const options = filterData.filter((item) => item.name === category)[0].value;
+  const list = options.map((item) => ({ name: item, value: item }));
+
+  dispatch({
+    type: TYPES.SET_QUAY_CATEGORY_FILTER,
+    payload: category,
+  });
+  dispatch({
+    type: TYPES.SET_QUAY_FILTER_OPTIONS,
+    payload: list,
+  });
+};
+export const removeQuayAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    const { start_date, end_date } = getState().quay;
+
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "quay")
+    );
+
+    dispatch({
+      type: TYPES.SET_QUAY_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
+  };
+export const applyFilters = () => (dispatch, getState) => {
+  const { appliedFilters } = getState().quay;
+
+  const results = [...getState().quay.results];
+
+  const isFilterApplied =
+    Object.keys(appliedFilters).length > 0 &&
+    Object.values(appliedFilters).flat().length > 0;
+
+  const filtered = isFilterApplied
+    ? getFilteredData(appliedFilters, results)
+    : results;
+
+  dispatch({
+    type: TYPES.SET_FILTERED_DATA,
+    payload: filtered,
+  });
+  dispatch(tableReCalcValues());
+  dispatch(buildFilterData("quay"));
+};
+export const setQuayAppliedFilters = (navigate) => (dispatch, getState) => {
+  const { selectedFilters, start_date, end_date } = getState().quay;
+
+  const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
+
+  const appliedFilters = {};
+  appliedFilterArr.forEach((item) => {
+    appliedFilters[item["name"]] = item.value;
+  });
+
+  dispatch({
+    type: TYPES.SET_QUAY_APPLIED_FILTERS,
+    payload: appliedFilters,
+  });
+  appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  dispatch(applyFilters());
+};
+
+export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+  const selectedFilters = cloneDeep(getState().quay.selectedFilters);
+  for (const key in params) {
+    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
+  }
+  dispatch({
+    type: TYPES.SET_QUAY_SELECTED_FILTERS,
+    payload: selectedFilters,
+  });
+};
+
+export const setSelectedFilter =
+  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
+    const selectedFilters = dispatch(
+      getSelectedFilter(selectedCategory, selectedOption, "quay", isFromMetrics)
+    );
+    dispatch({
+      type: TYPES.SET_QUAY_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
+export const setQuayDateFilter =
+  (start_date, end_date, navigate) => (dispatch, getState) => {
+    const appliedFilters = getState().quay.appliedFilters;
+
+    dispatch({
+      type: TYPES.SET_QUAY_DATE_FILTER,
+      payload: {
+        start_date,
+        end_date,
+      },
+    });
+
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+
+    dispatch(fetchQuayJobsData());
+  };
+
+export const setQuayOtherSummaryFilter = () => (dispatch, getState) => {
+  const filteredResults = [...getState().quay.filteredResults];
+  const keyWordArr = ["success", "failure"];
+  const data = filteredResults.filter(
+    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
+  );
+  dispatch({
+    type: TYPES.SET_QUAY_FILTERED_DATA,
+    payload: data,
+  });
+  dispatch(tableReCalcValues());
+};
+
+export const getQuaySummary = () => (dispatch, getState) => {
+  const results = [...getState().quay.filteredResults];
+
+  const countObj = calculateMetrics(results);
+  dispatch({
+    type: TYPES.SET_QUAY_SUMMARY,
+    payload: countObj,
+  });
+};
+
 export const tableReCalcValues = () => (dispatch) => {
+  dispatch(getQuaySummary());
   dispatch(setQuayPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceQuayTableRows(0, DEFAULT_PER_PAGE));
 };

@@ -76,7 +76,7 @@ export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
   });
 };
 
-export const setCatFilters = (category) => (dispatch, getState) => {
+export const setCPTCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().cpt.filterData];
   const options = filterData.filter((item) => item.name === category)[0].value;
   const list = options.map((item) => ({ name: item, value: item }));
@@ -112,7 +112,7 @@ export const setSelectedFilter =
     });
   };
 
-export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+export const setCPTAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().cpt;
 
   const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
@@ -130,7 +130,7 @@ export const setAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setOtherSummaryFilter = () => (dispatch, getState) => {
+export const setCPTOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().cpt.filteredResults];
   const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(
@@ -142,7 +142,7 @@ export const setOtherSummaryFilter = () => (dispatch, getState) => {
   });
   dispatch(tableReCalcValues());
 };
-export const removeAppliedFilters =
+export const removeCPTAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     const { start_date, end_date } = getState().cpt;
 
@@ -184,7 +184,7 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
-export const setDateFilter =
+export const setCPTDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().cpt.appliedFilters;
 

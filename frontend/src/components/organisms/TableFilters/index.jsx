@@ -9,6 +9,12 @@ import {
   ToolbarContent,
   ToolbarItem,
 } from "@patternfly/react-core";
+import {
+  removeAppliedFilters,
+  setAppliedFilters,
+  setCatFilters,
+  setDateFilter,
+} from "@/actions/filterActions.js";
 
 import ColumnMenuFilter from "@/components/molecules/ColumnMenuFilter";
 import DatePicker from "react-date-picker";
@@ -27,11 +33,7 @@ const TableFilter = (props) => {
     appliedFilters,
     start_date,
     end_date,
-    onCategoryChange,
-    onOptionsChange,
-    deleteItem,
-    startDateChangeHandler,
-    endDateChangeHandler,
+    navigation,
     type,
     showColumnMenu,
     setColumns,
@@ -48,6 +50,23 @@ const TableFilter = (props) => {
       tableFilters?.length > 0 &&
       tableFilters?.find((item) => item.value === key);
     return filter.name;
+  };
+
+  const onCategoryChange = (_event, value) => {
+    setCatFilters(value, type);
+  };
+  const onOptionsChange = () => {
+    setAppliedFilters(navigation, type);
+  };
+  const deleteItem = (key, value) => {
+    removeAppliedFilters(key, value, navigation, type);
+    updateSelectedFilter(key, value, false);
+  };
+  const startDateChangeHandler = (date, key) => {
+    setDateFilter(date, key, navigation, type);
+  };
+  const endDateChangeHandler = (date, key) => {
+    setDateFilter(key, date, navigation, type);
   };
 
   return (
@@ -128,15 +147,11 @@ TableFilter.propTypes = {
   appliedFilters: PropTypes.object,
   start_date: PropTypes.string,
   end_date: PropTypes.string,
-  onCategoryChange: PropTypes.func,
-  onOptionsChange: PropTypes.func,
-  deleteItem: PropTypes.func,
-  startDateChangeHandler: PropTypes.func,
-  endDateChangeHandler: PropTypes.func,
   type: PropTypes.string,
   showColumnMenu: PropTypes.bool,
   setColumns: PropTypes.func,
   selectedFilters: PropTypes.array,
   updateSelectedFilter: PropTypes.func,
+  navigation: PropTypes.func,
 };
 export default TableFilter;

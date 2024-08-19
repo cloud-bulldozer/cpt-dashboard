@@ -6,6 +6,11 @@ import {
   AccordionItem,
   AccordionToggle,
 } from "@patternfly/react-core";
+import {
+  removeAppliedFilters,
+  setAppliedFilters,
+  setOtherSummaryFilter,
+} from "@/actions/filterActions";
 
 import MetricCard from "@/components/molecules/MetricCard";
 import PropTypes from "prop-types";
@@ -20,6 +25,30 @@ const MetricsTab = (props) => {
     } else {
       setExpanded(id);
     }
+  };
+  const removeStatusFilter = () => {
+    if (
+      Array.isArray(props.appliedFilters["jobStatus"]) &&
+      props.appliedFilters["jobStatus"].length > 0
+    ) {
+      props.appliedFilters["jobStatus"].forEach((element) => {
+        props.updateSelectedFilter("jobStatus", element, true);
+        removeAppliedFilters(
+          "jobStatus",
+          element,
+          props.navigation,
+          props.type
+        );
+      });
+    }
+  };
+  const applyStatusFilter = (value) => {
+    props.updateSelectedFilter("jobStatus", value, true);
+    setAppliedFilters(props.navigation, props.type);
+  };
+  const applyOtherFilter = () => {
+    removeStatusFilter();
+    setOtherSummaryFilter(props.type);
   };
   return (
     <Accordion togglePosition="start">
@@ -39,23 +68,23 @@ const MetricsTab = (props) => {
         >
           <MetricCard
             title={"No. of Jobs"}
-            clickHandler={props.removeStatusFilter}
+            clickHandler={removeStatusFilter}
             footer={totalItems}
           />
           <MetricCard
             title={"Success"}
-            clickHandler={props.applyStatusFilter}
+            clickHandler={applyStatusFilter}
             footer={summary?.successCount}
           />
           <MetricCard
             title={"Failure"}
-            clickHandler={props.applyStatusFilter}
+            clickHandler={applyStatusFilter}
             footer={summary?.failureCount}
           />
           <MetricCard
             title={"Others"}
             footer={summary?.othersCount}
-            clickHandler={props.applyOtherFilter}
+            clickHandler={applyOtherFilter}
           />
         </AccordionContent>
       </AccordionItem>
@@ -65,8 +94,9 @@ const MetricsTab = (props) => {
 MetricsTab.propTypes = {
   totalItems: PropTypes.number,
   summary: PropTypes.object,
-  removeStatusFilter: PropTypes.func,
-  applyStatusFilter: PropTypes.func,
-  applyOtherFilter: PropTypes.func,
+  type: PropTypes.string,
+  updateSelectedFilter: PropTypes.func,
+  navigation: PropTypes.func,
+  appliedFilters: PropTypes.object,
 };
 export default MetricsTab;

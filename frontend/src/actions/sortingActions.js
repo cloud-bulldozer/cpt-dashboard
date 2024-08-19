@@ -8,7 +8,6 @@ import store from "@/store/store";
 
 const { dispatch } = store;
 export const setActiveSortDir = (dir, currType) => {
-  console.log("hey 1");
   if (currType === "cpt") {
     dispatch(setCPTSortDir(dir));
   } else if (currType === "ocp") {
@@ -20,8 +19,6 @@ export const setActiveSortDir = (dir, currType) => {
   }
 };
 export const setActiveSortIndex = (index, currType) => {
-  console.log("hey 2");
-  console.log(currType);
   if (currType === "cpt") {
     dispatch(setCPTSortIndex(index));
   } else if (currType === "ocp") {

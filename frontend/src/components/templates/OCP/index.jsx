@@ -1,14 +1,8 @@
 import {
   fetchGraphData,
   fetchOCPJobs,
-  removeAppliedFilters,
-  setAppliedFilters,
-  setDateFilter,
   setFilterFromURL,
-  setOCPCatFilters,
-  setOCPSortDir,
-  setOCPSortIndex,
-  setOtherSummaryFilter,
+  setOCPDateFilter,
   setSelectedFilter,
   setSelectedFilterFromUrl,
   setTableColumns,
@@ -20,7 +14,6 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
-import { sortTable } from "@/actions/commonActions.js";
 
 const OCP = () => {
   const dispatch = useDispatch();
@@ -46,13 +39,6 @@ const OCP = () => {
     selectedFilters,
   } = useSelector((state) => state.ocp);
 
-  const modifidedTableFilters = useMemo(
-    () =>
-      tableFilters.filter(
-        (item) => item.value !== "endDate" && item.value !== "startDate"
-      ),
-    [tableFilters]
-  );
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -68,7 +54,7 @@ const OCP = () => {
       }
       dispatch(setFilterFromURL(obj));
       dispatch(setSelectedFilterFromUrl(params));
-      dispatch(setDateFilter(startDate, endDate, navigate));
+      dispatch(setOCPDateFilter(startDate, endDate, navigate));
     }
   }, []);
 
@@ -76,76 +62,18 @@ const OCP = () => {
     dispatch(fetchOCPJobs());
   }, [dispatch]);
 
-  //Sorting
-  const setActiveSortDir = (dir) => {
-    dispatch(setOCPSortDir(dir));
-  };
-  const setActiveSortIndex = (index) => {
-    dispatch(setOCPSortIndex(index));
-  };
-  const handleOnSort = () => {
-    dispatch(sortTable("ocp"));
-  };
-  // Sorting
-
-  // // Pagination Helper
-  // const onSetPage = useCallback(
-  //   (_evt, newPage, _perPage, startIdx, endIdx) => {
-  //     dispatch(setPage(newPage));
-  //     dispatch(sliceOCPTableRows(startIdx, endIdx));
-  //   },
-  //   [dispatch]
-  // );
-  // const onPerPageSelect = useCallback(
-  //   (_evt, newPerPage, newPage, startIdx, endIdx) => {
-  //     dispatch(setPageOptions(newPage, newPerPage));
-  //     dispatch(sliceOCPTableRows(startIdx, endIdx));
-  //   },
-  //   [dispatch]
-  // );
-  // // Pagination helper
-  /* Summary Tab Filter*/
-  const removeStatusFilter = () => {
-    if (
-      Array.isArray(appliedFilters["jobStatus"]) &&
-      appliedFilters["jobStatus"].length > 0
-    ) {
-      appliedFilters["jobStatus"].forEach((element) => {
-        updateSelectedFilter("jobStatus", element, true);
-        dispatch(removeAppliedFilters("jobStatus", element, navigate));
-      });
-    }
-  };
-  const applyStatusFilter = (value) => {
-    updateSelectedFilter("jobStatus", value, true);
-    dispatch(setAppliedFilters(navigate));
-  };
-  const applyOtherFilter = () => {
-    removeStatusFilter();
-    dispatch(setOtherSummaryFilter());
-  };
+  //Filter Helper
+  const modifidedTableFilters = useMemo(
+    () =>
+      tableFilters.filter(
+        (item) => item.value !== "endDate" && item.value !== "startDate"
+      ),
+    [tableFilters]
+  );
   const updateSelectedFilter = (category, value, isFromMetrics = false) => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
 
-  /* Filter helper */
-
-  const onCategoryChange = (_event, value) => {
-    dispatch(setOCPCatFilters(value));
-  };
-  const onOptionsChange = () => {
-    dispatch(setAppliedFilters(navigate));
-  };
-  const deleteItem = (key, value) => {
-    dispatch(removeAppliedFilters(key, value, navigate));
-    updateSelectedFilter(key, value);
-  };
-  const startDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(date, key, navigate));
-  };
-  const endDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(key, date, navigate));
-  };
   //Row expansion
   const [expandedRunNames, setExpandedRunNames] = useState([]);
   const setRunExpanded = (run, isExpanding = true) => {
@@ -172,9 +100,10 @@ const OCP = () => {
       <MetricsTab
         totalItems={filteredResults.length}
         summary={summary}
-        removeStatusFilter={removeStatusFilter}
-        applyStatusFilter={applyStatusFilter}
-        applyOtherFilter={applyOtherFilter}
+        updateSelectedFilter={updateSelectedFilter}
+        navigation={navigate}
+        type={"ocp"}
+        appliedFilters={appliedFilters}
       />
 
       <TableFilter
@@ -185,16 +114,12 @@ const OCP = () => {
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}
-        onCategoryChange={onCategoryChange}
-        onOptionsChange={onOptionsChange}
-        deleteItem={deleteItem}
-        startDateChangeHandler={startDateChangeHandler}
-        endDateChangeHandler={endDateChangeHandler}
         type={"ocp"}
         showColumnMenu={true}
         setColumns={setColumns}
         selectedFilters={selectedFilters}
         updateSelectedFilter={updateSelectedFilter}
+        navigation={navigate}
       />
 
       <TableLayout
@@ -202,9 +127,6 @@ const OCP = () => {
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
-        setActiveSortDir={setActiveSortDir}
-        setActiveSortIndex={setActiveSortIndex}
-        handleOnSort={handleOnSort}
         page={page}
         perPage={perPage}
         totalItems={filteredResults.length}

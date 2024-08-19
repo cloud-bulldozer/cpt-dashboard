@@ -6,14 +6,22 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
+import {
+  buildFilterData,
+  calculateMetrics,
+  deleteAppliedFilters,
+  getFilteredData,
+  getSelectedFilter,
+} from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchTelcoJobsData = () => async (dispatch, getState) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().cpt;
+    const { start_date, end_date } = getState().telco;
     const response = await API.get(API_ROUTES.TELCO_JOBS_API_V1, {
       params: {
         pretty: true,
@@ -41,6 +49,7 @@ export const fetchTelcoJobsData = () => async (dispatch, getState) => {
           end_date: endDate,
         },
       });
+      dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }
   } catch (error) {
@@ -75,7 +84,142 @@ export const sliceTelcoTableRows =
       payload: results.slice(startIdx, endIdx),
     });
   };
+export const setTelcoCatFilters = (category) => (dispatch, getState) => {
+  const filterData = [...getState().telco.filterData];
+  const options = filterData.filter((item) => item.name === category)[0].value;
+  const list = options.map((item) => ({ name: item, value: item }));
+
+  dispatch({
+    type: TYPES.SET_TELCO_CATEGORY_FILTER,
+    payload: category,
+  });
+  dispatch({
+    type: TYPES.SET_TELCO_FILTER_OPTIONS,
+    payload: list,
+  });
+};
+export const removeTelcoAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    const { start_date, end_date } = getState().telco;
+
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "telco")
+    );
+
+    dispatch({
+      type: TYPES.SET_TELCO_APPLIED_FILTERS,
+      payload: appliedFilters,
+    });
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
+  };
+export const applyFilters = () => (dispatch, getState) => {
+  const { appliedFilters } = getState().telco;
+
+  const results = [...getState().telco.results];
+
+  const isFilterApplied =
+    Object.keys(appliedFilters).length > 0 &&
+    Object.values(appliedFilters).flat().length > 0;
+
+  const filtered = isFilterApplied
+    ? getFilteredData(appliedFilters, results)
+    : results;
+
+  dispatch({
+    type: TYPES.SET_FILTERED_DATA,
+    payload: filtered,
+  });
+  dispatch(tableReCalcValues());
+  dispatch(buildFilterData("telco"));
+};
+export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
+  const { selectedFilters, start_date, end_date } = getState().telco;
+
+  const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
+
+  const appliedFilters = {};
+  appliedFilterArr.forEach((item) => {
+    appliedFilters[item["name"]] = item.value;
+  });
+
+  dispatch({
+    type: TYPES.SET_TELCO_APPLIED_FILTERS,
+    payload: appliedFilters,
+  });
+  appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  dispatch(applyFilters());
+};
+
+export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+  const selectedFilters = cloneDeep(getState().telco.selectedFilters);
+  for (const key in params) {
+    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
+  }
+  dispatch({
+    type: TYPES.SET_TELCO_SELECTED_FILTERS,
+    payload: selectedFilters,
+  });
+};
+
+export const setSelectedFilter =
+  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
+    const selectedFilters = dispatch(
+      getSelectedFilter(
+        selectedCategory,
+        selectedOption,
+        "telco",
+        isFromMetrics
+      )
+    );
+    dispatch({
+      type: TYPES.TELCO_SET_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
+
+export const setTelcoDateFilter =
+  (start_date, end_date, navigate) => (dispatch, getState) => {
+    const appliedFilters = getState().telco.appliedFilters;
+
+    dispatch({
+      type: TYPES.SET_TELCO_DATE_FILTER,
+      payload: {
+        start_date,
+        end_date,
+      },
+    });
+
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+
+    dispatch(fetchTelcoJobsData());
+  };
+
+export const getTelcoSummary = () => (dispatch, getState) => {
+  const results = [...getState().telco.filteredResults];
+
+  const countObj = calculateMetrics(results);
+  dispatch({
+    type: TYPES.SET_TELCO_SUMMARY,
+    payload: countObj,
+  });
+};
+
+export const setTelcoOtherSummaryFilter = () => (dispatch, getState) => {
+  const filteredResults = [...getState().telco.filteredResults];
+  const keyWordArr = ["success", "failure"];
+  const data = filteredResults.filter(
+    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
+  );
+  dispatch({
+    type: TYPES.SET_TELCO_FILTERED_DATA,
+    payload: data,
+  });
+  dispatch(tableReCalcValues());
+};
+
 export const tableReCalcValues = () => (dispatch) => {
+  dispatch(getTelcoSummary());
   dispatch(setTelcoPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
 };

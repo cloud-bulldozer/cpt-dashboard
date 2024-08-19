@@ -141,7 +141,7 @@ export const setSelectedFilter =
       payload: selectedFilters,
     });
   };
-export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+export const setOCPAppliedFilters = (navigate) => (dispatch, getState) => {
   const { start_date, end_date, selectedFilters } = getState().ocp;
   const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
 
@@ -158,7 +158,7 @@ export const setAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const removeAppliedFilters =
+export const removeOCPAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     const appliedFilters = dispatch(
       deleteAppliedFilters(filterKey, filterValue, "ocp")
@@ -172,7 +172,7 @@ export const removeAppliedFilters =
     dispatch(applyFilters());
   };
 
-export const setDateFilter =
+export const setOCPDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().ocp.appliedFilters;
 
@@ -194,7 +194,7 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
-export const setOtherSummaryFilter = () => (dispatch, getState) => {
+export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().ocp.filteredResults];
   const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(

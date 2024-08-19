@@ -1,11 +1,7 @@
 import {
   fetchOCPJobsData,
-  removeAppliedFilters,
-  setAppliedFilters,
-  setCatFilters,
-  setDateFilter,
+  setCPTDateFilter,
   setFilterFromURL,
-  setOtherSummaryFilter,
   setSelectedFilter,
   setSelectedFilterFromUrl,
 } from "@/actions/homeActions.js";
@@ -56,7 +52,7 @@ const Home = () => {
       }
       dispatch(setFilterFromURL(obj));
       dispatch(setSelectedFilterFromUrl(params));
-      dispatch(setDateFilter(startDate, endDate, navigate));
+      dispatch(setCPTDateFilter(startDate, endDate, navigate));
     }
   }, []);
 
@@ -64,41 +60,6 @@ const Home = () => {
     dispatch(fetchOCPJobsData());
   }, [dispatch]);
   // Filter Helper
-  const onCategoryChange = (_event, value) => {
-    dispatch(setCatFilters(value));
-  };
-  const onOptionsChange = () => {
-    dispatch(setAppliedFilters(navigate));
-  };
-  const deleteItem = (key, value) => {
-    dispatch(removeAppliedFilters(key, value, navigate));
-    updateSelectedFilter(key, value, false);
-  };
-  const startDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(date, key, navigate));
-  };
-  const endDateChangeHandler = (date, key) => {
-    dispatch(setDateFilter(key, date, navigate));
-  };
-  const removeStatusFilter = () => {
-    if (
-      Array.isArray(appliedFilters["jobStatus"]) &&
-      appliedFilters["jobStatus"].length > 0
-    ) {
-      appliedFilters["jobStatus"].forEach((element) => {
-        updateSelectedFilter("jobStatus", element, true);
-        dispatch(removeAppliedFilters("jobStatus", element, navigate));
-      });
-    }
-  };
-  const applyStatusFilter = (value) => {
-    updateSelectedFilter("jobStatus", value, true);
-    dispatch(setAppliedFilters(navigate));
-  };
-  const applyOtherFilter = () => {
-    removeStatusFilter();
-    dispatch(setOtherSummaryFilter());
-  };
   const updateSelectedFilter = (category, value, isFromMetrics) => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
@@ -108,9 +69,10 @@ const Home = () => {
       <MetricsTab
         totalItems={filteredResults.length}
         summary={summary}
-        removeStatusFilter={removeStatusFilter}
-        applyStatusFilter={applyStatusFilter}
-        applyOtherFilter={applyOtherFilter}
+        updateSelectedFilter={updateSelectedFilter}
+        navigation={navigate}
+        type={"cpt"}
+        appliedFilters={appliedFilters}
       />
 
       <TableFilter
@@ -121,15 +83,11 @@ const Home = () => {
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}
-        onCategoryChange={onCategoryChange}
-        onOptionsChange={onOptionsChange}
-        deleteItem={deleteItem}
-        startDateChangeHandler={startDateChangeHandler}
-        endDateChangeHandler={endDateChangeHandler}
         type={"cpt"}
         selectedFilters={selectedFilters}
         updateSelectedFilter={updateSelectedFilter}
         showColumnMenu={false}
+        navigation={navigate}
       />
 
       <TableLayout

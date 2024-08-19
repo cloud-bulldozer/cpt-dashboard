@@ -27,13 +27,25 @@ const initialState = {
     { name: "Node Name", value: "nodeName" },
     { name: "Status", value: "jobStatus" },
   ],
+  selectedFilters: [
+    { name: "benchmark", value: [] },
+    { name: "releaseStream", value: [] },
+    { name: "TELCOVersion", value: [] },
+    { name: "cpu_util", value: [] },
+    { name: "nodeName", value: [] },
+    { name: "jobStatus", value: [] },
+  ],
   filterData: [],
   filteredResults: [],
+  categoryFilterValue: "Benchmark",
+  filterOptions: [],
+  appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
   tableData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  summary: {},
 };
 
 const TelcoReducer = (state = initialState, action = {}) => {
@@ -63,6 +75,18 @@ const TelcoReducer = (state = initialState, action = {}) => {
       return { ...state, tableData: payload };
     case TYPES.SET_TELCO_FILTERED_DATA:
       return { ...state, filteredResults: payload };
+    case TYPES.SET_TELCO_CATEGORY_FILTER:
+      return { ...state, categoryFilterValue: payload };
+    case TYPES.SET_TELCO_FILTER_OPTIONS:
+      return { ...state, filterOptions: payload };
+    case TYPES.SET_TELCO_FILTER_DATA:
+      return { ...state, filterData: payload };
+    case TYPES.SET_TELCO_APPLIED_FILTERS:
+      return { ...state, appliedFilters: payload };
+    case TYPES.SET_TELCO_SELECTED_FILTERS:
+      return { ...state, selectedFilters: payload };
+    case TYPES.SET_TELCO_SUMMARY:
+      return { ...state, summary: payload };
     default:
       return state;
   }

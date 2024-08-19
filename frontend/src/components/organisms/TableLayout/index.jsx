@@ -42,7 +42,7 @@ const TableLayout = (props) => {
       <Table isStriped>
         <Thead>
           <Tr>
-            {addExpansion && <Th screenReaderText="Row expansion" />}
+            {addExpansion && <Th />}
 
             {tableColumns?.length > 0 &&
               tableColumns.map((col, idx) => (
