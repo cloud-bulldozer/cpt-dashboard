@@ -32,6 +32,27 @@ const initialState = {
     { name: "workerNodesCount", value: [] },
     { name: "jobStatus", value: [] },
   ],
+  clusterMetaData: [
+    { name: "Release Binary", value: "releaseStream" },
+    { name: "Cluster Name", value: "clusterName" },
+    { name: "Cluster Type", value: "clusterType" },
+    { name: "Network Type", value: "networkType" },
+    { name: "Benchmark Status", value: "jobStatus" },
+    { name: "Duration", value: "jobDuration" },
+    { name: "Test ID", value: "uuid" },
+  ],
+  nodeKeys: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesType" },
+    { name: "Infra", value: "infraNodesType" },
+    { name: "Workload", value: "benchmark" },
+  ],
+  nodeCount: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesCount" },
+    { name: "Infra", value: "infraNodesCount" },
+    { name: "Total", value: "totalNodesCount" },
+  ],
   filterData: [],
   filteredResults: [],
   filterOptions: [],
@@ -40,6 +61,7 @@ const initialState = {
   activeSortDir: null,
   activeSortIndex: null,
   tableData: [],
+  graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
   summary: {},
@@ -84,6 +106,10 @@ const QuayReducer = (state = initialState, action = {}) => {
       return { ...state, selectedFilters: payload };
     case TYPES.SET_QUAY_SUMMARY:
       return { ...state, summary: payload };
+    case TYPES.SET_QUAY_COLUMNS:
+      return { ...state, tableColumns: payload };
+    case TYPES.SET_QUAY_GRAPH_DATA:
+      return { ...state, graphData: [...state.graphData, payload] };
     default:
       return state;
   }

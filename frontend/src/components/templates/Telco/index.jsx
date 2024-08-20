@@ -1,9 +1,11 @@
 import {
+  fetchGraphData,
   fetchTelcoJobsData,
   setSelectedFilter,
+  setTableColumns,
 } from "@/actions/telcoActions.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo } from "react";
 
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
@@ -31,6 +33,7 @@ const Telco = () => {
     end_date,
     selectedFilters,
     summary,
+    graphData,
   } = useSelector((state) => state.telco);
 
   useEffect(() => {
@@ -49,6 +52,27 @@ const Telco = () => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
   //Filter Helper
+  //Row expansion
+  const [expandedRunNames, setExpandedRunNames] = useState([]);
+  const setRunExpanded = (run, isExpanding = true) => {
+    setExpandedRunNames((prevExpanded) => {
+      const otherExpandedRunNames = prevExpanded.filter((r) => r !== run.uuid);
+      return isExpanding
+        ? [...otherExpandedRunNames, run.uuid]
+        : otherExpandedRunNames;
+    });
+    if (isExpanding) {
+      dispatch(fetchGraphData(run.uuid, run.encryptedData));
+    }
+  };
+
+  const isRunExpanded = useCallback(
+    (run) => expandedRunNames.includes(run.uuid),
+    [expandedRunNames]
+  );
+  const setColumns = (value, isAdding) => {
+    dispatch(setTableColumns(value, isAdding));
+  };
   return (
     <>
       <MetricsTab
@@ -70,7 +94,8 @@ const Telco = () => {
         type={"telco"}
         updateSelectedFilter={updateSelectedFilter}
         selectedFilters={selectedFilters}
-        showColumnMenu={false}
+        showColumnMenu={true}
+        setColumns={setColumns}
         navigation={navigate}
       />
       <TableLayout
@@ -82,7 +107,10 @@ const Telco = () => {
         perPage={perPage}
         totalItems={filteredResults.length}
         type={"telco"}
-        addExpansion={false}
+        addExpansion={true}
+        isRunExpanded={isRunExpanded}
+        setRunExpanded={setRunExpanded}
+        graphData={graphData}
       />
     </>
   );

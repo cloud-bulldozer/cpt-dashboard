@@ -12,8 +12,7 @@ const initialState = {
   tableColumns: [
     { name: "Benchmark", value: "benchmark" },
     { name: "Release Stream", value: "releaseStream" },
-    { name: "Build", value: "TELCOVersion" },
-    { name: "CPU", value: "cpu_util" },
+    { name: "CPU", value: "cpu" },
     { name: "Node Name", value: "nodeName" },
     { name: "Start Date", value: "startDate" },
     { name: "End Date", value: "endDate" },
@@ -22,18 +21,39 @@ const initialState = {
   tableFilters: [
     { name: "Benchmark", value: "benchmark" },
     { name: "Release Stream", value: "releaseStream" },
-    { name: "Build", value: "TELCOVersion" },
-    { name: "CPU", value: "cpu_util" },
+    { name: "Build", value: "ocpVersion" },
+    { name: "CPU", value: "cpu" },
     { name: "Node Name", value: "nodeName" },
     { name: "Status", value: "jobStatus" },
   ],
   selectedFilters: [
     { name: "benchmark", value: [] },
     { name: "releaseStream", value: [] },
-    { name: "TELCOVersion", value: [] },
-    { name: "cpu_util", value: [] },
+    { name: "ocpVersion", value: [] },
+    { name: "cpu", value: [] },
     { name: "nodeName", value: [] },
     { name: "jobStatus", value: [] },
+  ],
+  clusterMetaData: [
+    { name: "Release Binary", value: "releaseStream" },
+    { name: "Cluster Name", value: "clusterName" },
+    { name: "Cluster Type", value: "clusterType" },
+    { name: "Network Type", value: "networkType" },
+    { name: "Benchmark Status", value: "jobStatus" },
+    { name: "Duration", value: "jobDuration" },
+    { name: "Test ID", value: "uuid" },
+  ],
+  nodeKeys: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesType" },
+    { name: "Infra", value: "infraNodesType" },
+    { name: "Workload", value: "benchmark" },
+  ],
+  nodeCount: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesCount" },
+    { name: "Infra", value: "infraNodesCount" },
+    { name: "Total", value: "totalNodesCount" },
   ],
   filterData: [],
   filteredResults: [],
@@ -43,6 +63,7 @@ const initialState = {
   activeSortDir: null,
   activeSortIndex: null,
   tableData: [],
+  graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
   summary: {},
@@ -87,6 +108,10 @@ const TelcoReducer = (state = initialState, action = {}) => {
       return { ...state, selectedFilters: payload };
     case TYPES.SET_TELCO_SUMMARY:
       return { ...state, summary: payload };
+    case TYPES.SET_TELCO_COLUMNS:
+      return { ...state, tableColumns: payload };
+    case TYPES.SET_TELCO_GRAPH_DATA:
+      return { ...state, graphData: [...state.graphData, payload] };
     default:
       return state;
   }

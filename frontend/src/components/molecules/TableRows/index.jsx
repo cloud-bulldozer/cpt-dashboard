@@ -36,6 +36,7 @@ const TableRows = (props) => {
               <Td colSpan={8}>
                 <ExpandableRowContent>
                   <RowContent
+                    key={uid()}
                     item={item}
                     graphData={props.graphData}
                     type={props.type}

@@ -84,7 +84,7 @@ const OCP = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
-      dispatch(fetchGraphData(run.uuid));
+      dispatch(fetchGraphData(run.uuid, run.benchmark));
     }
   };
 

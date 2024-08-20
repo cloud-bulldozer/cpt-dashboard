@@ -1,6 +1,11 @@
-import { fetchQuayJobsData, setSelectedFilter } from "@/actions/quayActions.js";
+import {
+  fetchGraphData,
+  fetchQuayJobsData,
+  setSelectedFilter,
+  setTableColumns,
+} from "@/actions/quayActions.js";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo } from "react";
 
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
@@ -27,6 +32,7 @@ const Quay = () => {
     start_date,
     end_date,
     selectedFilters,
+    graphData,
     summary,
   } = useSelector((state) => state.quay);
 
@@ -46,7 +52,27 @@ const Quay = () => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
   //Filter Helper
+  //Row expansion
+  const [expandedRunNames, setExpandedRunNames] = useState([]);
+  const setRunExpanded = (run, isExpanding = true) => {
+    setExpandedRunNames((prevExpanded) => {
+      const otherExpandedRunNames = prevExpanded.filter((r) => r !== run.uuid);
+      return isExpanding
+        ? [...otherExpandedRunNames, run.uuid]
+        : otherExpandedRunNames;
+    });
+    if (isExpanding) {
+      dispatch(fetchGraphData(run.uuid));
+    }
+  };
 
+  const isRunExpanded = useCallback(
+    (run) => expandedRunNames.includes(run.uuid),
+    [expandedRunNames]
+  );
+  const setColumns = (value, isAdding) => {
+    dispatch(setTableColumns(value, isAdding));
+  };
   return (
     <>
       <MetricsTab
@@ -68,7 +94,8 @@ const Quay = () => {
         type={"quay"}
         selectedFilters={selectedFilters}
         updateSelectedFilter={updateSelectedFilter}
-        showColumnMenu={false}
+        showColumnMenu={true}
+        setColumns={setColumns}
         navigation={navigate}
       />
       <TableLayout
@@ -80,7 +107,10 @@ const Quay = () => {
         perPage={perPage}
         totalItems={filteredResults.length}
         type={"quay"}
-        addExpansion={false}
+        addExpansion={true}
+        isRunExpanded={isRunExpanded}
+        setRunExpanded={setRunExpanded}
+        graphData={graphData}
       />
     </>
   );

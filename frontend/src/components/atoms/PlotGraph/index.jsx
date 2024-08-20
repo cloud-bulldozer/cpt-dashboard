@@ -4,7 +4,7 @@ import PropTypes from "prop-types";
 const PlotGraph = (props) => {
   return (
     <Plotly
-      data={props?.data[0].data}
+      data={props?.data}
       useResizeHandler={false}
       layout={{ responsive: false, autosize: false, width: 600, length: 600 }}
     />

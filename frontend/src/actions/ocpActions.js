@@ -217,27 +217,30 @@ export const getOCPSummary = () => (dispatch, getState) => {
   });
 };
 
-export const fetchGraphData = (uuid) => async (dispatch, getState) => {
-  try {
-    dispatch({ type: TYPES.GRAPH_LOADING });
+export const fetchGraphData =
+  (uuid, nodeName) => async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.GRAPH_LOADING });
 
-    const graphData = getState().ocp.graphData;
-    const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
-    if (!hasData) {
-      const response = await API.get(`${API_ROUTES.OCP_GRAPH_API_V1}/${uuid}`);
+      const graphData = getState().ocp.graphData;
+      const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
+      if (!hasData) {
+        const response = await API.get(
+          `${API_ROUTES.OCP_GRAPH_API_V1}/${uuid}`
+        );
 
-      if (response.status === 200) {
-        dispatch({
-          type: TYPES.SET_OCP_GRAPH_DATA,
-          payload: { uuid, data: response.data },
-        });
+        if (response.status === 200) {
+          dispatch({
+            type: TYPES.SET_OCP_GRAPH_DATA,
+            payload: { uuid, data: [[nodeName, response.data]] },
+          });
+        }
       }
+    } catch (error) {
+      dispatch(showFailureToast());
     }
-  } catch (error) {
-    dispatch(showFailureToast());
-  }
-  dispatch({ type: TYPES.GRAPH_COMPLETED });
-};
+    dispatch({ type: TYPES.GRAPH_COMPLETED });
+  };
 
 export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
   let tableColumns = [...getState().ocp.tableColumns];

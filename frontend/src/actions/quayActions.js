@@ -13,9 +13,9 @@ import {
   getFilteredData,
   getSelectedFilter,
 } from "./commonActions";
+import { cloneDeep, result } from "lodash";
 
 import API from "@/utils/axiosInstance";
-import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchQuayJobsData = () => async (dispatch, getState) => {
@@ -214,6 +214,49 @@ export const getQuaySummary = () => (dispatch, getState) => {
     type: TYPES.SET_QUAY_SUMMARY,
     payload: countObj,
   });
+};
+
+export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
+  let tableColumns = [...getState().quay.tableColumns];
+  const tableFilters = getState().quay.tableFilters;
+
+  if (isAdding) {
+    const filterObj = tableFilters.find((item) => item.value === key);
+    tableColumns.push(filterObj);
+  } else {
+    tableColumns = tableColumns.filter((item) => item.value !== key);
+  }
+
+  dispatch({
+    type: TYPES.SET_QUAY_COLUMNS,
+    payload: tableColumns,
+  });
+};
+
+export const fetchGraphData = (uuid) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: TYPES.GRAPH_LOADING });
+
+    const graphData = getState().ocp.graphData;
+    const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
+    if (!hasData) {
+      const response = await API.get(`${API_ROUTES.QUAY_GRAPH_API_V1}/${uuid}`);
+
+      if (response.status === 200) {
+        const result = Object.keys(response.data).map((key) => [
+          key,
+          response.data[key],
+        ]);
+        dispatch({
+          type: TYPES.SET_QUAY_GRAPH_DATA,
+          payload: { uuid, data: result },
+        });
+      }
+    }
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
 
 export const tableReCalcValues = () => (dispatch) => {

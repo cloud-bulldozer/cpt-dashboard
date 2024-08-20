@@ -218,6 +218,50 @@ export const setTelcoOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(tableReCalcValues());
 };
 
+export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
+  let tableColumns = [...getState().telco.tableColumns];
+  const tableFilters = getState().telco.tableFilters;
+
+  if (isAdding) {
+    const filterObj = tableFilters.find((item) => item.value === key);
+    tableColumns.push(filterObj);
+  } else {
+    tableColumns = tableColumns.filter((item) => item.value !== key);
+  }
+
+  dispatch({
+    type: TYPES.SET_TELCO_COLUMNS,
+    payload: tableColumns,
+  });
+};
+export const fetchGraphData =
+  (uuid, encryption) => async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.GRAPH_LOADING });
+
+      const graphData = getState().ocp.graphData;
+      const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
+      if (!hasData) {
+        const response = await API.get(
+          `${API_ROUTES.TELCO_GRAPH_API_V1}/${uuid}/${encryption}`
+        );
+
+        if (response.status === 200) {
+          const result = Object.keys(response.data).map((key) => [
+            key,
+            response.data[key],
+          ]);
+          dispatch({
+            type: TYPES.SET_TELCO_GRAPH_DATA,
+            payload: { uuid, data: result },
+          });
+        }
+      }
+    } catch (error) {
+      dispatch(showFailureToast());
+    }
+    dispatch({ type: TYPES.GRAPH_COMPLETED });
+  };
 export const tableReCalcValues = () => (dispatch) => {
   dispatch(getTelcoSummary());
   dispatch(setTelcoPageOptions(START_PAGE, DEFAULT_PER_PAGE));
