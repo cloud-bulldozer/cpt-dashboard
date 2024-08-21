@@ -1,5 +1,5 @@
 
-# Openshift Performance Dashbaord
+# Openshift Performance Dashboard
 
 ## Dashboard directory structure
 

@@ -1,6 +1,5 @@
 import Plotly from "react-plotly.js";
 import PropTypes from "prop-types";
-
 const PlotGraph = (props) => {
   return (
     <Plotly

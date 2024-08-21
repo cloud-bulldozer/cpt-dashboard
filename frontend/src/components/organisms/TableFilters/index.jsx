@@ -124,7 +124,8 @@ const TableFilter = (props) => {
           )}
         </ToolbarContent>
       </Toolbar>
-      {Object.keys(appliedFilters).length > 0 &&
+      {appliedFilters &&
+        Object.keys(appliedFilters).length > 0 &&
         Object.keys(appliedFilters).map((key) => (
           <ChipGroup key={key} numChips={4}>
             {getFilterName(key)} :

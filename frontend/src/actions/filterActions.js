@@ -27,6 +27,7 @@ import {
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
 
+import { setIlabDateFilter } from "./ilabActions";
 import store from "@/store/store";
 
 const { dispatch } = store;
@@ -76,6 +77,8 @@ export const setDateFilter = (date, key, navigation, currType) => {
     dispatch(setQuayDateFilter(date, key, navigation));
   } else if (currType === "telco") {
     dispatch(setTelcoDateFilter(date, key, navigation));
+  } else if (currType === "ilab") {
+    dispatch(setIlabDateFilter(date, key, navigation));
   }
 };
 
