@@ -1,10 +1,13 @@
+import "./index.less";
+
 import * as CONSTANTS from "@/assets/constants/metadataConstants";
 
-import { Card, CardBody, Grid, GridItem } from "@patternfly/react-core";
+import { Card, CardBody, Grid, GridItem, Title } from "@patternfly/react-core";
 
 import MetadataRow from "../MetaDataRow";
 import PlotGraph from "@/components/atoms/PlotGraph";
 import PropTypes from "prop-types";
+import TasksInfo from "@/components/molecules/TasksInfo";
 import { uid } from "@/utils/helper.js";
 import { useSelector } from "react-redux";
 
@@ -43,6 +46,10 @@ const RowContent = (props) => {
                 <div className="divider" />
               </>
             ))}
+            <Title headingLevel="h4" className="type_heading">
+              Tasks ran
+            </Title>
+            <TasksInfo config={props.item} />
           </CardBody>
         </Card>
       </GridItem>

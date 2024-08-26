@@ -1,7 +1,4 @@
 
-Currently, two official plugins are available:
-
-
 # Openshift Performance Dashbaord
 
 ## Dashboard directory structure

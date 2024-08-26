@@ -28,7 +28,9 @@ const MetadataRow = (props) => {
 
   return (
     <>
-      <Title headingLevel="h4">{props.heading}</Title>
+      <Title headingLevel="h4" className="type_heading">
+        {props.heading}
+      </Title>
       <Table className="box" key={uid()} aria-label="metadata-table">
         <Thead>
           <Tr>
