@@ -30,16 +30,11 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
         ...(end_date && { end_date }),
       },
     });
-    if (response?.data?.results?.length > 0) {
+    if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
       appendDateFilter(startDate, endDate);
-
-      dispatch({
-        type: TYPES.SET_CPT_JOBS_DATA,
-        payload: response.data.results,
-      });
       dispatch({
         type: TYPES.SET_CPT_DATE_FILTER,
         payload: {
@@ -47,6 +42,14 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
           end_date: endDate,
         },
       });
+    }
+
+    if (response?.data?.results?.length > 0) {
+      dispatch({
+        type: TYPES.SET_CPT_JOBS_DATA,
+        payload: response.data.results,
+      });
+
       dispatch(applyFilters());
       dispatch(sortTable("cpt"));
       dispatch(tableReCalcValues());
