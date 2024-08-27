@@ -60,7 +60,7 @@ const RowContent = (props) => {
             <Title headingLevel="h4" className="type_heading">
               Tasks ran
             </Title>
-            <TasksInfo config={props.item} />
+            <TasksInfo config={props.item} type={props.type} />
           </CardBody>
         </Card>
       </GridItem>

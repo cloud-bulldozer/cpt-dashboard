@@ -29,11 +29,20 @@ export const fetchTelcoJobsData = () => async (dispatch, getState) => {
         ...(end_date && { end_date }),
       },
     });
-    if (response?.data?.results?.length > 0) {
+    if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
       appendDateFilter(startDate, endDate);
+      dispatch({
+        type: TYPES.SET_TELCO_DATE_FILTER,
+        payload: {
+          start_date: startDate,
+          end_date: endDate,
+        },
+      });
+    }
+    if (response?.data?.results?.length > 0) {
       dispatch({
         type: TYPES.SET_TELCO_JOBS_DATA,
         payload: response.data.results,
@@ -42,13 +51,7 @@ export const fetchTelcoJobsData = () => async (dispatch, getState) => {
         type: TYPES.SET_TELCO_FILTERED_DATA,
         payload: response.data.results,
       });
-      dispatch({
-        type: TYPES.SET_TELCO_DATE_FILTER,
-        payload: {
-          start_date: startDate,
-          end_date: endDate,
-        },
-      });
+
       dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }

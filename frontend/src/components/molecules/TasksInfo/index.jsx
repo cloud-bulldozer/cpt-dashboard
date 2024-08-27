@@ -1,18 +1,17 @@
 import "./index.less";
 
-import * as CONSTANTS from "@/assets/constants/grafanaConstants";
-
 import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExclamationTriangleIcon,
 } from "@patternfly/react-icons";
 
-import GrafanaIcon from "@/assets/images/grafana-icon.png";
+import GrafanaLink from "@/components/atoms/GrafanaLink";
 import JenkinsIcon from "@/assets/images/jenkins-icon.svg";
 import LinkIcon from "@/components/atoms/LinkIcon";
 import Proptypes from "prop-types";
 import ProwIcon from "@/assets/images/prow-icon.png";
+import SplunkLink from "@/components/atoms/SplunkLink";
 import { formatTime } from "@/helpers/Formatters.js";
 import { useMemo } from "react";
 
@@ -33,63 +32,36 @@ const TasksInfo = (props) => {
     [config.jobStatus]
   );
 
-  const grafanaLink = useMemo(() => {
-    const ciSystem_lCase = config.ciSystem?.toLowerCase();
-    const isProw = ciSystem_lCase === "prow";
-    const discreteBenchmark =
-      CONSTANTS.ciSystemMap[ciSystem_lCase]?.[ciSystem_lCase?.benchmark];
-
-    const hasBenchmark = Object.prototype.hasOwnProperty.call(
-      CONSTANTS.ciSystemMap?.[ciSystem_lCase],
-      config.benchmark
-    );
-    const datasource = isProw
-      ? CONSTANTS.PROW_DATASOURCE
-      : hasBenchmark
-      ? discreteBenchmark?.dataSource
-      : CONSTANTS.DEFAULT_DATASOURCE;
-
-    const dashboardURL =
-      discreteBenchmark?.dashboardURL ?? CONSTANTS.DASHBOARD_KUBE_BURNER;
-
-    const datePart = `&from=${startDate}&to=${endDate}`;
-    const uuidPart = `&var-uuid=${config.uuid}`;
-
-    if (config.benchmark === CONSTANTS.QUAY_LOAD_TEST)
-      return `${CONSTANTS.GRAFANA_BASE_URL}${CONSTANTS.DASHBOARD_QUAY}${datePart}${uuidPart}`;
-    return `${CONSTANTS.GRAFANA_BASE_URL}${dashboardURL}${datasource}${datePart}&var-platform=${config.platform}"&var-workload=${config.benchmark}${uuidPart}`;
-  }, [
-    config.benchmark,
-    config.ciSystem,
-    config.platform,
-    config.uuid,
-    endDate,
-    startDate,
-  ]);
-
   const icons = useMemo(
     () => ({
-      failed: <ExclamationCircleIcon />,
-      failure: <ExclamationCircleIcon />,
-      success: <CheckCircleIcon />,
-      upstream_failed: <ExclamationTriangleIcon />,
+      failed: <ExclamationCircleIcon fill={"#C9190B"} />,
+      failure: <ExclamationCircleIcon fill={"#C9190B"} />,
+      success: <CheckCircleIcon fill={"#3E8635"} />,
+      upstream_failed: <ExclamationTriangleIcon fill={"#F0AB00"} />,
     }),
     []
   );
+
   return (
     <>
       <div className="info-wrapper">
         <div>{icons[status] ?? status.toUpperCase()}</div>
         <div>{config.benchmark}</div>
-        <div>{`(${formatTime(config?.jobDuration)})`}</div>
-        <LinkIcon
-          link={grafanaLink}
-          target={"_blank"}
-          src={GrafanaIcon}
-          altText={"grafana link"}
-          height={30}
-          width={30}
-        />
+        <div>
+          {status !== "upstream_failed"
+            ? `(${formatTime(config?.jobDuration)})`
+            : "Skipped"}
+        </div>
+        {props.type === "ocp" && (
+          <GrafanaLink
+            config={config}
+            startDate={startDate}
+            endDate={endDate}
+          />
+        )}
+        {props.type === "telco" && (
+          <SplunkLink config={config} startDate={startDate} endDate={endDate} />
+        )}
         <LinkIcon
           link={config.buildUrl}
           target={"_blank"}
@@ -104,5 +76,6 @@ const TasksInfo = (props) => {
 };
 TasksInfo.propTypes = {
   config: Proptypes.object,
+  type: Proptypes.string,
 };
 export default TasksInfo;
