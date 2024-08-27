@@ -127,7 +127,7 @@ export const applyFilters = () => (dispatch, getState) => {
     : results;
 
   dispatch({
-    type: TYPES.SET_FILTERED_DATA,
+    type: TYPES.SET_TELCO_FILTERED_DATA,
     payload: filtered,
   });
   dispatch(tableReCalcValues());
@@ -173,7 +173,7 @@ export const setSelectedFilter =
       )
     );
     dispatch({
-      type: TYPES.TELCO_SET_SELECTED_FILTERS,
+      type: TYPES.SET_TELCO_SELECTED_FILTERS,
       payload: selectedFilters,
     });
   };

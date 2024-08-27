@@ -32,7 +32,6 @@ const MultiSelectBox = (props) => {
     setIsDirty(false);
   };
   const toggle = (toggleRef) => {
-    console.log(props.selected);
     return (
       <MenuToggle
         variant="typeahead"

@@ -13,9 +13,9 @@ import {
   getFilteredData,
   getSelectedFilter,
 } from "./commonActions";
-import { cloneDeep, result } from "lodash";
 
 import API from "@/utils/axiosInstance";
+import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchQuayJobsData = () => async (dispatch, getState) => {
@@ -25,10 +25,10 @@ export const fetchQuayJobsData = () => async (dispatch, getState) => {
     const response = await API.get(API_ROUTES.QUAY_JOBS_API_V1, {
       params: {
         pretty: true,
-        start_date: "2022-08-16",
-        end_date: "2024-08-16",
-        // ...(start_date && { start_date }),
-        // ...(end_date && { end_date }),
+        // start_date: "2022-08-16",
+        // end_date: "2024-08-16",
+        ...(start_date && { start_date }),
+        ...(end_date && { end_date }),
       },
     });
     if (response?.data?.results?.length > 0) {
