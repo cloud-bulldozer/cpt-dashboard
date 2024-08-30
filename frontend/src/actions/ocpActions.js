@@ -30,15 +30,11 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
         ...(end_date && { end_date }),
       },
     });
-    if (response?.data?.results?.length > 0) {
+    if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
       appendDateFilter(startDate, endDate);
-      dispatch({
-        type: TYPES.SET_OCP_JOBS_DATA,
-        payload: response.data.results,
-      });
       dispatch({
         type: TYPES.SET_OCP_DATE_FILTER,
         payload: {
@@ -46,6 +42,13 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
           end_date: endDate,
         },
       });
+    }
+    if (response?.data?.results?.length > 0) {
+      dispatch({
+        type: TYPES.SET_OCP_JOBS_DATA,
+        payload: response.data.results,
+      });
+
       dispatch(applyFilters());
       dispatch(sortTable("ocp"));
       dispatch(tableReCalcValues());
@@ -56,12 +59,12 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
-export const setPage = (pageNo) => ({
+export const setOCPPage = (pageNo) => ({
   type: TYPES.SET_OCP_PAGE,
   payload: pageNo,
 });
 
-export const setPageOptions = (page, perPage) => ({
+export const setOCPPageOptions = (page, perPage) => ({
   type: TYPES.SET_OCP_PAGE_OPTIONS,
   payload: { page, perPage },
 });
@@ -141,7 +144,7 @@ export const setSelectedFilter =
       payload: selectedFilters,
     });
   };
-export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+export const setOCPAppliedFilters = (navigate) => (dispatch, getState) => {
   const { start_date, end_date, selectedFilters } = getState().ocp;
   const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
 
@@ -158,7 +161,7 @@ export const setAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const removeAppliedFilters =
+export const removeOCPAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     const appliedFilters = dispatch(
       deleteAppliedFilters(filterKey, filterValue, "ocp")
@@ -172,7 +175,7 @@ export const removeAppliedFilters =
     dispatch(applyFilters());
   };
 
-export const setDateFilter =
+export const setOCPDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().ocp.appliedFilters;
 
@@ -194,7 +197,7 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
-export const setOtherSummaryFilter = () => (dispatch, getState) => {
+export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().ocp.filteredResults];
   const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(
@@ -217,27 +220,30 @@ export const getOCPSummary = () => (dispatch, getState) => {
   });
 };
 
-export const fetchGraphData = (uuid) => async (dispatch, getState) => {
-  try {
-    dispatch({ type: TYPES.GRAPH_LOADING });
+export const fetchGraphData =
+  (uuid, nodeName) => async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.GRAPH_LOADING });
 
-    const graphData = getState().ocp.graphData;
-    const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
-    if (!hasData) {
-      const response = await API.get(`${API_ROUTES.OCP_GRAPH_API_V1}/${uuid}`);
+      const graphData = getState().ocp.graphData;
+      const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
+      if (!hasData) {
+        const response = await API.get(
+          `${API_ROUTES.OCP_GRAPH_API_V1}/${uuid}`
+        );
 
-      if (response.status === 200) {
-        dispatch({
-          type: TYPES.SET_OCP_GRAPH_DATA,
-          payload: { uuid, data: response.data },
-        });
+        if (response.status === 200) {
+          dispatch({
+            type: TYPES.SET_OCP_GRAPH_DATA,
+            payload: { uuid, data: [[nodeName, response.data]] },
+          });
+        }
       }
+    } catch (error) {
+      dispatch(showFailureToast());
     }
-  } catch (error) {
-    dispatch(showFailureToast());
-  }
-  dispatch({ type: TYPES.GRAPH_COMPLETED });
-};
+    dispatch({ type: TYPES.GRAPH_COMPLETED });
+  };
 
 export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
   let tableColumns = [...getState().ocp.tableColumns];
@@ -257,6 +263,6 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
 };
 export const tableReCalcValues = () => (dispatch) => {
   dispatch(getOCPSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(setOCPPageOptions(START_PAGE, DEFAULT_PER_PAGE));
   dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
 };

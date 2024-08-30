@@ -1,7 +1,9 @@
 import * as TYPES from "@/actions/types.js";
 
-import { setCatFilters, sliceTableRows } from "./homeActions";
+import { setCPTCatFilters, sliceCPTTableRows } from "./homeActions";
 import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
+import { setQuayCatFilters, sliceQuayTableRows } from "./quayActions";
+import { setTelcoCatFilters, sliceTelcoTableRows } from "./telcoActions";
 
 import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
@@ -45,7 +47,7 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+    dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "ocp") {
@@ -54,6 +56,22 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       payload: sortedResults,
     });
     dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+    return;
+  }
+  if (currState === "quay") {
+    dispatch({
+      type: TYPES.SET_QUAY_FILTERED_DATA,
+      payload: sortedResults,
+    });
+    dispatch(sliceQuayTableRows(0, DEFAULT_PER_PAGE));
+    return;
+  }
+  if (currState === "telco") {
+    dispatch({
+      type: TYPES.SET_TELCO_FILTERED_DATA,
+      payload: sortedResults,
+    });
+    dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
   }
 };
 
@@ -114,7 +132,19 @@ const setFilterData = (filterData, currState, activeFilter) => (dispatch) => {
       type: TYPES.SET_CPT_FILTER_DATA,
       payload: filterData,
     });
-    dispatch(setCatFilters(activeFilter));
+    dispatch(setCPTCatFilters(activeFilter));
+  } else if (currState === "quay") {
+    dispatch({
+      type: TYPES.SET_QUAY_FILTER_DATA,
+      payload: filterData,
+    });
+    dispatch(setQuayCatFilters(activeFilter));
+  } else if (currState === "telco") {
+    dispatch({
+      type: TYPES.SET_TELCO_FILTER_DATA,
+      payload: filterData,
+    });
+    dispatch(setTelcoCatFilters(activeFilter));
   }
 };
 

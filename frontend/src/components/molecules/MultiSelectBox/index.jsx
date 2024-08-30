@@ -16,7 +16,6 @@ const MultiSelectBox = (props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const onSelect = (value) => {
-    console.log("selected", value);
     setIsDirty(true);
     props.onChange(props.currCategory, value);
   };
@@ -33,7 +32,6 @@ const MultiSelectBox = (props) => {
     setIsDirty(false);
   };
   const toggle = (toggleRef) => {
-    console.log(props.selected);
     return (
       <MenuToggle
         variant="typeahead"

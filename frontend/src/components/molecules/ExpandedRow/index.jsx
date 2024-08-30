@@ -9,6 +9,7 @@ import PlotGraph from "@/components/atoms/PlotGraph";
 import PropTypes from "prop-types";
 import TasksInfo from "@/components/molecules/TasksInfo";
 import { uid } from "@/utils/helper.js";
+import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const RowContent = (props) => {
@@ -22,13 +23,23 @@ const RowContent = (props) => {
 
     return hasData;
   };
-  const content = [
-    { heading: "Cluster config", category: CONSTANTS.CLUSTER },
-    { heading: "Node Type", category: CONSTANTS.NODE_TYPE },
-    { heading: "Node Count", category: CONSTANTS.NODE_COUNT },
-  ];
+
+  const content = useMemo(() => {
+    return [
+      { heading: "Cluster config", category: CONSTANTS.CLUSTER },
+      { heading: "Node Type", category: CONSTANTS.NODE_TYPE },
+      { heading: "Node Count", category: CONSTANTS.NODE_COUNT },
+    ];
+  }, []);
   const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
 
+  const graphTitle = useMemo(() => {
+    return {
+      apiResults: CONSTANTS.API_RESULTS,
+      latencyResults: CONSTANTS.LATENCY_RESULTS,
+      imageResults: CONSTANTS.IMAGE_RESULTS,
+    };
+  }, []);
   return (
     <Grid hasGutter>
       <GridItem span={7}>
@@ -49,17 +60,30 @@ const RowContent = (props) => {
             <Title headingLevel="h4" className="type_heading">
               Tasks ran
             </Title>
-            <TasksInfo config={props.item} />
+            <TasksInfo config={props.item} type={props.type} />
           </CardBody>
         </Card>
       </GridItem>
       <GridItem span={5}>
         <Card>
           <CardBody>
-            {isGraphLoading ? (
+            {isGraphLoading && !hasGraphData(props.item.uuid) ? (
               <div className="loader"></div>
             ) : hasGraphData(props.item.uuid) ? (
-              <PlotGraph data={getGraphData(props.item.uuid)} />
+              getGraphData(props.item.uuid)[0]?.data.length === 0 ? (
+                <div>No data to plot</div>
+              ) : (
+                getGraphData(props.item.uuid)[0]?.data?.map((bit) => {
+                  return (
+                    <>
+                      <Title headingLevel="h4">
+                        {graphTitle[bit[0]] ?? bit[0]}
+                      </Title>
+                      <PlotGraph data={bit[1]} key={uid()} />
+                    </>
+                  );
+                })
+              )
             ) : (
               <div>No data to plot</div>
             )}

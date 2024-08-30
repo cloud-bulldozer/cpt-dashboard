@@ -30,16 +30,11 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
         ...(end_date && { end_date }),
       },
     });
-    if (response?.data?.results?.length > 0) {
+    if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
       //on initial load startDate and endDate are empty, so from response append to url
       appendDateFilter(startDate, endDate);
-
-      dispatch({
-        type: TYPES.SET_CPT_JOBS_DATA,
-        payload: response.data.results,
-      });
       dispatch({
         type: TYPES.SET_CPT_DATE_FILTER,
         payload: {
@@ -47,6 +42,14 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
           end_date: endDate,
         },
       });
+    }
+
+    if (response?.data?.results?.length > 0) {
+      dispatch({
+        type: TYPES.SET_CPT_JOBS_DATA,
+        payload: response.data.results,
+      });
+
       dispatch(applyFilters());
       dispatch(sortTable("cpt"));
       dispatch(tableReCalcValues());
@@ -67,7 +70,7 @@ export const setCPTSortDir = (direction) => ({
   payload: direction,
 });
 
-export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
+export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
   const results = [...getState().cpt.filteredResults];
 
   dispatch({
@@ -76,7 +79,7 @@ export const sliceTableRows = (startIdx, endIdx) => (dispatch, getState) => {
   });
 };
 
-export const setCatFilters = (category) => (dispatch, getState) => {
+export const setCPTCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().cpt.filterData];
   const options = filterData.filter((item) => item.name === category)[0].value;
   const list = options.map((item) => ({ name: item, value: item }));
@@ -112,7 +115,7 @@ export const setSelectedFilter =
     });
   };
 
-export const setAppliedFilters = (navigate) => (dispatch, getState) => {
+export const setCPTAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().cpt;
 
   const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
@@ -130,7 +133,7 @@ export const setAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setOtherSummaryFilter = () => (dispatch, getState) => {
+export const setCPTOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().cpt.filteredResults];
   const keyWordArr = ["success", "failure"];
   const data = filteredResults.filter(
@@ -142,7 +145,7 @@ export const setOtherSummaryFilter = () => (dispatch, getState) => {
   });
   dispatch(tableReCalcValues());
 };
-export const removeAppliedFilters =
+export const removeCPTAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     const { start_date, end_date } = getState().cpt;
 
@@ -184,7 +187,7 @@ export const setFilterFromURL = (searchParams) => ({
   payload: searchParams,
 });
 
-export const setDateFilter =
+export const setCPTDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().cpt.appliedFilters;
 
@@ -201,12 +204,12 @@ export const setDateFilter =
     dispatch(fetchOCPJobsData());
   };
 
-export const setPage = (pageNo) => ({
+export const setCPTPage = (pageNo) => ({
   type: TYPES.SET_PAGE,
   payload: pageNo,
 });
 
-export const setPageOptions = (page, perPage) => ({
+export const setCPTPageOptions = (page, perPage) => ({
   type: TYPES.SET_PAGE_OPTIONS,
   payload: { page, perPage },
 });
@@ -223,6 +226,6 @@ export const getCPTSummary = () => (dispatch, getState) => {
 
 export const tableReCalcValues = () => (dispatch) => {
   dispatch(getCPTSummary());
-  dispatch(setPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setCPTPageOptions(START_PAGE, DEFAULT_PER_PAGE));
+  dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
 };

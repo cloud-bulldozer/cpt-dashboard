@@ -1,4 +1,9 @@
 import { Table, Tbody, Th, Thead, Tr } from "@patternfly/react-table";
+import {
+  handleOnSort,
+  setActiveSortDir,
+  setActiveSortIndex,
+} from "@/actions/sortingActions";
 
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
@@ -11,17 +16,11 @@ const TableLayout = (props) => {
     tableColumns,
     activeSortIndex,
     activeSortDir,
-    setActiveSortIndex,
-    setActiveSortDir,
-    handleOnSort,
     page,
     perPage,
-    setPage,
-    setPerPage,
-    onSetPage,
-    onPerPageSelect,
     totalItems,
     addExpansion,
+    type,
   } = props;
 
   const getSortParams = (columnIndex) => ({
@@ -31,9 +30,9 @@ const TableLayout = (props) => {
       defaultDirection: "asc",
     },
     onSort: (_event, index, direction) => {
-      setActiveSortIndex(index);
-      setActiveSortDir(direction);
-      handleOnSort();
+      setActiveSortIndex(index, type);
+      setActiveSortDir(direction, type);
+      handleOnSort(type);
     },
     columnIndex,
   });
@@ -43,7 +42,7 @@ const TableLayout = (props) => {
       <Table isStriped>
         <Thead>
           <Tr>
-            {addExpansion && <Th screenReaderText="Row expansion" />}
+            {addExpansion && <Th />}
 
             {tableColumns?.length > 0 &&
               tableColumns.map((col, idx) => (
@@ -68,11 +67,8 @@ const TableLayout = (props) => {
       <RenderPagination
         items={totalItems}
         page={page}
-        setPage={setPage}
         perPage={perPage}
-        setPerPage={setPerPage}
-        onSetPage={onSetPage}
-        onPerPageSelect={onPerPageSelect}
+        type={props.type}
       />
     </>
   );
@@ -83,16 +79,9 @@ TableLayout.propTypes = {
   tableColumns: PropTypes.array,
   activeSortIndex: PropTypes.number || PropTypes.object,
   activeSortDir: PropTypes.string || PropTypes.object,
-  setActiveSortIndex: PropTypes.func,
-  setActiveSortDir: PropTypes.func,
-  handleOnSort: PropTypes.func,
   totalItems: PropTypes.number,
   page: PropTypes.number,
   perPage: PropTypes.number,
-  onPerPageSelect: PropTypes.func,
-  onSetPage: PropTypes.func,
-  setPage: PropTypes.func,
-  setPerPage: PropTypes.func,
   addExpansion: PropTypes.bool,
   graphData: PropTypes.array,
   type: PropTypes.string,
