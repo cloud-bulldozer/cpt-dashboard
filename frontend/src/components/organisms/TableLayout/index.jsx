@@ -52,7 +52,19 @@ const TableLayout = (props) => {
               ))}
           </Tr>
         </Thead>
-        <Tbody isExpanded={addExpansion}>
+        {!addExpansion ? (
+          <Tbody>
+            <TableRows
+              rows={tableData}
+              columns={tableColumns}
+              addExpansion={addExpansion}
+              isRunExpanded={props?.isRunExpanded}
+              setRunExpanded={props?.setRunExpanded}
+              graphData={props?.graphData}
+              type={props.type}
+            />
+          </Tbody>
+        ) : (
           <TableRows
             rows={tableData}
             columns={tableColumns}
@@ -62,7 +74,7 @@ const TableLayout = (props) => {
             graphData={props?.graphData}
             type={props.type}
           />
-        </Tbody>
+        )}
       </Table>
       <RenderPagination
         items={totalItems}

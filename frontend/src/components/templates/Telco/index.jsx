@@ -1,21 +1,24 @@
 import {
   fetchGraphData,
   fetchTelcoJobsData,
+  setFilterFromURL,
   setSelectedFilter,
+  setSelectedFilterFromUrl,
   setTableColumns,
+  setTelcoDateFilter,
 } from "@/actions/telcoActions.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
-import { useNavigate } from "react-router-dom";
 
 const Telco = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-
+  const [searchParams] = useSearchParams();
   const {
     tableData,
     tableColumns,
@@ -40,6 +43,25 @@ const Telco = () => {
     dispatch(fetchTelcoJobsData());
   }, [dispatch]);
 
+  useEffect(() => {
+    if (searchParams.size > 0) {
+      // date filter is set apart
+      const startDate = searchParams.get("start_date");
+      const endDate = searchParams.get("end_date");
+
+      searchParams.delete("start_date");
+      searchParams.delete("end_date");
+      const params = Object.fromEntries(searchParams);
+      const obj = {};
+      for (const key in params) {
+        obj[key] = params[key].split(",");
+      }
+      dispatch(setFilterFromURL(obj));
+      dispatch(setSelectedFilterFromUrl(params));
+      dispatch(setTelcoDateFilter(startDate, endDate, navigate));
+    }
+  }, []);
+
   //Filter Helper
   const modifidedTableFilters = useMemo(
     () =>
@@ -62,7 +84,7 @@ const Telco = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
-      dispatch(fetchGraphData(run.uuid, run.encryptedData));
+      dispatch(fetchGraphData(run.benchmark, run.uuid, run.encryptedData));
     }
   };
 

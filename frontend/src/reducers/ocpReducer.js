@@ -68,7 +68,7 @@ const initialState = {
     { name: "Control Plane Architecture", value: "controlPlaneArch" },
   ],
   nodeKeys: [
-    { name: "Master", value: "masterNodesCount" },
+    { name: "Master", value: "masterNodesType" },
     { name: "Worker", value: "workerNodesType" },
     { name: "Infra", value: "infraNodesType" },
     { name: "Workload", value: "benchmark" },
