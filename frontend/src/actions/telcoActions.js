@@ -154,6 +154,11 @@ export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
+export const setFilterFromURL = (searchParams) => ({
+  type: TYPES.SET_TELCO_APPLIED_FILTERS,
+  payload: searchParams,
+});
+
 export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
   const selectedFilters = cloneDeep(getState().telco.selectedFilters);
   for (const key in params) {
@@ -238,7 +243,7 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
   });
 };
 export const fetchGraphData =
-  (uuid, encryption) => async (dispatch, getState) => {
+  (benchmark, uuid, encryption) => async (dispatch, getState) => {
     try {
       dispatch({ type: TYPES.GRAPH_LOADING });
 
@@ -250,10 +255,24 @@ export const fetchGraphData =
         );
 
         if (response.status === 200) {
-          const result = Object.keys(response.data).map((key) => [
-            key,
-            response.data[key],
-          ]);
+          let result;
+          if (
+            benchmark === "oslat" ||
+            benchmark === "cyclictest" ||
+            benchmark === "deployment"
+          ) {
+            const benchmarkData = response.data[benchmark];
+            result = Object.keys(response.data[benchmark]).map((key) => [
+              key,
+              benchmarkData[key],
+            ]);
+          } else {
+            result = Object.keys(response.data).map((key) => [
+              key,
+              response.data[key],
+            ]);
+          }
+
           dispatch({
             type: TYPES.SET_TELCO_GRAPH_DATA,
             payload: { uuid, data: result },

@@ -1,6 +1,6 @@
 import "./index.less";
 
-import { ExpandableRowContent, Td, Tr } from "@patternfly/react-table";
+import { ExpandableRowContent, Tbody, Td, Tr } from "@patternfly/react-table";
 
 import RowContent from "@/components/molecules/ExpandedRow";
 import TableCell from "@/components/atoms/TableCell";
@@ -12,40 +12,43 @@ const TableRows = (props) => {
   return (
     rows?.length > 0 &&
     rows.map((item, rowIndex) => {
-      return (
-        <>
-          <Tr key={uid()}>
-            {addExpansion && (
-              <Td
-                expand={{
-                  rowIndex,
-                  isExpanded: props?.isRunExpanded(item),
-                  onToggle: () =>
-                    props?.setRunExpanded(item, !props?.isRunExpanded(item)),
-                  expandId: `expandable-row${uid()}`,
-                }}
-              />
-            )}
+      return addExpansion ? (
+        <Tbody isExpanded={props?.isRunExpanded(item)} key={uid()}>
+          <Tr>
+            <Td
+              expand={{
+                rowIndex,
+                isExpanded: props?.isRunExpanded(item),
+                onToggle: () =>
+                  props?.setRunExpanded(item, !props?.isRunExpanded(item)),
+                expandId: `expandable-row${uid()}`,
+              }}
+            />
 
             {columns.map((col) => (
               <TableCell key={uid()} col={col} item={item} />
             ))}
           </Tr>
-          {addExpansion && (
-            <Tr isExpanded={props?.isRunExpanded(item)}>
-              <Td colSpan={8}>
-                <ExpandableRowContent>
-                  <RowContent
-                    key={uid()}
-                    item={item}
-                    graphData={props.graphData}
-                    type={props.type}
-                  />
-                </ExpandableRowContent>
-              </Td>
-            </Tr>
-          )}
-        </>
+
+          <Tr isExpanded={props?.isRunExpanded(item)}>
+            <Td colSpan={8}>
+              <ExpandableRowContent>
+                <RowContent
+                  key={uid()}
+                  item={item}
+                  graphData={props.graphData}
+                  type={props.type}
+                />
+              </ExpandableRowContent>
+            </Td>
+          </Tr>
+        </Tbody>
+      ) : (
+        <Tr>
+          {columns.map((col) => (
+            <TableCell key={uid()} col={col} item={item} />
+          ))}
+        </Tr>
       );
     })
   );

@@ -117,6 +117,7 @@ export const removeQuayAppliedFilters =
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
+
 export const applyFilters = () => (dispatch, getState) => {
   const { appliedFilters } = getState().quay;
 
@@ -131,7 +132,7 @@ export const applyFilters = () => (dispatch, getState) => {
     : results;
 
   dispatch({
-    type: TYPES.SET_FILTERED_DATA,
+    type: TYPES.SET_QUAY_FILTERED_DATA,
     payload: filtered,
   });
   dispatch(tableReCalcValues());
@@ -165,6 +166,11 @@ export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
     payload: selectedFilters,
   });
 };
+
+export const setFilterFromURL = (searchParams) => ({
+  type: TYPES.SET_QUAY_APPLIED_FILTERS,
+  payload: searchParams,
+});
 
 export const setSelectedFilter =
   (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
