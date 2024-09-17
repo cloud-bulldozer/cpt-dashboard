@@ -1,10 +1,6 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   buildFilterData,
@@ -22,12 +18,22 @@ import { showFailureToast } from "./toastActions";
 export const fetchOCPJobs = () => async (dispatch, getState) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().ocp;
+    const { start_date, end_date, size, offset, results, totalJobs } =
+      getState().ocp;
+    const diff = totalJobs - results.length;
+    let a;
+    if (results.length !== 0 && diff < size) {
+      a = diff;
+    } else {
+      a = size;
+    }
     const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, {
       params: {
         pretty: true,
         ...(start_date && { start_date }),
         ...(end_date && { end_date }),
+        size: a,
+        offset: Number(offset),
       },
     });
     if (response.status === 200) {
@@ -46,9 +52,15 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
     if (response?.data?.results?.length > 0) {
       dispatch({
         type: TYPES.SET_OCP_JOBS_DATA,
-        payload: response.data.results,
+        payload: [...results, ...response.data.results],
       });
-
+      dispatch({
+        type: TYPES.SET_OCP_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
+      });
       dispatch(applyFilters());
       dispatch(sortTable("ocp"));
       dispatch(tableReCalcValues());
@@ -261,8 +273,11 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
     payload: tableColumns,
   });
 };
-export const tableReCalcValues = () => (dispatch) => {
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().ocp;
+  const startIdx = page !== 1 ? (page - 1) * perPage : 0;
+  const endIdx = page !== 1 ? page * perPage - 1 : perPage;
   dispatch(getOCPSummary());
-  dispatch(setOCPPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setOCPPageOptions(page, perPage));
+  dispatch(sliceOCPTableRows(startIdx, endIdx));
 };

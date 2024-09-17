@@ -1,5 +1,6 @@
 import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
+  checkTableData,
   setPage,
   setPageOptions,
   sliceTableRows,
@@ -21,6 +22,7 @@ const RenderPagination = (props) => {
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
       dispatch(setPage(newPage, props.type));
+      dispatch(checkTableData(newPage, props.type));
       dispatch(sliceTableRows(startIdx, endIdx, props.type));
     },
     [dispatch, props.type]
@@ -28,7 +30,15 @@ const RenderPagination = (props) => {
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
+      dispatch(checkTableData(newPage, props.type));
       dispatch(sliceTableRows(startIdx, endIdx, props.type));
+    },
+    [dispatch, props.type]
+  );
+
+  const onNextClick = useCallback(
+    (_evt, newPage) => {
+      dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
@@ -43,6 +53,7 @@ const RenderPagination = (props) => {
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
+      onNextClick={onNextClick}
     />
   );
 };

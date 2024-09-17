@@ -1,11 +1,17 @@
 import {
+  fetchOCPJobs,
+  setOCPPage,
+  setOCPPageOptions,
+  sliceOCPTableRows,
+} from "./ocpActions";
+import {
   setCPTPage,
   setCPTPageOptions,
   sliceCPTTableRows,
 } from "./homeActions";
-import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
 import { setQuayPage, setQuayPageOptions } from "./quayActions";
 import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
+
 export const setPage = (newPage, currType) => (dispatch) => {
   if (currType === "cpt") {
     dispatch(setCPTPage(newPage));
@@ -34,6 +40,17 @@ export const sliceTableRows = (startIdx, endIdx, currType) => (dispatch) => {
   if (currType === "cpt") {
     dispatch(sliceCPTTableRows(startIdx, endIdx));
   } else if (currType === "ocp") {
-    dispatch(sliceOCPTableRows(startIdx, endIdx));
+    // dispatch(sliceOCPTableRows(startIdx, endIdx));
+  }
+};
+
+export const checkTableData = (newPage, currType) => (dispatch, getState) => {
+  const { results, totalJobs, perPage } = getState()[currType];
+  const hasPageData = results.length >= newPage * perPage;
+  if (results.length < totalJobs && !hasPageData) {
+    if (currType === "ocp") {
+      dispatch(fetchOCPJobs(newPage));
+    }
+    return;
   }
 };

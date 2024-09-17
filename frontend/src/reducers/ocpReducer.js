@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  INITIAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -43,6 +44,9 @@ const initialState = {
   activeSortIndex: null,
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  totalJobs: 0,
+  size: DEFAULT_PER_PAGE * 3,
+  offset: INITIAL_OFFSET,
   tableData: [],
   filterData: [],
   categoryFilterValue: "",
@@ -110,6 +114,12 @@ const OCPReducer = (state = initialState, action = {}) => {
       return {
         ...state,
         results: payload,
+      };
+    case TYPES.SET_OCP_PAGE_TOTAL:
+      return {
+        ...state,
+        totalJobs: payload.total,
+        offset: payload.offset,
       };
     case TYPES.SET_OCP_DATE_FILTER:
       return {

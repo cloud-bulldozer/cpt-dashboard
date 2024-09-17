@@ -37,6 +37,7 @@ const OCP = () => {
     end_date,
     graphData,
     selectedFilters,
+    totalJobs,
   } = useSelector((state) => state.ocp);
 
   useEffect(() => {
@@ -59,6 +60,7 @@ const OCP = () => {
   }, []);
 
   useEffect(() => {
+    console.log("twice");
     dispatch(fetchOCPJobs());
   }, [dispatch]);
 
@@ -129,7 +131,7 @@ const OCP = () => {
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         addExpansion={true}
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
