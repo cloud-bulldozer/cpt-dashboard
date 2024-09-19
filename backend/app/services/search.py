@@ -43,7 +43,7 @@ class ElasticService:
             es = AsyncElasticsearch(url, verify_certs=False)
         return es, indice, index_prefix
 
-    async def post(self, query, indice=None, size=None, offset=None, start_date=None, end_date=None, timestamp_field=None):
+    async def post(self, query, indice=None, size=None, offset=None, sort=None, start_date=None, end_date=None, timestamp_field=None):
         try:    
             """Runs a query and returns the results"""
             if size == 0:
@@ -82,7 +82,7 @@ class ElasticService:
                                     size=size)
                                 previous_results = {"data":response['hits']['hits'], "total":response['hits']["total"]["value"]}
                             else:
-                                previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size, offset)
+                                previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size, offset, sort)
                     if self.prev_es and self.new_es:
                         self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                         today = datetime.today().date()
@@ -101,14 +101,14 @@ class ElasticService:
                                     size=size)
                                 new_results = {"data":response['hits']['hits'],"total":response['hits']['total']['value']}
                             else:
-                                new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size, offset)
+                                new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size, offset, sort)
                         unique_data = await self.remove_duplicates(previous_results["data"] if("data" in previous_results) else [] + new_results["data"]  if("data" in new_results) else[])
                         return ({"data":unique_data, "total": new_results["total"]})
                     else:
                         if start_date and end_date:
                             query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(start_date)
                             query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)
-                            return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size, offset)
+                            return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size, offset, sort)
                         else:
                             response = await self.new_es.search(
                                 index=self.new_index+"*",
@@ -138,7 +138,7 @@ class ElasticService:
         except Exception as err:
             print(f"{type(err).__name__} was raised: {err}")  
             
-    async def scan_indices(self, es_client, indice, query, timestamp_field, start_date, end_date, size, offset):
+    async def scan_indices(self, es_client, indice, query, timestamp_field, start_date, end_date, size, offset, sort):
         try:
             """Scans results only from es indexes relevant to a query"""
             indices = await self.get_indices_from_alias(es_client, indice)
@@ -146,7 +146,7 @@ class ElasticService:
                 indices = [indice]
             sorted_index_list = SortedIndexList()
             for index in indices:
-                sorted_index_list.insert(IndexTimestamp(index, await self.get_timestamps(es_client, index, timestamp_field, size, offset)))
+                sorted_index_list.insert(IndexTimestamp(index, await self.get_timestamps(es_client, index, timestamp_field, size, offset, sort)))
             filtered_indices = sorted_index_list.get_indices_in_given_range(start_date, end_date)
             results = []
             for each_index in filtered_indices:
@@ -174,7 +174,7 @@ class ElasticService:
                 seen.add(tuple(sorted(flat_doc.items())))
         return filtered_results
 
-    async def get_timestamps(self, es_client, index, timestamp_field, size, offset):
+    async def get_timestamps(self, es_client, index, timestamp_field, size, offset, sort):
         """Returns start and end timestamps of a index"""
         query = {
             "size": size,
@@ -192,6 +192,7 @@ class ElasticService:
                 }
             }
         }
+        print(query)
         response = await es_client.search(
             index=index,
             body=query

@@ -42,6 +42,7 @@ const initialState = {
   ],
   activeSortDir: null,
   activeSortIndex: null,
+  sort: {},
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
   totalJobs: 0,
@@ -121,6 +122,11 @@ const OCPReducer = (state = initialState, action = {}) => {
         totalJobs: payload.total,
         offset: payload.offset,
       };
+    case TYPES.SET_OCP_OFFSET:
+      return {
+        ...state,
+        offset: payload,
+      };
     case TYPES.SET_OCP_DATE_FILTER:
       return {
         ...state,
@@ -131,6 +137,8 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_OCP_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_OCP_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_OCP_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_OCP_PAGE_OPTIONS:

@@ -1,5 +1,6 @@
 import json
-from fastapi import Response
+from typing import Optional
+from fastapi import Body, Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from ...commons.ocp import getData
@@ -24,7 +25,9 @@ async def jobs(start_date: date = Query(None, description="Start date for search
                 end_date: date = Query(None, description="End date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-15"]),
                 pretty: bool = Query(False, description="Output contet in pretty format."),
                 size: int = Query(None, description="Number of jobs to fetch"),
-                offset: int = Query(None, description="Offset Number to fetch jobs from")):
+                offset: int = Query(None, description="Offset Number to fetch jobs from"),
+                sort: str = Query(None, description="jjj")
+                ):
     try:
         if start_date is None:
             start_date = datetime.utcnow().date()
@@ -36,7 +39,8 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         if start_date > end_date:
             return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
         
-        results = await getData(start_date, end_date, size, offset, 'ocp.elasticsearch')
+        print(sort)
+        results = await getData(start_date, end_date, size, offset, sort, 'ocp.elasticsearch')
 
         if len(results["data"]) >= 1:
             response = {

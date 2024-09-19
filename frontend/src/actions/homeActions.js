@@ -51,7 +51,6 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       });
 
       dispatch(applyFilters());
-      dispatch(sortTable("cpt"));
       dispatch(tableReCalcValues());
     }
   } catch (error) {

@@ -23,7 +23,7 @@ const TableLayout = (props) => {
     type,
   } = props;
 
-  const getSortParams = (columnIndex) => ({
+  const getSortParams = (columnIndex, colName) => ({
     sortBy: {
       index: activeSortIndex,
       direction: activeSortDir,
@@ -32,7 +32,7 @@ const TableLayout = (props) => {
     onSort: (_event, index, direction) => {
       setActiveSortIndex(index, type);
       setActiveSortDir(direction, type);
-      handleOnSort(type);
+      handleOnSort(colName, type);
     },
     columnIndex,
   });
@@ -46,7 +46,7 @@ const TableLayout = (props) => {
 
             {tableColumns?.length > 0 &&
               tableColumns.map((col, idx) => (
-                <Th key={uid()} sort={getSortParams(idx)}>
+                <Th key={uid()} sort={getSortParams(idx, col.value)}>
                   {col.name}
                 </Th>
               ))}

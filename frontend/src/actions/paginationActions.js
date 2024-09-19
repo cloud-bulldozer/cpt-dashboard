@@ -40,7 +40,7 @@ export const sliceTableRows = (startIdx, endIdx, currType) => (dispatch) => {
   if (currType === "cpt") {
     dispatch(sliceCPTTableRows(startIdx, endIdx));
   } else if (currType === "ocp") {
-    // dispatch(sliceOCPTableRows(startIdx, endIdx));
+    dispatch(sliceOCPTableRows(startIdx, endIdx));
   }
 };
 
@@ -49,7 +49,7 @@ export const checkTableData = (newPage, currType) => (dispatch, getState) => {
   const hasPageData = results.length >= newPage * perPage;
   if (results.length < totalJobs && !hasPageData) {
     if (currType === "ocp") {
-      dispatch(fetchOCPJobs(newPage));
+      dispatch(fetchOCPJobs());
     }
     return;
   }

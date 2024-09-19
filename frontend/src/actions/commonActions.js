@@ -1,77 +1,37 @@
 import * as TYPES from "@/actions/types.js";
 
-import { setCPTCatFilters, sliceCPTTableRows } from "./homeActions";
-import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
-import { setQuayCatFilters, sliceQuayTableRows } from "./quayActions";
-import { setTelcoCatFilters, sliceTelcoTableRows } from "./telcoActions";
+import { fetchOCPJobs, setOCPCatFilters } from "./ocpActions";
 
-import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setCPTCatFilters } from "./homeActions";
+import { setQuayCatFilters } from "./quayActions";
+import { setTelcoCatFilters } from "./telcoActions";
 
-const getSortableRowValues = (result, tableColumns) => {
-  const tableKeys = tableColumns.map((item) => item.value);
-  return tableKeys.map((key) => result[key]);
-};
-
-export const sortTable = (currState) => (dispatch, getState) => {
-  const results = [...getState()[currState].filteredResults];
-  const { activeSortDir, activeSortIndex, tableColumns } =
-    getState()[currState];
+export const sortTable = (colName, currState) => (dispatch, getState) => {
+  const { activeSortDir, activeSortIndex } = getState()[currState];
+  const countObj = [
+    "masterNodesCount",
+    "workerNodesCount",
+    "infraNodesCount",
+    "totalNodesCount",
+    "startDate",
+    "endDate",
+  ];
   try {
     if (activeSortIndex !== null && typeof activeSortIndex !== "undefined") {
-      const sortedResults = results.sort((a, b) => {
-        const aValue = getSortableRowValues(a, tableColumns)[activeSortIndex];
-        const bValue = getSortableRowValues(b, tableColumns)[activeSortIndex];
-        if (typeof aValue === "number") {
-          if (activeSortDir === "asc") {
-            return aValue - bValue;
-          }
-          return bValue - aValue;
-        } else {
-          if (activeSortDir === "asc") {
-            return aValue.localeCompare(bValue);
-          }
-          return bValue.localeCompare(aValue);
-        }
-      });
-      dispatch(sortedTableRows(currState, sortedResults));
+      dispatch({ type: TYPES.SET_OCP_OFFSET, payload: 1 });
+      const fieldName = countObj.includes(colName)
+        ? colName
+        : `${colName}.keyword`;
+      const sortObj = { [fieldName]: { order: activeSortDir } };
+      dispatch({ type: TYPES.SET_OCP_SORT_OBJ, payload: sortObj });
+      console.log(sortObj);
+      const isFromSorting = true;
+
+      dispatch(fetchOCPJobs(isFromSorting));
     }
   } catch (error) {
     console.log(error);
-  }
-};
-
-const sortedTableRows = (currState, sortedResults) => (dispatch) => {
-  if (currState === "cpt") {
-    dispatch({
-      type: TYPES.SET_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "ocp") {
-    dispatch({
-      type: TYPES.SET_OCP_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "quay") {
-    dispatch({
-      type: TYPES.SET_QUAY_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceQuayTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "telco") {
-    dispatch({
-      type: TYPES.SET_TELCO_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
   }
 };
 

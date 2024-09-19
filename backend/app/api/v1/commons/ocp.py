@@ -2,9 +2,9 @@ from datetime import date
 import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
+import json
 
-
-async def getData(start_datetime: date, end_datetime: date, size:int, offset:int, configpath: str):
+async def getData(start_datetime: date, end_datetime: date, size:int, offset:int, sort:str, configpath: str):
     try:
         query = {
             "query": {
@@ -21,6 +21,9 @@ async def getData(start_datetime: date, end_datetime: date, size:int, offset:int
         }
 
         es = ElasticService(configpath=configpath)
+        if sort:
+            query.update({"sort": json.loads(sort)})
+        
         response = await es.post(query=query,  size=size, offset=offset, start_date=start_datetime, end_date=end_datetime, timestamp_field='timestamp')
         await es.close()
         tasks = [item['_source'] for item in response["data"]]

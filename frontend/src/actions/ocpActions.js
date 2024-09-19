@@ -8,68 +8,76 @@ import {
   deleteAppliedFilters,
   getFilteredData,
   getSelectedFilter,
-  sortTable,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "./toastActions";
 
-export const fetchOCPJobs = () => async (dispatch, getState) => {
-  try {
-    dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date, size, offset, results, totalJobs } =
-      getState().ocp;
-    const diff = totalJobs - results.length;
-    let a;
-    if (results.length !== 0 && diff < size) {
-      a = diff;
-    } else {
-      a = size;
-    }
-    const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, {
-      params: {
+export const fetchOCPJobs =
+  (isFromSorting = false) =>
+  async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.LOADING });
+      const { start_date, end_date, size, offset, results, totalJobs, sort } =
+        getState().ocp;
+      const diff = totalJobs - results.length;
+      let a;
+      if (results.length !== 0 && diff < size && results.length <= totalJobs) {
+        a = diff;
+      } else {
+        a = size;
+      }
+      console.log(JSON.stringify(sort));
+      const params = {
         pretty: true,
         ...(start_date && { start_date }),
         ...(end_date && { end_date }),
-        size: a,
-        offset: Number(offset),
-      },
-    });
-    if (response.status === 200) {
-      const startDate = response.data.startDate,
-        endDate = response.data.endDate;
-      //on initial load startDate and endDate are empty, so from response append to url
-      appendDateFilter(startDate, endDate);
-      dispatch({
-        type: TYPES.SET_OCP_DATE_FILTER,
-        payload: {
-          start_date: startDate,
-          end_date: endDate,
-        },
-      });
+        size: 10,
+        offset: offset,
+      };
+      if (Object.keys(sort).length > 0) {
+        params["sort"] = JSON.stringify(sort);
+      }
+      const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, { params });
+      if (response.status === 200) {
+        const startDate = response.data.startDate,
+          endDate = response.data.endDate;
+        //on initial load startDate and endDate are empty, so from response append to url
+        appendDateFilter(startDate, endDate);
+        dispatch({
+          type: TYPES.SET_OCP_DATE_FILTER,
+          payload: {
+            start_date: startDate,
+            end_date: endDate,
+          },
+        });
+      }
+      if (response?.data?.results?.length > 0) {
+        if (isFromSorting) {
+          dispatch(setOCPPage(1));
+        }
+        dispatch({
+          type: TYPES.SET_OCP_JOBS_DATA,
+          payload: isFromSorting
+            ? response.data.results
+            : [...results, ...response.data.results],
+        });
+        dispatch({
+          type: TYPES.SET_OCP_PAGE_TOTAL,
+          payload: {
+            total: response.data.total,
+            offset: response.data.offset,
+          },
+        });
+        dispatch(applyFilters());
+        dispatch(tableReCalcValues());
+      }
+    } catch (error) {
+      dispatch(showFailureToast());
     }
-    if (response?.data?.results?.length > 0) {
-      dispatch({
-        type: TYPES.SET_OCP_JOBS_DATA,
-        payload: [...results, ...response.data.results],
-      });
-      dispatch({
-        type: TYPES.SET_OCP_PAGE_TOTAL,
-        payload: {
-          total: response.data.total,
-          offset: response.data.offset,
-        },
-      });
-      dispatch(applyFilters());
-      dispatch(sortTable("ocp"));
-      dispatch(tableReCalcValues());
-    }
-  } catch (error) {
-    dispatch(showFailureToast());
-  }
-  dispatch({ type: TYPES.COMPLETED });
-};
+    dispatch({ type: TYPES.COMPLETED });
+  };
 
 export const setOCPPage = (pageNo) => ({
   type: TYPES.SET_OCP_PAGE,
