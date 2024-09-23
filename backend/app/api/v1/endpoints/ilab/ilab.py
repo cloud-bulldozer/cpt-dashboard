@@ -1,8 +1,9 @@
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Optional
 
-from app.services.crucible_svc import CrucibleService, Graph, GraphList
 from fastapi import APIRouter, Query
+
+from app.services.crucible_svc import CrucibleService, Graph, GraphList
 
 router = APIRouter()
 
@@ -28,39 +29,39 @@ def example_error(message: str) -> dict[str, Any]:
         200: example_response(
             {
                 "param": {
-                    "model": {
-                        "/home/models/granite-7b-lab/": 26,
-                        "/home/models/Mixtral-8x7B-Instruct-v0.1": 20,
-                        "/home/models/granite-7b-redhat-lab": 11,
-                    },
-                    "gpus": {"4": 53},
-                    "workflow": {"sdg": 22, "train": 16, "train+eval": 5},
-                    "data-path": {
-                        "/home/data/training/jul19-knowledge-26k.jsonl": 16,
-                        "/home/data/training/knowledge_data.jsonl": 13,
-                        "/home/data/jun12-phase05.jsonl": 4,
-                        "/home/data/training/jun12-phase05.jsonl": 4,
-                    },
-                    "nnodes": {"1": 37},
-                    "train-until": {"checkpoint:1": 17, "complete": 16},
-                    "save-samples": {"2500": 11, "10000": 5, "5000": 1},
-                    "deepspeed-cpu-offload-optimizer": {"1": 13, "0": 2},
-                    "deepspeed-cpu-offload-optimizer-pin-memory": {"1": 13, "0": 2},
-                    "batch-size": {"0": 2, "12": 2, "16": 2, "4": 2, "8": 2},
-                    "cpu-offload-optimizer": {"1": 6},
-                    "cpu-offload-pin-memory": {"1": 6},
-                    "nproc-per-node": {"4": 4},
-                    "num-runavg-samples": {"2": 2, "6": 2},
-                    "num-cpus": {"30": 2},
+                    "model": [
+                        "/home/models/granite-7b-redhat-lab",
+                        "/home/models/granite-7b-lab/",
+                        "/home/models/Mixtral-8x7B-Instruct-v0.1",
+                    ],
+                    "gpus": ["4"],
+                    "workflow": ["train", "sdg", "train+eval"],
+                    "data-path": [
+                        "/home/data/training/jun12-phase05.jsonl",
+                        "/home/data/training/knowledge_data.jsonl",
+                        "/home/data/training/jul19-knowledge-26k.jsonl",
+                        "/home/data/jun12-phase05.jsonl",
+                    ],
+                    "nnodes": ["1"],
+                    "train-until": ["checkpoint:1", "complete"],
+                    "save-samples": ["5000", "2500", "10000"],
+                    "deepspeed-cpu-offload-optimizer": ["0", "1"],
+                    "deepspeed-cpu-offload-optimizer-pin-memory": ["0", "1"],
+                    "batch-size": ["4", "8", "16", "12", "0"],
+                    "cpu-offload-optimizer": ["1"],
+                    "cpu-offload-pin-memory": ["1"],
+                    "nproc-per-node": ["4"],
+                    "num-runavg-samples": ["2", "6"],
+                    "num-cpus": ["30"],
                 },
-                "tag": {"topology": {"none": 21}},
+                "tag": {"topology": ["none"]},
             }
         )
     },
 )
 async def run_filters():
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.run_filters()
+    return crucible.get_run_filters()
 
 
 @router.get(
@@ -139,16 +140,19 @@ async def runs(
         Optional[int], Query(description="Number of runs in a page", examples=[10])
     ] = None,
     offset: Annotated[
-        Optional[int],
+        int,
         Query(description="Page offset to start", examples=[10]),
-    ] = None,
+    ] = 0,
 ):
     crucible = CrucibleService(CONFIGPATH)
-    if start_date is None or end_date is None:
+    if start_date is None and end_date is None:
         now = datetime.now(timezone.utc)
-    start = now - timedelta(days=30) if start_date is None else start_date
-    end = now if end_date is None else end_date
-    results: dict[str, Any] = crucible.runs(
+        start = now - timedelta(days=30)
+        end = now
+    else:
+        start = start_date
+        end = end_date
+    results: dict[str, Any] = crucible.get_runs(
         start=start, end=end, filter=filter, sort=sort, size=size, offset=offset
     )
     return results
@@ -165,7 +169,7 @@ async def runs(
 )
 async def tags(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.tags(run)
+    return crucible.get_tags(run)
 
 
 @router.get(
@@ -200,7 +204,7 @@ async def tags(run: str):
 )
 async def params(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.params(run)
+    return crucible.get_params(run)
 
 
 @router.get(
@@ -233,7 +237,7 @@ async def params(run: str):
 )
 async def iterations(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.iterations(run)
+    return crucible.get_iterations(run)
 
 
 @router.get(
@@ -262,7 +266,7 @@ async def iterations(run: str):
 )
 async def run_samples(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.samples(run)
+    return crucible.get_samples(run)
 
 
 @router.get(
@@ -291,7 +295,7 @@ async def run_samples(run: str):
 )
 async def run_periods(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.periods(run)
+    return crucible.get_periods(run)
 
 
 @router.get(
@@ -314,7 +318,7 @@ async def run_periods(run: str):
 )
 async def iteration_samples(iteration: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.samples(iteration=iteration)
+    return crucible.get_samples(iteration=iteration)
 
 
 @router.get(
@@ -362,7 +366,7 @@ async def iteration_samples(iteration: str):
 )
 async def timeline(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.timeline(run)
+    return crucible.get_timeline(run)
 
 
 @router.get(
@@ -399,7 +403,7 @@ async def timeline(run: str):
 )
 async def metrics(run: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metrics_list(run)
+    return crucible.get_metrics_list(run)
 
 
 @router.get(
@@ -438,7 +442,7 @@ async def metric_breakouts(
     ] = None,
 ):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metric_breakouts(run, metric, names=name, periods=period)
+    return crucible.get_metric_breakouts(run, metric, names=name, periods=period)
 
 
 @router.get(
@@ -498,7 +502,7 @@ async def metric_data(
     ] = False,
 ):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metrics_data(
+    return crucible.get_metrics_data(
         run, metric, names=name, periods=period, aggregate=aggregate
     )
 
@@ -550,12 +554,12 @@ async def metric_summary(
     ] = None,
 ):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metrics_summary(run, metric, names=name, periods=period)
+    return crucible.get_metrics_summary(run, metric, names=name, periods=period)
 
 
 @router.post(
     "/api/v1/ilab/runs/multigraph",
-    summary="Returns overlaid Plotly graph objects for a run",
+    summary="Returns overlaid Plotly graph objects",
     description="Returns metric data in a form usable by the Plot React component.",
     responses={
         200: example_response(
@@ -593,7 +597,7 @@ async def metric_summary(
 )
 async def metric_graph_body(graphs: GraphList):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metrics_graph(graphs)
+    return crucible.get_metrics_graph(graphs)
 
 
 @router.get(
@@ -656,7 +660,7 @@ async def metric_graph_param(
     ] = False,
 ):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.metrics_graph(
+    return crucible.get_metrics_graph(
         GraphList(
             run=run,
             name=metric,
@@ -704,8 +708,20 @@ async def info():
     responses={
         200: example_response(
             {
-                "cdm": ["ver"],
-                "run": ["name", "end", "begin", "email", "benchmark", "source", "id"],
+                "cdm": {"doctype": "keyword", "ver": "keyword"},
+                "run": {
+                    "begin": "date",
+                    "benchmark": "keyword",
+                    "desc": "text",
+                    "email": "keyword",
+                    "end": "date",
+                    "harness": "keyword",
+                    "host": "keyword",
+                    "id": "keyword",
+                    "name": "keyword",
+                    "source": "keyword",
+                    "tags": "text",
+                },
             }
         ),
         400: example_error("Index name 'foo' doesn't exist"),

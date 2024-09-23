@@ -1,28 +1,57 @@
-from dataclasses import dataclass
 import sys
-from collections import defaultdict
-from datetime import datetime, timezone
 import time
+from collections import defaultdict
+from dataclasses import dataclass
+from datetime import datetime, timezone
 from typing import Any, Iterator, Optional, Tuple, Union
 
+from elasticsearch import Elasticsearch, NotFoundError
+from fastapi import HTTPException, status
 from pydantic import BaseModel
 
 from app import config
-from elasticsearch import Elasticsearch, NotFoundError
-from fastapi import HTTPException, status
 
 
 class Graph(BaseModel):
+    """Describe a single graph
+
+    metric: the metric label, "ilab::train-samples-sec"
+    aggregate: True to aggregate unspecified breakouts
+    names: Lock in breakouts
+    periods: Select metrics for specific test period(s)
+    run: Override the default run ID from GraphList
+    """
+
     metric: str
     aggregate: bool = False
     names: Optional[list[str]] = None
     periods: Optional[list[str]] = None
+    run: Optional[str] = None
 
 
 class GraphList(BaseModel):
+    """Describe a set of overlaid graphs
+
+    run: Specify the (default) run ID
+    name: Specify a name for the set of graphs
+    graphs: a list of Graph objects
+    """
+
     run: str
     name: str
     graphs: list[Graph]
+
+
+@dataclass
+class Point:
+    """Graph point
+
+    Record the start & end timestamp and value of a metric data point
+    """
+
+    begin: int
+    end: int
+    value: float
 
 
 colors = [
@@ -142,12 +171,30 @@ class Parser:
 
 
 class CrucibleService:
+    """Support convenient generalized access to Crucible data
 
-    def __init__(self, configpath="crucible"):
+    This implements access to the "v7" Crucible "Common Data Model" through
+    OpenSearch queries.
+    """
+
+    # OpenSearch massive limit on hits in a single query
+    BIGQUERY = 262144
+
+    # 'run' document fields that support general `?filter=<name>:<value>`
+    #
+    # TODO: this excludes 'desc', which isn't used by the ilab runs, and needs
+    # different treatment as its a text field rather than a term.
+    RUN_FILTERS = ("benchmark", "email", "name", "source", "harness", "host")
+
+    def __init__(self, configpath: str = "crucible"):
         """Initialize a Crucible CDM (OpenSearch) connection.
 
-        This includes making an "info" call to confirm and record the server
-        response.
+        Generally the `configpath` should be scoped, like `ilab.crucible` so
+        that multiple APIs based on access to distinct Crucible controllers can
+        coexist.
+
+        Initialization includes making an "info" call to confirm and record the
+        server response.
 
         Args:
             configpath: The Vyper config path (e.g., "ilab.crucible")
@@ -192,7 +239,7 @@ class CrucibleService:
         return l
 
     @staticmethod
-    def normalize_date(value: Optional[Union[int, str, datetime]]) -> int:
+    def _normalize_date(value: Optional[Union[int, str, datetime]]) -> int:
         """Normalize date parameters
 
         The Crucible data model stores dates as string representations of an
@@ -273,7 +320,7 @@ class CrucibleService:
             payload: A JSON dict containing an "aggregations" field
 
         Returns:
-            Yields each aggregation from an aggregations object
+            Yields each aggregation from an aggregation bucket list
         """
         if "aggregations" not in payload:
             raise HTTPException(
@@ -290,7 +337,7 @@ class CrucibleService:
             yield agg
 
     @staticmethod
-    def _date(timestamp: str) -> str:
+    def _format_timestamp(timestamp: Union[str, int]) -> str:
         """Convert stringified integer milliseconds-from-epoch to ISO date"""
         return str(datetime.fromtimestamp(int(timestamp) / 1000, timezone.utc))
 
@@ -310,8 +357,8 @@ class CrucibleService:
             A neatly formatted "metric_data" object
         """
         return {
-            "begin": cls._date(data["begin"]),
-            "end": cls._date(data["end"]),
+            "begin": cls._format_timestamp(data["begin"]),
+            "end": cls._format_timestamp(data["end"]),
             "duration": int(data["duration"]) / 1000,
             "value": float(data["value"]),
         }
@@ -330,17 +377,32 @@ class CrucibleService:
             A neatly formatted "period" object
         """
         return {
-            "begin": cls._date(timestamp=period["begin"]),
-            "end": cls._date(period["end"]),
+            "begin": cls._format_timestamp(timestamp=period["begin"]),
+            "end": cls._format_timestamp(period["end"]),
             "id": period["id"],
             "name": period["name"],
         }
 
     @classmethod
-    def _build_filter_options(
-        cls, filter: Optional[list[str]] = None
-    ) -> Tuple[Optional[list[dict[str, Any]]], Optional[list[dict[str, Any]]]]:
+    def _build_filter_options(cls, filter: Optional[list[str]] = None) -> Tuple[
+        Optional[list[dict[str, Any]]],
+        Optional[list[dict[str, Any]]],
+        Optional[list[dict[str, Any]]],
+    ]:
         """Build filter terms for tag and parameter filter terms
+
+        Each term has the form "<namespace>:<key><operator><value>". Any term
+        may be quoted: quotes are stripped and ignored. (This is generally only
+        useful on the <value> to include spaces.)
+
+        We support three namespaces:
+            param: Match against param index arg/val
+            tag: Match against tag index name/val
+            run: Match against run index fields
+
+        We support two operators:
+            =: Exact match
+            ~: Partial match
 
         Args:
             filter: list of filter terms like "param:key=value"
@@ -352,35 +414,47 @@ class CrucibleService:
         for term in cls._split_list(filter):
             p = Parser(term)
             namespace, _ = p._next_token([":"])
-            key, operation = p._next_token(["="])
+            key, operation = p._next_token(["=", "~"])
             value, _ = p._next_token()
-            print(f"FILTER: {namespace}:{key}{operation}{value}")
-            if namespace == "param":
-                key_field = "param.arg"
-                value_field = "param.val"
+            if operation == "~":
+                value = f".*{value}.*"
+                matcher = "regexp"
             else:
-                key_field = "tag.name"
-                value_field = "tag.val"
-            terms[namespace].append(
-                {
-                    "bool": {
-                        "must": [
-                            {"term": {key_field: key}},
-                            {"term": {value_field: value}},
-                        ]
+                matcher = "term"
+            if namespace in ("param", "tag"):
+                if namespace == "param":
+                    key_field = "param.arg"
+                    value_field = "param.val"
+                else:
+                    key_field = "tag.name"
+                    value_field = "tag.val"
+                terms[namespace].append(
+                    {
+                        "bool": {
+                            "must": [
+                                {"term": {key_field: key}},
+                                {matcher: {value_field: value}},
+                            ]
+                        }
                     }
-                }
-            )
+                )
+            elif namespace == "run":
+                terms[namespace].append({matcher: {f"run.{key}": value}})
+            else:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    f"unknown filter namespace {namespace!r}",
+                )
         param_filter = None
         tag_filter = None
         if "param" in terms:
             param_filter = [{"dis_max": {"queries": terms["param"]}}]
         if "tag" in terms:
             tag_filter = [{"dis_max": {"queries": terms["tag"]}}]
-        return param_filter, tag_filter
+        return param_filter, tag_filter, terms.get("run")
 
     @classmethod
-    def _name_filters(
+    def _build_name_filters(
         cls, namelist: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Build filter terms for metric breakdown names
@@ -407,12 +481,18 @@ class CrucibleService:
         return filters
 
     @classmethod
-    def _period_filters(
+    def _build_period_filters(
         cls, periodlist: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Build period filters
 
-        Generate filter terms to match against a list of period IDs.
+        Generate metric_desc filter terms to match against a list of period IDs.
+
+        Note that not all metric descriptions are periodic, and we don't want
+        these filters to exclude them -- so the filter will exclude only
+        documents that have a period and don't match. (That is, we won't drop
+        any non-periodic metrics. We expect those to be filtered by timestamp
+        instead.)
 
         Args:
             period: list of possibly comma-separated period IDs
@@ -437,7 +517,7 @@ class CrucibleService:
             return []
 
     @classmethod
-    def _filter_metric_desc(
+    def _build_metric_filters(
         cls,
         run: str,
         metric: str,
@@ -465,8 +545,8 @@ class CrucibleService:
                 {"term": {"metric_desc.source": source}},
                 {"term": {"metric_desc.type": type}},
             ]
-            + cls._name_filters(names)
-            + cls._period_filters(periods)
+            + cls._build_name_filters(names)
+            + cls._build_period_filters(periods)
         )
 
     @staticmethod
@@ -525,7 +605,7 @@ class CrucibleService:
         """
         f = filters if filters else []
         query = {
-            "size": 250000 if size is None else size,
+            "size": self.BIGQUERY if size is None else size,
             "query": {"bool": {"filter": f}},
         }
         if sort:
@@ -544,32 +624,29 @@ class CrucibleService:
         metric: str,
         namelist: Optional[list[str]] = None,
         periodlist: Optional[list[str]] = None,
-        highlander: bool = True,
+        aggregate: bool = False,
     ) -> list[str]:
         """Generate a list of matching metric_desc IDs
 
         Given a specific run and metric name, and a set of breakout filters,
         returns a list of metric desc IDs that match.
 
-        Generally, breakout data isn't useful unless the set of filters
-        produces a single metric desc ID, however this can be overridden.
-
         If a single ID is required to produce a consistent metric, and the
-        supplied filters produce more than one, raise a 422 HTTP error
-        (UNPROCESSABLE CONTENT) with a response body showing the unsatisfied
-        breakouts (name and available values).
+        supplied filters produce more than one without aggregation, raise a
+        422 HTTP error (UNPROCESSABLE CONTENT) with a response body showing
+        the unsatisfied breakouts (name and available values).
 
         Args:
             run: run ID
             metric: combined metric name (e.g., sar-net::packets-sec)
             namelist: a list of breakout filters like "type=physical"
             periodlist: a list of period IDs
-            highlander: if True, there can be only one (metric ID)
+            aggregate: if True, allow multiple metric IDs
 
         Returns:
             A list of matching metric_desc ID value(s)
         """
-        filters = self._filter_metric_desc(run, metric, namelist, periodlist)
+        filters = self._build_metric_filters(run, metric, namelist, periodlist)
         metrics = self.search(
             "metric_desc",
             filters=filters,
@@ -584,7 +661,7 @@ class CrucibleService:
                 ),
             )
         ids = [h["metric_desc"]["id"] for h in self._hits(metrics)]
-        if len(ids) < 2 or not highlander:
+        if len(ids) < 2 or aggregate:
             return ids
 
         # This probably means we're not filtering well enouch for a useful
@@ -609,8 +686,14 @@ class CrucibleService:
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=[response]
         )
 
-    def _data_range(self, periods: Optional[list[str]] = None) -> list[dict[str, Any]]:
+    def _build_timestamp_range_filters(
+        self, periods: Optional[list[str]] = None
+    ) -> list[dict[str, Any]]:
         """Create a timestamp range filter
+
+        This extracts the begin and end timestamps from the list of periods and
+        builds a timestamp filter range to select documents on or after the
+        earliest begin timestamp and on or before the latest end timestamp.
 
         Args:
             periods: a list of CDM period IDs
@@ -630,6 +713,52 @@ class CrucibleService:
             ]
         else:
             return []
+
+    @classmethod
+    def _build_sort_terms(cls, sorters: Optional[list[str]]) -> list[dict[str, str]]:
+        """Build sort term list
+
+        Sorters may reference any native `run` index field and must specify
+        either "asc"(ending) or "desc"(ending) sort order. Any number of
+        sorters may be combined, like ["name:asc,benchmark:desc", "end:desc"]
+
+        Args:
+            sorters: list of <key>:<direction> sort terms
+
+        Returns:
+            list of OpenSearch sort terms
+        """
+        if sorters:
+            sort_terms = []
+            for s in sorters:
+                DIRECTIONS = ("asc", "desc")
+                FIELDS = (
+                    "begin",
+                    "benchmark",
+                    "desc",
+                    "email",
+                    "end",
+                    "harness",
+                    "host",
+                    "id",
+                    "name",
+                    "source",
+                )
+                key, dir = s.split(":", maxsplit=1)
+                if dir not in DIRECTIONS:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        f"Sort direction {dir!r} must be one of {','.join(DIRECTIONS)}",
+                    )
+                if key not in FIELDS:
+                    raise HTTPException(
+                        status.HTTP_400_BAD_REQUEST,
+                        f"Sort key {key!r} must be one of {','.join(FIELDS)}",
+                    )
+                sort_terms.append({f"run.{key}": dir})
+        else:
+            sort_terms = [{"run.begin": "asc"}]
+        return sort_terms
 
     def _get_run_ids(
         self, index: str, filters: Optional[list[dict[str, Any]]] = None
@@ -651,7 +780,7 @@ class CrucibleService:
         )
         return set([x["id"] for x in self._hits(filtered, ["run"])])
 
-    def run_filters(self) -> dict[str, dict[str, int]]:
+    def get_run_filters(self) -> dict[str, dict[str, list[str]]]:
         """Return possible tag and filter terms
 
         Return a description of tag and param filter terms meaningful
@@ -659,12 +788,6 @@ class CrucibleService:
         filtering. Consider supporting all `run` API filtering, which would
         allow adjusting the filter popups to drop options no longer relevant
         to a given set.
-
-        Returns:
-            A three-level JSON dict; the first level is the namespace (param or
-            tag), the second level is the parameter or tag name, the third
-            level key is each value present in the index, and the value is the
-            number of times that value appears.
 
             {
                 "param": {
@@ -674,14 +797,22 @@ class CrucibleService:
                     }
                 }
             }
+
+        Returns:
+            A three-level JSON dict; the first level is the namespace (param or
+            tag), the second level is the parameter or tag name, the third
+            level key is each value present in the index, and the value is the
+            number of times that value appears.
         """
         tags = self.search(
             "tag",
             size=0,
             aggregations={
                 "key": {
-                    "terms": {"field": "tag.name", "size": 10000},
-                    "aggs": {"values": {"terms": {"field": "tag.val", "size": 10000}}},
+                    "terms": {"field": "tag.name", "size": self.BIGQUERY},
+                    "aggs": {
+                        "values": {"terms": {"field": "tag.val", "size": self.BIGQUERY}}
+                    },
                 }
             },
             ignore_unavailable=True,
@@ -691,42 +822,108 @@ class CrucibleService:
             size=0,
             aggregations={
                 "key": {
-                    "terms": {"field": "param.arg", "size": 10000},
+                    "terms": {"field": "param.arg", "size": self.BIGQUERY},
                     "aggs": {
-                        "values": {"terms": {"field": "param.val", "size": 10000}}
+                        "values": {
+                            "terms": {"field": "param.val", "size": self.BIGQUERY}
+                        }
                     },
                 }
             },
             ignore_unavailable=True,
         )
-        result = defaultdict(lambda: defaultdict(lambda: defaultdict(int)))
-        for t in self._aggs(params, "key"):
-            for v in t["values"]["buckets"]:
-                result["param"][t["key"]][v["key"]] += v["doc_count"]
+        aggs = {
+            k: {"terms": {"field": f"run.{k}", "size": self.BIGQUERY}}
+            for k in self.RUN_FILTERS
+        }
+        runs = self.search(
+            "run",
+            size=0,
+            aggregations=aggs,
+        )
+        result = defaultdict(lambda: defaultdict(lambda: set()))
+        for p in self._aggs(params, "key"):
+            for v in p["values"]["buckets"]:
+                result["param"][p["key"]].add(v["key"])
         for t in self._aggs(tags, "key"):
             for v in t["values"]["buckets"]:
-                result["tag"][t["key"]][v["key"]] += v["doc_count"]
-        return result
+                result["tag"][t["key"]].add(v["key"])
+        for name in self.RUN_FILTERS:
+            for f in self._aggs(runs, name):
+                result["run"][name].add(f["key"])
+        return {s: {k: list(v) for k, v in keys.items()} for s, keys in result.items()}
 
-    def runs(
+    def get_runs(
         self,
-        benchmark: Optional[str] = None,
         filter: Optional[list[str]] = None,
-        name: Optional[str] = None,
         start: Optional[Union[int, str, datetime]] = None,
         end: Optional[Union[int, str, datetime]] = None,
-        offset: Optional[int] = None,
+        offset: int = 0,
         sort: Optional[list[str]] = None,
         size: Optional[int] = None,
         **kwargs,
     ) -> dict[str, Any]:
         """Return matching Crucible runs
 
-        Filtered list of runs
+        Filtered and sorted list of runs.
+
+        {
+            "sort": [],
+            "startDate": "2024-01-01T05:00:00+00:00",
+            "size": 1,
+            "offset": 0,
+            "results": [
+                {
+                    "begin": "1722878906342",
+                    "benchmark": "ilab",
+                    "email": "A@email",
+                    "end": "1722880503544",
+                    "id": "4e1d2c3c-b01c-4007-a92d-23a561af2c11",
+                    "name": "\"A User\"",
+                    "source": "node.example.com//var/lib/crucible/run/ilab--2024-08-05_17:17:13_UTC--4e1d2c3c-b01c-4007-a92d-23a561af2c11",
+                    "tags": {
+                        "topology": "none"
+                    },
+                    "iterations": [
+                        {
+                            "iteration": 1,
+                            "primary_metric": "ilab::train-samples-sec",
+                            "primary_period": "measurement",
+                            "status": "pass",
+                            "params": {
+                                "cpu-offload-pin-memory": "1",
+                                "model": "/home/models/granite-7b-lab/",
+                                "data-path": "/home/data/training/knowledge_data.jsonl",
+                                "cpu-offload-optimizer": "1",
+                                "nnodes": "1",
+                                "nproc-per-node": "4",
+                                "num-runavg-samples": "2"
+                            }
+                        }
+                    ],
+                    "primary_metrics": [
+                        "ilab::train-samples-sec"
+                    ],
+                    "status": "pass",
+                    "params": {
+                        "cpu-offload-pin-memory": "1",
+                        "model": "/home/models/granite-7b-lab/",
+                        "data-path": "/home/data/training/knowledge_data.jsonl",
+                        "cpu-offload-optimizer": "1",
+                        "nnodes": "1",
+                        "nproc-per-node": "4",
+                        "num-runavg-samples": "2"
+                    },
+                    "begin_date": "2024-08-05 17:28:26.342000+00:00",
+                    "end_date": "2024-08-05 17:55:03.544000+00:00"
+                }
+            ],
+            "count": 1,
+            "total": 15,
+            "next_offset": 1
+        }
 
         Args:
-            benchmark: Include runs with specified benchmark name
-            name: Include runs by owner name
             start: Include runs starting at timestamp
             end: Include runs ending no later than timestamp
             filter: List of tag/param filter terms (parm:key=value)
@@ -746,23 +943,24 @@ class CrucibleService:
         #
         # If there are no matches, we can exit early. (TODO: should this be an
         # error, or just a success with an empty list?)
-        param_filters, tag_filters = self._build_filter_options(filter)
         results = {}
         filters = []
-        if benchmark:
-            filters.append({"term": {"run.benchmark": benchmark}})
-        if name:
-            filters.append({"term": {"run.name": name}})
+        sorters = self._split_list(sort)
+        results["sort"] = sorters
+        sort_terms = self._build_sort_terms(sorters)
+        param_filters, tag_filters, run_filters = self._build_filter_options(filter)
+        if run_filters:
+            filters.extend(run_filters)
         if start or end:
             s = None
             e = None
             if start:
-                s = self.normalize_date(start)
+                s = self._normalize_date(start)
                 results["startDate"] = datetime.fromtimestamp(
                     s / 1000.0, tz=timezone.utc
                 )
             if end:
-                e = self.normalize_date(end)
+                e = self._normalize_date(end)
                 results["endDate"] = datetime.fromtimestamp(e / 1000.0, tz=timezone.utc)
 
             if s and e and s > e:
@@ -778,41 +976,9 @@ class CrucibleService:
             if e:
                 cond["lte"] = str(e)
             filters.append({"range": {"run.begin": cond}})
-        if sort:
-            sorters = self._split_list(sort)
-            results["sort"] = sorters
-            sort_terms = []
-            for s in sorters:
-                DIRECTIONS = ("asc", "desc")
-                FIELDS = (
-                    "begin",
-                    "benchmark",
-                    "email",
-                    "end",
-                    "id",
-                    "name",
-                    "source",
-                    "status",
-                )
-                key, dir = s.split(":", maxsplit=1)
-                if dir not in DIRECTIONS:
-                    raise HTTPException(
-                        status.HTTP_400_BAD_REQUEST,
-                        f"Sort direction {dir!r} must be one of {','.join(DIRECTIONS)}",
-                    )
-                if key not in FIELDS:
-                    raise HTTPException(
-                        status.HTTP_400_BAD_REQUEST,
-                        f"Sort key {key!r} must be one of {','.join(FIELDS)}",
-                    )
-                sort_terms.append({f"run.{key}": dir})
-        else:
-            sort_terms = [{"run.begin": "asc"}]
-
         if size:
             results["size"] = size
-        if offset:
-            results["offset"] = offset
+        results["offset"] = offset if offset is not None else 0
 
         # In order to filter by param or tag values, we need to produce a list
         # of matching RUN IDs from each index. We'll then drop any RUN ID that's
@@ -828,7 +994,7 @@ class CrucibleService:
             return results
 
         hits = self.search(
-            "iteration",
+            "run",
             size=size,
             offset=offset,
             sort=sort_terms,
@@ -836,12 +1002,17 @@ class CrucibleService:
             **kwargs,
             ignore_unavailable=True,
         )
+        rawiterations = self.search("iteration", ignore_unavailable=True)
         rawtags = self.search("tag", ignore_unavailable=True)
         rawparams = self.search("param", ignore_unavailable=True)
 
+        iterations = defaultdict(list)
         tags = defaultdict(defaultdict)
         params = defaultdict(defaultdict)
         run_params = defaultdict(list)
+
+        for i in self._hits(rawiterations):
+            iterations[i["run"]["id"]].append(i["iteration"])
 
         # Organize tags by run ID
         for t in self._hits(rawtags):
@@ -855,10 +1026,8 @@ class CrucibleService:
         runs = {}
         for h in self._hits(hits):
             run = h["run"]
-            iteration = h["iteration"]
-            iid = iteration["id"]
             rid = run["id"]
-            iparams = params.get(iid, {})
+            runs[rid] = run
 
             # Filter the runs by our tag and param queries
             if param_filters and rid not in paramids:
@@ -869,61 +1038,58 @@ class CrucibleService:
 
             # Collect unique runs: the status is "fail" if any iteration for
             # that run ID failed.
-            if rid not in runs:
-                runs[rid] = run
-                run["status"] = iteration["status"]
-                try:
-                    run["begin_date"] = self._date(run["begin"])
-                    run["end_date"] = self._date(run["end"])
-                except KeyError as e:
-                    print(f"Missing 'run' key {str(e)} in {run}")
-                    run["begin_date"] = self._date("0")
-                    run["end_date"] = self._date("0")
-                run["params"] = iparams.copy()
-                run["iterations"] = [
+            run["tags"] = tags.get(rid, {})
+            run["iterations"] = []
+            run["primary_metrics"] = set()
+            for i in iterations.get(rid, []):
+                iparams = params.get(i["id"], {})
+                if "status" not in run:
+                    run["status"] = i["status"]
+                else:
+                    if i["status"] != "pass":
+                        run["status"] = i["status"]
+                if "params" not in run:
+                    run["params"] = iparams.copy()
+                else:
+                    # Iteration-specific parameter names or values are factored out
+                    # of the run summary. (NOTE: listify the keys first so Python
+                    # doesn't complain about deletion during the traversal.)
+                    p = run["params"]
+                    for k in list(p.keys()):
+                        if k not in iparams or p[k] != iparams[k]:
+                            del p[k]
+                run["primary_metrics"].add(i["primary-metric"])
+                run["iterations"].append(
                     {
-                        "iteration": iteration["num"],
-                        "primary_metric": iteration["primary-metric"],
-                        "primary_period": iteration["primary-period"],
-                        "status": iteration["status"],
-                        "params": iparams,
-                    }
-                ]
-                run["primary_metrics"] = set([iteration["primary-metric"]])
-                run["tags"] = tags.get(rid, {})
-            else:
-                r = runs[rid]
-                r["iterations"].append(
-                    {
-                        "iteration": iteration["num"],
-                        "metric": iteration["primary-metric"],
-                        "status": iteration["status"],
+                        "iteration": i["num"],
+                        "primary_metric": i["primary-metric"],
+                        "primary_period": i["primary-period"],
+                        "status": i["status"],
                         "params": iparams,
                     }
                 )
+            try:
+                run["begin_date"] = self._format_timestamp(run["begin"])
+                run["end_date"] = self._format_timestamp(run["end"])
+            except KeyError as e:
+                print(f"Missing 'run' key {str(e)} in {run}")
+                run["begin_date"] = self._format_timestamp("0")
+                run["end_date"] = self._format_timestamp("0")
 
-                # Iteration-specific parameter names or values are factored out
-                # of the run summary. (NOTE: listify the keys first so Python
-                # doesn't complain about deletion during the traversal.)
-                p = r["params"]
-                for k in list(p.keys()):
-                    if k not in iparams or p[k] != iparams[k]:
-                        del p[k]
-                r["primary_metrics"].add(iteration["primary-metric"])
-                if iteration["status"] != "pass":
-                    r["status"] = iteration["status"]
+        count = len(runs)
+        total = hits["hits"]["total"]["value"]
         results.update(
             {
                 "results": list(runs.values()),
-                "count": len(runs),
-                "total": hits["hits"]["total"]["value"],
+                "count": count,
+                "total": total,
             }
         )
-        if offset:
-            results["next_offset"] = offset + size if size else len(runs)
+        if size and (offset + count < total):
+            results["next_offset"] = offset + size
         return results
 
-    def tags(self, run: str, **kwargs) -> dict[str, str]:
+    def get_tags(self, run: str, **kwargs) -> dict[str, str]:
         """Return the set of tags associated with a run
 
         Args:
@@ -940,7 +1106,7 @@ class CrucibleService:
         )
         return {t["name"]: t["val"] for t in self._hits(tags, ["tag"])}
 
-    def params(
+    def get_params(
         self, run: Optional[str] = None, iteration: Optional[str] = None, **kwargs
     ) -> dict[str, dict[str, str]]:
         """Return the set of parameters for a run or iteration
@@ -995,7 +1161,7 @@ class CrucibleService:
             response["common"] = common
         return response
 
-    def iterations(self, run: str, **kwargs) -> list[dict[str, Any]]:
+    def get_iterations(self, run: str, **kwargs) -> list[dict[str, Any]]:
         """Return a list of iterations for a run
 
         Args:
@@ -1008,12 +1174,13 @@ class CrucibleService:
         iterations = self.search(
             index="iteration",
             filters=[{"term": {"run.id": run}}],
+            sort=[{"iteration.num": "asc"}],
             **kwargs,
             ignore_unavailable=True,
         )
         return [i["iteration"] for i in self._hits(iterations)]
 
-    def samples(
+    def get_samples(
         self, run: Optional[str] = None, iteration: Optional[str] = None, **kwargs
     ):
         """Return a list of samples for a run or iteration
@@ -1032,15 +1199,23 @@ class CrucibleService:
                 "A sample query requires either a run or iteration ID",
             )
         match = {"run.id" if run else "iteration.id": run if run else iteration}
-        samples = self.search(
+        hits = self.search(
             index="sample",
             filters=[{"term": match}],
             **kwargs,
             ignore_unavailable=True,
         )
-        return [i["sample"] for i in self._hits(samples)]
+        samples = []
+        for s in self._hits(hits):
+            print(f"SAMPLE's ITERATION {s['iteration']}")
+            sample = s["sample"]
+            sample["iteration"] = s["iteration"]["num"]
+            sample["primary_metric"] = s["iteration"]["primary-metric"]
+            sample["status"] = s["iteration"]["status"]
+            samples.append(sample)
+        return samples
 
-    def periods(
+    def get_periods(
         self,
         run: Optional[str] = None,
         iteration: Optional[str] = None,
@@ -1077,16 +1252,20 @@ class CrucibleService:
         periods = self.search(
             index="period",
             filters=[{"term": match}],
+            sort=[{"period.begin": "asc"}],
             **kwargs,
             ignore_unavailable=True,
         )
         body = []
         for h in self._hits(periods):
-            p = h["period"]
-            body.append(self._format_period(p))
+            period = self._format_period(period=h["period"])
+            period["iteration"] = h["iteration"]["num"]
+            period["primary_metric"] = h["iteration"]["primary-metric"]
+            period["status"] = h["iteration"]["status"]
+            body.append(period)
         return body
 
-    def timeline(self, run: str, **kwargs) -> dict[str, Any]:
+    def get_timeline(self, run: str, **kwargs) -> dict[str, Any]:
         """Report the relative timeline of a run
 
         With nested object lists, show runs to iterations to samples to
@@ -1127,8 +1306,8 @@ class CrucibleService:
         body = {"run": robj}
         for i in self._hits(itr):
             if "begin" not in robj:
-                robj["begin"] = self._date(i["run"]["begin"])
-                robj["end"] = self._date(i["run"]["end"])
+                robj["begin"] = self._format_timestamp(i["run"]["begin"])
+                robj["end"] = self._format_timestamp(i["run"]["end"])
             iteration = i["iteration"]
             iterations.append(iteration)
             iteration["samples"] = []
@@ -1141,7 +1320,7 @@ class CrucibleService:
                 iteration["samples"].append(sample)
         return body
 
-    def metrics_list(self, run: str, **kwargs) -> dict[str, Any]:
+    def get_metrics_list(self, run: str, **kwargs) -> dict[str, Any]:
         """Return a list of metrics available for a run
 
         Each run may have multiple performance metrics stored. This API allows
@@ -1188,7 +1367,7 @@ class CrucibleService:
                 record["breakdowns"][n].add(v)
         return met
 
-    def metric_breakouts(
+    def get_metric_breakouts(
         self,
         run: str,
         metric: str,
@@ -1228,7 +1407,7 @@ class CrucibleService:
             }
         """
         start = time.time()
-        filters = self._filter_metric_desc(run, metric, names, periods)
+        filters = self._build_metric_filters(run, metric, names, periods)
         metric_name = metric + ("" if not names else ("+" + ",".join(names)))
         metrics = self.search(
             "metric_desc",
@@ -1263,7 +1442,7 @@ class CrucibleService:
         print(f"Processing took {duration} seconds")
         return response
 
-    def metrics_data(
+    def get_metrics_data(
         self,
         run: str,
         metric: str,
@@ -1308,14 +1487,14 @@ class CrucibleService:
         """
         start = time.time()
         ids = self._get_metric_ids(
-            run, metric, names, periodlist=periods, highlander=(not aggregate)
+            run, metric, names, periodlist=periods, aggregate=aggregate
         )
 
         # If we're searching by periods, filter metric data by the period
         # timestamp range rather than just relying on the metric desc IDs as
         # we also want to filter non-periodic tool data.
         filters = [{"terms": {"metric_desc.id": ids}}]
-        filters.extend(self._data_range(periods))
+        filters.extend(self._build_timestamp_range_filters(periods))
 
         response = []
         if len(ids) > 1:
@@ -1341,8 +1520,8 @@ class CrucibleService:
             for h in self._aggs(data, "interval"):
                 response.append(
                     {
-                        "begin": self._date(h["key"] - interval),
-                        "end": self._date(h["key"]),
+                        "begin": self._format_timestamp(h["key"] - interval),
+                        "end": self._format_timestamp(h["key"]),
                         "value": h["value"]["value"],
                         "duration": interval / 1000.0,
                     }
@@ -1356,7 +1535,7 @@ class CrucibleService:
         print(f"Processing took {duration} seconds")
         return response
 
-    def metrics_summary(
+    def get_metrics_summary(
         self,
         run: str,
         metric: str,
@@ -1381,13 +1560,13 @@ class CrucibleService:
                 "min": 0.0,
                 "max": 0.3296,
                 "avg": 0.02360704225352113,
-                "sum": 1.6761000000000001
+                "sum": 1.676self.BIGQUERY00000001
             }
         """
         start = time.time()
         ids = self._get_metric_ids(run, metric, names, periodlist=periods)
         filters = [{"terms": {"metric_desc.id": ids}}]
-        filters.extend(self._data_range(periods))
+        filters.extend(self._build_timestamp_range_filters(periods))
         data = self.search(
             "metric_data",
             size=0,
@@ -1398,7 +1577,7 @@ class CrucibleService:
         print(f"Processing took {duration} seconds")
         return data["aggregations"]["score"]
 
-    def metrics_graph(self, graphdata: GraphList) -> dict[str, Any]:
+    def get_metrics_graph(self, graphdata: GraphList) -> dict[str, Any]:
         """Return metrics data for a run
 
         Each run may have multiple performance metrics stored. This API allows
@@ -1441,25 +1620,111 @@ class CrucibleService:
         """
         start = time.time()
         graphlist = []
-        run = graphdata.run
+        default_run_id = graphdata.run
         layout: dict[str, Any] = {"width": "1500"}
         axes = {}
         yaxis = None
         cindex = 0
+        params_by_run = {}
+        periods_by_run = {}
+        suffix_by_run = {}
+
+        # Construct a de-duped ordered list of run IDs, starting with the
+        # default.
+        run_id_list = []
+        if default_run_id:
+            run_id_list.append(default_run_id)
         for g in graphdata.graphs:
+            if g.run and g.run not in run_id_list:
+                run_id_list.append(g.run)
+
+        for g in graphdata.graphs:
+            run_id = g.run if g.run else default_run_id
             names = g.names
             metric: str = g.metric
+
+            if run_id not in params_by_run:
+                # Gather iteration parameters outside the loop for help in generating
+                # useful lables.
+                all_params = self.search(
+                    "param", filters=[{"term": {"run.id": default_run_id}}]
+                )
+                collector = defaultdict(defaultdict)
+                for h in self._hits(all_params):
+                    collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"][
+                        "val"
+                    ]
+                params_by_run[run_id] = collector
+            else:
+                collector = params_by_run[run_id]
+
+            if run_id not in periods_by_run:
+                # Capture period IDs for the run iterations outside the loop
+                periods = self.search(
+                    "period", filters=[{"term": {"run.id": default_run_id}}]
+                )
+                iteration_periods = defaultdict(set)
+                for p in self._hits(periods):
+                    if run_id not in suffix_by_run:
+                        print(f"Run {run_id} suffix {p['run']['begin']}")
+                        suffix_by_run[run_id] = p["run"]["begin"]
+                    iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
+                periods_by_run[run_id] = iteration_periods
+            else:
+                iteration_periods = periods_by_run[run_id]
+
             ids = self._get_metric_ids(
-                run, metric, names, periodlist=g.periods, highlander=(not g.aggregate)
+                run_id,
+                metric,
+                names,
+                periodlist=g.periods,
+                aggregate=g.aggregate,
             )
+
+            # We can easily end up with multiple graphs across distinct periods
+            # or iterations, so we want to be able to provide some labeling to
+            # the graphs. We do this by looking for unique iteration parameters
+            # values, since the iteration number and period name aren't useful
+            # by themselves.
+            name_suffix = ""
+            if g.periods:
+                iteration = None
+                for i, pset in iteration_periods.items():
+                    if set(g.periods) <= pset:
+                        iteration = i
+                        break
+
+                # If the period(s) we're graphing resolve to a single iteration
+                # in a run with multiple iterations, then we can try to find a
+                # unique title suffix based on distinct param values for that
+                # iteration.
+                if iteration and len(collector) > 1:
+                    unique = collector[iteration].copy()
+                    for i, params in collector.items():
+                        if i != iteration:
+                            for p in list(unique.keys()):
+                                if p in params and unique[p] == params[p]:
+                                    del unique[p]
+                    if unique:
+                        name_suffix = (
+                            " ("
+                            + ",".join([f"{p}={v}" for p, v in unique.items()])
+                            + ")"
+                        )
+
+            if len(run_id_list) > 1:
+                name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
+
             filters = [{"terms": {"metric_desc.id": ids}}]
-            filters.extend(self._data_range(g.periods))
+            filters.extend(self._build_timestamp_range_filters(g.periods))
             y_max = 0.0
-            points = []
+            points: list[Point] = []
 
             # If we're pulling multiple breakouts, e.g., total CPU across modes
-            # or cores, we want to aggregate by timestamp. (Note that this will
-            # not work well unless the samples are aligned.)
+            # or cores, we want to aggregate by timestamp interval. Sample
+            # timstamps don't necessarily align, so the "histogram" aggregation
+            # normalizes within the interval (based on the minimum actual
+            # interval duration).
             if len(ids) > 1:
                 # Find the minimum sample interval of the selected metrics
                 aggdur = self.search(
@@ -1478,7 +1743,7 @@ class CrucibleService:
                     aggregations={
                         "interval": {
                             "histogram": {
-                                "field": "metric_data.end",
+                                "field": "metric_data.begin",
                                 "interval": interval,
                             },
                             "aggs": {"value": {"sum": {"field": "metric_data.value"}}},
@@ -1486,85 +1751,83 @@ class CrucibleService:
                     },
                 )
                 for h in self._aggs(data, "interval"):
-                    points.append((h["key"], h["value"]["value"]))
+                    begin = int(h["key"])
+                    end = begin + interval - 1
+                    points.append(Point(begin, end, float(h["value"]["value"])))
             else:
                 data = self.search("metric_data", filters=filters)
                 for h in self._hits(data, ["metric_data"]):
-                    points.append((h["end"], float(h["value"])))
+                    points.append(
+                        Point(int(h["begin"]), int(h["end"]), float(h["value"]))
+                    )
 
-            # Graph the "end" timestamp of each sample against the sample
-            # value. Sort the graph points by timestamp so that Ploty will draw
-            # nice lines.
+            # Sort the graph points by timestamp so that Ploty will draw nice
+            # lines. We graph both the "begin" and "end" timestamp of each
+            # sample against the value to more clearly show the sampling
+            # interval.
             x = []
             y = []
 
-            for t, v in sorted(points):
-                x.append(self._date(t))
-                y.append(v)
-                y_max = max(y_max, v)
-
-            try:
-                options = " " + ",".join(names) if names else ""
-                title = metric + options
-
-                # TODO -- how to identify the period here? Can I filter out
-                # param differences to label these based on the batch size??
-                graphitem = {
-                    "x": x,
-                    "y": y,
-                    "name": title,
-                    "type": "scatter",
-                    "mode": "line",
-                    "marker": {"color": colors[cindex]},
-                    "labels": {
-                        "x": "sample timestamp",
-                        "y": "samples / second",
-                    },
-                }
-
-                # Y-axis scaling and labeling is divided by benchmark label;
-                # so store each we've created to reuse. (E.g., if we graph
-                # 5 different mpstat::Busy-CPU periods, they'll share a single
-                # Y axis.)
-                if title in axes:
-                    yref = axes[metric]
-                else:
-                    if yaxis:
-                        name = f"yaxis{yaxis}"
-                        yref = f"y{yaxis}"
-                        yaxis += 1
-                        layout[name] = {
-                            "title": title,
-                            "color": colors[cindex],
-                            "autorange": True,
-                            "anchor": "free",
-                            "autoshift": True,
-                            "overlaying": "y",
-                        }
-                    else:
-                        name = "yaxis"
-                        yref = "y"
-                        yaxis = 2
-                        layout[name] = {
-                            "title": title,
-                            "color": colors[cindex],
-                        }
-                    axes[metric] = yref
-                graphitem["yaxis"] = yref
-                cindex += 1
-                if cindex >= len(colors):
-                    cindex = 0
-                graphlist.append(graphitem)
-            except ValueError as v:
-                raise HTTPException(
-                    status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                    detail=f"Unexpected data type: {str(v)}",
+            for p in sorted(points, key=lambda a: a.begin):
+                x.extend(
+                    [self._format_timestamp(p.begin), self._format_timestamp(p.end)]
                 )
+                y.extend([p.value, p.value])
+                y_max = max(y_max, p.value)
+
+            options = (" [" + ",".join(names) + "]") if names else ""
+            title = metric + options
+            graphitem = {
+                "x": x,
+                "y": y,
+                "name": title + name_suffix,
+                "type": "scatter",
+                "mode": "line",
+                "marker": {"color": colors[cindex]},
+                "labels": {
+                    "x": "sample timestamp",
+                    "y": "samples / second",
+                },
+            }
+
+            # Y-axis scaling and labeling is divided by benchmark label;
+            # so store each we've created to reuse. (E.g., if we graph
+            # 5 different mpstat::Busy-CPU periods, they'll share a single
+            # Y axis.)
+            if metric in axes:
+                yref = axes[metric]
+            else:
+                if yaxis:
+                    name = f"yaxis{yaxis}"
+                    yref = f"y{yaxis}"
+                    yaxis += 1
+                    layout[name] = {
+                        "title": metric,
+                        "color": colors[cindex],
+                        "autorange": True,
+                        "anchor": "free",
+                        "autoshift": True,
+                        "overlaying": "y",
+                    }
+                else:
+                    name = "yaxis"
+                    yref = "y"
+                    yaxis = 2
+                    layout[name] = {
+                        "title": metric,
+                        "color": colors[cindex],
+                    }
+                axes[metric] = yref
+            graphitem["yaxis"] = yref
+            cindex += 1
+            if cindex >= len(colors):
+                cindex = 0
+            graphlist.append(graphitem)
         duration = time.time() - start
         print(f"Processing took {duration} seconds")
         return {"data": graphlist, "layout": layout}
 
-    def fields(self, index: str) -> dict[str, set]:
+    def fields(self, index: str) -> dict[str, dict[str, str]]:
         """Return the fields of an OpenSearch document from an index
 
         This fetches the document mapping from OpenSearch and reports it as a
@@ -1572,16 +1835,17 @@ class CrucibleService:
 
         {
             "cdm": [
-                "ver"
+                "doctype": "keyword",
+                "ver": "keyword"
             ],
             "metric_data": [
-                "begin",
-                "value",
-                "end",
-                "duration"
+                "begin": "date",
+                "value": "double",
+                "end": "date",
+                "duration": "long"
             ],
             "metric_desc": [
-                "id"
+                "id": "keyword"
             ]
         }
 
@@ -1597,10 +1861,11 @@ class CrucibleService:
         try:
             idx = self._get_index(index)
             mapping = self.elastic.indices.get_mapping(index=idx)
-            fields = defaultdict(set)
+            fields = defaultdict(defaultdict)
             for f, subfields in mapping[idx]["mappings"]["properties"].items():
-                for s in subfields["properties"].keys():
-                    fields[f].add(s)
+                print(f"{f}: {subfields}")
+                for s, info in subfields["properties"].items():
+                    fields[f][s] = info.get("type")
             return fields
         except NotFoundError:
             raise HTTPException(

@@ -121,7 +121,7 @@ const ILab = () => {
               <Tr isExpanded={isResultExpanded(item.id)}>
                 <Td colSpan={8}>
                   <ExpandableRowContent>
-                    <Accordion asDefinitionList={false}>
+                    <Accordion asDefinitionList={false} togglePosition="start">
                       <AccordionItem>
                         <AccordionToggle
                           onClick={() => {
@@ -138,7 +138,21 @@ const ILab = () => {
                           isHidden={!expanded.includes("bordered-toggle1")}
                         >
                           <div className="metadata-wrapper">
-                            <Card className="metadata-card">
+                            <Card className="metadata-card" isCompact>
+                              <CardBody>
+                                <MetaRow
+                                  key={uid()}
+                                  heading={"Fields"}
+                                  metadata={[
+                                    ["benchmark", item.benchmark],
+                                    ["name", item.name],
+                                    ["email", item.email],
+                                    ["source", item.source],
+                                  ]}
+                                />
+                              </CardBody>
+                            </Card>
+                            <Card className="metadata-card" isCompact>
                               <CardBody>
                                 <MetaRow
                                   key={uid()}
@@ -147,11 +161,11 @@ const ILab = () => {
                                 />
                               </CardBody>
                             </Card>
-                            <Card className="metadata-card">
+                            <Card className="metadata-card" isCompact>
                               <CardBody>
                                 <MetaRow
                                   key={uid()}
-                                  heading={"Parameters"}
+                                  heading={"Common Parameters"}
                                   metadata={Object.entries(item.params)}
                                 />
                               </CardBody>

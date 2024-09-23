@@ -23,16 +23,16 @@ const ILabGraph = (props) => {
 
   return (
     <>
-      {isGraphLoading && !hasGraphData(item.id) ? (
-        <div className="loader"></div>
-      ) : !isGraphLoading ? (
-        <></>
-      ) : (
+      {hasGraphData(item.id) ? (
         <Plot
           data={getGraphData(item.id)[0]?.data}
           layout={getGraphData(item.id)[0]?.layout}
           key={uid()}
         />
+      ) : isGraphLoading && !hasGraphData(item.id) ? (
+        <div className="loader"></div>
+      ) : (
+        <></>
       )}
     </>
   );

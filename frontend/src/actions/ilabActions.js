@@ -103,9 +103,9 @@ export const fetchGraphData =
       const periods = await API.get(`/api/v1/ilab/runs/${uid}/periods`);
       let graphs = [];
       periods.data.forEach((p) => {
-        graphs.push({ metric, periods: [p.id] });
+        graphs.push({ metric: p.primary_metric, periods: [p.id] });
         graphs.push({
-          metric: metric,
+          metric,
           aggregate: true,
           periods: [p.id],
         });
