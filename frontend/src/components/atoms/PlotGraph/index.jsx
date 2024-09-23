@@ -5,7 +5,8 @@ const PlotGraph = (props) => {
     <Plotly
       data={props?.data}
       useResizeHandler={false}
-      layout={{ responsive: false, autosize: false, width: 600, length: 600 }}
+      layout={props?.layout}
+      // layout={{ responsive: false, autosize: false, width: 600, length: 600 }}
     />
   );
 };
@@ -13,4 +14,5 @@ export default PlotGraph;
 
 PlotGraph.propTypes = {
   data: PropTypes.arr,
+  layout: PropTypes.object,
 };

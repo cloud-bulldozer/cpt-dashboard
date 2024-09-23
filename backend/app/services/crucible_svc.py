@@ -603,7 +603,7 @@ class CrucibleService:
 
         # We want to help filter a consistent summary, so only show those
         # names with more than one value.
-        response["names"] = {n: sorted(v) for n, v in names.items() if len(v) > 1}
+        response["names"] = {n: sorted(v) for n, v in names.items() if v and len(v) > 1}
         response["periods"] = list(periods)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=[response]

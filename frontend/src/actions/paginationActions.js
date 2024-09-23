@@ -3,9 +3,13 @@ import {
   setCPTPageOptions,
   sliceCPTTableRows,
 } from "./homeActions";
+import { setIlabPage, setIlabPageOptions } from "./ilabActions";
 import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
 import { setQuayPage, setQuayPageOptions } from "./quayActions";
 import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
+
+import { checkIlabJobs } from "./ilabActions";
+
 export const setPage = (newPage, currType) => (dispatch) => {
   if (currType === "cpt") {
     dispatch(setCPTPage(newPage));
@@ -15,6 +19,8 @@ export const setPage = (newPage, currType) => (dispatch) => {
     dispatch(setQuayPage(newPage));
   } else if (currType === "telco") {
     dispatch(setTelcoPage(newPage));
+  } else if (currType === "ilab") {
+    dispatch(setIlabPage(newPage));
   }
 };
 
@@ -27,6 +33,8 @@ export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
     dispatch(setQuayPageOptions(newPage, newPerPage));
   } else if (currType === "telco") {
     dispatch(setTelcoPageOptions(newPage, newPerPage));
+  } else if (currType === "ilab") {
+    dispatch(setIlabPageOptions(newPage, newPerPage));
   }
 };
 
@@ -36,4 +44,8 @@ export const sliceTableRows = (startIdx, endIdx, currType) => (dispatch) => {
   } else if (currType === "ocp") {
     dispatch(sliceOCPTableRows(startIdx, endIdx));
   }
+};
+
+export const fetchNextJobs = (newPage) => (dispatch) => {
+  dispatch(checkIlabJobs(newPage));
 };

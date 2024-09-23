@@ -1,7 +1,13 @@
+import "./index.less";
+
 import {
-  CheckCircleIcon,
-  ExclamationCircleIcon,
-} from "@patternfly/react-icons";
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionToggle,
+  Card,
+  CardBody,
+} from "@patternfly/react-core";
 import {
   ExpandableRowContent,
   Table,
@@ -11,30 +17,40 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { Grid, GridItem, Label } from "@patternfly/react-core";
-import { fetchGraphData, fetchILabJobs } from "@/actions/ilabActions";
+import { fetchILabJobs, fetchMetricsInfo } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 
-import Plot from "react-plotly.js";
+import ILabGraph from "./ILabGraph";
+import MetaRow from "./MetaRow";
+import MetricsSelect from "./MetricsDropdown";
+import RenderPagination from "@/components/organisms/Pagination";
+import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
 import { useNavigate } from "react-router-dom";
-import { cloneDeep } from "lodash";
 
 const ILab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
-  const { results, start_date, end_date, graphData } = useSelector(
-    (state) => state.ilab
-  );
-  const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
-
+  const { results, start_date, end_date } = useSelector((state) => state.ilab);
   const [expandedResult, setExpandedResult] = useState([]);
+  const [expanded, setAccExpanded] = useState(["bordered-toggle1"]);
 
+  const onToggle = (id) => {
+    const index = expanded.indexOf(id);
+    const newExpanded =
+      index >= 0
+        ? [
+            ...expanded.slice(0, index),
+            ...expanded.slice(index + 1, expanded.length),
+          ]
+        : [...expanded, id];
+    setAccExpanded(newExpanded);
+  };
   const isResultExpanded = (res) => expandedResult?.includes(res);
-  const setExpanded = (run, isExpanding = true) => {
+  const setExpanded = async (run, isExpanding = true) => {
     setExpandedResult((prevExpanded) => {
       const otherExpandedRunNames = prevExpanded.filter((r) => r !== run.id);
       return isExpanding
@@ -42,20 +58,12 @@ const ILab = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
-      dispatch(fetchGraphData(run.id, run?.primary_metrics[0]));
+      dispatch(fetchMetricsInfo(run.id));
+      // dispatch(fetchGraphData(run.id, run?.primary_metrics[0]));
     }
   };
 
-  const getGraphData = (id) => {
-    const data = graphData?.filter((a) => a.uid === id);
-    return cloneDeep(data);
-  };
-  const hasGraphData = (uuid) => {
-    const hasData = getGraphData(uuid).length > 0;
-
-    return hasData;
-  };
-
+  const { totalItems, page, perPage } = useSelector((state) => state.ilab);
   useEffect(() => {
     dispatch(fetchILabJobs());
   }, [dispatch]);
@@ -70,38 +78,6 @@ const ILab = () => {
     end_date: "End Date",
     status: "Status",
   };
-
-  const StatusCell = (props) => {
-    return props.value?.toLowerCase() === "pass" ? (
-      <Label color="green" icon={<CheckCircleIcon />}>
-        Success
-      </Label>
-    ) : (
-      <Label color="red" icon={<ExclamationCircleIcon />}>
-        Failure
-      </Label>
-    );
-  };
-
-  const RenderKey = (props) => {
-    const { value } = props;
-    return (
-      <>
-        {Object.keys(value).length > 0 &&
-          Object.keys(value).map((unit) => {
-            return (
-              <>
-                <span>
-                  {" "}
-                  {value[unit]} {""}
-                </span>
-              </>
-            );
-          })}
-      </>
-    );
-  };
-
   return (
     <>
       <TableFilter
@@ -145,49 +121,65 @@ const ILab = () => {
               <Tr isExpanded={isResultExpanded(item.id)}>
                 <Td colSpan={8}>
                   <ExpandableRowContent>
-                    <Grid hasGutter>
-                      <GridItem span={4}>
-                        <strong>
-                          <em>Tags</em>
-                        </strong>
-                        {Object.keys(item.tags).length > 0 &&
-                          Object.keys(item.tags).map((key) => (
-                            <>
-                              <div>
-                                <strong key={uid()}>{key}</strong>:{" "}
-                                {item.tags[key]}
-                              </div>
-                            </>
-                          ))}
-                      </GridItem>
-                      <GridItem span={4}>
-                        <strong>
-                          <em>Parameters</em>
-                        </strong>
-                        {Object.keys(item.params).length > 0 &&
-                          Object.keys(item.params).map((key) => (
-                            <>
-                              <div>
-                                <strong key={uid()}>{key}</strong>:{" "}
-                                {item.params[key]}
-                              </div>
-                            </>
-                          ))}
-                      </GridItem>
-                      <GridItem span={8}>
-                        {isGraphLoading && !hasGraphData(item.id) ? (
-                          <div className="loader"></div>
-                        ) : (
-                          <>
-                            <Plot
-                              data={getGraphData(item.id)[0]?.data}
-                              layout={getGraphData(item.id)[0]?.layout}
-                              key={uid()}
-                            />
-                          </>
-                        )}
-                      </GridItem>
-                    </Grid>
+                    <Accordion asDefinitionList={false}>
+                      <AccordionItem>
+                        <AccordionToggle
+                          onClick={() => {
+                            onToggle("bordered-toggle1");
+                          }}
+                          isExpanded={expanded.includes("bordered-toggle1")}
+                          id="bordered-toggle1"
+                        >
+                          Metadata
+                        </AccordionToggle>
+
+                        <AccordionContent
+                          id="bordered-expand1"
+                          isHidden={!expanded.includes("bordered-toggle1")}
+                        >
+                          <div className="metadata-wrapper">
+                            <Card className="metadata-card">
+                              <CardBody>
+                                <MetaRow
+                                  key={uid()}
+                                  heading={"Tags"}
+                                  metadata={Object.entries(item.tags)}
+                                />
+                              </CardBody>
+                            </Card>
+                            <Card className="metadata-card">
+                              <CardBody>
+                                <MetaRow
+                                  key={uid()}
+                                  heading={"Parameters"}
+                                  metadata={Object.entries(item.params)}
+                                />
+                              </CardBody>
+                            </Card>
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                      <AccordionItem>
+                        <AccordionToggle
+                          onClick={() => {
+                            onToggle("bordered-toggle2");
+                          }}
+                          isExpanded={expanded.includes("bordered-toggle2")}
+                          id="bordered-toggle2"
+                        >
+                          Metrics & Graph
+                        </AccordionToggle>
+                        <AccordionContent
+                          id="bordered-expand2"
+                          isHidden={!expanded.includes("bordered-toggle2")}
+                        >
+                          Metrics: <MetricsSelect item={item} />
+                          <div className="graph-card">
+                            <ILabGraph item={item} />
+                          </div>
+                        </AccordionContent>
+                      </AccordionItem>
+                    </Accordion>
                   </ExpandableRowContent>
                 </Td>
               </Tr>
@@ -195,6 +187,12 @@ const ILab = () => {
           ))}
         </Tbody>
       </Table>
+      <RenderPagination
+        items={totalItems}
+        page={page}
+        perPage={perPage}
+        type={"ilab"}
+      />
     </>
   );
 };

@@ -1,5 +1,6 @@
 import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
+  fetchNextJobs,
   setPage,
   setPageOptions,
   sliceTableRows,
@@ -13,6 +14,7 @@ const RenderPagination = (props) => {
   const dispatch = useDispatch();
 
   const perPageOptions = [
+    { title: "10", value: 10 },
     { title: "25", value: 25 },
     { title: "50", value: 50 },
     { title: "100", value: 100 },
@@ -21,18 +23,27 @@ const RenderPagination = (props) => {
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
       dispatch(setPage(newPage, props.type));
-      dispatch(sliceTableRows(startIdx, endIdx, props.type));
+      if (props.type !== "ilab") {
+        dispatch(sliceTableRows(startIdx, endIdx, props.type));
+      }
     },
     [dispatch, props.type]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
-      dispatch(sliceTableRows(startIdx, endIdx, props.type));
+      if (props.type !== "ilab") {
+        dispatch(sliceTableRows(startIdx, endIdx, props.type));
+      }
     },
     [dispatch, props.type]
   );
 
+  const checkAndFetch = (_evt, newPage) => {
+    if (props.type === "ilab") {
+      dispatch(fetchNextJobs(newPage));
+    }
+  };
   return (
     <Pagination
       itemCount={props?.items}
@@ -40,6 +51,7 @@ const RenderPagination = (props) => {
       perPage={props.perPage}
       page={props.page}
       variant={PaginationVariant.bottom}
+      onNextClick={checkAndFetch}
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
