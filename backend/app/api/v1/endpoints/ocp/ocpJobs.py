@@ -26,7 +26,8 @@ async def jobs(start_date: date = Query(None, description="Start date for search
                 pretty: bool = Query(False, description="Output contet in pretty format."),
                 size: int = Query(None, description="Number of jobs to fetch"),
                 offset: int = Query(None, description="Offset Number to fetch jobs from"),
-                sort: str = Query(None, description="jjj")
+                sort: str = Query(None, description="To sort the field on specified direction"),
+                filter: str = Query(None, description="Filter jobs")
                 ):
     try:
         if start_date is None:
@@ -39,8 +40,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         if start_date > end_date:
             return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
         
-        print(sort)
-        results = await getData(start_date, end_date, size, offset, sort, 'ocp.elasticsearch')
+        results = await getData(start_date, end_date, size, offset, sort, filter, 'ocp.elasticsearch')
 
         if len(results["data"]) >= 1:
             response = {
@@ -48,7 +48,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
                 'endDate': end_date.__str__(),
                 'results': results["data"].to_dict('records'),
                 'total': results["total"], 
-                'offset': offset + 1
+                'offset': offset + size
             }
         else :
             response = {

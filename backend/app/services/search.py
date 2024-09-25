@@ -4,7 +4,7 @@ from datetime import datetime, timedelta
 from app import config
 import bisect
 import re
-
+import traceback
     
 class ElasticService:
     # todo add bulkhead pattern
@@ -43,7 +43,7 @@ class ElasticService:
             es = AsyncElasticsearch(url, verify_certs=False)
         return es, indice, index_prefix
 
-    async def post(self, query, indice=None, size=None, offset=None, sort=None, start_date=None, end_date=None, timestamp_field=None):
+    async def post(self, query, indice=None, size=None, offset=None, filterTerms=None, start_date=None, end_date=None, timestamp_field=None):
         try:    
             """Runs a query and returns the results"""
             if size == 0:
@@ -82,7 +82,7 @@ class ElasticService:
                                     size=size)
                                 previous_results = {"data":response['hits']['hits'], "total":response['hits']["total"]["value"]}
                             else:
-                                previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size, offset, sort)
+                                previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size, offset, filterTerms)
                     if self.prev_es and self.new_es:
                         self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                         today = datetime.today().date()
@@ -90,30 +90,30 @@ class ElasticService:
                         if end_date and end_date < seven_days_ago:
                             new_results = {}
                         else:
-                            new_start_date = max(start_date, seven_days_ago) if start_date else seven_days_ago
-                            query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(new_start_date)
-                            if end_date:
-                                query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)
+                            new_start_date = max(start_date, seven_days_ago) if start_date else seven_days_ago                          
+                            query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(new_start_date)                           
+                            if end_date:                              
+                                query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)                                
                             if end_date is None:
                                 response = await self.new_es.search(
                                     index=self.new_index+"*",
                                     body=jsonable_encoder(query),
                                     size=size)
                                 new_results = {"data":response['hits']['hits'],"total":response['hits']['total']['value']}
-                            else:
-                                new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size, offset, sort)
+                            else:                               
+                                new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size, offset, filterTerms)
                         unique_data = await self.remove_duplicates(previous_results["data"] if("data" in previous_results) else [] + new_results["data"]  if("data" in new_results) else[])
                         return ({"data":unique_data, "total": new_results["total"]})
                     else:
-                        if start_date and end_date:
+                        if start_date and end_date:                            
                             query['query']['bool']['filter']['range'][timestamp_field]['gte'] = str(start_date)
                             query['query']['bool']['filter']['range'][timestamp_field]['lte'] = str(end_date)
-                            return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size, offset, sort)
-                        else:
+                            return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size, offset, filterTerms)
+                        else:                            
                             response = await self.new_es.search(
                                 index=self.new_index+"*",
                                 body=jsonable_encoder(query),
-                                size=size)
+                                size=size)                            
                             return {"data":response['hits']['hits'],"total":response['hits']["total"]["value"]}
                 else:
                     """Handles queries that do not have a timestamp field"""
@@ -138,7 +138,7 @@ class ElasticService:
         except Exception as err:
             print(f"{type(err).__name__} was raised: {err}")  
             
-    async def scan_indices(self, es_client, indice, query, timestamp_field, start_date, end_date, size, offset, sort):
+    async def scan_indices(self, es_client, indice, query, timestamp_field, start_date, end_date, size, offset, filterTerms):
         try:
             """Scans results only from es indexes relevant to a query"""
             indices = await self.get_indices_from_alias(es_client, indice)
@@ -146,7 +146,7 @@ class ElasticService:
                 indices = [indice]
             sorted_index_list = SortedIndexList()
             for index in indices:
-                sorted_index_list.insert(IndexTimestamp(index, await self.get_timestamps(es_client, index, timestamp_field, size, offset, sort)))
+                sorted_index_list.insert(IndexTimestamp(index, await self.get_timestamps(es_client, index, timestamp_field, size, offset, filterTerms)))
             filtered_indices = sorted_index_list.get_indices_in_given_range(start_date, end_date)
             results = []
             for each_index in filtered_indices:
@@ -156,8 +156,7 @@ class ElasticService:
                     index=each_index.index,
                     body=jsonable_encoder(query),
                     size=size)
-                results.extend(response['hits']['hits'])
-                
+                results.extend(response['hits']['hits'])                
             return({"data":await self.remove_duplicates(results) , "total":response['hits']['total']['value']}) 
         except Exception as err:
             print(f"{type(err).__name__} was raised: {err}")
@@ -174,11 +173,11 @@ class ElasticService:
                 seen.add(tuple(sorted(flat_doc.items())))
         return filtered_results
 
-    async def get_timestamps(self, es_client, index, timestamp_field, size, offset, sort):
+    async def get_timestamps(self, es_client, index, timestamp_field, size, offset, filterTerms):
         """Returns start and end timestamps of a index"""
         query = {
             "size": size,
-            "from": offset,
+            "from": offset,                    
             "aggs": {
                 "min_timestamp": {
                     "min": {
@@ -192,7 +191,13 @@ class ElasticService:
                 }
             }
         }
-        print(query)
+        # query.update({"query":{"bool":{"filter":{"terms":{"platform.keyword":["AWS","GCP"]}}}}})
+        if bool(filterTerms):
+            filterList = []
+            for keyField,value in filterTerms.items():                  
+                obj = {"terms":{keyField:[s if s.isnumeric() else s.upper() for s in value]}}
+                filterList.append(obj)
+            query.update({"query":{"bool":{"filter":filterList}}})
         response = await es_client.search(
             index=index,
             body=query

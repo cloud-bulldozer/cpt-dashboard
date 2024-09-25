@@ -1,4 +1,5 @@
 import * as API_ROUTES from "@/utils/apiConstants";
+import * as CONSTANTS from "@/assets/constants/metadataConstants.js";
 import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
@@ -19,8 +20,16 @@ export const fetchOCPJobs =
   async (dispatch, getState) => {
     try {
       dispatch({ type: TYPES.LOADING });
-      const { start_date, end_date, size, offset, results, totalJobs, sort } =
-        getState().ocp;
+      const {
+        start_date,
+        end_date,
+        size,
+        offset,
+        results,
+        totalJobs,
+        sort,
+        appliedFilters,
+      } = getState().ocp;
       const diff = totalJobs - results.length;
       let a;
       if (results.length !== 0 && diff < size && results.length <= totalJobs) {
@@ -38,6 +47,14 @@ export const fetchOCPJobs =
       };
       if (Object.keys(sort).length > 0) {
         params["sort"] = JSON.stringify(sort);
+      }
+
+      if (Object.keys(appliedFilters).length > 0) {
+        let filter = {};
+        Object.keys(appliedFilters).forEach((key) => {
+          filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
+        });
+        params["filter"] = JSON.stringify(filter);
       }
       const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, { params });
       if (response.status === 200) {
@@ -70,7 +87,7 @@ export const fetchOCPJobs =
             offset: response.data.offset,
           },
         });
-        dispatch(applyFilters());
+        // dispatch(applyFilters());
         dispatch(tableReCalcValues());
       }
     } catch (error) {

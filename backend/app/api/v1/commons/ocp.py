@@ -4,27 +4,32 @@ import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 import json
 
-async def getData(start_datetime: date, end_datetime: date, size:int, offset:int, sort:str, configpath: str):
+async def getData(start_datetime: date, end_datetime: date, size:int, offset:int, sort:str, filter:str, configpath: str):
     try:
         query = {
             "query": {
                 "bool": {
-                    "filter": {
+                    "filter":{
                         "range": {
                             "timestamp": {
                                 "format": "yyyy-MM-dd"
                             }
                         }
+                        
                     }
                 }
             }
         }
-
         es = ElasticService(configpath=configpath)
         if sort:
             query.update({"sort": json.loads(sort)})
-        
-        response = await es.post(query=query,  size=size, offset=offset, start_date=start_datetime, end_date=end_datetime, timestamp_field='timestamp')
+        if filter:
+            filter_dict = json.loads(filter)
+            
+        # query['query']['bool']['must'][0].update({"terms":{"platform.keyword":["AWS","GCP"]}})
+        print(filter_dict)
+
+        response = await es.post(query=query, size=size, filterTerms=filter_dict, offset=offset, start_date=start_datetime, end_date=end_datetime, timestamp_field='timestamp')
         await es.close()
         tasks = [item['_source'] for item in response["data"]]
         jobs = pd.json_normalize(tasks)
