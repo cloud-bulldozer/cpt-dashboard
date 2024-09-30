@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchGraphData,
   fetchOCPJobs,
   setFilterFromURL,
@@ -20,7 +21,7 @@ const OCP = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    filteredResults,
+    results,
     tableColumns,
     activeSortDir,
     activeSortIndex,
@@ -60,8 +61,8 @@ const OCP = () => {
   }, []);
 
   useEffect(() => {
-    console.log("twice");
     dispatch(fetchOCPJobs());
+    dispatch(buildFilterData());
   }, [dispatch]);
 
   //Filter Helper
@@ -100,7 +101,7 @@ const OCP = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={results.length}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}

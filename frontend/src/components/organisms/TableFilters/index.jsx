@@ -43,7 +43,7 @@ const TableFilter = (props) => {
 
   const category =
     filterData?.length > 0 &&
-    filterData.filter((item) => item.name === categoryFilterValue)[0].key;
+    filterData.filter((item) => item.name === categoryFilterValue)?.[0]?.key;
 
   const getFilterName = (key) => {
     const filter =

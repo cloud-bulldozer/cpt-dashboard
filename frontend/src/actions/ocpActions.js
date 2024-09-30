@@ -4,10 +4,8 @@ import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  buildFilterData,
   calculateMetrics,
   deleteAppliedFilters,
-  getFilteredData,
   getSelectedFilter,
 } from "./commonActions";
 
@@ -26,17 +24,10 @@ export const fetchOCPJobs =
         size,
         offset,
         results,
-        totalJobs,
         sort,
         appliedFilters,
       } = getState().ocp;
-      const diff = totalJobs - results.length;
-      let a;
-      if (results.length !== 0 && diff < size && results.length <= totalJobs) {
-        a = diff;
-      } else {
-        a = size;
-      }
+
       console.log(JSON.stringify(sort));
       const params = {
         pretty: true,
@@ -107,7 +98,7 @@ export const setOCPPageOptions = (page, perPage) => ({
 });
 
 export const sliceOCPTableRows = (startIdx, endIdx) => (dispatch, getState) => {
-  const results = [...getState().ocp.filteredResults];
+  const results = [...getState().ocp.results];
 
   dispatch({
     type: TYPES.SET_OCP_INIT_JOBS,
@@ -128,7 +119,10 @@ export const setOCPSortDir = (direction) => ({
 export const setOCPCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().ocp.filterData];
   const options = filterData.filter((item) => item.name === category)[0].value;
-  const list = options.map((item) => ({ name: item, value: item }));
+  const list = options.map((item) => ({
+    name: item,
+    value: item,
+  }));
 
   dispatch({
     type: TYPES.SET_OCP_CATEGORY_FILTER,
@@ -140,23 +134,11 @@ export const setOCPCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().ocp;
+export const applyFilters = () => (dispatch) => {
+  dispatch(setOCPPage(1));
 
-  const results = [...getState().ocp.results];
+  dispatch(fetchOCPJobs());
 
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    !Object.values(appliedFilters).includes("");
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_OCP_FILTERED_DATA,
-    payload: filtered,
-  });
   dispatch(tableReCalcValues());
   dispatch(buildFilterData("ocp"));
 };
@@ -235,20 +217,20 @@ export const setFilterFromURL = (searchParams) => ({
 });
 
 export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().ocp.filteredResults];
+  const results = [...getState().ocp.results];
   const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
+  const data = results.filter(
     (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
   );
-  dispatch({
-    type: TYPES.SET_OCP_FILTERED_DATA,
-    payload: data,
-  });
+  // dispatch({
+  //   type: TYPES.SET_OCP_FILTERED_DATA,
+  //   payload: data,
+  // });
   dispatch(tableReCalcValues());
 };
 
 export const getOCPSummary = () => (dispatch, getState) => {
-  const results = [...getState().ocp.filteredResults];
+  const results = [...getState().ocp.results];
 
   const countObj = calculateMetrics(results);
   dispatch({
@@ -305,4 +287,62 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   dispatch(getOCPSummary());
   dispatch(setOCPPageOptions(page, perPage));
   dispatch(sliceOCPTableRows(startIdx, endIdx));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    const {
+      start_date,
+      end_date,
+      offset,
+      sort,
+      appliedFilters,
+      tableFilters,
+      categoryFilterValue,
+    } = getState().ocp;
+
+    const params = {
+      pretty: true,
+      ...(start_date && { start_date }),
+      ...(end_date && { end_date }),
+      size: 10,
+      offset: offset,
+    };
+    if (Object.keys(sort).length > 0) {
+      params["sort"] = JSON.stringify(sort);
+    }
+
+    if (Object.keys(appliedFilters).length > 0) {
+      let filter = {};
+      Object.keys(appliedFilters).forEach((key) => {
+        filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
+      });
+      params["filter"] = JSON.stringify(filter);
+    }
+
+    const response = await API.get("/api/v1/ocp/filters", { params });
+    if (response.status === 200 && response.data.length > 0) {
+      let data = cloneDeep(response.data);
+      for (let i = 0; i < tableFilters.length; i++) {
+        for (let j = 0; j < data.length; j++) {
+          if (tableFilters[i]["value"] === data[j].key) {
+            data[j]["name"] = tableFilters[i]["name"];
+          }
+        }
+      }
+      data.forEach((item) => {
+        if (item["key"] === "ocpVersion") {
+          item["name"] = "Version";
+        }
+      });
+      await dispatch({
+        type: TYPES.SET_OCP_FILTER_DATA,
+        payload: data,
+      });
+      const activeFilter = categoryFilterValue || tableFilters[0].name;
+      await dispatch(setOCPCatFilters(activeFilter));
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };

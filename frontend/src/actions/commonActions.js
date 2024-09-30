@@ -54,7 +54,7 @@ export const calculateMetrics = (results) => {
 };
 
 export const buildFilterData = (currState) => (dispatch, getState) => {
-  const results = [...getState()[currState].filteredResults];
+  const results = [...getState()[currState].results];
   const categoryFilterValue = getState()[currState].categoryFilterValue;
 
   const tableFilters = [...getState()[currState].tableFilters];

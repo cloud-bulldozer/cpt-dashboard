@@ -8,4 +8,5 @@ export const IMAGE_RESULTS = "Quay Image Status Codes";
 export const OCP_FILTERS = {
   ciSystem: "ciSystem.keyword",
   platform: "platform.keyword",
+  workerNodesCount: "workerNodesCount",
 };

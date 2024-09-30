@@ -53,7 +53,6 @@ const initialState = {
   categoryFilterValue: "",
   filterOptions: [],
   appliedFilters: { platform: ["AWS"], ciSystem: ["PROW"] },
-  filteredResults: [],
   summary: {},
   graphData: [],
   clusterMetaData: [
@@ -153,8 +152,6 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, categoryFilterValue: payload };
     case TYPES.SET_OCP_FILTER_OPTIONS:
       return { ...state, filterOptions: payload };
-    case TYPES.SET_OCP_FILTERED_DATA:
-      return { ...state, filteredResults: payload };
     case TYPES.SET_OCP_APPLIED_FILTERS:
       return { ...state, appliedFilters: payload };
     case TYPES.SET_OCP_GRAPH_DATA:

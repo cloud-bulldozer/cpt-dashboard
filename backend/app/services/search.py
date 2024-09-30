@@ -198,6 +198,7 @@ class ElasticService:
                 obj = {"terms":{keyField:[s if s.isnumeric() else s.upper() for s in value]}}
                 filterList.append(obj)
             query.update({"query":{"bool":{"filter":filterList}}})
+        
         response = await es_client.search(
             index=index,
             body=query
@@ -221,7 +222,20 @@ class ElasticService:
         except Exception as e:
             print(f"Error retrieving indices for alias '{alias}': {e}")
             return []
-
+        
+    async def filterPost(self, query):
+        """Get unique values for the fields"""
+        #self.new_es, self.new_index
+        try:
+            print("im here")
+            
+            response = await self.new_es.search(index=self.new_index, body=query, size=0)
+            print("hhhh")
+            
+            return response["aggregations"]
+        except Exception as e:
+            print(f"Error retrieving filter data': {e}")
+        
     async def close(self):
         """Closes es client connections"""
         await self.new_es.close()

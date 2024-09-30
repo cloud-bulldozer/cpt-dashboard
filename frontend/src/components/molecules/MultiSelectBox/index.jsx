@@ -73,7 +73,7 @@ const MultiSelectBox = (props) => {
     );
   };
   const createItemId = (value) =>
-    `select-multi-typeahead-${value.replace(" ", "-")}`;
+    `select-multi-typeahead-${value?.toString()?.replace(" ", "-")}`;
   return (
     <>
       <Select
