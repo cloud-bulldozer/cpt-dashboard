@@ -1,3 +1,55 @@
+Crucible divides data across a set of OpenSearch (or ElasticSearch) indices,
+each with a specific document mapping. CDM index names include a "root" name
+(like "run") with a versioned prefix, like "cdmv7dev-run".
+
+Crucible timestamps are integers in "millisecond-from-the-epoch" format.
+
+<dl>
+<dt>RUN</dt><dd>this contains the basic information about a performance run, including a
+    generated UUID, begin and end timestamps, a benchmark name, a user name and
+    email, the (host/directory) "source" of the indexed data (which is usable on
+    the controler's local file system), plus host and test harness names.</dd>
+<dt>TAG</dt><dd>this contains information about a general purpose "tag" to associate some
+    arbitrary context with a run, for example software versions, hardware, or
+    other metadata. This can be considered a SQL JOIN with the run document,
+    adding a tag UUID, name, and value.</dd>
+<dt>ITERATION</dt><dd>this contains basic information about a performance run iteration.
+    This is a JOIN with the RUN document, duplicating the run fields while
+    adding an iteration UUID, number, the primary (benchmark) metric associated
+    with the iteration, plus the primary "period" of the iteration, and the
+    iteration status.</dd>
+<dt>PARAM</dt><dd>this contains information about a benchmark parameter value affecting
+    the behavior of an iteration. This is a JOIN with the run and iteration
+    data, adding a parameter ID, argument, and value. While parameters are
+    iteration-specific, parameters that don't vary between iterations are often
+    represented as run parameters.</dd>
+<dt>SAMPLE</dt><dd>this contains basic information about a sample of an iteration. This is
+    effectively a JOIN against iteration and run, adding a sample UUID and
+    number, along with a "path" for sample data and a sample status.</dd>
+<dt>PERIOD</dt><dd>this contains basic information about a period during which data is
+    collected within a sample. This is a JOIN against sample, iteration, and
+    period, adding the period UUID, name, and begin and end timestamps. A set
+    of periods can be "linked" through a "prev_id" field.</dd>
+<dt>METRIC_DESC</dt><dd>this contains descriptive data about a specific set of benchmark
+    metric data. This is another JOIN, containing the associated period,
+    sample, iteration, and run data while adding information specific to a
+    sequence of metric data values. These include the metric UUID, a class,
+    type, and source, and a set of "names" which define breakouts that narrow
+    down a specific source and type. For example source:mpstat, type:Busy-CPU
+    data is broken down by package, cpu, core, and other breakouts which can
+    be isolated or aggregated for data reporting.</dd>
+<dt>METRIC_DATA</dt><dd>this describes a specific data point, sampled over a specified
+    duration with a fixed begin and end timestamp, plus a floating point value.
+    Each is tied to a specific metric_desc UUID value. Depending on the varied
+    semantics of metric_desc breakouts, it's often valid to aggregate these
+    across a set of relatead metric_desc IDs, based on source and type, for
+    example to get aggregate CPU load across all modes, cores, or across all
+    modes within a core. This service allows arbitrary aggregation within a
+    given metric source and type, but by default will attempt to direct the
+    caller to specifying a set of breakouts that result in a single metric_desc
+    ID.</dd>
+</dl>
+
 The `crucible_svc` allows CPT project APIs to access a Crucible CDM backing
 store to find information about runs, tags, params, iterations, samples,
 periods, plus various ways to expose and aggregate metric data both for
@@ -14,18 +66,18 @@ information is broken down by core and package. You can now aggregate
 all global data (e.g., total system CPU), or filter by breakout names to
 select by CPU, mode (usr, sys, irq), etc.
 
-For example, to return `mpstat` `Busy-CPU` graph data for one core, you
-might query:
+For example, to return `Busy-CPU` ("type") graph data from the `mpstat`
+("source") tool for system mode on one core, you might query:
 
 ```
-/api/v1/ilab/runs/f542a50c-55df-4ead-92d1-8c55367f2e79/graph/mpstat::Busy-CPU?name=core=12,package=1,num=77,type=guest
+/api/v1/ilab/runs/<id>/graph/mpstat::Busy-CPU?name=core=12,package=1,num=77,type=sys
 ```
 
 If you make a `graph`, `data`, or `summary` query that doesn't translate
-to a unique metric, and don't allow aggregation, you'll get a diagnostic
+to a unique metric, and don't select aggregation, you'll get a diagnostic
 message identifying possible additional filters. For example, with
-`type=guest` removed, that same query will show the available values for
-the `type` name:
+`type=sys` removed, that same query will show the available values for
+the `type` breakout name:
 
 ```
 {
@@ -51,12 +103,26 @@ This capability can be used to build an interactive exploratory UI to
 allow displaying breakout details. The `get_metrics` API will show all
 recorded metrics, along with information the names and values used in
 those. Metrics that show "names" with more than one value will need to be
-filtered to produce meaningful summaries or graphs. The `get_breakdowns` API
-can be used to explore the namespace recorded for that metric in the specified
-run. For example,
+filtered to produce meaningful summaries or graphs.
+
+You can instead aggregate metrics across breakouts using the `?aggregate`
+query parameter, like `GET /api/v1/ilab/runs/<id>/graph/mpstat::Busy-CPU?aggregate`
+which will aggregate all CPU busy data for the system.
+
+Normally you'll want to display data based on sample periods, for example the
+primary period of an iteration, using `?period=<period-id>`. This will
+implicitly constrain the metric data based on the period ID associated with
+the `metric_desc` document *and* the begin/end time period of the selected
+periods. Normally, a benchmark will will separate iterations because each is
+run with a different parameter value, and the default graph labeling will
+look for a set of distinct parameters not used by other iterations: for
+example, `mpstat::Busy-CPU (batch-size=16)`.
+
+The `get_breakouts` API can be used to explore the namespace recorded for that
+metric in the specified run. For example,
 
 ```
-GET /api/v1/ilab/runs/<id>/breakdowns/sar-net::packets-sec?name=direction=rx
+GET /api/v1/ilab/runs/<id>/breakouts/sar-net::packets-sec?name=direction=rx
 {
   "label": "sar-net::packets-sec",
   "source": "sar-net",
@@ -76,14 +142,10 @@ GET /api/v1/ilab/runs/<id>/breakdowns/sar-net::packets-sec?name=direction=rx
 }
 ```
 
-Metric data access (including graphing) is now sensitive to the Crucible
-"period". The UI iterates through all periods for the selected run,
-requesting the primary metric and a selected secondary non-periodic
-metric for each period. The labeling for the graph is based on finding
-"param" values unique for each period's iteration.
-
 The `get_filters` API reports all the tag and param filter tags and
 values for the runs. These can be used for the `filters` query parameter
 on `get_runs` to restrict the set of runs reported; for example,
 `/api/v1/ilab/runs?filter=param:workflow=sdg` shows only runs with the param
-arg `workflow` set to the value `sdg`.
+arg `workflow` set to the value `sdg`. You can search for a subset of the
+string value using the operator "~" instead of "=". For example,
+`?filter=param:user~user` will match `user` values of "A user" or "The user".

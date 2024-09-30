@@ -1,3 +1,10 @@
+"""Access RHEL AI InstructLab performance data through Crucible
+
+This defines an API to expose and filter performance data from InstructLab
+CPT runs via a persistent Crucuble controller instance as defined in the
+configuration path "ilab.crucible".
+"""
+
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Optional
 
@@ -378,7 +385,7 @@ async def timeline(run: str):
             {
                 "ilab::train-samples-sec": {
                     "periods": ["C022CDC6-60C8-11EF-BA80-AFE7B4B2692B"],
-                    "breakdowns": {
+                    "breakouts": {
                         "benchmark-group": ["unknown"],
                         "benchmark-name": ["unknown"],
                         "benchmark-role": ["client"],
@@ -417,7 +424,7 @@ async def metrics(run: str):
                 "class": ["throughput"],
                 "type": "Busy-CPU",
                 "source": "mpstat",
-                "breakdowns": {"num": ["8", "72"], "thread": [0, 1]},
+                "breakouts": {"num": ["8", "72"], "thread": [0, 1]},
             }
         ),
         400: example_error("Metric name <name> not found for run <id>"),
@@ -641,6 +648,9 @@ async def metric_graph_body(graphs: GraphList):
 async def metric_graph_param(
     run: str,
     metric: str,
+    aggregate: Annotated[
+        bool, Query(description="Allow aggregation of metrics")
+    ] = False,
     name: Annotated[
         Optional[list[str]],
         Query(
@@ -655,9 +665,7 @@ async def metric_graph_param(
             examples=["<id>", "<id1>,<id2>"],
         ),
     ] = None,
-    aggregate: Annotated[
-        bool, Query(description="Allow aggregation of metrics")
-    ] = False,
+    title: Annotated[Optional[str], Query(description="Title for graph")] = None,
 ):
     crucible = CrucibleService(CONFIGPATH)
     return crucible.get_metrics_graph(
@@ -665,7 +673,13 @@ async def metric_graph_param(
             run=run,
             name=metric,
             graphs=[
-                Graph(metric=metric, aggregate=aggregate, names=name, periods=period)
+                Graph(
+                    metric=metric,
+                    aggregate=aggregate,
+                    names=name,
+                    periods=period,
+                    title=title,
+                )
             ],
         )
     )
@@ -729,4 +743,4 @@ async def info():
 )
 async def fields(index: str):
     crucible = CrucibleService(CONFIGPATH)
-    return crucible.fields(index=index)
+    return crucible.get_fields(index=index)

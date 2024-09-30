@@ -1,3 +1,15 @@
+"""Service to pull data from a Crucible CDM OpenSearch data store
+
+A set of helper methods to enable a project API to easily process data from a
+Crucible controller's OpenSearch data backend.
+
+This includes paginated, filtered, and sorted lists of benchmark runs, along
+access to the associated Crucible documents such as iterations, samples, and
+periods. Metric data can be accessed by breakout names, or aggregated by
+breakout subsets or collection periods as either raw data points, statistical
+aggregate, or Plotly graph format for UI display.
+"""
+
 import sys
 import time
 from collections import defaultdict
@@ -15,11 +27,22 @@ from app import config
 class Graph(BaseModel):
     """Describe a single graph
 
-    metric: the metric label, "ilab::train-samples-sec"
-    aggregate: True to aggregate unspecified breakouts
-    names: Lock in breakouts
-    periods: Select metrics for specific test period(s)
-    run: Override the default run ID from GraphList
+    This represents a JSON object provided by a caller through the get_graph
+    API to describe a specific metric graph.
+
+    The default title (if the field is omitted) is the metric label with a
+    suffix denoting breakout values selected, any unique parameter values
+    in a selected iteration, and (if multiple runs are selected in any Graph
+    list) an indication of the run index. For example,
+    "mpstat::Busy-CPU [core=2,type=usr] (batch-size=16)".
+
+    Fields:
+        metric: the metric label, "ilab::train-samples-sec"
+        aggregate: True to aggregate unspecified breakouts
+        names: Lock in breakouts
+        periods: Select metrics for specific test period(s)
+        run: Override the default run ID from GraphList
+        title: Provide a title for the graph. The default is a generated title
     """
 
     metric: str
@@ -27,14 +50,22 @@ class Graph(BaseModel):
     names: Optional[list[str]] = None
     periods: Optional[list[str]] = None
     run: Optional[str] = None
+    title: Optional[str] = None
 
 
 class GraphList(BaseModel):
     """Describe a set of overlaid graphs
 
-    run: Specify the (default) run ID
-    name: Specify a name for the set of graphs
-    graphs: a list of Graph objects
+    This represents a JSON object provided by a caller through the get_graph
+    API to introduce a set of constrained metrics to be graphed. The "run
+    ID" here provides a default for the embedded Graph objects, and can be
+    omitted if all Graph objects specify a run ID. (This is most useful to
+    select a set of graphs all for a single run ID.)
+
+    Fields:
+        run: Specify the (default) run ID
+        name: Specify a name for the set of graphs
+        graphs: a list of Graph objects
     """
 
     run: str
@@ -457,10 +488,10 @@ class CrucibleService:
     def _build_name_filters(
         cls, namelist: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
-        """Build filter terms for metric breakdown names
+        """Build filter terms for metric breakout names
 
         for example, "cpu=10" filters for metric data descriptors where the
-        breakdown name "cpu" exists and has a value of 10.
+        breakout name "cpu" exists and has a value of 10.
 
         Args:
             namelist: list of possibly comma-separated list values
@@ -1331,11 +1362,11 @@ class CrucibleService:
         {
             "ilab::train-samples-sec": {
                 "periods": [{"id": <id>, "name": "measurement"}],
-                "names": {"benchmark-group" ["unknown"], ...}
+                "breakouts": {"benchmark-group" ["unknown"], ...}
             },
             "iostat::avg-queue-length": {
                 "periods": [],
-                "names": {"benchmark-group": ["unknown"], ...},
+                "breakouts": {"benchmark-group": ["unknown"], ...},
             },
             ...
         }
@@ -1359,12 +1390,12 @@ class CrucibleService:
             if name in met:
                 record = met[name]
             else:
-                record = {"periods": [], "breakdowns": defaultdict(set)}
+                record = {"periods": [], "breakouts": defaultdict(set)}
                 met[name] = record
             if "period" in h:
                 record["periods"].append(h["period"]["id"])
             for n, v in desc["names"].items():
-                record["breakdowns"][n].add(v)
+                record["breakouts"][n].add(v)
         return met
 
     def get_metric_breakouts(
@@ -1374,7 +1405,7 @@ class CrucibleService:
         names: Optional[list[str]] = None,
         periods: Optional[list[str]] = None,
     ) -> dict[str, Any]:
-        """Help explore available metric breakdowns
+        """Help explore available metric breakouts
 
         Args:
             run: run ID
@@ -1383,7 +1414,7 @@ class CrucibleService:
             periods: list of period IDs
 
         Returns:
-            A description of all breakdown names and values, which can be
+            A description of all breakout names and values, which can be
             specified to narrow down metrics returns by the data, summary, and
             graph APIs.
 
@@ -1394,7 +1425,7 @@ class CrucibleService:
                 ],
                 "type": "Busy-CPU",
                 "source": "mpstat",
-                "breakdowns": {
+                "breakouts": {
                     "num": [
                         "8",
                         "72"
@@ -1643,35 +1674,73 @@ class CrucibleService:
             names = g.names
             metric: str = g.metric
 
-            if run_id not in params_by_run:
-                # Gather iteration parameters outside the loop for help in generating
-                # useful lables.
-                all_params = self.search(
-                    "param", filters=[{"term": {"run.id": default_run_id}}]
-                )
-                collector = defaultdict(defaultdict)
-                for h in self._hits(all_params):
-                    collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"][
-                        "val"
-                    ]
-                params_by_run[run_id] = collector
+            if g.title:
+                title = g.title
             else:
-                collector = params_by_run[run_id]
+                if run_id not in params_by_run:
+                    # Gather iteration parameters outside the loop for help in
+                    # generating useful lables.
+                    all_params = self.search(
+                        "param", filters=[{"term": {"run.id": default_run_id}}]
+                    )
+                    collector = defaultdict(defaultdict)
+                    for h in self._hits(all_params):
+                        collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"][
+                            "val"
+                        ]
+                    params_by_run[run_id] = collector
+                else:
+                    collector = params_by_run[run_id]
 
-            if run_id not in periods_by_run:
-                # Capture period IDs for the run iterations outside the loop
-                periods = self.search(
-                    "period", filters=[{"term": {"run.id": default_run_id}}]
-                )
-                iteration_periods = defaultdict(set)
-                for p in self._hits(periods):
-                    if run_id not in suffix_by_run:
-                        print(f"Run {run_id} suffix {p['run']['begin']}")
-                        suffix_by_run[run_id] = p["run"]["begin"]
-                    iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
-                periods_by_run[run_id] = iteration_periods
-            else:
-                iteration_periods = periods_by_run[run_id]
+                if run_id not in periods_by_run:
+                    periods = self.search(
+                        "period", filters=[{"term": {"run.id": default_run_id}}]
+                    )
+                    iteration_periods = defaultdict(set)
+                    for p in self._hits(periods):
+                        if run_id not in suffix_by_run:
+                            suffix_by_run[run_id] = p["run"]["begin"]
+                        iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
+                    periods_by_run[run_id] = iteration_periods
+                else:
+                    iteration_periods = periods_by_run[run_id]
+
+                # We can easily end up with multiple graphs across distinct
+                # periods or iterations, so we want to be able to provide some
+                # labeling to the graphs. We do this by looking for unique
+                # iteration parameters values, since the iteration number and
+                # period name aren't useful by themselves.
+                name_suffix = ""
+                if g.periods:
+                    iteration = None
+                    for i, pset in iteration_periods.items():
+                        if set(g.periods) <= pset:
+                            iteration = i
+                            break
+
+                    # If the period(s) we're graphing resolve to a single
+                    # iteration in a run with multiple iterations, then we can
+                    # try to find a unique title suffix based on distinct param
+                    # values for that iteration.
+                    if iteration and len(collector) > 1:
+                        unique = collector[iteration].copy()
+                        for i, params in collector.items():
+                            if i != iteration:
+                                for p in list(unique.keys()):
+                                    if p in params and unique[p] == params[p]:
+                                        del unique[p]
+                        if unique:
+                            name_suffix = (
+                                " ("
+                                + ",".join([f"{p}={v}" for p, v in unique.items()])
+                                + ")"
+                            )
+
+                if len(run_id_list) > 1:
+                    name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
+
+                options = (" [" + ",".join(names) + "]") if names else ""
+                title = metric + options + name_suffix
 
             ids = self._get_metric_ids(
                 run_id,
@@ -1680,41 +1749,6 @@ class CrucibleService:
                 periodlist=g.periods,
                 aggregate=g.aggregate,
             )
-
-            # We can easily end up with multiple graphs across distinct periods
-            # or iterations, so we want to be able to provide some labeling to
-            # the graphs. We do this by looking for unique iteration parameters
-            # values, since the iteration number and period name aren't useful
-            # by themselves.
-            name_suffix = ""
-            if g.periods:
-                iteration = None
-                for i, pset in iteration_periods.items():
-                    if set(g.periods) <= pset:
-                        iteration = i
-                        break
-
-                # If the period(s) we're graphing resolve to a single iteration
-                # in a run with multiple iterations, then we can try to find a
-                # unique title suffix based on distinct param values for that
-                # iteration.
-                if iteration and len(collector) > 1:
-                    unique = collector[iteration].copy()
-                    for i, params in collector.items():
-                        if i != iteration:
-                            for p in list(unique.keys()):
-                                if p in params and unique[p] == params[p]:
-                                    del unique[p]
-                    if unique:
-                        name_suffix = (
-                            " ("
-                            + ",".join([f"{p}={v}" for p, v in unique.items()])
-                            + ")"
-                        )
-
-            if len(run_id_list) > 1:
-                name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
-
             filters = [{"terms": {"metric_desc.id": ids}}]
             filters.extend(self._build_timestamp_range_filters(g.periods))
             y_max = 0.0
@@ -1775,12 +1809,10 @@ class CrucibleService:
                 y.extend([p.value, p.value])
                 y_max = max(y_max, p.value)
 
-            options = (" [" + ",".join(names) + "]") if names else ""
-            title = metric + options
             graphitem = {
                 "x": x,
                 "y": y,
-                "name": title + name_suffix,
+                "name": title,
                 "type": "scatter",
                 "mode": "line",
                 "marker": {"color": colors[cindex]},
@@ -1827,7 +1859,7 @@ class CrucibleService:
         print(f"Processing took {duration} seconds")
         return {"data": graphlist, "layout": layout}
 
-    def fields(self, index: str) -> dict[str, dict[str, str]]:
+    def get_fields(self, index: str) -> dict[str, dict[str, str]]:
         """Return the fields of an OpenSearch document from an index
 
         This fetches the document mapping from OpenSearch and reports it as a
