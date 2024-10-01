@@ -39,6 +39,7 @@ class Graph(BaseModel):
     Fields:
         metric: the metric label, "ilab::train-samples-sec"
         aggregate: True to aggregate unspecified breakouts
+        color: CSS color string ("green" or "#008000")
         names: Lock in breakouts
         periods: Select metrics for specific test period(s)
         run: Override the default run ID from GraphList
@@ -47,6 +48,7 @@ class Graph(BaseModel):
 
     metric: str
     aggregate: bool = False
+    color: Optional[str] = None
     names: Optional[list[str]] = None
     periods: Optional[list[str]] = None
     run: Optional[str] = None
@@ -1809,13 +1811,20 @@ class CrucibleService:
                 y.extend([p.value, p.value])
                 y_max = max(y_max, p.value)
 
+            if g.color:
+                color = g.color
+            else:
+                color = colors[cindex]
+                cindex += 1
+                if cindex >= len(colors):
+                    cindex = 0
             graphitem = {
                 "x": x,
                 "y": y,
                 "name": title,
                 "type": "scatter",
                 "mode": "line",
-                "marker": {"color": colors[cindex]},
+                "marker": {"color": color},
                 "labels": {
                     "x": "sample timestamp",
                     "y": "samples / second",
@@ -1835,7 +1844,7 @@ class CrucibleService:
                     yaxis += 1
                     layout[name] = {
                         "title": metric,
-                        "color": colors[cindex],
+                        "color": color,
                         "autorange": True,
                         "anchor": "free",
                         "autoshift": True,
@@ -1847,13 +1856,10 @@ class CrucibleService:
                     yaxis = 2
                     layout[name] = {
                         "title": metric,
-                        "color": colors[cindex],
+                        "color": color,
                     }
                 axes[metric] = yref
             graphitem["yaxis"] = yref
-            cindex += 1
-            if cindex >= len(colors):
-                cindex = 0
             graphlist.append(graphitem)
         duration = time.time() - start
         print(f"Processing took {duration} seconds")
