@@ -255,16 +255,20 @@ async def iterations(run: str):
         200: example_response(
             [
                 {
-                    "id": "6BA5071A-7139-11EF-9864-EA6BC0BEFE10",
-                    "num": "1",
-                    "path": None,
-                    "status": "pass",
-                },
-                {
                     "id": "6BBE6872-7139-11EF-BFAA-8569A9399D61",
                     "num": "1",
                     "path": None,
                     "status": "pass",
+                    "iteration": 5,
+                    "primary_metric": "ilab::sdg-samples-sec",
+                },
+                {
+                    "id": "6BACDFA8-7139-11EF-9F33-8185DD5B4869",
+                    "num": "1",
+                    "path": None,
+                    "status": "pass",
+                    "iteration": 2,
+                    "primary_metric": "ilab::sdg-samples-sec",
                 },
             ]
         ),
@@ -288,12 +292,20 @@ async def run_samples(run: str):
                     "end": "2024-09-12 18:03:23.132000+00:00",
                     "id": "6BA57EF2-7139-11EF-A80B-E5037504B9B1",
                     "name": "measurement",
+                    "iteration": 1,
+                    "sample": "1",
+                    "primary_metric": "ilab::sdg-samples-sec",
+                    "status": "pass",
                 },
                 {
-                    "begin": "2024-09-12 16:50:19.305000+00:00",
-                    "end": "2024-09-12 17:14:04.475000+00:00",
-                    "id": "6BAD466E-7139-11EF-8E60-927A210BA97E",
+                    "begin": "2024-09-12 18:05:03.229000+00:00",
+                    "end": "2024-09-12 18:27:55.419000+00:00",
+                    "id": "6BB93622-7139-11EF-A6C0-89A48E630F9D",
                     "name": "measurement",
+                    "iteration": 4,
+                    "sample": "1",
+                    "primary_metric": "ilab::sdg-samples-sec",
+                    "status": "pass",
                 },
             ]
         ),
@@ -313,11 +325,21 @@ async def run_periods(run: str):
         200: example_response(
             [
                 {
-                    "id": "6BB8BD00-7139-11EF-B2B2-942D604C0B7B",
+                    "id": "6BBE6872-7139-11EF-BFAA-8569A9399D61",
                     "num": "1",
                     "path": None,
                     "status": "pass",
-                }
+                    "iteration": 5,
+                    "primary_metric": "ilab::sdg-samples-sec",
+                },
+                {
+                    "id": "6BACDFA8-7139-11EF-9F33-8185DD5B4869",
+                    "num": "1",
+                    "path": None,
+                    "status": "pass",
+                    "iteration": 2,
+                    "primary_metric": "ilab::sdg-samples-sec",
+                },
             ]
         ),
         400: example_error("Parameter error"),
@@ -383,26 +405,28 @@ async def timeline(run: str):
     responses={
         200: example_response(
             {
-                "ilab::train-samples-sec": {
-                    "periods": ["C022CDC6-60C8-11EF-BA80-AFE7B4B2692B"],
+                "sar-net::packets-sec": {
+                    "periods": [],
                     "breakouts": {
-                        "benchmark-group": ["unknown"],
-                        "benchmark-name": ["unknown"],
-                        "benchmark-role": ["client"],
-                        "csid": ["1"],
-                        "cstype": ["client"],
+                        "benchmark-name": ["none"],
+                        "benchmark-role": ["none"],
+                        "csid": ["remotehosts-1-sysstat-1"],
+                        "cstype": ["profiler"],
+                        "dev": ["lo", "eno8303", "eno12399", "eno12409"],
+                        "direction": ["rx", "tx"],
                         "endpoint-label": ["remotehosts-1"],
-                        "engine-id": ["1"],
-                        "engine-role": ["benchmarker"],
-                        "engine-type": ["client"],
-                        "hosted-by": ["nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com"],
-                        "hostname": ["nvd-srv-29.nvidia.eng.rdu2.dc.redhat.com"],
+                        "engine-id": ["remotehosts-1-sysstat-1"],
+                        "engine-role": ["profiler"],
+                        "engine-type": ["profiler"],
+                        "hosted-by": ["x.example.com"],
+                        "hostname": ["x.example.com"],
                         "hypervisor-host": ["none"],
                         "osruntime": ["podman"],
-                        "tool-name": ["unknown"],
+                        "tool-name": ["sysstat"],
+                        "type": ["virtual", "physical"],
                         "userenv": ["rhel-ai"],
                     },
-                }
+                },
             },
         ),
         400: example_error("Parameter error"),
@@ -571,21 +595,49 @@ async def metric_summary(
     responses={
         200: example_response(
             response={
-                "iostat::operations-merged-sec": [
+                "data": [
                     {
                         "x": [
-                            "2024-09-05 22:01:52+00:00",
+                            "2024-09-05 21:50:07+00:00",
                             "2024-09-05 21:56:37+00:00",
+                            "2024-09-05 21:56:37.001000+00:00",
                             "2024-09-05 21:56:52+00:00",
+                            "2024-09-05 21:56:52.001000+00:00",
+                            "2024-09-05 22:01:52+00:00",
                         ],
-                        "y": [0.0, 0.0, 0.33],
-                        "name": "Metric iostat::operations-merged-sec cmd=read,dev=sdb",
+                        "y": [0.0, 0.0, 0.33, 0.33, 0.0, 0.0],
+                        "name": "iostat::operations-merged-sec [cmd=read,dev=sdb]",
                         "type": "scatter",
-                        "mode": "markers",
-                        "orientation": "h",
+                        "mode": "line",
+                        "marker": {"color": "black"},
                         "labels": {"x": "sample timestamp", "y": "samples / second"},
-                    }
-                ]
+                        "yaxis": "y",
+                    },
+                    {
+                        "x": [
+                            "2024-09-05 21:50:07+00:00",
+                            "2024-09-05 21:56:37+00:00",
+                            "2024-09-05 21:56:37.001000+00:00",
+                            "2024-09-05 21:56:52+00:00",
+                            "2024-09-05 21:56:52.001000+00:00",
+                            "2024-09-05 22:01:52+00:00",
+                        ],
+                        "y": [0.0, 0.0, 0.33, 0.33, 0.0, 0.0],
+                        "name": "iostat::operations-merged-sec [dev=sdb,cmd=read]",
+                        "type": "scatter",
+                        "mode": "line",
+                        "marker": {"color": "purple"},
+                        "labels": {"x": "sample timestamp", "y": "samples / second"},
+                        "yaxis": "y",
+                    },
+                ],
+                "layout": {
+                    "width": "1500",
+                    "yaxis": {
+                        "title": "iostat::operations-merged-sec",
+                        "color": "black",
+                    },
+                },
             }
         ),
         400: example_error("No matches for ilab::train-samples-sec"),
@@ -614,21 +666,35 @@ async def metric_graph_body(graphs: GraphList):
     responses={
         200: example_response(
             response={
-                "iostat::operations-merged-sec": [
+                "data": [
                     {
                         "x": [
-                            "2024-09-05 22:01:52+00:00",
-                            "2024-09-05 21:56:37+00:00",
-                            "2024-09-05 21:56:52+00:00",
+                            "2024-09-12 16:49:01+00:00",
+                            "2024-09-12 18:04:31+00:00",
+                            "2024-09-12 18:04:31.001000+00:00",
+                            "2024-09-12 18:04:46+00:00",
+                            "2024-09-12 18:04:46.001000+00:00",
+                            "2024-09-12 18:53:16+00:00",
                         ],
-                        "y": [0.0, 0.0, 0.33],
-                        "name": "Metric iostat::operations-merged-sec cmd=read,dev=sdb",
+                        "y": [0.0, 0.0, 1.4, 1.4, 0.0, 0.0],
+                        "name": "iostat::operations-merged-sec [cmd=read,dev=sda]",
                         "type": "scatter",
-                        "mode": "markers",
-                        "orientation": "h",
-                        "labels": {"x": "sample timestamp", "y": "samples / second"},
+                        "mode": "line",
+                        "marker": {"color": "black"},
+                        "labels": {
+                            "x": "sample timestamp",
+                            "y": "samples / second",
+                        },
+                        "yaxis": "y",
                     }
-                ]
+                ],
+                "layout": {
+                    "width": "1500",
+                    "yaxis": {
+                        "title": "iostat::operations-merged-sec",
+                        "color": "black",
+                    },
+                },
             }
         ),
         400: example_error("No matches for ilab::train-samples-sec"),

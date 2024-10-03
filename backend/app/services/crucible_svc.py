@@ -70,7 +70,7 @@ class GraphList(BaseModel):
         graphs: a list of Graph objects
     """
 
-    run: str
+    run: Optional[str] = None
     name: str
     graphs: list[Graph]
 
@@ -824,18 +824,14 @@ class CrucibleService:
 
             {
                 "param": {
-                    {"gpus": {
-                        "4": 22,
-                        "8": 2
-                    }
+                    {"gpus": [4", "8"]}
                 }
             }
 
         Returns:
-            A three-level JSON dict; the first level is the namespace (param or
-            tag), the second level is the parameter or tag name, the third
-            level key is each value present in the index, and the value is the
-            number of times that value appears.
+            A two-level JSON dict; the first level is the namespace (param or
+            tag), the second level key is the param/tag/field name and its value
+            is the set of values defined for that key.
         """
         tags = self.search(
             "tag",
@@ -965,7 +961,7 @@ class CrucibleService:
             offset: Use size/from pagination instead of search_after
 
         Returns:
-            JSON object with "runs" list, "size", "next", and "total" fields.
+            JSON object with "results" list and "housekeeping" fields
         """
 
         # We need to remove runs which don't match against 'tag' or 'param'
@@ -1145,9 +1141,9 @@ class CrucibleService:
         """Return the set of parameters for a run or iteration
 
         Parameters are technically associated with an iteration, but can be
-        aggregated for a run. (Note that, technically, values might vary across
-        iterations, and only one will be returned. This is OK if a run has a
-        single iteration, or if you know they're consistent.)
+        aggregated for a run. This will return a set of parameters for each
+        iteration; plus, if a "run" was specified, a filtered list of param
+        values that are common across all iterations.
 
         Args:
             run: run ID
@@ -1155,7 +1151,7 @@ class CrucibleService:
             kwargs: additional OpenSearch keywords
 
         Returns:
-            JSON dict of param key: value
+            JSON dict of param values by iteration (plus "common" if by run ID)
         """
         if not run and not iteration:
             raise HTTPException(
@@ -1293,6 +1289,7 @@ class CrucibleService:
         for h in self._hits(periods):
             period = self._format_period(period=h["period"])
             period["iteration"] = h["iteration"]["num"]
+            period["sample"] = h["sample"]["num"]
             period["primary_metric"] = h["iteration"]["primary-metric"]
             period["status"] = h["iteration"]["status"]
             body.append(period)
@@ -1502,19 +1499,22 @@ class CrucibleService:
 
             [
                 {
-                    "end": "2024-09-12 18:27:15+00:00",
-                    "value": 0.0,
-                    "duration": 15.0
+                    "begin": "2024-08-22 20:03:23.028000+00:00",
+                    "end": "2024-08-22 20:03:37.127000+00:00",
+                    "duration": 14.1,
+                    "value": 9.35271216694379
                 },
                 {
-                    "end": "2024-09-12 18:27:30+00:00",
-                    "value": 0.0007,
-                    "duration": 15.0
+                    "begin": "2024-08-22 20:03:37.128000+00:00",
+                    "end": "2024-08-22 20:03:51.149000+00:00",
+                    "duration": 14.022,
+                    "value": 9.405932330557683
                 },
                 {
-                    "end": "2024-09-12 18:27:45+00:00",
-                    "value": 0.0033,
-                    "duration": 15.0
+                    "begin": "2024-08-22 20:03:51.150000+00:00",
+                    "end": "2024-08-22 20:04:05.071000+00:00",
+                    "duration": 13.922,
+                    "value": 9.478773265522682
                 }
             ]
         """
@@ -1610,6 +1610,89 @@ class CrucibleService:
         print(f"Processing took {duration} seconds")
         return data["aggregations"]["score"]
 
+    def _graph_title(
+        self,
+        run_id: str,
+        run_id_list: list[str],
+        graph: Graph,
+        params_by_run: dict[str, Any],
+        periods_by_run: dict[str, Any],
+    ) -> str:
+        """Compute a default title for a graph
+
+        Use the period, breakout name selections, run list, and iteration
+        parameters to construct a meaningful name for a graph.
+
+        For example, "ilab::sdg-samples-sec (batch-size=4) {run 1}", or
+        "mpstat::Busy-CPU [cpu=4]"
+
+        Args:
+            run_id: the Crucible run ID
+            run_id_list: ordered list of run IDs in our list of graphs
+            graph: the current Graph object
+            params_by_run: initially empty dict used to cache parameters
+            periods_by_run: initially empty dict used to cache periods
+
+        Returns:
+            A string title
+        """
+        names = graph.names
+        metric = graph.metric
+        if run_id not in params_by_run:
+            # Gather iteration parameters outside the loop for help in
+            # generating useful labels.
+            all_params = self.search("param", filters=[{"term": {"run.id": run_id}}])
+            collector = defaultdict(defaultdict)
+            for h in self._hits(all_params):
+                collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"]["val"]
+            params_by_run[run_id] = collector
+        else:
+            collector = params_by_run[run_id]
+
+        if run_id not in periods_by_run:
+            periods = self.search("period", filters=[{"term": {"run.id": run_id}}])
+            iteration_periods = defaultdict(set)
+            for p in self._hits(periods):
+                iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
+            periods_by_run[run_id] = iteration_periods
+        else:
+            iteration_periods = periods_by_run[run_id]
+
+        # We can easily end up with multiple graphs across distinct
+        # periods or iterations, so we want to be able to provide some
+        # labeling to the graphs. We do this by looking for unique
+        # iteration parameters values, since the iteration number and
+        # period name aren't useful by themselves.
+        name_suffix = ""
+        if graph.periods:
+            iteration = None
+            for i, pset in iteration_periods.items():
+                if set(graph.periods) <= pset:
+                    iteration = i
+                    break
+
+            # If the period(s) we're graphing resolve to a single
+            # iteration in a run with multiple iterations, then we can
+            # try to find a unique title suffix based on distinct param
+            # values for that iteration.
+            if iteration and len(collector) > 1:
+                unique = collector[iteration].copy()
+                for i, params in collector.items():
+                    if i != iteration:
+                        for p in list(unique.keys()):
+                            if p in params and unique[p] == params[p]:
+                                del unique[p]
+                if unique:
+                    name_suffix = (
+                        " (" + ",".join([f"{p}={v}" for p, v in unique.items()]) + ")"
+                    )
+
+        if len(run_id_list) > 1:
+            name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
+
+        options = (" [" + ",".join(names) + "]") if names else ""
+        return metric + options + name_suffix
+
     def get_metrics_graph(self, graphdata: GraphList) -> dict[str, Any]:
         """Return metrics data for a run
 
@@ -1660,7 +1743,6 @@ class CrucibleService:
         cindex = 0
         params_by_run = {}
         periods_by_run = {}
-        suffix_by_run = {}
 
         # Construct a de-duped ordered list of run IDs, starting with the
         # default.
@@ -1671,78 +1753,26 @@ class CrucibleService:
             if g.run and g.run not in run_id_list:
                 run_id_list.append(g.run)
 
+        if len(run_id_list) < len(graphdata.graphs) and not default_run_id:
+            raise HTTPException(
+                status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
+            )
+
         for g in graphdata.graphs:
             run_id = g.run if g.run else default_run_id
             names = g.names
             metric: str = g.metric
 
+            # The caller can provide a title for each graph; but, if not, we
+            # journey down dark overgrown pathways to fabricate a default with
+            # reasonable context, including unique iteration parameters,
+            # breakdown selections, and which run provided the data.
             if g.title:
                 title = g.title
             else:
-                if run_id not in params_by_run:
-                    # Gather iteration parameters outside the loop for help in
-                    # generating useful lables.
-                    all_params = self.search(
-                        "param", filters=[{"term": {"run.id": default_run_id}}]
-                    )
-                    collector = defaultdict(defaultdict)
-                    for h in self._hits(all_params):
-                        collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"][
-                            "val"
-                        ]
-                    params_by_run[run_id] = collector
-                else:
-                    collector = params_by_run[run_id]
-
-                if run_id not in periods_by_run:
-                    periods = self.search(
-                        "period", filters=[{"term": {"run.id": default_run_id}}]
-                    )
-                    iteration_periods = defaultdict(set)
-                    for p in self._hits(periods):
-                        if run_id not in suffix_by_run:
-                            suffix_by_run[run_id] = p["run"]["begin"]
-                        iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
-                    periods_by_run[run_id] = iteration_periods
-                else:
-                    iteration_periods = periods_by_run[run_id]
-
-                # We can easily end up with multiple graphs across distinct
-                # periods or iterations, so we want to be able to provide some
-                # labeling to the graphs. We do this by looking for unique
-                # iteration parameters values, since the iteration number and
-                # period name aren't useful by themselves.
-                name_suffix = ""
-                if g.periods:
-                    iteration = None
-                    for i, pset in iteration_periods.items():
-                        if set(g.periods) <= pset:
-                            iteration = i
-                            break
-
-                    # If the period(s) we're graphing resolve to a single
-                    # iteration in a run with multiple iterations, then we can
-                    # try to find a unique title suffix based on distinct param
-                    # values for that iteration.
-                    if iteration and len(collector) > 1:
-                        unique = collector[iteration].copy()
-                        for i, params in collector.items():
-                            if i != iteration:
-                                for p in list(unique.keys()):
-                                    if p in params and unique[p] == params[p]:
-                                        del unique[p]
-                        if unique:
-                            name_suffix = (
-                                " ("
-                                + ",".join([f"{p}={v}" for p, v in unique.items()])
-                                + ")"
-                            )
-
-                if len(run_id_list) > 1:
-                    name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
-
-                options = (" [" + ",".join(names) + "]") if names else ""
-                title = metric + options + name_suffix
+                title = self._graph_title(
+                    run_id, run_id_list, g, params_by_run, periods_by_run
+                )
 
             ids = self._get_metric_ids(
                 run_id,
