@@ -11,6 +11,7 @@ const initialState = {
   size: 10,
   offset: 1,
   metrics: [],
+  periods: [],
   metrics_selected: {},
 };
 const ILabReducer = (state = initialState, action = {}) => {
@@ -40,6 +41,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, page: payload.page, perPage: payload.perPage };
     case TYPES.SET_ILAB_METRICS:
       return { ...state, metrics: [...state.metrics, payload] };
+    case TYPES.SET_ILAB_PERIODS:
+      return { ...state, periods: [...state.periods, payload] };
     case TYPES.SET_ILAB_SELECTED_METRICS:
       return {
         ...state,

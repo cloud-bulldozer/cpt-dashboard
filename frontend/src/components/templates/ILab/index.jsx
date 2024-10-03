@@ -17,7 +17,7 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { fetchILabJobs, fetchMetricsInfo } from "@/actions/ilabActions";
+import { fetchILabJobs, fetchMetricsInfo, fetchPeriods } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
@@ -58,6 +58,7 @@ const ILab = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
+      dispatch(fetchPeriods(run.id));
       dispatch(fetchMetricsInfo(run.id));
       // dispatch(fetchGraphData(run.id, run?.primary_metrics[0]));
     }

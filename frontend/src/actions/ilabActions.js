@@ -89,9 +89,27 @@ export const fetchMetricsInfo = (uid) => async (dispatch) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
+export const fetchPeriods = (uid) => async (dispatch) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+    const response = await API.get(`/api/v1/ilab/runs/${uid}/periods`);
+    if (response.status === 200) {
+      dispatch({
+        type: TYPES.SET_ILAB_PERIODS,
+        payload: { uid, periods: response.data },
+      });
+    }
+  } catch (error) {
+    console.error(error);
+    dispatch(showFailureToast(error?.response?.data?.detail));
+  }
+  dispatch({ type: TYPES.COMPLETED });
+};
+
 export const fetchGraphData =
   (uid, metric, primary_metric) => async (dispatch, getState) => {
     try {
+      const periods = getState().ilab.periods.find((i) => i.uid == uid);
       const graphData = cloneDeep(getState().ilab.graphData);
       const filterData = graphData.filter((i) => i.uid !== uid);
       dispatch({
@@ -100,9 +118,8 @@ export const fetchGraphData =
       });
       const copyData = cloneDeep(filterData);
       dispatch({ type: TYPES.GRAPH_LOADING });
-      const periods = await API.get(`/api/v1/ilab/runs/${uid}/periods`);
       let graphs = [];
-      periods.data.forEach((p) => {
+      periods?.periods?.forEach((p) => {
         graphs.push({ metric: p.primary_metric, periods: [p.id] });
         graphs.push({
           metric,
@@ -127,8 +144,16 @@ export const fetchGraphData =
         });
       }
     } catch (error) {
-      console.error(error);
-      dispatch(showToast("danger", "Graph error", error.data));
+      var detail = error?.response?.data?.detail;
+      var str;
+      if (typeof detail == "string") {
+        str = detail;
+      } else if (typeof detail == "object" && typeof detail?.message == "string") {
+        str = detail.message;
+      } else {
+        str = JSON.stringify(detail);
+      }
+      dispatch(showFailureToast(str));
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
@@ -161,11 +186,6 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
 
 export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
   const metrics_selected = cloneDeep(getState().ilab.metrics_selected);
-  // if (id in metrics_selected) {
-  //   metrics_selected[id] = metrics;
-  // } else {
-  //   metrics_selected[id] =  metrics;
-  // }
   metrics_selected[id] = metrics;
   dispatch({
     type: TYPES.SET_ILAB_SELECTED_METRICS,
