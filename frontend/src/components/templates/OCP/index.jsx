@@ -21,7 +21,6 @@ const OCP = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    results,
     tableColumns,
     activeSortDir,
     activeSortIndex,
@@ -101,7 +100,7 @@ const OCP = () => {
   return (
     <>
       <MetricsTab
-        totalItems={results.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}

@@ -52,7 +52,7 @@ const initialState = {
   filterData: [],
   categoryFilterValue: "",
   filterOptions: [],
-  appliedFilters: { platform: ["AWS"], ciSystem: ["PROW"] },
+  appliedFilters: {},
   summary: {},
   graphData: [],
   clusterMetaData: [

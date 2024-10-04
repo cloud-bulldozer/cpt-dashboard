@@ -42,7 +42,8 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         
         results = await getData(start_date, end_date, size, offset, sort, filter, 'ocp.elasticsearch')
 
-        if len(results["data"]) >= 1:
+        
+        if "data" in results and len(results["data"]) >= 1:
             response = {
                 'startDate': start_date.__str__(),
                 'endDate': end_date.__str__(),
@@ -67,7 +68,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         return jsonstring
     
     except Exception as err:
-        print(f"{type(err).__name__} was raised: {err}") 
+        print(f"{type(err).__name__} was raised15: {err}") 
 
 @router.get('/api/v1/ocp/filters',
             summary="Returns a job list",
@@ -99,13 +100,18 @@ async def filters(start_date: date = Query(None, description="Start date for sea
         
         results = await getFilterData(start_date, end_date, size, offset, sort, filter, 'ocp.elasticsearch')
         
-        if len(results) > 0:
-            print(results)
+        if len(results["filterData"]) > 0:
+            json_str = json.dumps(results, indent=4)
+            return Response(content=json_str, media_type='application/json')
         else:
-            print("No data")
+            response = {
+                "filterData": [],
+                "summary": []
+            }
+            json_str = json.dumps(results, indent=4)
+            return Response(content=json_str, media_type='application/json')
         
-        json_str = json.dumps(results, indent=4)
-        return Response(content=json_str, media_type='application/json')
+        
         
     except Exception as err:
         print(f"{type(err).__name__} was raised: {err}") 

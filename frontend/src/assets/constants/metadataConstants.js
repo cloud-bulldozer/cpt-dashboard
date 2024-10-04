@@ -9,4 +9,5 @@ export const OCP_FILTERS = {
   ciSystem: "ciSystem.keyword",
   platform: "platform.keyword",
   workerNodesCount: "workerNodesCount",
+  build: "build",
 };

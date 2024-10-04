@@ -33,20 +33,21 @@ export const fetchOCPJobs =
         pretty: true,
         ...(start_date && { start_date }),
         ...(end_date && { end_date }),
-        size: 10,
+        size: size,
         offset: offset,
       };
       if (Object.keys(sort).length > 0) {
         params["sort"] = JSON.stringify(sort);
       }
 
-      if (Object.keys(appliedFilters).length > 0) {
-        let filter = {};
-        Object.keys(appliedFilters).forEach((key) => {
-          filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
-        });
-        params["filter"] = JSON.stringify(filter);
-      }
+      // if (Object.keys(appliedFilters).length > 0) {
+      //   let filter = {};
+      //   Object.keys(appliedFilters).forEach((key) => {
+      //     filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
+      //   });
+      //   params["filter"] = JSON.stringify(filter);
+      // }
+      params["filter"] = JSON.stringify(appliedFilters);
       const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, { params });
       if (response.status === 200) {
         const startDate = response.data.startDate,
@@ -78,7 +79,6 @@ export const fetchOCPJobs =
             offset: response.data.offset,
           },
         });
-        // dispatch(applyFilters());
         dispatch(tableReCalcValues());
       }
     } catch (error) {
@@ -140,7 +140,7 @@ export const applyFilters = () => (dispatch) => {
   dispatch(fetchOCPJobs());
 
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("ocp"));
+  dispatch(buildFilterData());
 };
 
 export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
@@ -229,10 +229,27 @@ export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(tableReCalcValues());
 };
 
-export const getOCPSummary = () => (dispatch, getState) => {
-  const results = [...getState().ocp.results];
-
-  const countObj = calculateMetrics(results);
+export const getOCPSummary = (countArr) => (dispatch) => {
+  const countObj = {
+    successCount: 0,
+    failureCount: 0,
+    othersCount: 0,
+    total: 0,
+  };
+  countArr.forEach((item) => {
+    if (item["key"] === "failure") {
+      countObj["failureCount"] = item["count"];
+    } else if (item["key"] === "success") {
+      countObj["successCount"] = item["count"];
+    }
+    countObj["othersCount"] +=
+      item["key"] !== "failure" &&
+      item["key"] !== "success" &&
+      item["key"] !== "total"
+        ? item["count"]
+        : 0;
+    countObj["total"] = item["key"] === "total";
+  });
   dispatch({
     type: TYPES.SET_OCP_SUMMARY,
     payload: countObj,
@@ -284,7 +301,6 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().ocp;
   const startIdx = page !== 1 ? (page - 1) * perPage : 0;
   const endIdx = page !== 1 ? page * perPage - 1 : perPage;
-  dispatch(getOCPSummary());
   dispatch(setOCPPageOptions(page, perPage));
   dispatch(sliceOCPTableRows(startIdx, endIdx));
 };
@@ -298,6 +314,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
       sort,
       appliedFilters,
       tableFilters,
+      size,
       categoryFilterValue,
     } = getState().ocp;
 
@@ -305,24 +322,17 @@ export const buildFilterData = () => async (dispatch, getState) => {
       pretty: true,
       ...(start_date && { start_date }),
       ...(end_date && { end_date }),
-      size: 10,
+      size: size,
       offset: offset,
     };
     if (Object.keys(sort).length > 0) {
       params["sort"] = JSON.stringify(sort);
     }
 
-    if (Object.keys(appliedFilters).length > 0) {
-      let filter = {};
-      Object.keys(appliedFilters).forEach((key) => {
-        filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
-      });
-      params["filter"] = JSON.stringify(filter);
-    }
-
+    params["filter"] = JSON.stringify(appliedFilters);
     const response = await API.get("/api/v1/ocp/filters", { params });
-    if (response.status === 200 && response.data.length > 0) {
-      let data = cloneDeep(response.data);
+    if (response.status === 200 && response?.data?.filterData?.length > 0) {
+      let data = cloneDeep(response.data.filterData);
       for (let i = 0; i < tableFilters.length; i++) {
         for (let j = 0; j < data.length; j++) {
           if (tableFilters[i]["value"] === data[j].key) {
@@ -339,6 +349,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
         type: TYPES.SET_OCP_FILTER_DATA,
         payload: data,
       });
+      dispatch(getOCPSummary(response.data.summary));
       const activeFilter = categoryFilterValue || tableFilters[0].name;
       await dispatch(setOCPCatFilters(activeFilter));
     }
