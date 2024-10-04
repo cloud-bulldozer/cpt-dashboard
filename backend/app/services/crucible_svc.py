@@ -608,6 +608,12 @@ class CrucibleService:
         )
         return value
 
+    def close(self):
+        """Close the OpenSearch connection"""
+        if self.elastic:
+            self.elastic.close()
+        self.elastic = None
+
     def search(
         self,
         index: str,
