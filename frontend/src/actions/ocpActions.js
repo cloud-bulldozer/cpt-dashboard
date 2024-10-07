@@ -1,53 +1,23 @@
 import * as API_ROUTES from "@/utils/apiConstants";
-import * as CONSTANTS from "@/assets/constants/metadataConstants.js";
 import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
-import {
-  calculateMetrics,
-  deleteAppliedFilters,
-  getSelectedFilter,
-} from "./commonActions";
+import { deleteAppliedFilters, getSelectedFilter } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "./toastActions";
 
 export const fetchOCPJobs =
-  (isFromSorting = false) =>
+  (shouldStartFresh = false) =>
   async (dispatch, getState) => {
     try {
       dispatch({ type: TYPES.LOADING });
-      const {
-        start_date,
-        end_date,
-        size,
-        offset,
-        results,
-        sort,
-        appliedFilters,
-      } = getState().ocp;
+      const { results, sort } = getState().ocp;
 
       console.log(JSON.stringify(sort));
-      const params = {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-        size: size,
-        offset: offset,
-      };
-      if (Object.keys(sort).length > 0) {
-        params["sort"] = JSON.stringify(sort);
-      }
+      const params = dispatch(getRequestParams());
 
-      // if (Object.keys(appliedFilters).length > 0) {
-      //   let filter = {};
-      //   Object.keys(appliedFilters).forEach((key) => {
-      //     filter[CONSTANTS.OCP_FILTERS[key]] = appliedFilters[key];
-      //   });
-      //   params["filter"] = JSON.stringify(filter);
-      // }
-      params["filter"] = JSON.stringify(appliedFilters);
       const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, { params });
       if (response.status === 200) {
         const startDate = response.data.startDate,
@@ -63,15 +33,16 @@ export const fetchOCPJobs =
         });
       }
       if (response?.data?.results?.length > 0) {
-        if (isFromSorting) {
+        if (shouldStartFresh) {
           dispatch(setOCPPage(1));
         }
         dispatch({
           type: TYPES.SET_OCP_JOBS_DATA,
-          payload: isFromSorting
+          payload: shouldStartFresh
             ? response.data.results
             : [...results, ...response.data.results],
         });
+
         dispatch({
           type: TYPES.SET_OCP_PAGE_TOTAL,
           payload: {
@@ -91,7 +62,29 @@ export const setOCPPage = (pageNo) => ({
   type: TYPES.SET_OCP_PAGE,
   payload: pageNo,
 });
+export const setOCPOffset = (offset) => ({
+  type: TYPES.SET_OCP_OFFSET,
+  payload: offset,
+});
 
+const getRequestParams = () => (dispatch, getState) => {
+  const { start_date, end_date, size, offset, sort, appliedFilters } =
+    getState().ocp;
+  const params = {
+    pretty: true,
+    ...(start_date && { start_date }),
+    ...(end_date && { end_date }),
+    size: size,
+    offset: offset,
+  };
+  if (Object.keys(sort).length > 0) {
+    params["sort"] = JSON.stringify(sort);
+  }
+  if (Object.keys(appliedFilters).length > 0) {
+    params["filter"] = JSON.stringify(appliedFilters);
+  }
+  return params;
+};
 export const setOCPPageOptions = (page, perPage) => ({
   type: TYPES.SET_OCP_PAGE_OPTIONS,
   payload: { page, perPage },
@@ -137,7 +130,7 @@ export const setOCPCatFilters = (category) => (dispatch, getState) => {
 export const applyFilters = () => (dispatch) => {
   dispatch(setOCPPage(1));
 
-  dispatch(fetchOCPJobs());
+  dispatch(fetchOCPJobs(true));
 
   dispatch(tableReCalcValues());
   dispatch(buildFilterData());
@@ -229,27 +222,18 @@ export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(tableReCalcValues());
 };
 
-export const getOCPSummary = (countArr) => (dispatch) => {
+export const getOCPSummary = (summary) => (dispatch) => {
   const countObj = {
-    successCount: 0,
-    failureCount: 0,
+    successCount: summary["success"],
+    failureCount: summary["failure"],
     othersCount: 0,
-    total: 0,
+    total: summary["total"],
   };
-  countArr.forEach((item) => {
-    if (item["key"] === "failure") {
-      countObj["failureCount"] = item["count"];
-    } else if (item["key"] === "success") {
-      countObj["successCount"] = item["count"];
+  for (const key in summary) {
+    if (key !== "total" && key !== "success" && key !== "failure") {
+      countObj["othersCount"] += summary[key];
     }
-    countObj["othersCount"] +=
-      item["key"] !== "failure" &&
-      item["key"] !== "success" &&
-      item["key"] !== "total"
-        ? item["count"]
-        : 0;
-    countObj["total"] = item["key"] === "total";
-  });
+  }
   dispatch({
     type: TYPES.SET_OCP_SUMMARY,
     payload: countObj,
@@ -299,37 +283,19 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
 };
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().ocp;
+
   const startIdx = page !== 1 ? (page - 1) * perPage : 0;
   const endIdx = page !== 1 ? page * perPage - 1 : perPage;
-  dispatch(setOCPPageOptions(page, perPage));
+  //dispatch(setOCPPageOptions(page, perPage));
   dispatch(sliceOCPTableRows(startIdx, endIdx));
 };
 
 export const buildFilterData = () => async (dispatch, getState) => {
   try {
-    const {
-      start_date,
-      end_date,
-      offset,
-      sort,
-      appliedFilters,
-      tableFilters,
-      size,
-      categoryFilterValue,
-    } = getState().ocp;
+    const { tableFilters, categoryFilterValue } = getState().ocp;
 
-    const params = {
-      pretty: true,
-      ...(start_date && { start_date }),
-      ...(end_date && { end_date }),
-      size: size,
-      offset: offset,
-    };
-    if (Object.keys(sort).length > 0) {
-      params["sort"] = JSON.stringify(sort);
-    }
+    const params = dispatch(getRequestParams());
 
-    params["filter"] = JSON.stringify(appliedFilters);
     const response = await API.get("/api/v1/ocp/filters", { params });
     if (response.status === 200 && response?.data?.filterData?.length > 0) {
       let data = cloneDeep(response.data.filterData);

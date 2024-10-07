@@ -7,7 +7,7 @@ import {
   setSelectedFilterFromUrl,
   setTableColumns,
 } from "@/actions/quayActions.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -96,8 +96,10 @@ const Quay = () => {
   const setColumns = (value, isAdding) => {
     dispatch(setTableColumns(value, isAdding));
   };
+  const pageTopRef = useRef(null);
   return (
     <>
+      <div ref={pageTopRef} />
       <MetricsTab
         totalItems={filteredResults.length}
         summary={summary}

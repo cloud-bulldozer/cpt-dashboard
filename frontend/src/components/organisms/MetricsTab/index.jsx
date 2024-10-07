@@ -69,7 +69,7 @@ const MetricsTab = (props) => {
           <MetricCard
             title={"No. of Jobs"}
             clickHandler={removeStatusFilter}
-            footer={totalItems ?? summary?.total}
+            footer={summary?.total ?? totalItems}
           />
           <MetricCard
             title={"Success"}

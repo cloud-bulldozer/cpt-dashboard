@@ -36,7 +36,6 @@ const TableLayout = (props) => {
     },
     columnIndex,
   });
-
   return (
     <>
       <Table isStriped>
@@ -81,6 +80,7 @@ const TableLayout = (props) => {
         page={page}
         perPage={perPage}
         type={props.type}
+        pageTopRef={props.pageTopRef}
       />
     </>
   );
@@ -99,5 +99,9 @@ TableLayout.propTypes = {
   type: PropTypes.string,
   isRunExpanded: PropTypes.func,
   setRunExpanded: PropTypes.func,
+  pageTopRef: PropTypes.oneOfType([
+    PropTypes.func, // for legacy refs
+    PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
+  ]),
 };
 export default TableLayout;

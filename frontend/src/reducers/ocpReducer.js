@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  FACTOR,
   INITIAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
@@ -46,7 +47,7 @@ const initialState = {
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
   totalJobs: 0,
-  size: DEFAULT_PER_PAGE * 3,
+  size: DEFAULT_PER_PAGE * FACTOR,
   offset: INITIAL_OFFSET,
   tableData: [],
   filterData: [],

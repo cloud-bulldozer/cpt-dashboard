@@ -6,12 +6,12 @@ import {
   setSelectedFilterFromUrl,
 } from "@/actions/homeActions.js";
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
-import { useEffect } from "react";
 
 const Home = () => {
   const dispatch = useDispatch();
@@ -64,8 +64,10 @@ const Home = () => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
   // Filter Helper
+  const pageTopRef = useRef(null);
   return (
     <>
+      <div ref={pageTopRef} />
       <MetricsTab
         totalItems={filteredResults.length}
         summary={summary}

@@ -35,12 +35,12 @@ const RenderPagination = (props) => {
     },
     [dispatch, props.type]
   );
-
   const onNextClick = useCallback(
     (_evt, newPage) => {
       dispatch(checkTableData(newPage, props.type));
+      props.pageTopRef.current.scrollIntoView();
     },
-    [dispatch, props.type]
+    [dispatch, props.pageTopRef, props.type]
   );
 
   return (
@@ -54,6 +54,8 @@ const RenderPagination = (props) => {
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
       onNextClick={onNextClick}
+      onPageInput={onNextClick}
+      isCompact={true}
     />
   );
 };
@@ -63,5 +65,9 @@ RenderPagination.propTypes = {
   perPage: PropTypes.number,
   type: PropTypes.string,
   items: PropTypes.number,
+  pageTopRef: PropTypes.oneOfType([
+    PropTypes.func, // for legacy refs
+    PropTypes.shape({ current: PropTypes.instanceOf(Element) }),
+  ]),
 };
 export default RenderPagination;

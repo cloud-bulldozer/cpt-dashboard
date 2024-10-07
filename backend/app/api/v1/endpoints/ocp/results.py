@@ -23,5 +23,5 @@ async def results_for_job(
     es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query=query)
     await es.close()
-    tasks = [item['_source'] for item in response]
+    tasks = [item['_source'] for item in response['data']]
     return tasks

@@ -31,8 +31,11 @@ async def jobs(start_date: date = Query(None, description="Start date for search
 
     if start_date > end_date:
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
-
-    results = await getData(start_date, end_date, 'ocm.elasticsearch')
+    sort = {}
+    filter = {}
+    offset = 0
+    size = 75
+    results = await getData(start_date, end_date, sort, filter, offset, 'ocm.elasticsearch')
 
     if len(results) >= 1:
         response = {
