@@ -224,10 +224,10 @@ export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
 
 export const getOCPSummary = (summary) => (dispatch) => {
   const countObj = {
-    successCount: summary["success"],
-    failureCount: summary["failure"],
+    successCount: summary["success"] ?? 0,
+    failureCount: summary["failure"] ?? 0,
     othersCount: 0,
-    total: summary["total"],
+    total: summary["total"] ?? 0,
   };
   for (const key in summary) {
     if (key !== "total" && key !== "success" && key !== "failure") {

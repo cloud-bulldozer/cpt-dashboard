@@ -46,10 +46,10 @@ const MetricsTab = (props) => {
     props.updateSelectedFilter("jobStatus", value, true);
     setAppliedFilters(props.navigation, props.type);
   };
-  const applyOtherFilter = () => {
-    removeStatusFilter();
-    setOtherSummaryFilter(props.type);
-  };
+  // const applyOtherFilter = () => {
+  //   removeStatusFilter();
+  //   setOtherSummaryFilter(props.type);
+  // };
   return (
     <Accordion togglePosition="start">
       <AccordionItem>
@@ -84,7 +84,7 @@ const MetricsTab = (props) => {
           <MetricCard
             title={"Others"}
             footer={summary?.othersCount}
-            clickHandler={applyOtherFilter}
+            // clickHandler={applyOtherFilter}
           />
         </AccordionContent>
       </AccordionItem>

@@ -7,7 +7,6 @@ import json
 def buildFilterQuery(filter: dict, query: dict):
     minimum_match = 0
     filter_dict = json.loads(filter)
-    print("filter")
     if bool(filter_dict):
         for key,val in filter_dict.items():
             if key == "workerNodesCount":
@@ -35,11 +34,9 @@ def buildFilterQuery(filter: dict, query: dict):
                     queryObj = getMatchPhrase(key, item) 
                     query["query"]["bool"]["should"].append(queryObj)
                 minimum_match+=1
-    print(len(query["query"]["bool"]["should"]))
-    print("my match")
     if len(query["query"]["bool"]["should"]) >= 1:
         query["query"]["bool"].update({"minimum_should_match": minimum_match})
-    print(query)    
+    
     return query    
  
 def buildAggregateQuery():
@@ -158,8 +155,7 @@ async def getFilterData(start_datetime: date, end_datetime: date, size:int, offs
                         values=[]
                         if x == "buckets":
                             buck = v[x]
-                            if k == "jobStatus":
-                                print(buck)
+                            if k == "jobStatus":                                
                                 metrics.update(getSummary(buck, isFilterReset))                                
                             for m in buck:                           
                                 if k == "ocpVersion":

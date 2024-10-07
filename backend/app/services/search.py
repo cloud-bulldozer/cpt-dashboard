@@ -47,8 +47,6 @@ class ElasticService:
     async def post(self, query, indice=None, size=None, offset=None, start_date=None, end_date=None, timestamp_field=None):
         try:    
             """Runs a query and returns the results"""           
-            print("end date")
-            print(end_date)
             """Handles queries that require data from ES docs"""
             if timestamp_field:
                 """Handles queries that have a timestamp field. Queries from both new and archive instances"""
@@ -75,7 +73,6 @@ class ElasticService:
                                 body=jsonable_encoder(query),
                                 size=size)
                             previous_results = {"data":response['hits']['hits'], "total":response['hits']["total"]["value"]}
-                            print("sollamaten po")
                            # previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size, offset)
                 if self.prev_es and self.new_es:
                     self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
@@ -87,19 +84,15 @@ class ElasticService:
                         new_start_date = max(start_date, seven_days_ago) if start_date else seven_days_ago                          
                         new_results = {}
                         query['query']['bool']['filter'][0]['range'][timestamp_field]['gte'] = str(new_start_date)                           
-                        if end_date:   
-                            print(end_date)                           
+                        if end_date:                          
                             query['query']['bool']['filter'][0]['range'][timestamp_field]['lte'] = str(end_date)                                
                         if end_date is None:
-                            print("why no end_date")
                             response = await self.new_es.search(
                                 index=self.new_index+"*",
                                 body=jsonable_encoder(query),
                                 size=size)
                             new_results = {"data":response['hits']['hits'],"total":response['hits']['total']['value']}
-                        else:          
-                            print("hydrogen")  
-                            print(query)   
+                        else:            
                             response = await self.new_es.search(
                                 index=self.new_index+"*",
                                 body=jsonable_encoder(query),
@@ -230,19 +223,12 @@ class ElasticService:
         try:
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
-                print("prev")
-                print(query)
-                print(self.prev_index+"*")
                 response =  await self.prev_es.search(
                     index=self.prev_index+"*",
                     body=query,
                     size=0)
-                print(response)
-                print(response["hits"]["total"]["value"])
             elif self.new_es:
-                self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
-                print("new")
-                print(self.new_index)                
+                self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)              
                 response =  await self.new_es.search(
                     index=self.new_index+"*",
                     body=jsonable_encoder(query),
