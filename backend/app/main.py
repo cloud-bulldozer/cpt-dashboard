@@ -1,5 +1,4 @@
 import sys
-import traceback
 import typing
 
 from fastapi import FastAPI, HTTPException, Request
@@ -17,23 +16,24 @@ class ORJSONResponse(JSONResponse):
         return orjson.dumps(content)
 
 
-origins = ["http://localhost:3000", "localhost:3000"]
+origins = [
+    "http://localhost:3000",
+    "localhost:3000"
+]
 
-app = FastAPI(
-    default_response_class=ORJSONResponse,
-    docs_url="/docs",
-    redoc_url=None,
-    title="CPT-Dashboard API Documentation",
-    version="0.0.1",
-    contact={
-        "name": "OCP PerfScale Jedi",
-        "url": "https://redhat.enterprise.slack.com/archives/C05CDC19ZKJ",
-    },
-    license_info={
-        "name": "Apache 2.0",
-        "url": "https://www.apache.org/licenses/LICENSE-2.0",
-    },
-)
+app = FastAPI(default_response_class=ORJSONResponse,
+              docs_url="/docs",
+              redoc_url=None,
+              title="CPT-Dashboard API Documentation",
+              version="0.0.1",
+              contact={
+                "name": "OCP PerfScale Jedi",
+                "url": "https://redhat.enterprise.slack.com/archives/C05CDC19ZKJ",
+              },
+              license_info={
+                "name": "Apache 2.0",
+                "url": "https://www.apache.org/licenses/LICENSE-2.0",
+              })
 
 
 @app.middleware("http")
@@ -53,7 +53,10 @@ async def report_exceptions(request: Request, call_next):
                 file=sys.stderr,
             )
             tb = tb.tb_next
-        return JSONResponse(status_code=500, content={"message": f"Unhandled server error at {where}: {str(e)}"})
+        return JSONResponse(
+            status_code=500,
+            content={"message": f"Unhandled server error at {where}: {str(e)}"},
+        )
 
 
 app.add_middleware(
@@ -64,17 +67,15 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-routes_to_reroute = ["/"]
+routes_to_reroute = ['/']
 
-
-@app.middleware("http")
+@app.middleware('http')
 async def some_middleware(request: Request, call_next):
     if request.url.path in routes_to_reroute:
-        request.scope["path"] = "/docs"
-        headers = dict(request.scope["headers"])
-        headers[b"custom-header"] = b"my custom header"
-        request.scope["headers"] = [(k, v) for k, v in headers.items()]
+        request.scope['path'] = '/docs'
+        headers = dict(request.scope['headers'])
+        headers[b'custom-header'] = b'my custom header'
+        request.scope['headers'] = [(k, v) for k, v in headers.items()]
     return await call_next(request)
-
 
 app.include_router(router)
