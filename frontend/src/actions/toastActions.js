@@ -2,11 +2,11 @@ import * as TYPES from "./types";
 
 import { uid } from "@/utils/helper";
 
-export const showFailureToast = (message = null) => async (dispatch) => {
+export const showFailureToast = () => async (dispatch) => {
   const toast = {
     variant: "danger",
     title: "Something went wrong",
-    message: message ? message : "Please try again later",
+    message: "Please try again later",
   };
   dispatch(showToast(toast.variant, toast.title, toast.message));
 };

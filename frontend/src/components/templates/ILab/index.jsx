@@ -60,7 +60,6 @@ const ILab = () => {
     if (isExpanding) {
       dispatch(fetchPeriods(run.id));
       dispatch(fetchMetricsInfo(run.id));
-      // dispatch(fetchGraphData(run.id, run?.primary_metrics[0]));
     }
   };
 

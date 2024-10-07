@@ -100,8 +100,8 @@ export const fetchPeriods = (uid) => async (dispatch) => {
       });
     }
   } catch (error) {
-    console.error(error);
-    dispatch(showFailureToast(error?.response?.data?.detail));
+    console.error(`ERROR (${error?.response?.status}): ${JSON.stringify(error?.response?.data)}`);
+    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -144,16 +144,8 @@ export const fetchGraphData =
         });
       }
     } catch (error) {
-      var detail = error?.response?.data?.detail;
-      var str;
-      if (typeof detail == "string") {
-        str = detail;
-      } else if (typeof detail == "object" && typeof detail?.message == "string") {
-        str = detail.message;
-      } else {
-        str = JSON.stringify(detail);
-      }
-      dispatch(showFailureToast(str));
+      console.error(`ERROR (${error?.response?.status}): ${JSON.stringify(error?.response?.data)}`);
+      dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };

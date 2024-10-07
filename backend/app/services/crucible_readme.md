@@ -4,6 +4,17 @@ each with a specific document mapping. CDM index names include a "root" name
 
 Crucible timestamps are integers in "millisecond-from-the-epoch" format.
 
+The Crucible CDM hierarchy is roughly:
+
+- RUN (an instrumented benchmark run)
+  - TAG (metadata)
+  - ITERATION (a benchmark interval)
+    - PARAM (execution parameters)
+    - SAMPLE
+      - PERIOD (time range where data is recorded)
+        - METRIC_DESC (description of a specific recorded metric)
+          - METRIC_DATA (a specific recorded data point)
+
 <dl>
 <dt>RUN</dt><dd>this contains the basic information about a performance run, including a
     generated UUID, begin and end timestamps, a benchmark name, a user name and
