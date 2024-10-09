@@ -319,8 +319,8 @@ class CrucibleService:
 
         Iteratively yields the "_source" of each hit. As a convenience, can
         yield a sub-object of "_source" ... for example, specifying the
-        optional "fields" as ["metric_desc"] will yield the equivalent of
-        hit["_source"]["metric_desc"]
+        optional "fields" as ["metric_desc", "id"] will yield the equivalent of
+        hit["_source"]["metric_desc"]["id"]
 
         Args:
             payload: OpenSearch reponse payload
@@ -560,7 +560,7 @@ class CrucibleService:
         """Helper for filtering metric descriptions
 
         We normally filter by run, metric "label", and optionally by breakout
-        names and periods. This encapsulates the filter contruction.
+        names and periods. This encapsulates the filter construction.
 
         Args:
             run: run ID
@@ -571,12 +571,12 @@ class CrucibleService:
         Returns:
             A list of OpenSearch filter expressions
         """
-        source, type = metric.split("::")
+        msource, mtype = metric.split("::")
         return (
             [
                 {"term": {"run.id": run}},
-                {"term": {"metric_desc.source": source}},
-                {"term": {"metric_desc.type": type}},
+                {"term": {"metric_desc.source": msource}},
+                {"term": {"metric_desc.type": mtype}},
             ]
             + cls._build_name_filters(names)
             + cls._build_period_filters(periods)
@@ -703,13 +703,14 @@ class CrucibleService:
         if len(ids) < 2 or aggregate:
             return ids
 
-        # This probably means we're not filtering well enouch for a useful
-        # summary. Diagnose how to improve it.
+        # If we get here, the client asked for breakout data that doesn't
+        # resolve to a single metric stream, and didn't specify aggregation.
+        # Offer some help.
         names = defaultdict(set)
         periods = set()
         response = {
-            "message": f"More than one metric ({len(ids)}) probably means "
-            "you should add filters"
+            "message": f"More than one metric ({len(ids)}) means "
+            "you should add breakout filters or aggregate."
         }
         for m in self._hits(metrics):
             if "period" in m:
@@ -744,8 +745,8 @@ class CrucibleService:
         if periods:
             ps = self._split_list(periods)
             matches = self.search("period", filters=[{"terms": {"period.id": ps}}])
-            start = min([int(h["begin"]) for h in self._hits(matches, ["period"])])
-            end = max([int(h["end"]) for h in self._hits(matches, ["period"])])
+            start = min([int(h) for h in self._hits(matches, ["period", "begin"])])
+            end = max([int(h) for h in self._hits(matches, ["period", "end"])])
             return [
                 {"range": {"metric_data.begin": {"gte": str(start)}}},
                 {"range": {"metric_data.end": {"lte": str(end)}}},
@@ -817,7 +818,8 @@ class CrucibleService:
         filtered = self.search(
             index, source="run.id", filters=filters, ignore_unavailable=True
         )
-        return set([x["id"] for x in self._hits(filtered, ["run"])])
+        print(f"HITS: {filtered['hits']['hits']}")
+        return set([x for x in self._hits(filtered, ["run", "id"])])
 
     def get_run_filters(self) -> dict[str, dict[str, list[str]]]:
         """Return possible tag and filter terms
@@ -1062,7 +1064,6 @@ class CrucibleService:
         for h in self._hits(hits):
             run = h["run"]
             rid = run["id"]
-            runs[rid] = run
 
             # Filter the runs by our tag and param queries
             if param_filters and rid not in paramids:
@@ -1073,6 +1074,7 @@ class CrucibleService:
 
             # Collect unique runs: the status is "fail" if any iteration for
             # that run ID failed.
+            runs[rid] = run
             run["tags"] = tags.get(rid, {})
             run["iterations"] = []
             run["primary_metrics"] = set()
