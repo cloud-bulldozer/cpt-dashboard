@@ -66,7 +66,7 @@ const TableFilter = (props) => {
     setDateFilter(date, key, navigation, type);
   };
   const endDateChangeHandler = (date, key) => {
-    setDateFilter(key, date, navigation, type);
+    setDateFilter(date, key, navigation, type);
   };
 
   return (

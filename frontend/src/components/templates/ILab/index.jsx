@@ -5,6 +5,7 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionToggle,
+  Button,
   Card,
   CardBody,
 } from "@patternfly/react-core";
@@ -49,9 +50,9 @@ const ILab = () => {
     const newExpanded =
       index >= 0
         ? [
-            ...expanded.slice(0, index),
-            ...expanded.slice(index + 1, expanded.length),
-          ]
+          ...expanded.slice(0, index),
+          ...expanded.slice(index + 1, expanded.length),
+        ]
         : [...expanded, id];
     setAccExpanded(newExpanded);
   };
@@ -72,6 +73,17 @@ const ILab = () => {
   const { totalItems, page, perPage, tableData } = useSelector(
     (state) => state.ilab
   );
+
+  const [selectedRuns, setSelectedRuns] = useState([]);
+  const setRunSelected = (run, isSelecting = true) =>
+    setSelectedRuns((prevSelected) => {
+      const others = prevSelected.filter((r) => r != run.id);
+      return isSelecting ? [...others, run.id] : others;
+    });
+  const selectAllRuns = (isSelecting = true) =>
+    setSelectedRuns(isSelecting ? tableData.map((r) => r.id) : []);
+  const areAllRunsSelected = selectedRuns.length === tableData.length;
+  const isRunSelected = (run) => selectedRuns.includes(run.id);
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -107,6 +119,7 @@ const ILab = () => {
 
   return (
     <>
+      {selectedRuns.length > 1 && <Button variant="secondary">Graph</Button>}
       <TableFilter
         start_date={start_date}
         end_date={end_date}
@@ -114,9 +127,16 @@ const ILab = () => {
         showColumnMenu={false}
         navigation={navigate}
       />
-      <Table aria-label="Misc table" isStriped>
+      <Table aria-label="Misc table" isStriped variant="compact">
         <Thead>
-          <Tr>
+          <Tr key={uid()}>
+            <Th
+              screenReaderText="Row selection"
+              select={{
+                onSelect: (_event, isSelecting) => selectAllRuns(isSelecting),
+                isSelected: areAllRunsSelected,
+              }}
+            />
             <Th screenReaderText="Row expansion" />
             <Th>{columnNames.metric}</Th>
             <Th>{columnNames.begin_date}</Th>
@@ -128,6 +148,14 @@ const ILab = () => {
           {tableData.map((item, rowIndex) => (
             <>
               <Tr key={uid()}>
+                <Td
+                  select={{
+                    rowIndex,
+                    onSelect: (_event, isSelecting) =>
+                      setRunSelected(item, isSelecting),
+                    isSelected: isRunSelected(item),
+                  }}
+                />
                 <Td
                   expand={{
                     rowIndex,
@@ -145,7 +173,7 @@ const ILab = () => {
                   <StatusCell value={item.status} />
                 </Td>
               </Tr>
-              <Tr isExpanded={isResultExpanded(item.id)}>
+              <Tr key={uid()} isExpanded={isResultExpanded(item.id)}>
                 <Td colSpan={8}>
                   <ExpandableRowContent>
                     <Accordion asDefinitionList={false} togglePosition="start">

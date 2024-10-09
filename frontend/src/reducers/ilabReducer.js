@@ -5,6 +5,7 @@ const initialState = {
   start_date: "",
   end_date: "",
   graphData: [],
+  multiGraphData: [],
   totalItems: 0,
   page: 1,
   perPage: 10,
@@ -53,6 +54,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, graphData: payload };
     case TYPES.SET_ILAB_INIT_JOBS:
       return { ...state, tableData: payload };
+    case TYPES.SET_ILAB_MULTIGRAPH_DATA:
+      return { ...state, multiGraphData: payload };
     default:
       return state;
   }

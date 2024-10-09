@@ -169,6 +169,60 @@ export const fetchGraphData =
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
 
+export const fetchMultiGraphData =
+  (uids, metric) => async (dispatch, getState) => {
+    try {
+      const graphData = cloneDeep(getState().ilab.multiGraphData);
+      const filterData = graphData.filter((i) => !isEqual(i.uids, uids));
+      dispatch({
+        type: TYPES.SET_ILAB_MULTIGRAPH_DATA,
+        payload: filterData,
+      });
+      const copyData = cloneDeep(filterData);
+      dispatch({ type: TYPES.GRAPH_LOADING });
+      uids.forEach((uid) => {
+        const periods = getState().ilab.periods.find((i) => i.uid == uid);
+        let graphs = [];
+        periods?.periods?.forEach((p) => {
+          graphs.push({
+            run: uid,
+            metric: p.primary_metric,
+            periods: [p.id],
+          });
+          graphs.push({
+            run: uid,
+            metric,
+            aggregate: true,
+            periods: [p.id],
+          });
+        });
+      });
+      const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
+        name: "comparison",
+        graphs,
+      });
+      if (response.status === 200) {
+        copyData.push({
+          uids,
+          data: response.data.data,
+          layout: response.data.layout,
+        });
+        dispatch({
+          type: TYPES.SET_ILAB_MULTIGRAPH_DATA,
+          payload: copyData,
+        });
+      }
+    } catch (error) {
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
+      dispatch(showFailureToast());
+    }
+    dispatch({ type: TYPES.GRAPH_COMPLETED });
+  };
+
 export const setIlabPage = (pageNo) => ({
   type: TYPES.SET_ILAB_PAGE,
   payload: pageNo,
