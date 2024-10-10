@@ -41,7 +41,7 @@ const MetricsSelect = (props) => {
     //setSelected(run[1].trim());
     dispatch(setSelectedMetrics(run[0].trim(), run[1].trim()));
     setIsOpen(false);
-    dispatch(fetchGraphData(run[0].trim(), run[1].trim(), run[2].trim()));
+    dispatch(fetchGraphData(run[0].trim(), run[1].trim()));
   };
   const metricsDataCopy = cloneDeep(metrics);
 

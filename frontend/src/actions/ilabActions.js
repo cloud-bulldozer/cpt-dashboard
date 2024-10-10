@@ -122,7 +122,7 @@ export const fetchPeriods = (uid) => async (dispatch) => {
 };
 
 export const fetchGraphData =
-  (uid, metric, primary_metric) => async (dispatch, getState) => {
+  (uid, metric = null) => async (dispatch, getState) => {
     try {
       const periods = getState().ilab.periods.find((i) => i.uid == uid);
       const graphData = cloneDeep(getState().ilab.graphData);
@@ -136,15 +136,17 @@ export const fetchGraphData =
       let graphs = [];
       periods?.periods?.forEach((p) => {
         graphs.push({ metric: p.primary_metric, periods: [p.id] });
-        graphs.push({
-          metric,
-          aggregate: true,
-          periods: [p.id],
-        });
+        if (metric) {
+          graphs.push({
+            metric,
+            aggregate: true,
+            periods: [p.id],
+          });
+        }
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
         run: uid,
-        name: primary_metric,
+        name: `graph ${uid}`,
         graphs,
       });
       if (response.status === 200) {
@@ -170,7 +172,7 @@ export const fetchGraphData =
   };
 
 export const fetchMultiGraphData =
-  (uids, metric) => async (dispatch, getState) => {
+  (uids, metric = null) => async (dispatch, getState) => {
     try {
       const graphData = cloneDeep(getState().ilab.multiGraphData);
       const filterData = graphData.filter((i) => !isEqual(i.uids, uids));
@@ -189,12 +191,14 @@ export const fetchMultiGraphData =
             metric: p.primary_metric,
             periods: [p.id],
           });
-          graphs.push({
-            run: uid,
-            metric,
-            aggregate: true,
-            periods: [p.id],
-          });
+          if (metric) {
+            graphs.push({
+              run: uid,
+              metric,
+              aggregate: true,
+              periods: [p.id],
+            });
+          }
         });
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
