@@ -1,61 +1,74 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
-import { showFailureToast, showToast } from "@/actions/toastActions";
-
 import API from "@/utils/axiosInstance";
 import { appendQueryString } from "@/utils/helper";
 import { cloneDeep } from "lodash";
+import { showFailureToast } from "@/actions/toastActions";
 
-export const fetchILabJobs = () => async (dispatch, getState) => {
-  try {
-    dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date, size, offset } = getState().ilab;
-    const response = await API.get(API_ROUTES.ILABS_JOBS_API_V1, {
-      params: {
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-        ...(size && { size }),
-        ...(offset && { offset }),
-      },
-    });
-    if (response.status === 200 && response?.data?.results.length > 0) {
-      const startDate = response.data.startDate,
-        endDate = response.data.endDate;
-      dispatch({
-        type: TYPES.SET_ILAB_JOBS_DATA,
-        payload: response.data.results,
-      });
-
-      dispatch({
-        type: TYPES.SET_ILAB_DATE_FILTER,
-        payload: {
-          start_date: startDate,
-          end_date: endDate,
+export const fetchILabJobs =
+  (shouldStartFresh = false) =>
+  async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.LOADING });
+      const { start_date, end_date, size, offset, results } = getState().ilab;
+      const response = await API.get(API_ROUTES.ILABS_JOBS_API_V1, {
+        params: {
+          ...(start_date && { start_date }),
+          ...(end_date && { end_date }),
+          ...(size && { size }),
+          ...(offset && { offset }),
         },
       });
+      if (response.status === 200 && response?.data?.results.length > 0) {
+        const startDate = response.data.startDate,
+          endDate = response.data.endDate;
+        dispatch({
+          type: TYPES.SET_ILAB_JOBS_DATA,
+          payload: shouldStartFresh
+            ? response.data.results
+            : [...results, ...response.data.results],
+        });
 
-      dispatch({
-        type: TYPES.SET_ILAB_TOTAL_ITEMS,
-        payload: response.data.total,
-      });
-      dispatch({
-        type: TYPES.SET_ILAB_OFFSET,
-        payload: response.data.next_offset,
-      });
+        dispatch({
+          type: TYPES.SET_ILAB_DATE_FILTER,
+          payload: {
+            start_date: startDate,
+            end_date: endDate,
+          },
+        });
+
+        dispatch({
+          type: TYPES.SET_ILAB_TOTAL_ITEMS,
+          payload: response.data.total,
+        });
+        dispatch({
+          type: TYPES.SET_ILAB_OFFSET,
+          payload: response.data.next_offset,
+        });
+
+        dispatch(tableReCalcValues());
+      }
+    } catch (error) {
+      dispatch(showFailureToast());
     }
-  } catch (error) {
-    dispatch(showFailureToast());
-  }
-  dispatch({ type: TYPES.COMPLETED });
-};
-
-export const setIlabDateFilter =
-  (start_date, end_date, navigate) => (dispatch, getState) => {
-    const appliedFilters = getState().cpt.appliedFilters;
+    dispatch({ type: TYPES.COMPLETED });
+  };
+export const sliceIlabTableRows =
+  (startIdx, endIdx) => (dispatch, getState) => {
+    const results = [...getState().ilab.results];
 
     dispatch({
-      type: TYPES.SET_CPT_DATE_FILTER,
+      type: TYPES.SET_ILAB_INIT_JOBS,
+      payload: results.slice(startIdx, endIdx),
+    });
+  };
+export const setIlabDateFilter =
+  (start_date, end_date, navigate) => (dispatch, getState) => {
+    const appliedFilters = getState().ilab.appliedFilters;
+
+    dispatch({
+      type: TYPES.SET_ILAB_DATE_FILTER,
       payload: {
         start_date,
         end_date,
@@ -63,8 +76,6 @@ export const setIlabDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-
-    dispatch(fetchILabJobs());
   };
 
 export const fetchMetricsInfo = (uid) => async (dispatch) => {
@@ -100,7 +111,11 @@ export const fetchPeriods = (uid) => async (dispatch) => {
       });
     }
   } catch (error) {
-    console.error(`ERROR (${error?.response?.status}): ${JSON.stringify(error?.response?.data)}`);
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
     dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
@@ -144,7 +159,11 @@ export const fetchGraphData =
         });
       }
     } catch (error) {
-      console.error(`ERROR (${error?.response?.status}): ${JSON.stringify(error?.response?.data)}`);
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
       dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
@@ -183,4 +202,12 @@ export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
     type: TYPES.SET_ILAB_SELECTED_METRICS,
     payload: metrics_selected,
   });
+};
+
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().ilab;
+
+  const startIdx = page !== 1 ? (page - 1) * perPage : 0;
+  const endIdx = page !== 1 ? page * perPage - 1 : perPage;
+  dispatch(sliceIlabTableRows(startIdx, endIdx));
 };

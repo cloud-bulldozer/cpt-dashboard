@@ -9,10 +9,11 @@ const initialState = {
   page: 1,
   perPage: 10,
   size: 10,
-  offset: 1,
+  offset: 0,
   metrics: [],
   periods: [],
   metrics_selected: {},
+  tableData: [],
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -20,7 +21,7 @@ const ILabReducer = (state = initialState, action = {}) => {
     case TYPES.SET_ILAB_JOBS_DATA:
       return {
         ...state,
-        results: [...state.results, ...payload],
+        results: payload,
       };
     case TYPES.SET_ILAB_DATE_FILTER:
       return {
@@ -50,6 +51,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       };
     case TYPES.SET_ILAB_GRAPH_DATA:
       return { ...state, graphData: payload };
+    case TYPES.SET_ILAB_INIT_JOBS:
+      return { ...state, tableData: payload };
     default:
       return state;
   }

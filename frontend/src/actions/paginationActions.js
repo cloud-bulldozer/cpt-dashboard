@@ -3,7 +3,11 @@ import {
   setCPTPageOptions,
   sliceCPTTableRows,
 } from "./homeActions";
-import { setIlabPage, setIlabPageOptions } from "./ilabActions";
+import {
+  setIlabPage,
+  setIlabPageOptions,
+  sliceIlabTableRows,
+} from "./ilabActions";
 import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
 import { setQuayPage, setQuayPageOptions } from "./quayActions";
 import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
@@ -43,6 +47,8 @@ export const sliceTableRows = (startIdx, endIdx, currType) => (dispatch) => {
     dispatch(sliceCPTTableRows(startIdx, endIdx));
   } else if (currType === "ocp") {
     dispatch(sliceOCPTableRows(startIdx, endIdx));
+  } else if (currType === "ilab") {
+    dispatch(sliceIlabTableRows(startIdx, endIdx));
   }
 };
 

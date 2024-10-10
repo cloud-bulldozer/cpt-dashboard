@@ -17,10 +17,16 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { fetchILabJobs, fetchMetricsInfo, fetchPeriods } from "@/actions/ilabActions";
+import {
+  fetchILabJobs,
+  fetchMetricsInfo,
+  fetchPeriods,
+  setIlabDateFilter,
+} from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
+import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ILabGraph from "./ILabGraph";
 import MetaRow from "./MetaRow";
@@ -28,13 +34,13 @@ import MetricsSelect from "./MetricsDropdown";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
-import { useNavigate } from "react-router-dom";
 
 const ILab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
-  const { results, start_date, end_date } = useSelector((state) => state.ilab);
+  const { start_date, end_date } = useSelector((state) => state.ilab);
   const [expandedResult, setExpandedResult] = useState([]);
   const [expanded, setAccExpanded] = useState(["bordered-toggle1"]);
 
@@ -63,7 +69,27 @@ const ILab = () => {
     }
   };
 
-  const { totalItems, page, perPage } = useSelector((state) => state.ilab);
+  const { totalItems, page, perPage, tableData } = useSelector(
+    (state) => state.ilab
+  );
+
+  useEffect(() => {
+    if (searchParams.size > 0) {
+      // date filter is set apart
+      const startDate = searchParams.get("start_date");
+      const endDate = searchParams.get("end_date");
+
+      searchParams.delete("start_date");
+      searchParams.delete("end_date");
+      const params = Object.fromEntries(searchParams);
+      const obj = {};
+      for (const key in params) {
+        obj[key] = params[key].split(",");
+      }
+      dispatch(setIlabDateFilter(startDate, endDate, navigate));
+    }
+  }, []);
+
   useEffect(() => {
     dispatch(fetchILabJobs());
   }, [dispatch]);
@@ -78,6 +104,7 @@ const ILab = () => {
     end_date: "End Date",
     status: "Status",
   };
+
   return (
     <>
       <TableFilter
@@ -98,7 +125,7 @@ const ILab = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {results.map((item, rowIndex) => (
+          {tableData.map((item, rowIndex) => (
             <>
               <Tr key={uid()}>
                 <Td

@@ -23,18 +23,16 @@ const RenderPagination = (props) => {
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
       dispatch(setPage(newPage, props.type));
-      if (props.type !== "ilab") {
-        dispatch(sliceTableRows(startIdx, endIdx, props.type));
-      }
+
+      dispatch(sliceTableRows(startIdx, endIdx, props.type));
     },
     [dispatch, props.type]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
-      if (props.type !== "ilab") {
-        dispatch(sliceTableRows(startIdx, endIdx, props.type));
-      }
+
+      dispatch(sliceTableRows(startIdx, endIdx, props.type));
     },
     [dispatch, props.type]
   );
@@ -55,6 +53,7 @@ const RenderPagination = (props) => {
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
+      onPageInput={checkAndFetch}
     />
   );
 };
