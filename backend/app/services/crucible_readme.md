@@ -15,6 +15,14 @@ The Crucible CDM hierarchy is roughly:
         - METRIC_DESC (description of a specific recorded metric)
           - METRIC_DATA (a specific recorded data point)
 
+OpenSearch doesn't support the concept of a SQL "join", but many of the indices
+contain documents that could be considered a static "join" with parent documents
+for convenience. For example, each `iteration` document contains a copy of it's
+parent `run` document, while the `period` document contains copies of its parent
+`sample`, `iteration`, and `run` documents. This means, for example, that it's
+possible to make a single query returning all `period` documents for specific
+iteration number of a specific run.
+
 <dl>
 <dt>RUN</dt><dd>this contains the basic information about a performance run, including a
     generated UUID, begin and end timestamps, a benchmark name, a user name and
@@ -24,31 +32,25 @@ The Crucible CDM hierarchy is roughly:
     arbitrary context with a run, for example software versions, hardware, or
     other metadata. This can be considered a SQL JOIN with the run document,
     adding a tag UUID, name, and value.</dd>
-<dt>ITERATION</dt><dd>this contains basic information about a performance run iteration.
-    This is a JOIN with the RUN document, duplicating the run fields while
-    adding an iteration UUID, number, the primary (benchmark) metric associated
+<dt>ITERATION</dt><dd>this contains basic information about a performance run iteration,
+    including the iteration UUID, number, the primary (benchmark) metric associated
     with the iteration, plus the primary "period" of the iteration, and the
     iteration status.</dd>
-<dt>PARAM</dt><dd>this contains information about a benchmark parameter value affecting
-    the behavior of an iteration. This is a JOIN with the run and iteration
-    data, adding a parameter ID, argument, and value. While parameters are
-    iteration-specific, parameters that don't vary between iterations are often
-    represented as run parameters.</dd>
-<dt>SAMPLE</dt><dd>this contains basic information about a sample of an iteration. This is
-    effectively a JOIN against iteration and run, adding a sample UUID and
-    number, along with a "path" for sample data and a sample status.</dd>
+<dt>PARAM</dt><dd>this defines a key/value pair specifying behavior of the benchmark
+    script for an iteration. Parameters are iteration-specific, but parameters that
+    don't vary between iterations are often represented as run parameters.</dd>
+<dt>SAMPLE</dt><dd>this contains basic information about a sample of an iteration,
+    including a sample UUID and sample number, along with a "path" for sample data
+    and a sample status.</dd>
 <dt>PERIOD</dt><dd>this contains basic information about a period during which data is
-    collected within a sample. This is a JOIN against sample, iteration, and
-    period, adding the period UUID, name, and begin and end timestamps. A set
-    of periods can be "linked" through a "prev_id" field.</dd>
-<dt>METRIC_DESC</dt><dd>this contains descriptive data about a specific set of benchmark
-    metric data. This is another JOIN, containing the associated period,
-    sample, iteration, and run data while adding information specific to a
-    sequence of metric data values. These include the metric UUID, a class,
-    type, and source, and a set of "names" which define breakouts that narrow
-    down a specific source and type. For example source:mpstat, type:Busy-CPU
-    data is broken down by package, cpu, core, and other breakouts which can
-    be isolated or aggregated for data reporting.</dd>
+    collected within a sample, including the period UUID, name, and begin and end
+    timestamps. A set of periods can be "linked" through a "prev_id" field.</dd>
+<dt>METRIC_DESC</dt><dd>this contains descriptive data about a specific series
+    of metric values within a specific period of a run, including the metric UUID,
+    the metric "class", type, and source, along with a set of "names" (key/value
+    pairs) defining the metric breakout details that narrow down a specific source and
+    type. For example source:mpstat, type:Busy-CPU data is broken down by package, cpu,
+    core, and other breakouts which can be isolated or aggregated for data reporting.</dd>
 <dt>METRIC_DATA</dt><dd>this describes a specific data point, sampled over a specified
     duration with a fixed begin and end timestamp, plus a floating point value.
     Each is tied to a specific metric_desc UUID value. Depending on the varied

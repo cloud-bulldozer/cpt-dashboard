@@ -203,6 +203,33 @@ class Parser:
         return (token, next_char) if not first_quote else (token[1:-1], next_char)
 
 
+class CommonParams:
+    """Help with sorting out parameters
+
+    Parameter values are associated with iterations, but often a set of
+    parameters is common across all iterations of a run, and that set can
+    provide useful context.
+
+    This helps to filter out identical parameters across a set of
+    iterations.
+    """
+
+    def __init__(self):
+        self.common: dict[str, Any] = {}
+        self.removed = set()
+
+    def add(self, params: dict[str, Any]):
+        if not self.common:
+            self.common.update(params)
+        else:
+            for k, v in self.common.items():
+                if k not in self.removed and (k not in params or v != params[k]):
+                    self.removed.add(k)
+
+    def render(self) -> dict[str, Any]:
+        return {k: v for k, v in self.common.items() if k not in self.removed}
+
+
 class CrucibleService:
     """Support convenient generalized access to Crucible data
 
@@ -213,11 +240,28 @@ class CrucibleService:
     # OpenSearch massive limit on hits in a single query
     BIGQUERY = 262144
 
-    # 'run' document fields that support general `?filter=<name>:<value>`
+    # Define the 'run' document fields that support general filtering via
+    # `?filter=<name>:<value>`
     #
     # TODO: this excludes 'desc', which isn't used by the ilab runs, and needs
-    # different treatment as its a text field rather than a term.
+    # different treatment as it's a text field rather than a term. It's not an
+    # immediate priority for ilab, but may be important for general use.
     RUN_FILTERS = ("benchmark", "email", "name", "source", "harness", "host")
+
+    # Define the keywords for sorting.
+    DIRECTIONS = ("asc", "desc")
+    FIELDS = (
+        "begin",
+        "benchmark",
+        "desc",
+        "email",
+        "end",
+        "harness",
+        "host",
+        "id",
+        "name",
+        "source",
+    )
 
     def __init__(self, configpath: str = "crucible"):
         """Initialize a Crucible CDM (OpenSearch) connection.
@@ -441,7 +485,27 @@ class CrucibleService:
             filter: list of filter terms like "param:key=value"
 
         Returns:
-            An OpenSearch filter list to apply the filters
+            A set of OpenSearch filter object lists to detect missing
+            and matching documents for params, tags, and run fields. For
+            example, to select param:batch-size=12 results in the
+            following param filter list:
+
+                [
+                    {'
+                        dis_max': {
+                            'queries': [
+                                {
+                                    'bool': {
+                                        'must': [
+                                            {'term': {'param.arg': 'batch-size'}},
+                                            {'term': {'param.val': '12'}}
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    }
+                ]
         """
         terms = defaultdict(list)
         for term in cls._split_list(filter):
@@ -771,26 +835,13 @@ class CrucibleService:
         if sorters:
             sort_terms = []
             for s in sorters:
-                DIRECTIONS = ("asc", "desc")
-                FIELDS = (
-                    "begin",
-                    "benchmark",
-                    "desc",
-                    "email",
-                    "end",
-                    "harness",
-                    "host",
-                    "id",
-                    "name",
-                    "source",
-                )
                 key, dir = s.split(":", maxsplit=1)
-                if dir not in DIRECTIONS:
+                if dir not in cls.DIRECTIONS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
                         f"Sort direction {dir!r} must be one of {','.join(DIRECTIONS)}",
                     )
-                if key not in FIELDS:
+                if key not in cls.FIELDS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
                         f"Sort key {key!r} must be one of {','.join(FIELDS)}",
@@ -1078,6 +1129,7 @@ class CrucibleService:
             run["tags"] = tags.get(rid, {})
             run["iterations"] = []
             run["primary_metrics"] = set()
+            common = CommonParams()
             for i in iterations.get(rid, []):
                 iparams = params.get(i["id"], {})
                 if "status" not in run:
@@ -1085,16 +1137,7 @@ class CrucibleService:
                 else:
                     if i["status"] != "pass":
                         run["status"] = i["status"]
-                if "params" not in run:
-                    run["params"] = iparams.copy()
-                else:
-                    # Iteration-specific parameter names or values are factored out
-                    # of the run summary. (NOTE: listify the keys first so Python
-                    # doesn't complain about deletion during the traversal.)
-                    p = run["params"]
-                    for k in list(p.keys()):
-                        if k not in iparams or p[k] != iparams[k]:
-                            del p[k]
+                common.add(iparams)
                 run["primary_metrics"].add(i["primary-metric"])
                 run["iterations"].append(
                     {
@@ -1105,6 +1148,7 @@ class CrucibleService:
                         "params": iparams,
                     }
                 )
+            run["params"] = common.render()
             try:
                 run["begin_date"] = self._format_timestamp(run["begin"])
                 run["end_date"] = self._format_timestamp(run["end"])
@@ -1185,17 +1229,10 @@ class CrucibleService:
         # Filter out all parameter values that don't exist in all or which have
         # different values.
         if run:
-            common = {}
-            for iter, params in response.items():
-                if not common:
-                    common = dict(params)
-                else:
-                    # We can't change a dict during iteration, so iterate over
-                    # a list of the param keys.
-                    for param in list(common.keys()):
-                        if param not in params or params[param] != common[param]:
-                            del common[param]
-            response["common"] = common
+            common = CommonParams()
+            for params in response.values():
+                common.add(params)
+            response["common"] = common.render()
         return response
 
     def get_iterations(self, run: str, **kwargs) -> list[dict[str, Any]]:
