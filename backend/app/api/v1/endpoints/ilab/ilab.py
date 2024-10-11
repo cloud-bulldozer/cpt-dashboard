@@ -31,12 +31,6 @@ def crucible_svc():
     try:
         crucible = CrucibleService(CONFIGPATH)
         yield crucible
-    except Exception as e:
-        print(f"Error opening {CONFIGPATH}: {str(e)!r}")
-        raise HTTPException(
-            status.HTTP_502_BAD_GATEWAY,
-            f"Crucible service is not available: {str(e)!r}",
-        )
     finally:
         if crucible:
             crucible.close()

@@ -216,18 +216,28 @@ class CommonParams:
 
     def __init__(self):
         self.common: dict[str, Any] = {}
-        self.removed = set()
+        self.omit = set()
 
     def add(self, params: dict[str, Any]):
+        """Add a new iteration into the param set
+
+        Mark all parameter keys which don't appear in all iterations, or which
+        have different values in at least one iteration, to be omitted from the
+        merged "common" param set.
+
+        Args:
+            params: the param dictionary of an iteration
+        """
         if not self.common:
             self.common.update(params)
         else:
             for k, v in self.common.items():
-                if k not in self.removed and (k not in params or v != params[k]):
-                    self.removed.add(k)
+                if k not in self.omit and (k not in params or v != params[k]):
+                    self.omit.add(k)
 
     def render(self) -> dict[str, Any]:
-        return {k: v for k, v in self.common.items() if k not in self.removed}
+        """Return a new param set with only common params"""
+        return {k: v for k, v in self.common.items() if k not in self.omit}
 
 
 class CrucibleService:
@@ -783,7 +793,7 @@ class CrucibleService:
                 names[n].add(v)
 
         # We want to help filter a consistent summary, so only show those
-        # names with more than one value.
+        # breakout names with more than one value.
         response["names"] = {n: sorted(v) for n, v in names.items() if v and len(v) > 1}
         response["periods"] = list(periods)
         raise HTTPException(
