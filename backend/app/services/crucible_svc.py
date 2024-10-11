@@ -1804,11 +1804,15 @@ class CrucibleService:
         run_id_list = []
         if default_run_id:
             run_id_list.append(default_run_id)
+        run_id_missing = False
         for g in graphdata.graphs:
-            if g.run and g.run not in run_id_list:
-                run_id_list.append(g.run)
+            if g.run:
+                if g.run not in run_id_list:
+                    run_id_list.append(g.run)
+            else:
+                run_id_missing = True
 
-        if len(run_id_list) < len(graphdata.graphs) and not default_run_id:
+        if run_id_missing and not default_run_id:
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
             )

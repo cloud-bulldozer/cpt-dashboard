@@ -220,9 +220,19 @@ const ILab = () => {
                               <CardBody>
                                 <MetaRow
                                   key={uid()}
-                                  heading={"Common Parameters"}
+                                  heading={`Common Parameters (${item.iterations.length} iterations)`}
                                   metadata={Object.entries(item.params)}
                                 />
+                                {item?.iterations &&
+                                  item.iterations.forEach((i) => {
+                                    i?.params && (
+                                      <MetaRow
+                                        key={uid()}
+                                        heading={`Iteration ${i.iteration} Parameters`}
+                                        metadata={Object.entries(i.params)}
+                                      />
+                                    );
+                                  })}
                               </CardBody>
                             </Card>
                           </div>
