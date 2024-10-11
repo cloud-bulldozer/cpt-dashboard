@@ -15,6 +15,7 @@ const initialState = {
   periods: [],
   metrics_selected: {},
   tableData: [],
+  comparisonSwitch: false,
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -56,6 +57,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, tableData: payload };
     case TYPES.SET_ILAB_MULTIGRAPH_DATA:
       return { ...state, multiGraphData: payload };
+    case TYPES.TOGGLE_COMPARISON_SWITCH:
+      return { ...state, comparisonSwitch: !state.comparisonSwitch };
     default:
       return state;
   }

@@ -7,6 +7,7 @@ import {
 import { fetchGraphData, setSelectedMetrics } from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
 
+import PropTypes from "prop-types";
 import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
@@ -83,4 +84,7 @@ const MetricsSelect = (props) => {
   );
 };
 
+MetricsSelect.propTypes = {
+  item: PropTypes.object,
+};
 export default MetricsSelect;
