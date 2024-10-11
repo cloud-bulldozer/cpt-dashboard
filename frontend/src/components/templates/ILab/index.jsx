@@ -220,19 +220,51 @@ const ILab = () => {
                               <CardBody>
                                 <MetaRow
                                   key={uid()}
-                                  heading={`Common Parameters (${item.iterations.length} iterations)`}
+                                  heading={"Common Parameters"}
                                   metadata={Object.entries(item.params)}
                                 />
-                                {item?.iterations &&
-                                  item.iterations.forEach((i) => {
-                                    i?.params && (
-                                      <MetaRow
-                                        key={uid()}
-                                        heading={`Iteration ${i.iteration} Parameters`}
-                                        metadata={Object.entries(i.params)}
-                                      />
-                                    );
-                                  })}
+                                {item.iterations.length > 1 && (
+                                  <div>
+                                    <Accordion
+                                      asDefinitionList={false}
+                                      togglePosition="start"
+                                    >
+                                      <AccordionItem>
+                                        <AccordionToggle
+                                          onClick={() => {
+                                            onToggle("bordered-toggle3");
+                                          }}
+                                          isExpanded={expanded.includes(
+                                            "bordered-toggle3"
+                                          )}
+                                          id="bordered-toggle3"
+                                        >
+                                          {`Unique parameters for ${item.iterations.length} Iterations`}
+                                        </AccordionToggle>
+                                        <AccordionContent
+                                          id="bordered-expand3"
+                                          isHidden={
+                                            !expanded.includes(
+                                              "bordered-toggle3"
+                                            )
+                                          }
+                                        >
+                                          {item.iterations.map((i) => (
+                                            <MetaRow
+                                              key={uid()}
+                                              heading={`Iteration ${i.iteration} Parameters`}
+                                              metadata={Object.entries(
+                                                i.params
+                                              ).filter(
+                                                (i) => !(i[0] in item.params)
+                                              )}
+                                            />
+                                          ))}
+                                        </AccordionContent>
+                                      </AccordionItem>
+                                    </Accordion>
+                                  </div>
+                                )}
                               </CardBody>
                             </Card>
                           </div>

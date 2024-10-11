@@ -1158,6 +1158,7 @@ class CrucibleService:
                         "params": iparams,
                     }
                 )
+            run["iterations"].sort(key=lambda i: i["iteration"])
             run["params"] = common.render()
             try:
                 run["begin_date"] = self._format_timestamp(run["begin"])
