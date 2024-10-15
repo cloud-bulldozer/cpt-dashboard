@@ -34,7 +34,6 @@ const ILab = () => {
   const [searchParams] = useSearchParams();
 
   const {
-    results,
     start_date,
     end_date,
     comparisonSwitch,
@@ -118,7 +117,7 @@ const ILab = () => {
         onSwitchChange={onSwitchChange}
       />
       {comparisonSwitch ? (
-        <IlabCompareComponent data={results} />
+        <IlabCompareComponent />
       ) : (
         <>
           <Table aria-label="Misc table" isStriped variant="compact">

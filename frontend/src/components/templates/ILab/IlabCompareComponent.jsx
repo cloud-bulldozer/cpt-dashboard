@@ -18,9 +18,11 @@ import { handleMultiGraph } from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
 
-const IlabCompareComponent = (props) => {
-  const { data } = props;
-  const { page, perPage, totalItems } = useSelector((state) => state.ilab);
+const IlabCompareComponent = () => {
+  // const { data } = props;
+  const { page, perPage, totalItems, tableData } = useSelector(
+    (state) => state.ilab
+  );
   const dispatch = useDispatch();
   const [selectedItems, setSelectedItems] = useState([]);
   const { multiGraphData } = useSelector((state) => state.ilab);
@@ -55,7 +57,7 @@ const IlabCompareComponent = (props) => {
         <Menu onSelect={onSelect} selected={selectedItems}>
           <MenuContent>
             <MenuList>
-              {data.map((item) => {
+              {tableData.map((item) => {
                 return (
                   <MenuItem
                     key={uid()}
