@@ -108,8 +108,6 @@ const ILab = () => {
   };
   return (
     <>
-      {/* {selectedRuns.length > 1 && <Button variant="secondary">Graph</Button>} */}
-
       <TableFilter
         start_date={start_date}
         end_date={end_date}

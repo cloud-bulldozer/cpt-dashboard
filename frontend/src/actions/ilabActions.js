@@ -227,7 +227,6 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     });
     if (response.status === 200) {
       response.data.layout["showlegend"] = true;
-      //response.data.layout["width"] = "1200px";
       response.data.layout["responsive"] = "true";
       response.data.layout["autosize"] = "true";
       response.data.layout["legend"] = { x: 0, y: 1 };

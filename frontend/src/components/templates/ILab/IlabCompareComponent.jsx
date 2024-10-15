@@ -12,6 +12,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
+import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
 import { handleMultiGraph } from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
@@ -19,7 +20,7 @@ import { useState } from "react";
 
 const IlabCompareComponent = (props) => {
   const { data } = props;
-
+  const { page, perPage, totalItems } = useSelector((state) => state.ilab);
   const dispatch = useDispatch();
   const [selectedItems, setSelectedItems] = useState([]);
   const { multiGraphData } = useSelector((state) => state.ilab);
@@ -49,7 +50,7 @@ const IlabCompareComponent = (props) => {
           isBlock
           onClick={dummy}
         >
-          Comapre
+          Compare
         </Button>
         <Menu onSelect={onSelect} selected={selectedItems}>
           <MenuContent>
@@ -69,20 +70,27 @@ const IlabCompareComponent = (props) => {
             </MenuList>
           </MenuContent>
         </Menu>
+        <RenderPagination
+          items={totalItems}
+          page={page}
+          perPage={perPage}
+          type={"ilab"}
+        />
       </div>
       <div className="chart-conatiner">
         {isGraphLoading ? (
           <div className="loader"></div>
+        ) : graphDataCopy?.length > 0 &&
+          graphDataCopy?.[0]?.data?.length > 0 ? (
+          <div className="chart-box">
+            <Plot
+              data={graphDataCopy[0]?.data}
+              layout={graphDataCopy[0]?.layout}
+              key={uid()}
+            />
+          </div>
         ) : (
-          graphDataCopy?.length > 0 && (
-            <div className="chart-box">
-              <Plot
-                data={graphDataCopy[0]?.data}
-                layout={graphDataCopy[0]?.layout}
-                key={uid()}
-              />
-            </div>
-          )
+          <div>No data to compare</div>
         )}
       </div>
     </div>
