@@ -64,14 +64,21 @@ class GraphList(BaseModel):
     omitted if all Graph objects specify a run ID. (This is most useful to
     select a set of graphs all for a single run ID.)
 
+    Normally the X axis will be the actual sample timestamp values; if you
+    specify relative=True, the X axis will be the duration from the first
+    timestamp of the metric series. This allows graphs of similar runs started
+    at different times to be overlaid.
+
     Fields:
         run: Specify the (default) run ID
         name: Specify a name for the set of graphs
+        relative: True for relative timescale
         graphs: a list of Graph objects
     """
 
     run: Optional[str] = None
     name: str
+    relative: bool = False
     graphs: list[Graph]
 
 
@@ -1894,10 +1901,19 @@ class CrucibleService:
             x = []
             y = []
 
+            first = None
+
             for p in sorted(points, key=lambda a: a.begin):
-                x.extend(
-                    [self._format_timestamp(p.begin), self._format_timestamp(p.end)]
-                )
+                if graphdata.relative:
+                    if not first:
+                        first = p.begin
+                    s = (p.begin - first) / 1000.0
+                    e = (p.end - first) / 1000.0
+                    x.extend([s, e])
+                else:
+                    x.extend(
+                        [self._format_timestamp(p.begin), self._format_timestamp(p.end)]
+                    )
                 y.extend([p.value, p.value])
                 y_max = max(y_max, p.value)
 

@@ -223,6 +223,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     console.log(graphs);
     const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
       name: "comparison",
+      relative: true,
       graphs,
     });
     if (response.status === 200) {
