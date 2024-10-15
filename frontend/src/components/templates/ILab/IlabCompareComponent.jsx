@@ -1,3 +1,5 @@
+import "./index.less";
+
 import {
   Button,
   Menu,
@@ -6,11 +8,13 @@ import {
   MenuList,
   Title,
 } from "@patternfly/react-core";
+import { useDispatch, useSelector } from "react-redux";
 
+import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
-import { fetchMultiGraphData } from "@/actions/ilabActions.js";
+import { cloneDeep } from "lodash";
+import { handleMultiGraph } from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
-import { useDispatch } from "react-redux";
 import { useState } from "react";
 
 const IlabCompareComponent = (props) => {
@@ -18,6 +22,10 @@ const IlabCompareComponent = (props) => {
 
   const dispatch = useDispatch();
   const [selectedItems, setSelectedItems] = useState([]);
+  const { multiGraphData } = useSelector((state) => state.ilab);
+  const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
+  const graphDataCopy = cloneDeep(multiGraphData);
+
   const onSelect = (_event, itemId) => {
     const item = itemId;
     if (selectedItems.includes(item)) {
@@ -25,6 +33,9 @@ const IlabCompareComponent = (props) => {
     } else {
       setSelectedItems([...selectedItems, item]);
     }
+  };
+  const dummy = () => {
+    dispatch(handleMultiGraph(selectedItems));
   };
   return (
     <div className="comparison-container">
@@ -36,23 +47,10 @@ const IlabCompareComponent = (props) => {
           className="compare-btn"
           isDisabled={selectedItems.length < 2}
           isBlock
-          onClick={() => dispatch(fetchMultiGraphData(selectedItems))}
+          onClick={dummy}
         >
           Comapre
         </Button>
-        {/* <List isPlain isBordered>
-          {data.map((item) => {
-            return (
-              // <ListItem ></ListItem>
-              <Checkbox
-                key={uid()}
-                isLabelWrapped
-                label={item.primary_metrics[0]}
-              />
-            );
-          })}
-          
-        </List> */}
         <Menu onSelect={onSelect} selected={selectedItems}>
           <MenuContent>
             <MenuList>
@@ -72,10 +70,21 @@ const IlabCompareComponent = (props) => {
           </MenuContent>
         </Menu>
       </div>
-
-      <Title headingLevel="h3" className="title">
-        Chart
-      </Title>
+      <div className="chart-conatiner">
+        {isGraphLoading ? (
+          <div className="loader"></div>
+        ) : (
+          graphDataCopy?.length > 0 && (
+            <div className="chart-box">
+              <Plot
+                data={graphDataCopy[0]?.data}
+                layout={graphDataCopy[0]?.layout}
+                key={uid()}
+              />
+            </div>
+          )
+        )}
+      </div>
     </div>
   );
 };

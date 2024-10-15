@@ -1,10 +1,9 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
-import { cloneDeep, isEqual } from "lodash";
-
 import API from "@/utils/axiosInstance";
 import { appendQueryString } from "@/utils/helper";
+import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchILabJobs =
@@ -173,24 +172,40 @@ export const fetchGraphData =
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
 
+export const handleMultiGraph = (uids) => async (dispatch, getState) => {
+  try {
+    const periods = getState().ilab.periods;
+
+    const missingPeriods = periods.filter((item) => !uids.includes(item.uid));
+
+    const missingUids =
+      periods.length > 0 ? missingPeriods.map((item) => item.uid) : uids;
+
+    await Promise.all(
+      missingUids.map(async (uid) => {
+        await dispatch(fetchPeriods(uid)); // Dispatch each item
+      })
+    );
+
+    dispatch(fetchMultiGraphData(uids));
+  } catch (error) {
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
+    dispatch(showFailureToast());
+  }
+};
 export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
   try {
-    const graphData = cloneDeep(getState().ilab.multiGraphData);
-    const filterData = graphData.filter((i) => !isEqual(i.uids, uids));
-    dispatch({
-      type: TYPES.SET_ILAB_MULTIGRAPH_DATA,
-      payload: filterData,
-    });
-    const copyData = cloneDeep(filterData);
-    dispatch({ type: TYPES.GRAPH_LOADING });
+    dispatch({ type: TYPES.LOADING });
+    const periods = getState().ilab.periods;
+    const filterPeriods = periods.filter((item) => uids.includes(item.uid));
 
     let graphs = [];
     uids.forEach(async (uid) => {
-      // if (!periods) {
-      await dispatch(fetchPeriods(uid));
-      //}
-
-      const periods = getState().ilab.periods.find((i) => i.uid == uid);
+      const periods = filterPeriods.find((i) => i.uid == uid);
       periods?.periods?.forEach((p) => {
         graphs.push({
           run: uid,
@@ -211,14 +226,19 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
       graphs,
     });
     if (response.status === 200) {
-      copyData.push({
-        uids,
+      response.data.layout["showlegend"] = true;
+      //response.data.layout["width"] = "1200px";
+      response.data.layout["responsive"] = "true";
+      response.data.layout["autosize"] = "true";
+      response.data.layout["legend"] = { x: 0, y: 1 };
+      const graphData = [];
+      graphData.push({
         data: response.data.data,
         layout: response.data.layout,
       });
       dispatch({
         type: TYPES.SET_ILAB_MULTIGRAPH_DATA,
-        payload: copyData,
+        payload: graphData,
       });
     }
   } catch (error) {
@@ -229,7 +249,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     );
     dispatch(showFailureToast());
   }
-  dispatch({ type: TYPES.GRAPH_COMPLETED });
+  dispatch({ type: TYPES.COMPLETED });
 };
 
 export const setIlabPage = (pageNo) => ({
