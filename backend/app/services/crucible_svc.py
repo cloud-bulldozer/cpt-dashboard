@@ -2109,9 +2109,7 @@ class CrucibleService:
                     size=0,
                     filters=filters,
                     aggregations={
-                        "duration": {
-                            "stats": {"field": "metric_data.duration"}
-                        }
+                        "duration": {"stats": {"field": "metric_data.duration"}}
                     },
                 )
                 if aggdur["aggregations"]["duration"]["count"] > 0:
@@ -2127,9 +2125,7 @@ class CrucibleService:
                                     "interval": interval,
                                 },
                                 "aggs": {
-                                    "value": {
-                                        "sum": {"field": "metric_data.value"}
-                                    }
+                                    "value": {"sum": {"field": "metric_data.value"}}
                                 },
                             }
                         },
@@ -2137,9 +2133,7 @@ class CrucibleService:
                     for h in self._aggs(data, "interval"):
                         begin = int(h["key"])
                         end = begin + interval - 1
-                        points.append(
-                            Point(begin, end, float(h["value"]["value"]))
-                        )
+                        points.append(Point(begin, end, float(h["value"]["value"])))
             else:
                 data = await self.search("metric_data", filters=filters)
                 for h in self._hits(data, ["metric_data"]):
