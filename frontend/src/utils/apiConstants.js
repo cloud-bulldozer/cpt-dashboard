@@ -1,7 +1,7 @@
 export const getUrl = () => {
   const { hostname, protocol } = window.location;
   return hostname === "localhost"
-    ? "http://localhost:8000"
+    ? "http://0.0.0.0:8000"
     : `${protocol}//${hostname}`;
 };
 
@@ -26,3 +26,6 @@ export const TELCO_GRAPH_API_V1 = "/api/v1/telco/graph";
 export const QUAY_JOBS_API_V1 = "/api/v1/quay/jobs";
 export const QUAY_GRAPH_API_V1 = "/api/v1/quay/graph";
 export const QUAY_FILTERS_API_V1 = "/api/v1/quay/filters";
+
+export const ILABS_JOBS_API_V1 = "/api/v1/ilab/runs";
+export const ILAB_GRAPH_API_V1 = "/api/v1/ilab/runs/";

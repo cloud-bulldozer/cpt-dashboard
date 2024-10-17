@@ -12,23 +12,15 @@ import {
   sliceCPTTableRows,
 } from "./homeActions";
 import {
-  fetchQuayJobsData,
-  setQuayOffset,
-  setQuayPage,
-  setQuayPageOptions,
-} from "./quayActions";
-import {
-  fetchTelcoJobsData,
-  setTelcoOffset,
-  setTelcoPage,
-  setTelcoPageOptions,
-} from "./telcoActions";
-import {
-  fetchOLSJobsData,
-  setOLSOffset,
-  setOLSPage,
-  setOLSPageOptions,
-} from "./olsActions";
+  setIlabPage,
+  setIlabPageOptions,
+  sliceIlabTableRows,
+} from "./ilabActions";
+import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
+import { setQuayPage, setQuayPageOptions } from "./quayActions";
+import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
+
+import { checkIlabJobs } from "./ilabActions";
 
 export const setPage = (newPage, currType) => (dispatch) => {
   const actions = {
@@ -37,6 +29,7 @@ export const setPage = (newPage, currType) => (dispatch) => {
     quay: setQuayPage,
     telco: setTelcoPage,
     ols: setOLSPage,
+    ilab: setIlabPage,
   };
   dispatch(actions[currType](newPage));
 };
@@ -48,6 +41,7 @@ export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
     quay: setQuayPageOptions,
     telco: setTelcoPageOptions,
     ols: setOLSPageOptions,
+    ilab: setIlabPageOptions,
   };
   dispatch(actions[currType](newPage, newPerPage));
 };
@@ -62,6 +56,7 @@ const fetchActions = {
   telco: fetchTelcoJobsData,
   cpt: fetchOCPJobsData,
   ols: fetchOLSJobsData,
+  ilab: fetchIlabPageOptions,
 };
 const offsetActions = {
   ocp: setOCPOffset,
@@ -69,6 +64,7 @@ const offsetActions = {
   telco: setTelcoOffset,
   cpt: setCPTOffset,
   ols: setOLSOffset,
+  ilab: setIlabOffset,
 };
 
 export const checkTableData = (newPage, currType) => (dispatch, getState) => {
@@ -91,4 +87,8 @@ export const checkTableData = (newPage, currType) => (dispatch, getState) => {
     dispatch(offsetActions[currType](offset));
     dispatch(fetchActions[currType]());
   }
+};
+
+export const fetchNextJobs = (newPage) => (dispatch) => {
+  dispatch(checkIlabJobs(newPage));
 };
