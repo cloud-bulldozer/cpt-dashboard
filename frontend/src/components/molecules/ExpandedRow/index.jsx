@@ -42,7 +42,7 @@ const RowContent = (props) => {
 
   return (
     <Grid hasGutter>
-      <GridItem span={6}>
+      <GridItem span={3}>
         <Card>
           <CardBody>
             {content.map((unit) => (

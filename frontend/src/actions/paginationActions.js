@@ -12,6 +12,12 @@ import {
   sliceCPTTableRows,
 } from "./homeActions";
 import {
+  fetchOLSJobsData,
+  setOLSOffset,
+  setOLSPage,
+  setOLSPageOptions,
+} from "./olsActions";
+import {
   fetchQuayJobsData,
   setQuayOffset,
   setQuayPage,
@@ -101,4 +107,8 @@ export const checkTableData = (newPage, currType) => (dispatch, getState) => {
     dispatch(offsetActions[currType](offset));
     dispatch(fetchActions[currType]());
   }
+};
+
+export const fetchNextJobs = (newPage) => (dispatch) => {
+  dispatch(checkIlabJobs(newPage));
 };

@@ -1,6 +1,7 @@
 import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
   checkTableData,
+  fetchNextJobs,
   setPage,
   setPageOptions,
 } from "@/actions/paginationActions";
@@ -40,7 +41,6 @@ const RenderPagination = (props) => {
       if (props.type === "cpt") {
         dispatch(setPage(newPage, props.type, navigate));
       }
-      dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type, navigate]
   );

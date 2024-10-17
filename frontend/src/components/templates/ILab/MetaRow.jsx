@@ -11,13 +11,20 @@ const MetaRow = (props) => {
       <Title headingLevel="h4" className="type_heading">
         {heading}
       </Title>
-      <Table className="box" key={uid()} aria-label="metadata-table" variant="compact">
+      <Table
+        className="box"
+        key={uid()}
+        aria-label="metadata-table"
+        variant="compact"
+      >
         <Thead>
           <Tr>
             <Th width={25} style={{ textAlign: "left" }}>
               Key
             </Th>
-            <Th width={75} style={{ overflow: "wrap" }}>Value</Th>
+            <Th width={75} style={{ overflow: "wrap" }}>
+              Value
+            </Th>
           </Tr>
         </Thead>
         <Tbody>
