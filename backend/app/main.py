@@ -1,7 +1,7 @@
 import sys
 import typing
 
-from fastapi import FastAPI, HTTPException, Request
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
@@ -21,25 +21,6 @@ origins = [
     "localhost:3000"
 ]
 
-
-async def report_exceptions(request: Request, e: Exception):
-    if isinstance(e, HTTPException):
-        raise
-    tb = e.__traceback__
-    print(f"Unhandled exception {e.__class__.__name__}: {str(e)}")
-    where = "unknown"
-    while tb is not None:
-        where = f"{tb.tb_frame.f_code.co_filename}:{tb.tb_lineno}"
-        print(
-            f"  {where} {tb.tb_frame.f_code.co_name}",
-            file=sys.stderr,
-        )
-        tb = tb.tb_next
-    return JSONResponse(
-        status_code=500,
-        content={"detail": f"Unhandled server error at {where}: {str(e)}"},
-    )
-
 app = FastAPI(default_response_class=ORJSONResponse,
               docs_url="/docs",
               redoc_url=None,
@@ -52,8 +33,7 @@ app = FastAPI(default_response_class=ORJSONResponse,
               license_info={
                 "name": "Apache 2.0",
                 "url": "https://www.apache.org/licenses/LICENSE-2.0",
-              },
-              exception_handlers={Exception: report_exceptions})
+              })
 
 app.add_middleware(
     CORSMiddleware,

@@ -65,7 +65,7 @@ const IlabCompareComponent = () => {
                     itemId={item.id}
                     isSelected={selectedItems.includes(item.id)}
                   >
-                    {item.primary_metrics[0]}
+                    {`${new Date(item.begin_date).toLocaleDateString()} ${item.primary_metrics[0]}`}
                   </MenuItem>
                 );
               })}
