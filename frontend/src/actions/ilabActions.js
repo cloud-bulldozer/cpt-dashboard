@@ -230,7 +230,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
       response.data.layout["showlegend"] = true;
       response.data.layout["responsive"] = "true";
       response.data.layout["autosize"] = "true";
-      response.data.layout["legend"] = { x: 0, y: 1 };
+      response.data.layout["legend"] = { x: 0, y: 1.5 };
       const graphData = [];
       graphData.push({
         data: response.data.data,

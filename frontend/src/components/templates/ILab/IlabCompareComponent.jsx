@@ -79,7 +79,7 @@ const IlabCompareComponent = () => {
           type={"ilab"}
         />
       </div>
-      <div className="chart-conatiner">
+      <div className="chart-container">
         {isGraphLoading ? (
           <div className="loader"></div>
         ) : graphDataCopy?.length > 0 &&
