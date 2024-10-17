@@ -1,3 +1,4 @@
+import { fetchILabJobs, setIlabDateFilter } from "./ilabActions";
 import {
   removeCPTAppliedFilters,
   setCPTAppliedFilters,
@@ -76,6 +77,9 @@ export const setDateFilter = (date, key, navigation, currType) => {
     dispatch(setQuayDateFilter(date, key, navigation));
   } else if (currType === "telco") {
     dispatch(setTelcoDateFilter(date, key, navigation));
+  } else if (currType === "ilab") {
+    dispatch(setIlabDateFilter(date, key, navigation));
+    dispatch(fetchILabJobs());
   }
 };
 

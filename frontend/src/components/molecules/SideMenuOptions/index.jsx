@@ -28,6 +28,11 @@ const sideMenuOptions = [
     key: "telco",
     displayName: "Telco",
   },
+  {
+    id: CONSTANTS.ILAB_NAV,
+    key: "ilab",
+    displayName: "ILAB",
+  },
 ];
 
 const MenuOptions = () => {
