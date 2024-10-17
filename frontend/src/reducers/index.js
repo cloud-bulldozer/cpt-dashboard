@@ -1,5 +1,6 @@
 import HeaderReducer from "./headerReducer";
 import HomeReducer from "./homeReducer";
+import ILabReducer from "./ilabReducer";
 import LoadingReducer from "./loadingReducer";
 import OCPReducer from "./ocpReducer";
 import OLSReducer from "./olsReducer";
@@ -19,4 +20,5 @@ export default combineReducers({
   quay: QuayReducer,
   telco: TelcoReducer,
   header: HeaderReducer,
+  ilab: ILabReducer,
 });
