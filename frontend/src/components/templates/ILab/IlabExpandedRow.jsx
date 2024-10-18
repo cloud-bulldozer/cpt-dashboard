@@ -86,14 +86,20 @@ const IlabRowContent = (props) => {
                       onClick={() => {
                         onToggle(`iterations-toggle-${item.id}`);
                       }}
-                      isExpanded={metaRowExpanded.includes(`iterations-toggle-${item.id}`)}
+                      isExpanded={metaRowExpanded.includes(
+                        `iterations-toggle-${item.id}`
+                      )}
                       id={`iterations-toggle-${item.id}`}
                     >
                       {`Unique parameters for ${item.iterations.length} Iterations`}
                     </AccordionToggle>
                     <AccordionContent
-                      id={`iterations-toggle-${item.id}`}
-                      isHidden={!metaRowExpanded.includes(`iterations-toggle-${item.id}`)}
+                      id={`iterations-${item.id}`}
+                      isHidden={
+                        !metaRowExpanded.includes(
+                          `iterations-toggle-${item.id}`
+                        )
+                      }
                     >
                       {item.iterations.map((i) => (
                         <MetaRow
