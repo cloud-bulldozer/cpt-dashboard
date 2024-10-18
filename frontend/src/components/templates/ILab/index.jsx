@@ -21,7 +21,6 @@ import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-// import { Button } from "@patternfly/react-core";
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
 import RenderPagination from "@/components/organisms/Pagination";
@@ -57,18 +56,6 @@ const ILab = () => {
       dispatch(fetchMetricsInfo(run.id));
     }
   };
-
-  // const [selectedRuns, setSelectedRuns] = useState([]);
-  // const setRunSelected = (run, isSelecting = true) =>
-  //   setSelectedRuns((prevSelected) => {
-  //     console.log(`Adding ${run}, ${isSelecting}`);
-  //     const others = prevSelected.filter((r) => r != run.id);
-  //     return isSelecting ? [...others, run.id] : others;
-  //   });
-  // const selectAllRuns = (isSelecting = true) =>
-  //   setSelectedRuns(isSelecting ? results.map((r) => r.id) : []);
-  // const areAllRunsSelected = selectedRuns.length === results.length;
-  // const isRunSelected = (run) => selectedRuns.includes(run.id);
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -123,13 +110,6 @@ const ILab = () => {
           <Table aria-label="Misc table" isStriped variant="compact">
             <Thead>
               <Tr key={uid()}>
-                {/* <Th
-              screenReaderText="Row selection"
-              select={{
-                onSelect: (_event, isSelecting) => selectAllRuns(isSelecting),
-                isSelected: areAllRunsSelected,
-              }}
-            /> */}
                 <Th screenReaderText="Row expansion" />
                 <Th>{columnNames.metric}</Th>
                 <Th>{columnNames.begin_date}</Th>
@@ -141,14 +121,6 @@ const ILab = () => {
               {tableData.map((item, rowIndex) => (
                 <>
                   <Tr key={uid()}>
-                    {/* <Td
-                  select={{
-                    rowIndex,
-                    onSelect: (_event, isSelecting) =>
-                      setRunSelected(item, isSelecting),
-                    isSelected: isRunSelected(item),
-                  }}
-                /> */}
                     <Td
                       expand={{
                         rowIndex,

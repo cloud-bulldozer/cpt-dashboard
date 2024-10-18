@@ -16,6 +16,7 @@ const initialState = {
   metrics_selected: {},
   tableData: [],
   comparisonSwitch: false,
+  metaRowExpanded: [],
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -59,6 +60,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, multiGraphData: payload };
     case TYPES.TOGGLE_COMPARISON_SWITCH:
       return { ...state, comparisonSwitch: !state.comparisonSwitch };
+    case TYPES.SET_EXPANDED_METAROW:
+      return { ...state, metaRowExpanded: payload };
     default:
       return state;
   }

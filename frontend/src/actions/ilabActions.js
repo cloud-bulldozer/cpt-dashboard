@@ -293,7 +293,19 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   const startIdx = page !== 1 ? (page - 1) * perPage : 0;
   const endIdx = page !== 1 ? page * perPage - 1 : perPage;
   dispatch(sliceIlabTableRows(startIdx, endIdx));
+  dispatch(getMetaRowdId());
+};
+
+export const getMetaRowdId = () => (dispatch, getState) => {
+  const tableData = getState().ilab.tableData;
+  const metaId = tableData.map((item) => `metadata-toggle-${item.id}`);
+  dispatch(setMetaRowExpanded(metaId));
 };
 export const toggleComparisonSwitch = () => ({
   type: TYPES.TOGGLE_COMPARISON_SWITCH,
+});
+
+export const setMetaRowExpanded = (expandedItems) => ({
+  type: TYPES.SET_EXPANDED_METAROW,
+  payload: expandedItems,
 });

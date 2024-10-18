@@ -3,6 +3,7 @@ import {
   Select,
   SelectList,
   SelectOption,
+  Skeleton
 } from "@patternfly/react-core";
 import { fetchGraphData, setSelectedMetrics } from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
@@ -58,7 +59,7 @@ const MetricsSelect = (props) => {
   /* Metrics select */
   return (
     <>
-      {hasMetricsData(item.id) && (
+      {hasMetricsData(item.id) ? (
         <Select
           id="single-select"
           isOpen={isOpen}
@@ -79,7 +80,9 @@ const MetricsSelect = (props) => {
             ))}
           </SelectList>
         </Select>
-      )}
+      ):
+      <Skeleton width="33%" screenreaderText="Loaded 33% of content" />
+      }
     </>
   );
 };
