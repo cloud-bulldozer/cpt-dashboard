@@ -175,14 +175,14 @@ export const fetchGraphData =
 export const handleMultiGraph = (uids) => async (dispatch, getState) => {
   try {
     const periods = getState().ilab.periods;
+    const pUids = periods.map((i) => i.uid);
 
-    const missingPeriods = periods.filter((item) => !uids.includes(item.uid));
-
-    const missingUids =
-      periods.length > 0 ? missingPeriods.map((item) => item.uid) : uids;
+    const missingPeriods = uids.filter(function (x) {
+      return pUids.indexOf(x) < 0;
+    });
 
     await Promise.all(
-      missingUids.map(async (uid) => {
+      missingPeriods.map(async (uid) => {
         await dispatch(fetchPeriods(uid)); // Dispatch each item
       })
     );

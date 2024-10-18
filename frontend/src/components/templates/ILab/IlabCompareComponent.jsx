@@ -5,11 +5,13 @@ import {
   Menu,
   MenuContent,
   MenuItem,
+  MenuItemAction,
   MenuList,
   Title,
 } from "@patternfly/react-core";
 import { useDispatch, useSelector } from "react-redux";
 
+import { InfoCircleIcon } from "@patternfly/react-icons";
 import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
@@ -64,8 +66,18 @@ const IlabCompareComponent = () => {
                     hasCheckbox
                     itemId={item.id}
                     isSelected={selectedItems.includes(item.id)}
+                    actions={
+                      <MenuItemAction
+                        icon={<InfoCircleIcon aria-hidden />}
+                        actionId="code"
+                        onClick={() => console.log("clicked on code icon")}
+                        aria-label="Code"
+                      />
+                    }
                   >
-                    {`${new Date(item.begin_date).toLocaleDateString()} ${item.primary_metrics[0]}`}
+                    {`${new Date(item.begin_date).toLocaleDateString()} ${
+                      item.primary_metrics[0]
+                    }`}
                   </MenuItem>
                 );
               })}
