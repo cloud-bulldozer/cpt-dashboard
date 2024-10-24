@@ -79,8 +79,12 @@ export const setDateFilter = (date, key, navigation, currType) => {
     quay: applyQuayDateFilter,
     telco: applyTelcoDateFilter,
     ols: applyOLSDateFilter,
+    ilab: setIlabDateFilter,
   };
   dispatch(actions[currType](date, key, navigation));
+  if (currType === "ilab") {
+    dispatch(fetchILabJobs(true));
+  }
 };
 
 export const setOtherSummaryFilter = (currType) => {
