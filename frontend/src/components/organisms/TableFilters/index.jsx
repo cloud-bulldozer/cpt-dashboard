@@ -5,6 +5,7 @@ import "./index.less";
 import {
   Chip,
   ChipGroup,
+  Switch,
   Toolbar,
   ToolbarContent,
   ToolbarItem,
@@ -39,6 +40,8 @@ const TableFilter = (props) => {
     setColumns,
     selectedFilters,
     updateSelectedFilter,
+    onSwitchChange,
+    isSwitchChecked,
   } = props;
 
   const category =
@@ -66,7 +69,7 @@ const TableFilter = (props) => {
     setDateFilter(date, key, navigation, type);
   };
   const endDateChangeHandler = (date, key) => {
-    setDateFilter(key, date, navigation, type);
+    setDateFilter(date, key, navigation, type);
   };
 
   return (
@@ -123,6 +126,18 @@ const TableFilter = (props) => {
             </ToolbarItem>
           )}
         </ToolbarContent>
+        {type === "ilab" && (
+          <ToolbarContent id="comparison-switch">
+            <ToolbarItem>
+              <Switch
+                label="Comparison"
+                isChecked={isSwitchChecked}
+                onChange={onSwitchChange}
+                ouiaId="Comparison Switch"
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        )}
       </Toolbar>
       {appliedFilters &&
         Object.keys(appliedFilters).length > 0 &&
@@ -154,5 +169,7 @@ TableFilter.propTypes = {
   selectedFilters: PropTypes.array,
   updateSelectedFilter: PropTypes.func,
   navigation: PropTypes.func,
+  isSwitchChecked: PropTypes.bool,
+  onSwitchChange: PropTypes.func,
 };
 export default TableFilter;
