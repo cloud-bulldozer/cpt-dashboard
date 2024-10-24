@@ -79,7 +79,7 @@ export const setDateFilter = (date, key, navigation, currType) => {
     dispatch(setTelcoDateFilter(date, key, navigation));
   } else if (currType === "ilab") {
     dispatch(setIlabDateFilter(date, key, navigation));
-    dispatch(fetchILabJobs());
+    dispatch(fetchILabJobs(true));
   }
 };
 

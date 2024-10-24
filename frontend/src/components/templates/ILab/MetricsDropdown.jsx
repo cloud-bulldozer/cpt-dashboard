@@ -3,10 +3,12 @@ import {
   Select,
   SelectList,
   SelectOption,
+  Skeleton
 } from "@patternfly/react-core";
 import { fetchGraphData, setSelectedMetrics } from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
 
+import PropTypes from "prop-types";
 import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
@@ -41,7 +43,7 @@ const MetricsSelect = (props) => {
     //setSelected(run[1].trim());
     dispatch(setSelectedMetrics(run[0].trim(), run[1].trim()));
     setIsOpen(false);
-    dispatch(fetchGraphData(run[0].trim(), run[1].trim(), run[2].trim()));
+    dispatch(fetchGraphData(run[0].trim(), run[1].trim()));
   };
   const metricsDataCopy = cloneDeep(metrics);
 
@@ -57,7 +59,7 @@ const MetricsSelect = (props) => {
   /* Metrics select */
   return (
     <>
-      {hasMetricsData(item.id) && (
+      {hasMetricsData(item.id) ? (
         <Select
           id="single-select"
           isOpen={isOpen}
@@ -78,9 +80,14 @@ const MetricsSelect = (props) => {
             ))}
           </SelectList>
         </Select>
-      )}
+      ):
+      <Skeleton width="33%" screenreaderText="Loaded 33% of content" />
+      }
     </>
   );
 };
 
+MetricsSelect.propTypes = {
+  item: PropTypes.object,
+};
 export default MetricsSelect;

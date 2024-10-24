@@ -1,14 +1,6 @@
 import "./index.less";
 
 import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionToggle,
-  Card,
-  CardBody,
-} from "@patternfly/react-core";
-import {
   ExpandableRowContent,
   Table,
   Tbody,
@@ -22,15 +14,15 @@ import {
   fetchMetricsInfo,
   fetchPeriods,
   setIlabDateFilter,
+  toggleComparisonSwitch,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
-import ILabGraph from "./ILabGraph";
-import MetaRow from "./MetaRow";
-import MetricsSelect from "./MetricsDropdown";
+import IlabCompareComponent from "./IlabCompareComponent";
+import IlabRowContent from "./IlabExpandedRow";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
@@ -40,21 +32,17 @@ const ILab = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const { start_date, end_date } = useSelector((state) => state.ilab);
+  const {
+    start_date,
+    end_date,
+    comparisonSwitch,
+    tableData,
+    page,
+    perPage,
+    totalItems,
+  } = useSelector((state) => state.ilab);
   const [expandedResult, setExpandedResult] = useState([]);
-  const [expanded, setAccExpanded] = useState(["bordered-toggle1"]);
 
-  const onToggle = (id) => {
-    const index = expanded.indexOf(id);
-    const newExpanded =
-      index >= 0
-        ? [
-            ...expanded.slice(0, index),
-            ...expanded.slice(index + 1, expanded.length),
-          ]
-        : [...expanded, id];
-    setAccExpanded(newExpanded);
-  };
   const isResultExpanded = (res) => expandedResult?.includes(res);
   const setExpanded = async (run, isExpanding = true) => {
     setExpandedResult((prevExpanded) => {
@@ -68,10 +56,6 @@ const ILab = () => {
       dispatch(fetchMetricsInfo(run.id));
     }
   };
-
-  const { totalItems, page, perPage, tableData } = useSelector(
-    (state) => state.ilab
-  );
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -105,6 +89,9 @@ const ILab = () => {
     status: "Status",
   };
 
+  const onSwitchChange = () => {
+    dispatch(toggleComparisonSwitch());
+  };
   return (
     <>
       <TableFilter
@@ -113,127 +100,63 @@ const ILab = () => {
         type={"ilab"}
         showColumnMenu={false}
         navigation={navigate}
+        isSwitchChecked={comparisonSwitch}
+        onSwitchChange={onSwitchChange}
       />
-      <Table aria-label="Misc table" isStriped>
-        <Thead>
-          <Tr>
-            <Th screenReaderText="Row expansion" />
-            <Th>{columnNames.metric}</Th>
-            <Th>{columnNames.begin_date}</Th>
-            <Th>{columnNames.end_date}</Th>
-            <Th>{columnNames.status}</Th>
-          </Tr>
-        </Thead>
-        <Tbody>
-          {tableData.map((item, rowIndex) => (
-            <>
+      {comparisonSwitch ? (
+        <IlabCompareComponent />
+      ) : (
+        <>
+          <Table aria-label="Misc table" isStriped variant="compact">
+            <Thead>
               <Tr key={uid()}>
-                <Td
-                  expand={{
-                    rowIndex,
-                    isExpanded: isResultExpanded(item.id),
-                    onToggle: () =>
-                      setExpanded(item, !isResultExpanded(item.id)),
-                    expandId: `expandId-${uid()}`,
-                  }}
-                />
-
-                <Td>{item.primary_metrics[0]}</Td>
-                <Th>{formatDateTime(item.begin_date)}</Th>
-                <Th>{formatDateTime(item.end_date)}</Th>
-                <Td>
-                  <StatusCell value={item.status} />
-                </Td>
+                <Th screenReaderText="Row expansion" />
+                <Th>{columnNames.metric}</Th>
+                <Th>{columnNames.begin_date}</Th>
+                <Th>{columnNames.end_date}</Th>
+                <Th>{columnNames.status}</Th>
               </Tr>
-              <Tr isExpanded={isResultExpanded(item.id)}>
-                <Td colSpan={8}>
-                  <ExpandableRowContent>
-                    <Accordion asDefinitionList={false} togglePosition="start">
-                      <AccordionItem>
-                        <AccordionToggle
-                          onClick={() => {
-                            onToggle("bordered-toggle1");
-                          }}
-                          isExpanded={expanded.includes("bordered-toggle1")}
-                          id="bordered-toggle1"
-                        >
-                          Metadata
-                        </AccordionToggle>
+            </Thead>
+            <Tbody>
+              {tableData.map((item, rowIndex) => (
+                <>
+                  <Tr key={uid()}>
+                    <Td
+                      expand={{
+                        rowIndex,
+                        isExpanded: isResultExpanded(item.id),
+                        onToggle: () =>
+                          setExpanded(item, !isResultExpanded(item.id)),
+                        expandId: `expandId-${uid()}`,
+                      }}
+                    />
 
-                        <AccordionContent
-                          id="bordered-expand1"
-                          isHidden={!expanded.includes("bordered-toggle1")}
-                        >
-                          <div className="metadata-wrapper">
-                            <Card className="metadata-card" isCompact>
-                              <CardBody>
-                                <MetaRow
-                                  key={uid()}
-                                  heading={"Fields"}
-                                  metadata={[
-                                    ["benchmark", item.benchmark],
-                                    ["name", item.name],
-                                    ["email", item.email],
-                                    ["source", item.source],
-                                  ]}
-                                />
-                              </CardBody>
-                            </Card>
-                            <Card className="metadata-card" isCompact>
-                              <CardBody>
-                                <MetaRow
-                                  key={uid()}
-                                  heading={"Tags"}
-                                  metadata={Object.entries(item.tags)}
-                                />
-                              </CardBody>
-                            </Card>
-                            <Card className="metadata-card" isCompact>
-                              <CardBody>
-                                <MetaRow
-                                  key={uid()}
-                                  heading={"Common Parameters"}
-                                  metadata={Object.entries(item.params)}
-                                />
-                              </CardBody>
-                            </Card>
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                      <AccordionItem>
-                        <AccordionToggle
-                          onClick={() => {
-                            onToggle("bordered-toggle2");
-                          }}
-                          isExpanded={expanded.includes("bordered-toggle2")}
-                          id="bordered-toggle2"
-                        >
-                          Metrics & Graph
-                        </AccordionToggle>
-                        <AccordionContent
-                          id="bordered-expand2"
-                          isHidden={!expanded.includes("bordered-toggle2")}
-                        >
-                          Metrics: <MetricsSelect item={item} />
-                          <div className="graph-card">
-                            <ILabGraph item={item} />
-                          </div>
-                        </AccordionContent>
-                      </AccordionItem>
-                    </Accordion>
-                  </ExpandableRowContent>
-                </Td>
-              </Tr>
-            </>
-          ))}
-        </Tbody>
-      </Table>
-      <RenderPagination
-        items={totalItems}
-        page={page}
-        perPage={perPage}
-        type={"ilab"}
-      />
+                    <Td>{item.primary_metrics[0]}</Td>
+                    <Th>{formatDateTime(item.begin_date)}</Th>
+                    <Th>{formatDateTime(item.end_date)}</Th>
+                    <Td>
+                      <StatusCell value={item.status} />
+                    </Td>
+                  </Tr>
+                  <Tr key={uid()} isExpanded={isResultExpanded(item.id)}>
+                    <Td colSpan={8}>
+                      <ExpandableRowContent>
+                        <IlabRowContent item={item} />
+                      </ExpandableRowContent>
+                    </Td>
+                  </Tr>
+                </>
+              ))}
+            </Tbody>
+          </Table>
+          <RenderPagination
+            items={totalItems}
+            page={page}
+            perPage={perPage}
+            type={"ilab"}
+          />
+        </>
+      )}
     </>
   );
 };
