@@ -7,7 +7,8 @@ authors = ["mleader <mleader@redhat.com>"]
 [tool.poetry.dependencies]
 python = "^3.9"
 cryptography = "^3.4.8"
-pandas = "1.2.4"
+pandas = "2.2.2"
+numpy = "1.26.4"
 vyper-config = "1.0.0"
 semver = "2.13.0"
 splunk-sdk = "2.0.1"
