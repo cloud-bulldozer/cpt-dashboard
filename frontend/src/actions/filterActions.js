@@ -92,6 +92,9 @@ export const setDateFilter = (date, key, navigation, currType) => {
     ilab: applyIlabDateFilter,
   };
   dispatch(actions[currType](date, key, navigation));
+  if (currType === "ilab") {
+    dispatch(fetchILabJobs(true));
+  }
 };
 
 export const setOtherSummaryFilter = (currType) => {
