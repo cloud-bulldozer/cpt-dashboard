@@ -4,25 +4,30 @@ import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 
 
-async def getData(start_datetime: date, end_datetime: date, configpath: str):
+async def getData(
+    start_datetime: date, end_datetime: date, size: int, offset: int, configpath: str
+):
     query = {
+        "size": size,
+        "from": offset,
         "query": {
             "bool": {"filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}}}
-        }
+        },
     }
 
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
+        size=size,
         start_date=start_datetime,
         end_date=end_datetime,
         timestamp_field="timestamp",
     )
     await es.close()
-    tasks = [item["_source"] for item in response]
+    tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
-        return jobs
+        return {"data": jobs, "total": response["total"]}
 
     jobs[
         ["masterNodesCount", "workerNodesCount", "infraNodesCount", "totalNodesCount"]
@@ -52,7 +57,7 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     jbs = cleanJobs
     jbs["shortVersion"] = jbs["ocpVersion"].str.slice(0, 4)
 
-    return jbs
+    return {"data": jbs, "total": response["total"]}
 
 
 def fillEncryptionType(row):

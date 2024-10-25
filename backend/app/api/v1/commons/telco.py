@@ -8,7 +8,9 @@ import app.api.v1.commons.utils as utils
 import app.api.v1.endpoints.telco.telcoGraphs as telcoGraphs
 
 
-async def getData(start_datetime: date, end_datetime: date, configpath: str):
+async def getData(
+    start_datetime: date, end_datetime: date, size: int, offset: int, configpath: str
+):
     test_types = [
         "oslat",
         "cyclictest",
@@ -41,7 +43,9 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
         ['test_type="{}"'.format(test_type) for test_type in test_types]
     )
     splunk = SplunkService(configpath=configpath)
-    response = await splunk.query(query=query, searchList=searchList)
+    response = await splunk.query(
+        query=query, size=size, offset=offset, searchList=searchList
+    )
     mapped_list = []
 
     for each_response in response:

@@ -1,11 +1,28 @@
 import {
+  fetchOCPJobs,
+  setOCPOffset,
+  setOCPPage,
+  setOCPPageOptions,
+} from "./ocpActions";
+import {
+  fetchOCPJobsData,
+  setCPTOffset,
   setCPTPage,
   setCPTPageOptions,
-  sliceCPTTableRows,
 } from "./homeActions";
-import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
-import { setQuayPage, setQuayPageOptions } from "./quayActions";
-import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
+import {
+  fetchQuayJobsData,
+  setQuayOffset,
+  setQuayPage,
+  setQuayPageOptions,
+} from "./quayActions";
+import {
+  fetchTelcoJobsData,
+  setTelcoOffset,
+  setTelcoPage,
+  setTelcoPageOptions,
+} from "./telcoActions";
+
 export const setPage = (newPage, currType) => (dispatch) => {
   if (currType === "cpt") {
     dispatch(setCPTPage(newPage));
@@ -30,10 +47,27 @@ export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
   }
 };
 
-export const sliceTableRows = (startIdx, endIdx, currType) => (dispatch) => {
-  if (currType === "cpt") {
-    dispatch(sliceCPTTableRows(startIdx, endIdx));
-  } else if (currType === "ocp") {
-    dispatch(sliceOCPTableRows(startIdx, endIdx));
+const calculateOffset = (pageNumber, itemsPerPage) => {
+  return (pageNumber - 1) * itemsPerPage;
+};
+
+export const checkTableData = (newPage, currType) => (dispatch, getState) => {
+  const { results, totalJobs, perPage } = getState()[currType];
+  const hasPageData = results.length >= newPage * perPage;
+  const offset = calculateOffset(newPage, perPage);
+  if (results.length < totalJobs && !hasPageData) {
+    if (currType === "cpt") {
+      dispatch(setCPTOffset(offset));
+      dispatch(fetchOCPJobsData());
+    } else if (currType === "ocp") {
+      dispatch(setOCPOffset(offset));
+      dispatch(fetchOCPJobs());
+    } else if (currType === "quay") {
+      dispatch(setQuayOffset(offset));
+      dispatch(fetchQuayJobsData());
+    } else if (currType === "telco") {
+      dispatch(setTelcoOffset(offset));
+      dispatch(fetchTelcoJobsData());
+    }
   }
 };

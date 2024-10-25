@@ -20,11 +20,10 @@ const OCP = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    filteredResults,
+    results,
     tableColumns,
     activeSortDir,
     activeSortIndex,
-    tableData,
     page,
     perPage,
     summary,
@@ -37,6 +36,7 @@ const OCP = () => {
     end_date,
     graphData,
     selectedFilters,
+    totalJobs,
   } = useSelector((state) => state.ocp);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ const OCP = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -123,13 +123,13 @@ const OCP = () => {
       />
 
       <TableLayout
-        tableData={tableData}
+        tableData={results}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         addExpansion={true}
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
