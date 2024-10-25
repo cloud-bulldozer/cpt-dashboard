@@ -239,9 +239,7 @@ export const getCPTSummary = () => (dispatch, getState) => {
 
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().cpt;
-
   dispatch(setCPTPageOptions(page, perPage));
-
   const startIdx = page !== 0 ? (page - 1) * perPage : 0;
   const endIdx = startIdx + perPage - 1;
   dispatch(sliceCPTTableRows(startIdx, endIdx));
