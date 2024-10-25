@@ -15,6 +15,7 @@ import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
+<<<<<<< HEAD
 export const fetchOCPJobsData =
   (isNewSearch = false) =>
   async (dispatch, getState) => {
@@ -38,6 +39,41 @@ export const fetchOCPJobsData =
           },
         });
       }
+=======
+export const fetchOCPJobsData = () => async (dispatch) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+
+    const params = dispatch(getRequestParams("cpt"));
+
+    const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, { params });
+    if (response.status === 200) {
+      const startDate = response.data.startDate,
+        endDate = response.data.endDate;
+      //on initial load startDate and endDate are empty, so from response append to url
+      appendDateFilter(startDate, endDate);
+      dispatch({
+        type: TYPES.SET_CPT_DATE_FILTER,
+        payload: {
+          start_date: startDate,
+          end_date: endDate,
+        },
+      });
+    }
+
+    if (response?.data?.results?.length > 0) {
+      dispatch({
+        type: TYPES.SET_CPT_JOBS_DATA,
+        payload: response.data.results,
+      });
+      dispatch({
+        type: TYPES.SET_CPT_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
+      });
+>>>>>>> 4baf573 (Page Size and offset)
 
       if (response?.data?.results?.length > 0) {
         dispatch({
@@ -240,7 +276,10 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().cpt;
   dispatch(getCPTSummary());
   dispatch(setCPTPageOptions(page, perPage));
+<<<<<<< HEAD
   const startIdx = page !== 0 ? (page - 1) * perPage : 0;
   const endIdx = startIdx + perPage - 1;
   dispatch(sliceCPTTableRows(startIdx, endIdx));
+=======
+>>>>>>> 4baf573 (Page Size and offset)
 };

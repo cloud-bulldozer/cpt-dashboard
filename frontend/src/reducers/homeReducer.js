@@ -77,8 +77,6 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_CPT_SORT_DIR:
       return { ...state, activeSortDir: payload };
-    case TYPES.SET_CPT_INIT_JOBS:
-      return { ...state, tableData: payload };
     case TYPES.SET_CPT_FILTER_DATA:
       return { ...state, filterData: payload };
     case TYPES.SET_CATEGORY_FILTER:
