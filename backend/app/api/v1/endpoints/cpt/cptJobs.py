@@ -28,7 +28,7 @@ products = {
 @router.get(
     "/api/v1/cpt/jobs",
     summary="Returns a job list from all the products.",
-    description="Returns a list of jobs in the specified dates. \
+    description="Returns a list of jobs in the specified dates of requested size \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
@@ -49,6 +49,8 @@ async def jobs(
         examples=["2020-11-15"],
     ),
     pretty: bool = Query(False, description="Output contet in pretty format."),
+    size: int = Query(None, description="Number of jobs to fetch"),
+    offset: int = Query(None, description="Offset Number to fetch jobs from"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()

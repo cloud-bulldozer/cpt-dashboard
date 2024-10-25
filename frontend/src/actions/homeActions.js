@@ -1,16 +1,13 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
   buildFilterData,
   calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
+  getRequestParams,
   getSelectedFilter,
   sortTable,
 } from "./commonActions";
@@ -19,17 +16,13 @@ import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
-export const fetchOCPJobsData = () => async (dispatch, getState) => {
+export const fetchOCPJobsData = () => async (dispatch) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().cpt;
-    const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
+
+    const params = dispatch(getRequestParams("cpt"));
+
+    const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, { params });
     if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
@@ -48,6 +41,13 @@ export const fetchOCPJobsData = () => async (dispatch, getState) => {
       dispatch({
         type: TYPES.SET_CPT_JOBS_DATA,
         payload: response.data.results,
+      });
+      dispatch({
+        type: TYPES.SET_CPT_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
       });
 
       dispatch(applyFilters());
@@ -68,6 +68,11 @@ export const setCPTSortIndex = (index) => ({
 export const setCPTSortDir = (direction) => ({
   type: TYPES.SET_CPT_SORT_DIR,
   payload: direction,
+});
+
+export const setCPTOffset = (offset) => ({
+  type: TYPES.SET_CPT_OFFSET,
+  payload: offset,
 });
 
 export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
@@ -224,8 +229,8 @@ export const getCPTSummary = () => (dispatch, getState) => {
   });
 };
 
-export const tableReCalcValues = () => (dispatch) => {
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().cpt;
   dispatch(getCPTSummary());
-  dispatch(setCPTPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setCPTPageOptions(page, perPage));
 };

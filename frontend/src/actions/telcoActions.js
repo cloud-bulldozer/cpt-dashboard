@@ -1,16 +1,13 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   buildFilterData,
   calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
+  getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
@@ -18,17 +15,13 @@ import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
-export const fetchTelcoJobsData = () => async (dispatch, getState) => {
+export const fetchTelcoJobsData = () => async (dispatch) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().telco;
-    const response = await API.get(API_ROUTES.TELCO_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
+
+    const params = dispatch(getRequestParams("telco"));
+
+    const response = await API.get(API_ROUTES.TELCO_JOBS_API_V1, { params });
     if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
@@ -50,6 +43,13 @@ export const fetchTelcoJobsData = () => async (dispatch, getState) => {
       dispatch({
         type: TYPES.SET_TELCO_FILTERED_DATA,
         payload: response.data.results,
+      });
+      dispatch({
+        type: TYPES.SET_TELCO_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
       });
 
       dispatch(applyFilters());
@@ -73,20 +73,15 @@ export const setTelcoSortIndex = (index) => ({
   type: TYPES.SET_TELCO_SORT_INDEX,
   payload: index,
 });
-
+export const setTelcoOffset = (offset) => ({
+  type: TYPES.SET_TELCO_OFFSET,
+  payload: offset,
+});
 export const setTelcoSortDir = (direction) => ({
   type: TYPES.SET_TELCO_SORT_DIR,
   payload: direction,
 });
-export const sliceTelcoTableRows =
-  (startIdx, endIdx) => (dispatch, getState) => {
-    const results = [...getState().telco.filteredResults];
 
-    dispatch({
-      type: TYPES.SET_TELCO_INIT_JOBS,
-      payload: results.slice(startIdx, endIdx),
-    });
-  };
 export const setTelcoCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().telco.filterData];
   const options = filterData.filter((item) => item.name === category)[0].value;
@@ -284,8 +279,8 @@ export const fetchGraphData =
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
-export const tableReCalcValues = () => (dispatch) => {
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().telco;
   dispatch(getTelcoSummary());
-  dispatch(setTelcoPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setTelcoPageOptions(page, perPage));
 };

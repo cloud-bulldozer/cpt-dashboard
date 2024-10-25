@@ -19,11 +19,10 @@ const Home = () => {
   const navigate = useNavigate();
 
   const {
-    filteredResults,
     tableColumns,
     activeSortDir,
     activeSortIndex,
-    tableData,
+    results,
     filterOptions,
     tableFilters,
     categoryFilterValue,
@@ -35,6 +34,7 @@ const Home = () => {
     perPage,
     summary,
     selectedFilters,
+    totalJobs,
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
@@ -67,7 +67,7 @@ const Home = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -91,13 +91,13 @@ const Home = () => {
       />
 
       <TableLayout
-        tableData={tableData}
+        tableData={results}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         addExpansion={false}
         type={"cpt"}
       />

@@ -32,7 +32,9 @@ class SplunkService:
             print(f"Error connecting to splunk: {e}")
             return None
 
-    async def query(self, query, searchList="", max_results=10000):
+    async def query(
+        self, query, searchList="", size=None, offset=None, max_results=10000
+    ):
         """
         Query data from splunk server using splunk lib sdk
 
@@ -40,7 +42,8 @@ class SplunkService:
             query (string): splunk query
             OPTIONAL: searchList (string): additional query parameters for index
         """
-        query["count"] = max_results
+        query["count"] = size
+        query["offset"] = offset
 
         # If additional search parameters are provided, include those in searchindex
         searchindex = (

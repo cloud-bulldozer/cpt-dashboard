@@ -4,11 +4,15 @@ import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 
 
-async def getData(start_datetime: date, end_datetime: date, configpath: str):
+async def getData(
+    start_datetime: date, end_datetime: date, size, offset, configpath: str
+):
     query = {
+        "size": size,
+        "from": offset,
         "query": {
             "bool": {"filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}}}
-        }
+        },
     }
 
     es = ElasticService(configpath=configpath)
@@ -19,10 +23,10 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
         timestamp_field="timestamp",
     )
     await es.close()
-    tasks = [item["_source"] for item in response]
+    tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
-        return jobs
+        return {"data": jobs, "total": response["total"]}
 
     jobs[
         ["masterNodesCount", "workerNodesCount", "infraNodesCount", "totalNodesCount"]
@@ -38,4 +42,7 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     jobs["build"] = jobs.apply(utils.getBuild, axis=1)
     jobs["shortVersion"] = jobs["ocpVersion"].str.slice(0, 4)
 
-    return jobs[jobs["platform"] != ""]
+    cleanJobs = jobs[jobs["platform"] != ""]
+
+    jbs = cleanJobs
+    return {"data": jbs, "total": response["total"]}
