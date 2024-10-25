@@ -1,12 +1,10 @@
 import * as TYPES from "@/actions/types.js";
 
-import { setCPTCatFilters, sliceCPTTableRows } from "./homeActions";
-import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
-import { setQuayCatFilters, sliceQuayTableRows } from "./quayActions";
-import { setTelcoCatFilters, sliceTelcoTableRows } from "./telcoActions";
-
-import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setCPTCatFilters } from "./homeActions";
+import { setOCPCatFilters } from "./ocpActions";
+import { setQuayCatFilters } from "./quayActions";
+import { setTelcoCatFilters } from "./telcoActions";
 
 const getSortableRowValues = (result, tableColumns) => {
   const tableKeys = tableColumns.map((item) => item.value);
@@ -47,7 +45,6 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "ocp") {
@@ -55,7 +52,6 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_OCP_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "quay") {
@@ -63,7 +59,6 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_QUAY_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceQuayTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "telco") {
@@ -71,7 +66,6 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       type: TYPES.SET_TELCO_FILTERED_DATA,
       payload: sortedResults,
     });
-    dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
   }
 };
 
@@ -207,3 +201,16 @@ export const getSelectedFilter =
 
     return selectedFilters;
   };
+
+export const getRequestParams = (type) => (dispatch, getState) => {
+  const { start_date, end_date, size, offset } = getState()[type];
+  const params = {
+    pretty: true,
+    ...(start_date && { start_date }),
+    ...(end_date && { end_date }),
+    size: size,
+    offset: offset,
+  };
+
+  return params;
+};

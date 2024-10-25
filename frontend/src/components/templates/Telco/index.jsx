@@ -20,13 +20,12 @@ const Telco = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    tableData,
+    results,
     tableColumns,
     activeSortIndex,
     activeSortDir,
     page,
     perPage,
-    filteredResults,
     tableFilters,
     filterOptions,
     categoryFilterValue,
@@ -37,6 +36,7 @@ const Telco = () => {
     selectedFilters,
     summary,
     graphData,
+    totalJobs,
   } = useSelector((state) => state.telco);
 
   useEffect(() => {
@@ -98,7 +98,7 @@ const Telco = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -121,13 +121,13 @@ const Telco = () => {
         navigation={navigate}
       />
       <TableLayout
-        tableData={tableData}
+        tableData={results}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         type={"telco"}
         addExpansion={true}
         isRunExpanded={isRunExpanded}

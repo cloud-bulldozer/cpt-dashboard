@@ -21,13 +21,12 @@ const Quay = () => {
   const [searchParams] = useSearchParams();
 
   const {
-    tableData,
+    results,
     tableColumns,
     activeSortIndex,
     activeSortDir,
     page,
     perPage,
-    filteredResults,
     tableFilters,
     filterOptions,
     categoryFilterValue,
@@ -38,6 +37,7 @@ const Quay = () => {
     selectedFilters,
     graphData,
     summary,
+    totalJobs,
   } = useSelector((state) => state.quay);
 
   useEffect(() => {
@@ -99,7 +99,7 @@ const Quay = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -122,13 +122,13 @@ const Quay = () => {
         navigation={navigate}
       />
       <TableLayout
-        tableData={tableData}
+        tableData={results}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         type={"quay"}
         addExpansion={true}
         isRunExpanded={isRunExpanded}

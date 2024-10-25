@@ -1,16 +1,13 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   buildFilterData,
   calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
+  getRequestParams,
   getSelectedFilter,
   sortTable,
 } from "./commonActions";
@@ -19,17 +16,14 @@ import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "./toastActions";
 
-export const fetchOCPJobs = () => async (dispatch, getState) => {
+export const fetchOCPJobs = () => async (dispatch) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().ocp;
-    const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
+
+    const params = dispatch(getRequestParams("ocp"));
+
+    const response = await API.get(API_ROUTES.OCP_JOBS_API_V1, { params });
+
     if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
@@ -47,6 +41,14 @@ export const fetchOCPJobs = () => async (dispatch, getState) => {
       dispatch({
         type: TYPES.SET_OCP_JOBS_DATA,
         payload: response.data.results,
+      });
+
+      dispatch({
+        type: TYPES.SET_OCP_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
       });
 
       dispatch(applyFilters());
@@ -69,14 +71,10 @@ export const setOCPPageOptions = (page, perPage) => ({
   payload: { page, perPage },
 });
 
-export const sliceOCPTableRows = (startIdx, endIdx) => (dispatch, getState) => {
-  const results = [...getState().ocp.filteredResults];
-
-  dispatch({
-    type: TYPES.SET_OCP_INIT_JOBS,
-    payload: results.slice(startIdx, endIdx),
-  });
-};
+export const setOCPOffset = (offset) => ({
+  type: TYPES.SET_OCP_OFFSET,
+  payload: offset,
+});
 
 export const setOCPSortIndex = (index) => ({
   type: TYPES.SET_OCP_SORT_INDEX,
@@ -261,8 +259,9 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
     payload: tableColumns,
   });
 };
-export const tableReCalcValues = () => (dispatch) => {
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().ocp;
+
   dispatch(getOCPSummary());
-  dispatch(setOCPPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+  dispatch(setOCPPageOptions(page, perPage));
 };
