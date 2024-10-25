@@ -47,7 +47,7 @@ class ElasticService:
         self,
         query,
         indice=None,
-        size=10000,
+        size=None,
         start_date=None,
         end_date=None,
         timestamp_field=None,

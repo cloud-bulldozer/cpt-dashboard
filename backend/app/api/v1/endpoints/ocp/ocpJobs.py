@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get(
     "/api/v1/ocp/jobs",
     summary="Returns a job list",
-    description="Returns a list of jobs in the specified dates. \
+    description="Returns a list of jobs in the specified dates of requested size. \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
