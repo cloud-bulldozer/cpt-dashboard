@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 """Tool to analyze CDM data to help identify "broken" runs.
 
 Traverse the CDM hierarchy (run to iteration to sample to period to metric
@@ -8,6 +9,9 @@ captive Opensearch snapshot for functional testing; but this can be used to
 validate any CDMv7 Opensearch instance.
 """
 
+=======
+import argparse
+>>>>>>> 92baaf7 (Crucible statistics comparison)
 from collections import defaultdict
 from dataclasses import dataclass, field
 import datetime
