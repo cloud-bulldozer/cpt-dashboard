@@ -136,9 +136,12 @@ export const fetchGraphData =
       dispatch({ type: TYPES.GRAPH_LOADING });
       let graphs = [];
       periods?.periods?.forEach((p) => {
-        graphs.push({ metric: p.primary_metric, periods: [p.id] });
+        if (p.is_primary) {
+          graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
+        }
         if (metric) {
           graphs.push({
+            run: uid,
             metric,
             aggregate: true,
             periods: [p.id],
@@ -146,11 +149,19 @@ export const fetchGraphData =
         }
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
-        run: uid,
         name: `graph ${uid}`,
         graphs,
       });
       if (response.status === 200) {
+        response.data.layout["showlegend"] = true;
+        response.data.layout["responsive"] = "true";
+        response.data.layout["autosize"] = "true";
+        response.data.layout["legend"] = {
+          orientation: "h",
+          xanchor: "left",
+          yanchor: "top",
+          y: -0.1,
+        };
         copyData.push({
           uid,
           data: response.data.data,
@@ -207,11 +218,13 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     uids.forEach(async (uid) => {
       const periods = filterPeriods.find((i) => i.uid == uid);
       periods?.periods?.forEach((p) => {
-        graphs.push({
-          run: uid,
-          metric: p.primary_metric,
-          periods: [p.id],
-        });
+        if (p.is_primary) {
+          graphs.push({
+            run: uid,
+            metric: p.primary_metric,
+            periods: [p.id],
+          });
+        }
         // graphs.push({
         //   run: uid,
         //   metric,
@@ -230,7 +243,11 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
       response.data.layout["showlegend"] = true;
       response.data.layout["responsive"] = "true";
       response.data.layout["autosize"] = "true";
-      response.data.layout["legend"] = { x: 0, y: 1.5 };
+      response.data.layout["legend"] = {
+        orientation: "h",
+        xanchor: "left",
+        yanchor: "top",
+      };
       const graphData = [];
       graphData.push({
         data: response.data.data,

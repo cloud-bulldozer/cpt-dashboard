@@ -5,7 +5,7 @@ import pytest
 from starlette.testclient import TestClient
 
 from app.main import app as fastapi_app
-from app.services.crucible_svc import CrucibleService, Graph, GraphList
+from app.services.crucible_svc import CrucibleService, GraphList, Metric
 
 
 @pytest.fixture
@@ -160,23 +160,16 @@ class TestIlabApi:
     @pytest.mark.parametrize(
         "name,period", ((None, None), (["cpu=1", "x=y"], None), (None, ["p1,p2"]))
     )
-    @pytest.mark.parametrize(
-        "api,getter",
-        (("breakouts", "get_metric_breakouts"), ("summary", "get_metrics_summary")),
-    )
-    def test_metric_name_period(
-        self, name, period, api, getter, monkeypatch, client: TestClient, fake_crucible
+    def test_metric_breakouts_name_period(
+        self, name, period, monkeypatch, client: TestClient, fake_crucible
     ):
-        if api == "breakouts":
-            expected = {
-                "label": "source::type",
-                "class": ["test"],
-                "type": "type",
-                "source": "source",
-                "breakouts": {"one": [1, 2]},
-            }
-        else:
-            expected = {"count": 2, "min": 0.0, "max": 10.0, "avg": 5.0, "sum": 10.0}
+        expected = {
+            "label": "source::type",
+            "class": ["test"],
+            "type": "type",
+            "source": "source",
+            "breakouts": {"one": [1, 2]},
+        }
 
         async def fake_get(self, run, metric, names, periods):
             assert run == "r1"
@@ -186,7 +179,7 @@ class TestIlabApi:
             return expected
 
         monkeypatch.setattr(
-            f"app.services.crucible_svc.CrucibleService.{getter}", fake_get
+            "app.services.crucible_svc.CrucibleService.get_metric_breakouts", fake_get
         )
         query = None
         if name or period:
@@ -195,7 +188,40 @@ class TestIlabApi:
                 query["name"] = name
             if period:
                 query["period"] = period
-        response = client.get(f"/api/v1/ilab/runs/r1/{api}/source::type", params=query)
+        response = client.get(
+            "/api/v1/ilab/runs/r1/breakouts/source::type", params=query
+        )
+        assert response.json() == expected
+        assert response.status_code == 200
+
+    @pytest.mark.parametrize(
+        "name,period", ((None, None), (["cpu=1", "x=y"], None), (None, ["p1,p2"]))
+    )
+    def test_metric_summary_name_period(
+        self, name, period, monkeypatch, client: TestClient, fake_crucible
+    ):
+        expected = {"count": 2, "min": 0.0, "max": 10.0, "avg": 5.0, "sum": 10.0}
+
+        async def fake_get(self, summaries: list[Metric]):
+            assert len(summaries) == 1
+            m = summaries[0]
+            assert m.run == "r1"
+            assert m.metric == "source::type"
+            assert m.names == name
+            assert m.periods == period
+            return expected
+
+        monkeypatch.setattr(
+            "app.services.crucible_svc.CrucibleService.get_metrics_summary", fake_get
+        )
+        query = None
+        if name or period:
+            query = {}
+            if name:
+                query["name"] = name
+            if period:
+                query["period"] = period
+        response = client.get("/api/v1/ilab/runs/r1/summary/source::type", params=query)
         assert response.json() == expected
         assert response.status_code == 200
 
@@ -239,11 +265,11 @@ class TestIlabApi:
         assert response.status_code == 200
 
     def test_multigraph(self, monkeypatch, client: TestClient, fake_crucible):
-        expected = [{"data": [{"x": [], "y": []}]}]
+        expected = {"data": [{"x": [], "y": []}]}
 
         async def fake_get(self, graphs):
             assert graphs == GraphList(
-                run="r1", name="graphs", graphs=[Graph(metric="source::type")]
+                name="graphs", graphs=[Metric(run="r1", metric="source::type")]
             )
             return expected
 
@@ -253,9 +279,8 @@ class TestIlabApi:
         response = client.post(
             "/api/v1/ilab/runs/multigraph",
             json={
-                "run": "r1",
                 "name": "graphs",
-                "graphs": [{"metric": "source::type"}],
+                "graphs": [{"run": "r1", "metric": "source::type"}],
             },
         )
         assert response.json() == expected
@@ -278,10 +303,10 @@ class TestIlabApi:
 
         async def fake_get(self, graphs):
             assert graphs == GraphList(
-                run="r1",
                 name="source::type",
                 graphs=[
-                    Graph(
+                    Metric(
+                        run="r1",
                         metric="source::type",
                         aggregate=agg,
                         names=name,

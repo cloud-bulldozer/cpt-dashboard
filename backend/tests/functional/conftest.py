@@ -10,8 +10,9 @@ inside the Opensearch container.
 """
 import os
 import time
-import pytest
+
 from elasticsearch import Elasticsearch
+import pytest
 
 
 @pytest.fixture(scope="session")
@@ -40,10 +41,18 @@ def restore_snapshot():
     else:
         # Opensearch hasn't been loaded yet, so restore the snapshot
         print("Restoring 'base' snapshot...")
-        r = db.snapshot.create_repository(repository="functional", body={"type": "fs", "settings": {"location": "/var/tmp/snapshot"}})
+        r = db.snapshot.create_repository(
+            repository="functional",
+            body={"type": "fs", "settings": {"location": "/var/tmp/snapshot"}},
+        )
         assert r.get("acknowledged") is True
         r = db.snapshot.get(repository="functional", snapshot="base")
         # We expect one snapshot, named "base"
         assert r["snapshots"][0]["snapshot"] == "base"
-        r = db.snapshot.restore(repository="functional", snapshot="base", body={"indices": "cdmv*dev-*"}, wait_for_completion=True)
+        r = db.snapshot.restore(
+            repository="functional",
+            snapshot="base",
+            body={"indices": "cdmv*dev-*"},
+            wait_for_completion=True,
+        )
         assert r["snapshot"]["shards"]["failed"] == 0

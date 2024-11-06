@@ -17,6 +17,7 @@ from pathlib import Path
 import sys
 import time
 from typing import Any, Iterator, Optional
+
 from elasticsearch import Elasticsearch
 
 indices = (
@@ -95,7 +96,7 @@ def clone(source_server: str, target_server: str, ids: list[str]):
         body = {
             "source": {"remote": {"host": source_server}, "index": name},
             "dest": {"index": name},
-            "size": 250000
+            "size": 250000,
         }
         if query:
             body["source"].update(query)
@@ -134,7 +135,7 @@ def clone(source_server: str, target_server: str, ids: list[str]):
                 "index": name,
             },
             "dest": {"index": name},
-            "size": 250000
+            "size": 250000,
         },
         timeout="5m",
         request_timeout=1000.0,
