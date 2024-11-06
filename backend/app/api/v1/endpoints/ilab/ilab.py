@@ -10,7 +10,7 @@ from typing import Annotated, Any, Optional
 
 from fastapi import APIRouter, Depends, Query
 
-from app.services.crucible_svc import CrucibleService, Graph, GraphList
+from app.services.crucible_svc import CrucibleService, GraphList, Metric
 
 router = APIRouter()
 
@@ -254,7 +254,7 @@ async def params(crucible: Annotated[CrucibleService, Depends(crucible_svc)], ru
 )
 async def iterations(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)], run: str
-):
+) -> list[dict[str, Any]]:
     return await crucible.get_iterations(run)
 
 
@@ -288,7 +288,7 @@ async def iterations(
 )
 async def run_samples(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)], run: str
-):
+) -> list[dict[str, Any]]:
     return await crucible.get_samples(run)
 
 
@@ -300,23 +300,34 @@ async def run_samples(
         200: example_response(
             [
                 {
-                    "begin": "2024-09-12 17:40:27.982000+00:00",
-                    "end": "2024-09-12 18:03:23.132000+00:00",
-                    "id": "6BA57EF2-7139-11EF-A80B-E5037504B9B1",
+                    "begin": "2024-10-29 14:30:56.723000+00:00",
+                    "end": "2024-10-29 14:35:18.939000+00:00",
+                    "id": "DDBF3584-9603-11EF-8B3C-BAA807DC31B7",
                     "name": "measurement",
                     "iteration": 1,
                     "sample": "1",
-                    "primary_metric": "ilab::sdg-samples-sec",
+                    "is_primary": True,
+                    "primary_metric": "ilab::actual-train-seconds",
                     "status": "pass",
                 },
                 {
-                    "begin": "2024-09-12 18:05:03.229000+00:00",
-                    "end": "2024-09-12 18:27:55.419000+00:00",
-                    "id": "6BB93622-7139-11EF-A6C0-89A48E630F9D",
-                    "name": "measurement",
-                    "iteration": 4,
+                    "begin": "1970-01-01 00:00:00+00:00",
+                    "end": "1970-01-01 00:00:00+00:00",
+                    "id": "DDB7FC92-9603-11EF-8FD6-97CFCD234564",
+                    "name": "phase1",
+                    "iteration": 1,
                     "sample": "1",
-                    "primary_metric": "ilab::sdg-samples-sec",
+                    "is_primary": False,
+                    "status": "pass",
+                },
+                {
+                    "begin": "1970-01-01 00:00:00+00:00",
+                    "end": "1970-01-01 00:00:00+00:00",
+                    "id": "DDBBB5B2-9603-11EF-A19F-824975057E5B",
+                    "name": "phase2",
+                    "iteration": 1,
+                    "sample": "1",
+                    "is_primary": False,
                     "status": "pass",
                 },
             ]
@@ -326,7 +337,7 @@ async def run_samples(
 )
 async def run_periods(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)], run: str
-):
+) -> list[dict[str, Any]]:
     return await crucible.get_periods(run)
 
 
@@ -338,21 +349,14 @@ async def run_periods(
         200: example_response(
             [
                 {
-                    "id": "6BBE6872-7139-11EF-BFAA-8569A9399D61",
+                    "id": "DDB759EA-9603-11EF-A714-9033EEFCCE93",
                     "num": "1",
                     "path": None,
                     "status": "pass",
-                    "iteration": 5,
-                    "primary_metric": "ilab::sdg-samples-sec",
-                },
-                {
-                    "id": "6BACDFA8-7139-11EF-9F33-8185DD5B4869",
-                    "num": "1",
-                    "path": None,
-                    "status": "pass",
-                    "iteration": 2,
-                    "primary_metric": "ilab::sdg-samples-sec",
-                },
+                    "iteration": 1,
+                    "primary_metric": "ilab::actual-train-seconds",
+                    "primary_period": "measurement",
+                }
             ]
         ),
         400: example_error("Parameter error"),
@@ -360,7 +364,7 @@ async def run_periods(
 )
 async def iteration_samples(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)], iteration: str
-):
+) -> list[dict[str, Any]]:
     return await crucible.get_samples(iteration=iteration)
 
 
@@ -439,7 +443,7 @@ async def metric_breakouts(
             examples=["<id>", "<id1>,<id2>"],
         ),
     ] = None,
-):
+) -> dict[str, Any]:
     return await crucible.get_metric_breakouts(run, metric, names=name, periods=period)
 
 
@@ -499,10 +503,68 @@ async def metric_data(
     aggregate: Annotated[
         bool, Query(description="Allow aggregation of metrics")
     ] = False,
-):
+) -> list[dict[str, Any]]:
     return await crucible.get_metrics_data(
         run, metric, names=name, periods=period, aggregate=aggregate
     )
+
+
+@router.post(
+    "/api/v1/ilab/runs/multisummary",
+    summary="Returns metric data summaries",
+    description="Returns a statistical summary of metric data",
+    responses={
+        200: example_response(
+            [
+                {
+                    "count": 1625,
+                    "min": 0.0,
+                    "max": 375.4,
+                    "avg": 2.364492307692308,
+                    "sum": 3842.3,
+                    "sum_of_squares": 773029.4976,
+                    "variance": 470.11963618840235,
+                    "variance_population": 470.11963618840235,
+                    "variance_sampling": 470.4091187230011,
+                    "std_deviation": 21.68224241605103,
+                    "std_deviation_population": 21.68224241605103,
+                    "std_deviation_sampling": 21.68891695597088,
+                    "std_deviation_bounds": {
+                        "upper": 45.72897713979437,
+                        "lower": -40.99999252440975,
+                        "upper_population": 45.72897713979437,
+                        "lower_population": -40.99999252440975,
+                        "upper_sampling": 45.742326219634066,
+                        "lower_sampling": -41.01334160424945,
+                    },
+                    "aggregate": True,
+                    "metric": "iostat::operations-merged-sec",
+                    "names": None,
+                    "periods": None,
+                    "run": "26ad48c1-fc9c-404d-bccf-d19755ca8a39",
+                    "title": "iostat::operations-merged-sec {run 2}",
+                }
+            ]
+        ),
+        400: example_error("No matches for ilab::train-samples-sc+cpu=10"),
+        422: example_response(
+            response={
+                "detail": [
+                    {
+                        "message": "More than one metric (2) probably means you should add filters",
+                        "names": {"dev": ["sdb", "sdb3"]},
+                        "periods": [],
+                    }
+                ]
+            }
+        ),
+    },
+)
+async def metric_summary_body(
+    crucible: Annotated[CrucibleService, Depends(crucible_svc)],
+    summaries: list[Metric],
+) -> list[dict[str, Any]]:
+    return await crucible.get_metrics_summary(summaries)
 
 
 @router.get(
@@ -512,11 +574,32 @@ async def metric_data(
     responses={
         200: example_response(
             {
-                "count": 234,
-                "min": 7.905045031896648,
-                "max": 9.666444615077308,
-                "avg": 9.38298722585416,
-                "sum": 2195.6190108498736,
+                "count": 1625,
+                "min": 0.0,
+                "max": 375.4,
+                "avg": 2.364492307692308,
+                "sum": 3842.3,
+                "sum_of_squares": 773029.4976,
+                "variance": 470.11963618840235,
+                "variance_population": 470.11963618840235,
+                "variance_sampling": 470.4091187230011,
+                "std_deviation": 21.68224241605103,
+                "std_deviation_population": 21.68224241605103,
+                "std_deviation_sampling": 21.68891695597088,
+                "std_deviation_bounds": {
+                    "upper": 45.72897713979437,
+                    "lower": -40.99999252440975,
+                    "upper_population": 45.72897713979437,
+                    "lower_population": -40.99999252440975,
+                    "upper_sampling": 45.742326219634066,
+                    "lower_sampling": -41.01334160424945,
+                },
+                "aggregate": True,
+                "metric": "iostat::operations-merged-sec",
+                "names": None,
+                "periods": None,
+                "run": "26ad48c1-fc9c-404d-bccf-d19755ca8a39",
+                "title": "iostat::operations-merged-sec {run 2}",
             }
         ),
         400: example_error("No matches for ilab::train-samples-sc+cpu=10"),
@@ -533,7 +616,7 @@ async def metric_data(
         ),
     },
 )
-async def metric_summary(
+async def metric_summary_param(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)],
     run: str,
     metric: str,
@@ -551,8 +634,18 @@ async def metric_summary(
             examples=["<id>", "<id1>,<id2>"],
         ),
     ] = None,
-):
-    return await crucible.get_metrics_summary(run, metric, names=name, periods=period)
+    aggregate: Annotated[
+        bool, Query(description="Allow aggregation of metrics")
+    ] = False,
+) -> dict[str, Any]:
+    result = await crucible.get_metrics_summary(
+        [
+            Metric(
+                run=run, metric=metric, aggregate=aggregate, names=name, periods=period
+            )
+        ]
+    )
+    return result[0] if isinstance(result, list) and len(result) == 1 else result
 
 
 @router.post(
@@ -704,10 +797,10 @@ async def metric_graph_param(
 ):
     return await crucible.get_metrics_graph(
         GraphList(
-            run=run,
             name=metric,
             graphs=[
-                Graph(
+                Metric(
+                    run=run,
                     metric=metric,
                     aggregate=aggregate,
                     names=name,
