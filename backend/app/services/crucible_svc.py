@@ -24,34 +24,35 @@ from pydantic import BaseModel
 from app import config
 
 
-class Graph(BaseModel):
-    """Describe a single graph
+class Metric(BaseModel):
+    """Describe a single metric to be graphed or summarized
 
-    This represents a JSON object provided by a caller through the get_graph
-    API to describe a specific metric graph.
+    This represents a JSON object provided by a caller through the
+    get_multigraph or get_multisummary APIs to describe a specific
+    metric.
 
     The default title (if the field is omitted) is the metric label with a
     suffix denoting breakout values selected, any unique parameter values
     in a selected iteration, and (if multiple runs are selected in any Graph
     list) an indication of the run index. For example,
-    "mpstat::Busy-CPU [core=2,type=usr] (batch-size=16)".
+    "mpstat::Busy-CPU [core=2,type=usr] (batch-size=16) {run 1}".
 
     Fields:
+        run: run ID
         metric: the metric label, "ilab::train-samples-sec"
         aggregate: True to aggregate unspecified breakouts
         color: CSS color string ("green" or "#008000")
         names: Lock in breakouts
         periods: Select metrics for specific test period(s)
-        run: Override the default run ID from GraphList
         title: Provide a title for the graph. The default is a generated title
     """
 
+    run: str
     metric: str
     aggregate: bool = False
     color: Optional[str] = None
     names: Optional[list[str]] = None
     periods: Optional[list[str]] = None
-    run: Optional[str] = None
     title: Optional[str] = None
 
 
@@ -66,20 +67,18 @@ class GraphList(BaseModel):
 
     Normally the X axis will be the actual sample timestamp values; if you
     specify relative=True, the X axis will be the duration from the first
-    timestamp of the metric series, in seconds. This allows graphs of similar
-    runs started at different times to be overlaid.
+    timestamp of the metric series. This allows graphs of similar runs started
+    at different times to be overlaid.
 
     Fields:
-        run: Specify the (default) run ID
         name: Specify a name for the set of graphs
-        relative: True for relative timescale in seconds
+        relative: True for relative timescale
         graphs: a list of Graph objects
     """
 
-    run: Optional[str] = None
     name: str
     relative: bool = False
-    graphs: list[Graph]
+    graphs: list[Metric]
 
 
 @dataclass
@@ -831,13 +830,8 @@ class CrucibleService:
             ignore_unavailable=True,
         )
         if len(metrics["hits"]["hits"]) < 1:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                (
-                    f"No matches for {metric}"
-                    f"{('+' + ','.join(namelist) if namelist else '')}"
-                ),
-            )
+            print(f"No metric descs: filters={filters}")
+            return []
         ids = [h["metric_desc"]["id"] for h in self._hits(metrics)]
         if len(ids) < 2 or aggregate:
             return ids
@@ -881,33 +875,29 @@ class CrucibleService:
             Constructs a range filter for the earliest begin timestamp and the
             latest end timestamp among the specified periods.
         """
+
         if periods:
             ps = self._split_list(periods)
             matches = await self.search(
                 "period", filters=[{"terms": {"period.id": ps}}]
             )
-            start = None
-            end = None
-            name = "<unknown>"
-            for h in self._hits(matches):
-                p = h["period"]
-                st = p.get("begin")
-                et = p.get("end")
-                if not st or not et:
-                    name = (
-                        f"run {self._get(h, ['run', 'benchmark'])}:"
-                        f"{self._get(h, ['run', 'begin'])},"
-                        f"iteration {self._get(h, ['iteration', 'num'])},"
-                        f"sample {self._get(h, ['sample', 'num'])}"
+            try:
+                start = min([int(h) for h in self._hits(matches, ["period", "begin"])])
+                end = max([int(h) for h in self._hits(matches, ["period", "end"])])
+            except Exception as e:
+                plist = ",".join(ps)
+                print(
+                    (
+                        "Can't compute a time filter because one of the periods "
+                        f"in {plist!r} is missing a timestamp: {str(e)!r}"
                     )
-                if st and (not start or st < start):
-                    start = st
-                if et and (not end or et > end):
-                    end = et
-            if start is None or end is None:
+                )
                 raise HTTPException(
                     status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    f"Unable to compute {name!r} time range: the run is missing period timestamps",
+                    (
+                        "Cannot process metric time filter: at least one of "
+                        f"the periods in {plist!r} is broken and lacks a time range."
+                    ),
                 )
             return [
                 {"range": {"metric_data.begin": {"gte": str(start)}}},
@@ -936,6 +926,101 @@ class CrucibleService:
         )
         self.logger.debug("HITS: %s", filtered["hits"]["hits"])
         return set([x for x in self._hits(filtered, ["run", "id"])])
+
+    async def _make_title(
+        self,
+        run_id: str,
+        run_id_list: list[str],
+        metric_item: Metric,
+        params_by_run: dict[str, Any],
+        periods_by_run: dict[str, Any],
+    ) -> str:
+        """Compute a default title for a graph
+
+        Use the period, breakout name selections, run list, and iteration
+        parameters to construct a meaningful name for a metric.
+
+        For example, "ilab::sdg-samples-sec (batch-size=4) {run 1}", or
+        "mpstat::Busy-CPU [cpu=4]"
+
+        Args:
+            run_id: the Crucible run ID
+            run_id_list: ordered list of run IDs in our list of metrics
+            metric_item: the current MetricItem object
+            periods: list of aggregation periods, if any
+            params_by_run: initially empty dict used to cache parameters
+            periods_by_run: initially empty dict used to cache periods
+
+        Returns:
+            A string title
+        """
+        names = metric_item.names
+        metric = metric_item.metric
+        if metric_item.periods and len(metric_item.periods) == 1:
+            period = metric_item.periods[0]
+        else:
+            period = None
+        if run_id not in params_by_run:
+            # Gather iteration parameters outside the loop for help in
+            # generating useful labels.
+            all_params = await self.search(
+                "param", filters=[{"term": {"run.id": run_id}}]
+            )
+            collector = defaultdict(defaultdict)
+            for h in self._hits(all_params):
+                collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"]["val"]
+            params_by_run[run_id] = collector
+        else:
+            collector = params_by_run[run_id]
+
+        if run_id not in periods_by_run:
+            periods = await self.search(
+                "period", filters=[{"term": {"run.id": run_id}}]
+            )
+            iteration_periods = defaultdict(list[dict[str, Any]])
+            for p in self._hits(periods):
+                iteration_periods[p["iteration"]["id"]].append(p["period"])
+            periods_by_run[run_id] = iteration_periods
+        else:
+            iteration_periods = periods_by_run[run_id]
+
+        # We can easily end up with multiple graphs across distinct
+        # periods or iterations, so we want to be able to provide some
+        # labeling to the graphs. We do this by looking for unique
+        # iteration parameters values, since the iteration number and
+        # period name aren't useful by themselves.
+        name_suffix = ""
+        if metric_item.periods:
+            iteration = None
+            for i, plist in iteration_periods.items():
+                if set(metric_item.periods) <= set([p["id"] for p in plist]):
+                    iteration = i
+                if period:
+                    for p in plist:
+                        if p["id"] == period:
+                            name_suffix += f" {p['name']}"
+
+            # If the period(s) we're graphing resolve to a single
+            # iteration in a run with multiple iterations, then we can
+            # try to find a unique title suffix based on distinct param
+            # values for that iteration.
+            if iteration and len(collector) > 1:
+                unique = collector[iteration].copy()
+                for i, params in collector.items():
+                    if i != iteration:
+                        for p in list(unique.keys()):
+                            if p in params and unique[p] == params[p]:
+                                del unique[p]
+                if unique:
+                    name_suffix += (
+                        " (" + ",".join([f"{p}={v}" for p, v in unique.items()]) + ")"
+                    )
+
+        if len(run_id_list) > 1:
+            name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
+
+        options = (" [" + ",".join(names) + "]") if names else ""
+        return metric + options + name_suffix
 
     async def get_run_filters(self) -> dict[str, dict[str, list[str]]]:
         """Return possible tag and filter terms
@@ -1190,13 +1275,24 @@ class CrucibleService:
             if tag_filters and rid not in tagids:
                 continue
 
-            # Collect unique runs: the status is "fail" if any iteration for
-            # that run ID failed.
             runs[rid] = run
+
+            # Convert string timestamps (milliseconds from epoch) to int
+            try:
+                run["begin"] = int(run["begin"])
+                run["end"] = int(run["end"])
+            except Exception as e:
+                print(
+                    f"Unexpected error converting timestamp {run['begin']!r} "
+                    f"or {run['end']!r} to int: {str(e)!r}"
+                )
             run["tags"] = tags.get(rid, {})
             run["iterations"] = []
             run["primary_metrics"] = set()
             common = CommonParams()
+
+            # Collect unique iterations: the status is "fail" if any iteration
+            # for that run ID failed.
             for i in iterations.get(rid, []):
                 iparams = params.get(i["id"], {})
                 if "status" not in run:
@@ -1316,14 +1412,27 @@ class CrucibleService:
         Returns:
             A list of iteration documents
         """
-        iterations = await self.search(
+        hits = await self.search(
             index="iteration",
             filters=[{"term": {"run.id": run}}],
             sort=[{"iteration.num": "asc"}],
             **kwargs,
             ignore_unavailable=True,
         )
-        return [i["iteration"] for i in self._hits(iterations)]
+
+        iterations = []
+        for i in self._hits(hits, ["iteration"]):
+            iterations.append(
+                {
+                    "id": i["id"],
+                    "num": i["num"],
+                    "path": i["path"],
+                    "primary_metric": i["primary-metric"],
+                    "primary_period": i["primary-period"],
+                    "status": i["status"],
+                }
+            )
+        return iterations
 
     async def get_samples(
         self, run: Optional[str] = None, iteration: Optional[str] = None, **kwargs
@@ -1355,6 +1464,8 @@ class CrucibleService:
             sample = s["sample"]
             sample["iteration"] = s["iteration"]["num"]
             sample["primary_metric"] = s["iteration"]["primary-metric"]
+            sample["primary_period"] = s["iteration"]["primary-period"]
+            sample["status"] = s["iteration"]["status"]
             samples.append(sample)
         return samples
 
@@ -1404,7 +1515,10 @@ class CrucibleService:
             period = self._format_period(period=h["period"])
             period["iteration"] = h["iteration"]["num"]
             period["sample"] = h["sample"]["num"]
-            period["primary_metric"] = h["iteration"]["primary-metric"]
+            is_primary = h["iteration"]["primary-period"] == h["period"]["name"]
+            period["is_primary"] = is_primary
+            if is_primary:
+                period["primary_metric"] = h["iteration"]["primary-metric"]
             period["status"] = h["iteration"]["status"]
             body.append(period)
         return body
@@ -1601,10 +1715,10 @@ class CrucibleService:
                 "metric_data",
                 size=0,
                 filters=filters,
-                aggregations={"duration": {"stats": {"field": "metric_data.duration"}}},
+                aggregations={"duration": {"min": {"field": "metric_data.duration"}}},
             )
-            if aggdur["aggregations"]["duration"]["count"] > 0:
-                interval = int(aggdur["aggregations"]["duration"]["min"])
+            if aggdur["aggregations"]["duration"].get("value", 0) > 0:
+                interval = int(aggdur["aggregations"]["duration"]["value"])
                 data = await self.search(
                     index="metric_data",
                     size=0,
@@ -1637,132 +1751,72 @@ class CrucibleService:
         return response
 
     async def get_metrics_summary(
-        self,
-        run: str,
-        metric: str,
-        names: Optional[list[str]] = None,
-        periods: Optional[list[str]] = None,
-    ) -> dict[str, Any]:
+        self, summaries: list[Metric]
+    ) -> list[dict[str, Any]]:
         """Return a statistical summary of metric data
 
         Provides a statistical summary of selected data samples.
 
         Args:
-            run: run ID
-            metric: metric label (e.g., "mpstat::Busy-CPU")
-            names: list of name filters ("cpu=3")
-            periods: list of period IDs
+            summaries: list of Summary objects to define desired metrics
 
         Returns:
             A statistical summary of the selected metric data
-
-            {
-                "count": 71,
-                "min": 0.0,
-                "max": 0.3296,
-                "avg": 0.02360704225352113,
-                "sum": 1.676self.BIGQUERY00000001
-            }
         """
         start = time.time()
-        ids = await self._get_metric_ids(run, metric, names, periodlist=periods)
-        filters = [{"terms": {"metric_desc.id": ids}}]
-        filters.extend(await self._build_timestamp_range_filters(periods))
-        data = await self.search(
-            "metric_data",
-            size=0,
-            filters=filters,
-            aggregations={"score": {"stats": {"field": "metric_data.value"}}},
-        )
-        self.logger.info("Processing took %.3f seconds", time.time() - start)
-        return data["aggregations"]["score"]
-
-    async def _graph_title(
-        self,
-        run_id: str,
-        run_id_list: list[str],
-        graph: Graph,
-        params_by_run: dict[str, Any],
-        periods_by_run: dict[str, Any],
-    ) -> str:
-        """Compute a default title for a graph
-
-        Use the period, breakout name selections, run list, and iteration
-        parameters to construct a meaningful name for a graph.
-
-        For example, "ilab::sdg-samples-sec (batch-size=4) {run 1}", or
-        "mpstat::Busy-CPU [cpu=4]"
-
-        Args:
-            run_id: the Crucible run ID
-            run_id_list: ordered list of run IDs in our list of graphs
-            graph: the current Graph object
-            params_by_run: initially empty dict used to cache parameters
-            periods_by_run: initially empty dict used to cache periods
-
-        Returns:
-            A string title
-        """
-        names = graph.names
-        metric = graph.metric
-        if run_id not in params_by_run:
-            # Gather iteration parameters outside the loop for help in
-            # generating useful labels.
-            all_params = await self.search(
-                "param", filters=[{"term": {"run.id": run_id}}]
+        results = []
+        params_by_run = {}
+        periods_by_run = {}
+        run_id_list = []
+        for s in summaries:
+            if not s.run:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    "each summary request must have a run ID",
+                )
+            if s.run not in run_id_list:
+                run_id_list.append(s.run)
+        for summary in summaries:
+            ids = await self._get_metric_ids(
+                summary.run,
+                summary.metric,
+                summary.names,
+                periodlist=summary.periods,
+                aggregate=summary.aggregate,
             )
-            collector = defaultdict(defaultdict)
-            for h in self._hits(all_params):
-                collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"]["val"]
-            params_by_run[run_id] = collector
-        else:
-            collector = params_by_run[run_id]
-
-        if run_id not in periods_by_run:
-            periods = await self.search(
-                "period", filters=[{"term": {"run.id": run_id}}]
+            filters = [{"terms": {"metric_desc.id": ids}}]
+            filters.extend(await self._build_timestamp_range_filters(summary.periods))
+            data = await self.search(
+                "metric_data",
+                size=0,
+                filters=filters,
+                aggregations={
+                    "score": {"extended_stats": {"field": "metric_data.value"}}
+                },
             )
-            iteration_periods = defaultdict(set)
-            for p in self._hits(periods):
-                iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
-            periods_by_run[run_id] = iteration_periods
-        else:
-            iteration_periods = periods_by_run[run_id]
 
-        # We can easily end up with multiple graphs across distinct
-        # periods or iterations, so we want to be able to provide some
-        # labeling to the graphs. We do this by looking for unique
-        # iteration parameters values, since the iteration number and
-        # period name aren't useful by themselves.
-        name_suffix = ""
-        if graph.periods:
-            iteration = None
-            for i, pset in iteration_periods.items():
-                if set(graph.periods) <= pset:
-                    iteration = i
-                    break
+            # The caller can provide a title for each graph; but, if not, we
+            # journey down dark overgrown pathways to fabricate a default with
+            # reasonable context, including unique iteration parameters,
+            # breakdown selections, and which run provided the data.
+            if summary.title:
+                title = summary.title
+            else:
+                title = await self._make_title(
+                    summary.run, run_id_list, summary, params_by_run, periods_by_run
+                )
 
-            # If the period(s) we're graphing resolve to a single
-            # iteration in a run with multiple iterations, then we can
-            # try to find a unique title suffix based on distinct param
-            # values for that iteration.
-            if iteration and len(collector) > 1:
-                unique = collector[iteration].copy()
-                for i, params in collector.items():
-                    if i != iteration:
-                        for p in list(unique.keys()):
-                            if p in params and unique[p] == params[p]:
-                                del unique[p]
-                if unique:
-                    name_suffix = (
-                        " (" + ",".join([f"{p}={v}" for p, v in unique.items()]) + ")"
-                    )
-
-        if len(run_id_list) > 1:
-            name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
-
-        options = (" [" + ",".join(names) + "]") if names else ""
-        return metric + options + name_suffix
+            score = data["aggregations"]["score"]
+            score["aggregate"] = summary.aggregate
+            score["metric"] = summary.metric
+            score["names"] = summary.names
+            score["periods"] = summary.periods
+            score["run"] = summary.run
+            score["title"] = title
+            results.append(score)
+        duration = time.time() - start
+        print(f"Processing took {duration} seconds")
+        return results
 
     async def get_metrics_graph(self, graphdata: GraphList) -> dict[str, Any]:
         """Return metrics data for a run
@@ -1807,7 +1861,6 @@ class CrucibleService:
         """
         start = time.time()
         graphlist = []
-        default_run_id = graphdata.run
         layout: dict[str, Any] = {"width": "1500"}
         axes = {}
         yaxis = None
@@ -1818,23 +1871,16 @@ class CrucibleService:
         # Construct a de-duped ordered list of run IDs, starting with the
         # default.
         run_id_list = []
-        if default_run_id:
-            run_id_list.append(default_run_id)
-        run_id_missing = False
         for g in graphdata.graphs:
-            if g.run:
-                if g.run not in run_id_list:
-                    run_id_list.append(g.run)
-            else:
-                run_id_missing = True
-
-        if run_id_missing and not default_run_id:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
-            )
+            if not g.run:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
+                )
+            if g.run not in run_id_list:
+                run_id_list.append(g.run)
 
         for g in graphdata.graphs:
-            run_id = g.run if g.run else default_run_id
+            run_id = g.run
             names = g.names
             metric: str = g.metric
 
@@ -1845,7 +1891,7 @@ class CrucibleService:
             if g.title:
                 title = g.title
             else:
-                title = await self._graph_title(
+                title = await self._make_title(
                     run_id, run_id_list, g, params_by_run, periods_by_run
                 )
 

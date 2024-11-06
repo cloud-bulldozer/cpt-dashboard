@@ -181,9 +181,12 @@ export const fetchGraphData =
       dispatch({ type: TYPES.GRAPH_LOADING });
       let graphs = [];
       periods?.periods?.forEach((p) => {
-        graphs.push({ metric: p.primary_metric, periods: [p.id] });
+        if (p.is_primary) {
+          graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
+        }
         if (metric) {
           graphs.push({
+            run: uid,
             metric,
             aggregate: true,
             periods: [p.id],
@@ -196,6 +199,15 @@ export const fetchGraphData =
         graphs,
       });
       if (response.status === 200) {
+        response.data.layout["showlegend"] = true;
+        response.data.layout["responsive"] = "true";
+        response.data.layout["autosize"] = "true";
+        response.data.layout["legend"] = {
+          orientation: "h",
+          xanchor: "left",
+          yanchor: "top",
+          y: -0.1,
+        };
         copyData.push({
           uid,
           data: response.data.data,
@@ -252,14 +264,21 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     uids.forEach(async (uid) => {
       const periods = filterPeriods.find((i) => i.uid == uid);
       periods?.periods?.forEach((p) => {
-        graphs.push({
-          run: uid,
-          metric: p.primary_metric,
-          periods: [p.id],
-        });
+        if (p.is_primary) {
+          graphs.push({
+            run: uid,
+            metric: p.primary_metric,
+            periods: [p.id],
+          });
+        }
+        // graphs.push({
+        //   run: uid,
+        //   metric,
+        //   aggregate: true,
+        //   periods: [p.id],
+        // });
       });
     });
-    console.log(graphs);
     const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
       name: "comparison",
       relative: true,
@@ -269,7 +288,11 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
       response.data.layout["showlegend"] = true;
       response.data.layout["responsive"] = "true";
       response.data.layout["autosize"] = "true";
-      response.data.layout["legend"] = { x: 0, y: 1.5 };
+      response.data.layout["legend"] = {
+        orientation: "h",
+        xanchor: "left",
+        yanchor: "top",
+      };
       const graphData = [];
       graphData.push({
         data: response.data.data,
@@ -290,6 +313,16 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
   }
   dispatch({ type: TYPES.COMPLETED });
 };
+
+export const setIlabPage = (pageNo) => ({
+  type: TYPES.SET_ILAB_PAGE,
+  payload: pageNo,
+});
+
+export const setIlabPageOptions = (page, perPage) => ({
+  type: TYPES.SET_ILAB_PAGE_OPTIONS,
+  payload: { page, perPage },
+});
 
 export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   const results = cloneDeep(getState().ilab.results);

@@ -15,8 +15,8 @@ import sys
 from threading import Thread
 import time
 from typing import Any, Iterator, Optional, Union
+
 from elasticsearch import Elasticsearch
-import argparse
 
 
 @dataclass

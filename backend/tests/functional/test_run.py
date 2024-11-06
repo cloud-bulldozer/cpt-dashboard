@@ -2,8 +2,8 @@ from dataclasses import dataclass
 from datetime import datetime, timezone
 import os
 
-import requests
 import pytest
+import requests
 
 
 @dataclass

@@ -10,8 +10,9 @@ inside the Opensearch container.
 """
 import os
 import time
-import pytest
+
 from elasticsearch import Elasticsearch
+import pytest
 
 
 @pytest.fixture(scope="session")
