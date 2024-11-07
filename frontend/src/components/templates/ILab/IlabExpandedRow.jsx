@@ -5,12 +5,15 @@ import {
   AccordionToggle,
   Card,
   CardBody,
+  Stack,
+  StackItem,
 } from "@patternfly/react-core";
 import { useDispatch, useSelector } from "react-redux";
 
 import ILabGraph from "./ILabGraph";
 import MetaRow from "./MetaRow";
 import MetricsSelect from "./MetricsDropdown";
+import ILabSummary from "./ILabSummary";
 import PropTypes from "prop-types";
 import { setMetaRowExpanded } from "@/actions/ilabActions";
 import { uid } from "@/utils/helper";
@@ -134,9 +137,14 @@ const IlabRowContent = (props) => {
         >
           <div>Metrics:</div>
           <MetricsSelect item={item} />
-          <div className="graph-card">
-            <ILabGraph item={item} />
-          </div>
+          <Stack>
+            <StackItem className="summary-card">
+              <ILabSummary ids={[item.id]} />
+            </StackItem>
+            <StackItem className="graph-card">
+              <ILabGraph item={item} />
+            </StackItem>
+          </Stack>
         </AccordionContent>
       </AccordionItem>
     </Accordion>
