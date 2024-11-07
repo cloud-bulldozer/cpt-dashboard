@@ -3,20 +3,17 @@ import {
   AccordionContent,
   AccordionItem,
   AccordionToggle,
-  Card,
-  CardBody,
   Stack,
   StackItem,
 } from "@patternfly/react-core";
 import { useDispatch, useSelector } from "react-redux";
 
 import ILabGraph from "./ILabGraph";
-import MetaRow from "./MetaRow";
-import MetricsSelect from "./MetricsDropdown";
 import ILabSummary from "./ILabSummary";
+import MetricsSelect from "./MetricsDropdown";
 import PropTypes from "prop-types";
 import { setMetaRowExpanded } from "@/actions/ilabActions";
-import { uid } from "@/utils/helper";
+import ILabMetadata from "./ILabMetadata";
 
 const IlabRowContent = (props) => {
   const { item } = props;
@@ -52,73 +49,7 @@ const IlabRowContent = (props) => {
           id={`metadata-${item.id}`}
           isHidden={!metaRowExpanded.includes(`metadata-toggle-${item.id}`)}
         >
-          <div className="metadata-wrapper">
-            <Card className="metadata-card" isCompact>
-              <CardBody>
-                <MetaRow
-                  key={uid()}
-                  heading={"Fields"}
-                  metadata={[
-                    ["benchmark", item.benchmark],
-                    ["name", item.name],
-                    ["email", item.email],
-                    ["source", item.source],
-                  ]}
-                />
-              </CardBody>
-            </Card>
-            <Card className="metadata-card" isCompact>
-              <CardBody>
-                <MetaRow
-                  key={uid()}
-                  heading={"Tags"}
-                  metadata={Object.entries(item.tags)}
-                />
-              </CardBody>
-            </Card>
-            <Card className="metadata-card" isCompact>
-              <CardBody>
-                <MetaRow
-                  key={uid()}
-                  heading={"Common Parameters"}
-                  metadata={Object.entries(item.params)}
-                />
-                {item.iterations.length > 1 && (
-                  <AccordionItem>
-                    <AccordionToggle
-                      onClick={() => {
-                        onToggle(`iterations-toggle-${item.id}`);
-                      }}
-                      isExpanded={metaRowExpanded.includes(
-                        `iterations-toggle-${item.id}`
-                      )}
-                      id={`iterations-toggle-${item.id}`}
-                    >
-                      {`Unique parameters for ${item.iterations.length} Iterations`}
-                    </AccordionToggle>
-                    <AccordionContent
-                      id={`iterations-${item.id}`}
-                      isHidden={
-                        !metaRowExpanded.includes(
-                          `iterations-toggle-${item.id}`
-                        )
-                      }
-                    >
-                      {item.iterations.map((i) => (
-                        <MetaRow
-                          key={uid()}
-                          heading={`Iteration ${i.iteration} Parameters`}
-                          metadata={Object.entries(i.params).filter(
-                            (i) => !(i[0] in item.params)
-                          )}
-                        />
-                      ))}
-                    </AccordionContent>
-                  </AccordionItem>
-                )}
-              </CardBody>
-            </Card>
-          </div>
+          <ILabMetadata item={item} />
         </AccordionContent>
       </AccordionItem>
       <AccordionItem>
