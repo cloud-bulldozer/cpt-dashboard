@@ -5,8 +5,8 @@ import {
   Menu,
   MenuContent,
   MenuItem,
-  MenuItemAction,
   MenuList,
+  Popover,
   Stack,
   StackItem,
   Title,
@@ -22,6 +22,7 @@ import { handleMultiGraph, handleSummaryData } from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
 import ILabSummary from "./ILabSummary";
+import ILabMetadata from "./ILabMetadata";
 
 const IlabCompareComponent = () => {
   const { page, perPage, totalItems, tableData } = useSelector(
@@ -72,12 +73,23 @@ const IlabCompareComponent = () => {
                     itemId={item.id}
                     isSelected={selectedItems.includes(item.id)}
                     actions={
-                      <MenuItemAction
-                        icon={<InfoCircleIcon aria-hidden />}
-                        actionId="code"
-                        onClick={() => console.log("clicked on code icon")}
-                        aria-label="Code"
-                      />
+                      <Popover
+                        triggerAction="hover"
+                        aria-label="Metadata popover"
+                        headerContent={<h3>Metadata</h3>}
+                        appendTo={() => document.body}
+                        // hasAutoWidth
+                        hasNoPadding
+                        position="auto"
+                        className="mini-metadata"
+                        bodyContent={
+                          <div position="auto" className="mini-metadata">
+                            <ILabMetadata item={item} />
+                          </div>
+                        }
+                      >
+                        <Button icon={<InfoCircleIcon aria-hidden />}></Button>
+                      </Popover>
                     }
                   >
                     {`${new Date(item.begin_date).toLocaleDateString()} ${
