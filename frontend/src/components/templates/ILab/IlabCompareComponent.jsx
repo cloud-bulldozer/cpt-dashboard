@@ -7,6 +7,8 @@ import {
   MenuItem,
   MenuItemAction,
   MenuList,
+  Stack,
+  StackItem,
   Title,
 } from "@patternfly/react-core";
 import { useDispatch, useSelector } from "react-redux";
@@ -16,18 +18,20 @@ import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
-import { handleMultiGraph } from "@/actions/ilabActions.js";
+import { handleMultiGraph, handleSummaryData } from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
+import ILabSummary from "./ILabSummary";
 
 const IlabCompareComponent = () => {
-  // const { data } = props;
   const { page, perPage, totalItems, tableData } = useSelector(
     (state) => state.ilab
   );
   const dispatch = useDispatch();
   const [selectedItems, setSelectedItems] = useState([]);
-  const { multiGraphData } = useSelector((state) => state.ilab);
+  const { multiGraphData, summaryData, isSummaryLoading } = useSelector(
+    (state) => state.ilab
+  );
   const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
   const graphDataCopy = cloneDeep(multiGraphData);
 
@@ -40,6 +44,7 @@ const IlabCompareComponent = () => {
     }
   };
   const dummy = () => {
+    dispatch(handleSummaryData(selectedItems));
     dispatch(handleMultiGraph(selectedItems));
   };
   return (
@@ -91,22 +96,32 @@ const IlabCompareComponent = () => {
           type={"ilab"}
         />
       </div>
-      <div className="chart-container">
-        {isGraphLoading ? (
-          <div className="loader"></div>
-        ) : graphDataCopy?.length > 0 &&
-          graphDataCopy?.[0]?.data?.length > 0 ? (
-          <div className="chart-box">
+      <Stack>
+        <StackItem span={12} className="summary-box">
+          {isSummaryLoading ? (
+            <div className="loader"></div>
+          ) : summaryData.filter((i) => selectedItems.includes(i.uid)).length ==
+            selectedItems.length ? (
+            <ILabSummary ids={selectedItems} />
+          ) : (
+            <div>No data to summarize</div>
+          )}
+        </StackItem>
+        <StackItem span={12} className="chart-box">
+          {isGraphLoading ? (
+            <div className="loader"></div>
+          ) : graphDataCopy?.length > 0 &&
+            graphDataCopy?.[0]?.data?.length > 0 ? (
             <Plot
               data={graphDataCopy[0]?.data}
               layout={graphDataCopy[0]?.layout}
               key={uid()}
             />
-          </div>
-        ) : (
-          <div>No data to compare</div>
-        )}
-      </div>
+          ) : (
+            <div>No data to compare</div>
+          )}
+        </StackItem>
+      </Stack>
     </div>
   );
 };

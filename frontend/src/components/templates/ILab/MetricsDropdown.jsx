@@ -5,7 +5,7 @@ import {
   SelectOption,
   Skeleton
 } from "@patternfly/react-core";
-import { fetchGraphData, setSelectedMetrics } from "@/actions/ilabActions";
+import { fetchGraphData, fetchSummaryData, setSelectedMetrics } from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
 
 import PropTypes from "prop-types";
@@ -39,11 +39,11 @@ const MetricsSelect = (props) => {
   };
   const onSelect = (_event, value) => {
     console.log("selected", value);
-    const run = value.split("*");
-    //setSelected(run[1].trim());
-    dispatch(setSelectedMetrics(run[0].trim(), run[1].trim()));
+    const [run, metric] = value;
+    dispatch(setSelectedMetrics(run, metric));
+    dispatch(fetchGraphData(run, metric));
+    dispatch(fetchSummaryData(run, metric));
     setIsOpen(false);
-    dispatch(fetchGraphData(run[0].trim(), run[1].trim()));
   };
   const metricsDataCopy = cloneDeep(metrics);
 
@@ -70,12 +70,12 @@ const MetricsSelect = (props) => {
           shouldFocusToggleOnSelect
         >
           <SelectList>
-            {getMetricsData(item.id)[0]?.metrics.map((unit) => (
+            {getMetricsData(item.id)[0]?.metrics.map((metric) => (
               <SelectOption
                 key={uid()}
-                value={`${item.id} * ${unit} * ${item.primary_metrics[0]}`}
+                value={[item.id, metric]}
               >
-                {unit}
+                {metric}
               </SelectOption>
             ))}
           </SelectList>
