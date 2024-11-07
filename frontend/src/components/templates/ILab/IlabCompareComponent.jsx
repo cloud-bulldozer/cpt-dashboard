@@ -31,6 +31,7 @@ import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
 import ILabSummary from "./ILabSummary";
+import ILabMetadata from "./ILabMetadata";
 
 const IlabCompareComponent = () => {
   // const { data } = props;
