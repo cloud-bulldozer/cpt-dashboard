@@ -89,7 +89,7 @@ export const fetchMetricsInfo = (uid) => async (dispatch) => {
       ) {
         dispatch({
           type: TYPES.SET_ILAB_METRICS,
-          payload: { uid, metrics: Object.keys(response.data) },
+          payload: { uid, metrics: Object.keys(response.data).sort() },
         });
       }
     }
@@ -137,13 +137,15 @@ export const fetchSummaryData =
             periods: [p.id],
           });
         }
-        if (metric) {
-          summaries.push({
-            run: uid,
-            metric,
-            aggregate: true,
-            periods: [p.id],
-          });
+        if (metrics) {
+          metrics.forEach((metric) =>
+            summaries.push({
+              run: uid,
+              metric,
+              aggregate: true,
+              periods: [p.id],
+            })
+          );
         }
       });
       const response = await API.post(
@@ -202,6 +204,7 @@ export const fetchGraphData =
       const periods = getState().ilab.periods.find((i) => i.uid == uid);
       const graphData = cloneDeep(getState().ilab.graphData);
       const filterData = graphData.filter((i) => i.uid !== uid);
+      const metrics = getState().ilab.metrics_selected[uid];
       dispatch({
         type: TYPES.SET_ILAB_GRAPH_DATA,
         payload: filterData,
@@ -213,13 +216,15 @@ export const fetchGraphData =
         if (p.is_primary) {
           graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
         }
-        if (metric) {
-          graphs.push({
-            run: uid,
-            metric,
-            aggregate: true,
-            periods: [p.id],
-          });
+        if (metrics) {
+          metrics.forEach((metric) =>
+            graphs.push({
+              run: uid,
+              metric,
+              aggregate: true,
+              periods: [p.id],
+            })
+          );
         }
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
@@ -369,9 +374,15 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   }
 };
 
-export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
+export const toggleSelectedMetric = (id, metric) => (dispatch, getState) => {
   const metrics_selected = cloneDeep(getState().ilab.metrics_selected);
-  metrics_selected[id] = metrics;
+  var new_selected = metrics_selected[id] ? metrics_selected[id] : [];
+  if (new_selected.includes(metric)) {
+    new_selected = new_selected.filter((m) => m !== metric);
+  } else {
+    new_selected = [...new_selected, metric];
+  }
+  metrics_selected[id] = new_selected;
   dispatch({
     type: TYPES.SET_ILAB_SELECTED_METRICS,
     payload: metrics_selected,

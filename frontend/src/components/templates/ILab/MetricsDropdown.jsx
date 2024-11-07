@@ -1,11 +1,16 @@
 import {
+  Badge,
   MenuToggle,
   Select,
   SelectList,
   SelectOption,
-  Skeleton
+  Skeleton,
 } from "@patternfly/react-core";
-import { fetchGraphData, fetchSummaryData, setSelectedMetrics } from "@/actions/ilabActions";
+import {
+  fetchGraphData,
+  fetchSummaryData,
+  toggleSelectedMetric,
+} from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
 
 import PropTypes from "prop-types";
@@ -16,21 +21,22 @@ import { useState } from "react";
 const MetricsSelect = (props) => {
   const { metrics, metrics_selected } = useSelector((state) => state.ilab);
   const { item } = props;
+  var current_metrics = metrics_selected[item.id]
+    ? metrics_selected[item.id]
+    : [];
+
   /* Metrics select */
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
-  // const [selected, setSelected] = useState("Select a value");
 
-  const toggle1 = (toggleRef, selected) => (
+  const toggle1 = (toggleRef) => (
     <MenuToggle
       ref={toggleRef}
       onClick={onToggleClick}
       isExpanded={isOpen}
-      style={{
-        width: "200px",
-      }}
+      badge={<Badge isRead>{`${current_metrics.length} selected`}</Badge>}
     >
-      {selected}
+      Additional metrics
     </MenuToggle>
   );
 
@@ -38,12 +44,10 @@ const MetricsSelect = (props) => {
     setIsOpen(!isOpen);
   };
   const onSelect = (_event, value) => {
-    console.log("selected", value);
     const [run, metric] = value;
-    dispatch(setSelectedMetrics(run, metric));
+    dispatch(toggleSelectedMetric(run, metric));
     dispatch(fetchGraphData(run, metric));
     dispatch(fetchSummaryData(run, metric));
-    setIsOpen(false);
   };
   const metricsDataCopy = cloneDeep(metrics);
 
@@ -53,7 +57,6 @@ const MetricsSelect = (props) => {
   };
   const hasMetricsData = (uuid) => {
     const hasData = getMetricsData(uuid).length > 0;
-
     return hasData;
   };
   /* Metrics select */
@@ -61,18 +64,20 @@ const MetricsSelect = (props) => {
     <>
       {hasMetricsData(item.id) ? (
         <Select
-          id="single-select"
+          id="checkbox-select"
+          role="menu"
           isOpen={isOpen}
-          selected={metrics_selected[item.id]}
+          selected={current_metrics}
           onSelect={onSelect}
           onOpenChange={(isOpen) => setIsOpen(isOpen)}
-          toggle={(ref) => toggle1(ref, metrics_selected[item.id])}
-          shouldFocusToggleOnSelect
+          toggle={toggle1}
         >
           <SelectList>
             {getMetricsData(item.id)[0]?.metrics.map((metric) => (
               <SelectOption
-                key={uid()}
+                key={metric}
+                isSelected={current_metrics.includes(metric)}
+                hasCheckbox
                 value={[item.id, metric]}
               >
                 {metric}
@@ -80,9 +85,9 @@ const MetricsSelect = (props) => {
             ))}
           </SelectList>
         </Select>
-      ):
-      <Skeleton width="33%" screenreaderText="Loaded 33% of content" />
-      }
+      ) : (
+        <Skeleton width="33%" screenreaderText="Loaded 33% of content" />
+      )}
     </>
   );
 };
