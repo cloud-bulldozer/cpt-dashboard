@@ -30,6 +30,7 @@ import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
+import ILabSummary from "./ILabSummary";
 
 const IlabCompareComponent = () => {
   // const { data } = props;
