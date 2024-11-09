@@ -2,6 +2,7 @@ from ....commons.hce import getData
 from datetime import date
 import pandas as pd
 
+
 ################################################################
 # This will return a Dictionary from HCE required by the CPT
 #  endpoint, it contians totalJobs and a Dataframe with the following columns:
@@ -16,8 +17,6 @@ import pandas as pd
 #   "version"
 #   "testName"
 ################################################################
-
-
 async def hceMapper(start_datetime: date, end_datetime: date, size: int, offset: int):
     response = await getData(
         start_datetime, end_datetime, size, offset, f"hce.elasticsearch"
