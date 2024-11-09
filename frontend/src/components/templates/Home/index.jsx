@@ -22,7 +22,7 @@ const Home = () => {
     tableColumns,
     activeSortDir,
     activeSortIndex,
-    results,
+    tableData,
     filterOptions,
     tableFilters,
     categoryFilterValue,
@@ -91,7 +91,7 @@ const Home = () => {
       />
 
       <TableLayout
-        tableData={results}
+        tableData={tableData}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
