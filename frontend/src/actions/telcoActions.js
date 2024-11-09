@@ -195,7 +195,7 @@ export const setTelcoDateFilter =
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
 
-    dispatch(fetchTelcoJobsData());
+    //dispatch(fetchTelcoJobsData());
   };
 
 export const getTelcoSummary = () => (dispatch, getState) => {

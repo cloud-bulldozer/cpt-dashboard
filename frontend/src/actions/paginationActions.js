@@ -6,9 +6,9 @@ import {
 } from "./ocpActions";
 import {
   fetchOCPJobsData,
-  setCPTOffset,
   setCPTPage,
   setCPTPageOptions,
+  sliceCPTTableRows,
 } from "./homeActions";
 import {
   fetchQuayJobsData,
@@ -24,27 +24,23 @@ import {
 } from "./telcoActions";
 
 export const setPage = (newPage, currType) => (dispatch) => {
-  if (currType === "cpt") {
-    dispatch(setCPTPage(newPage));
-  } else if (currType === "ocp") {
-    dispatch(setOCPPage(newPage));
-  } else if (currType === "quay") {
-    dispatch(setQuayPage(newPage));
-  } else if (currType === "telco") {
-    dispatch(setTelcoPage(newPage));
-  }
+  const actions = {
+    cpt: setCPTPage,
+    ocp: setOCPPage,
+    quay: setQuayPage,
+    telco: setTelcoPage,
+  };
+  dispatch(actions[currType](newPage));
 };
 
 export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
-  if (currType === "cpt") {
-    dispatch(setCPTPageOptions(newPage, newPerPage));
-  } else if (currType === "ocp") {
-    dispatch(setOCPPageOptions(newPage, newPerPage));
-  } else if (currType === "quay") {
-    dispatch(setQuayPageOptions(newPage, newPerPage));
-  } else if (currType === "telco") {
-    dispatch(setTelcoPageOptions(newPage, newPerPage));
-  }
+  const actions = {
+    cpt: setCPTPageOptions,
+    ocp: setOCPPageOptions,
+    quay: setQuayPageOptions,
+    telco: setTelcoPageOptions,
+  };
+  dispatch(actions[currType](newPage, newPerPage));
 };
 
 const calculateOffset = (pageNumber, itemsPerPage) => {
@@ -52,22 +48,35 @@ const calculateOffset = (pageNumber, itemsPerPage) => {
 };
 
 export const checkTableData = (newPage, currType) => (dispatch, getState) => {
-  const { results, totalJobs, perPage } = getState()[currType];
+  const { results, totalJobs, perPage, page } = getState()[currType];
+  const fetchActions = {
+    ocp: fetchOCPJobs,
+    quay: fetchQuayJobsData,
+    telco: fetchTelcoJobsData,
+  };
+  const offsetActions = {
+    ocp: setOCPOffset,
+    quay: setQuayOffset,
+    telco: setTelcoOffset,
+  };
   const hasPageData = results.length >= newPage * perPage;
   const offset = calculateOffset(newPage, perPage);
   if (results.length < totalJobs && !hasPageData) {
     if (currType === "cpt") {
-      dispatch(setCPTOffset(offset));
-      dispatch(fetchOCPJobsData());
-    } else if (currType === "ocp") {
-      dispatch(setOCPOffset(offset));
-      dispatch(fetchOCPJobs());
-    } else if (currType === "quay") {
-      dispatch(setQuayOffset(offset));
-      dispatch(fetchQuayJobsData());
-    } else if (currType === "telco") {
-      dispatch(setTelcoOffset(offset));
-      dispatch(fetchTelcoJobsData());
+      const startIdx = (page - 1) * perPage;
+      const endIdx = startIdx + perPage - 1;
+      if (results[startIdx] === undefined || results[endIdx] === undefined) {
+        dispatch(fetchOCPJobsData());
+      }
+    } else {
+      dispatch(offsetActions[currType](offset));
+      dispatch(fetchActions[currType]());
+    }
+  } else {
+    if (currType === "cpt") {
+      const startIdx = (page - 1) * perPage;
+      const endIdx = startIdx + perPage - 1;
+      dispatch(sliceCPTTableRows(startIdx, endIdx));
     }
   }
 };

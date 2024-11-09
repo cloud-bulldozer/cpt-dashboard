@@ -21,20 +21,23 @@ const RenderPagination = (props) => {
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
       dispatch(setPage(newPage, props.type));
-      dispatch(checkTableData(newPage, props.type));
+      // dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
-      dispatch(checkTableData(newPage, props.type));
+      // dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
 
   const onNextClick = useCallback(
     (_evt, newPage) => {
+      if (props.type === "cpt") {
+        dispatch(setPage(newPage, props.type));
+      }
       dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
@@ -52,6 +55,7 @@ const RenderPagination = (props) => {
       onPerPageSelect={onPerPageSelect}
       onNextClick={onNextClick}
       onPageInput={onNextClick}
+      isCompact={props.type === "cpt" ? true : false}
     />
   );
 };

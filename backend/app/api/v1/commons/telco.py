@@ -48,7 +48,7 @@ async def getData(
     )
     mapped_list = []
 
-    for each_response in response:
+    for each_response in response["data"]:
         end_timestamp = int(each_response["timestamp"])
         test_data = each_response["data"]
         threshold = await telcoGraphs.process_json(test_data, True)
@@ -90,4 +90,4 @@ async def getData(
     if len(jobs) == 0:
         return jobs
 
-    return jobs
+    return {"data": jobs, "total": response["total"]}

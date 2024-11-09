@@ -98,6 +98,7 @@ class ElasticService:
                             response = await self.prev_es.search(
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
+<<<<<<< HEAD
                                 size=size,
                             )
                             previous_results = {
@@ -105,10 +106,15 @@ class ElasticService:
                                 "total": response["hits"]["total"]["value"],
                             }
 
+=======
+                                size=size)
+                            previous_results = {"data":response['hits']['hits'], "total":response['hits']["total"]["value"]}                            
+>>>>>>> 9385645 (pagination params)
                         else:
                             response = await self.prev_es.search(
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
+<<<<<<< HEAD
                                 size=size,
                             )
                             previous_results = {
@@ -116,6 +122,10 @@ class ElasticService:
                                 "total": response["hits"]["total"]["value"],
                             }
 
+=======
+                                size=size)                            
+                            previous_results = {"data":response['hits']['hits'], "total":response['hits']["total"]["value"]}                            
+>>>>>>> 9385645 (pagination params)
                             # previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size)
                 if self.prev_es and self.new_es:
                     self.new_index = self.new_index_prefix + (
@@ -142,6 +152,7 @@ class ElasticService:
                             response = await self.new_es.search(
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
+<<<<<<< HEAD
                                 size=size,
                             )
 
@@ -150,10 +161,15 @@ class ElasticService:
                                 "total": response["hits"]["total"]["value"],
                             }
 
+=======
+                                size=size)   
+                            new_results = {"data":response['hits']['hits'],"total":response['hits']['total']['value']}
+>>>>>>> 9385645 (pagination params)
                         else:
                             response = await self.new_es.search(
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
+<<<<<<< HEAD
                                 size=size,
                             )
 
@@ -175,6 +191,14 @@ class ElasticService:
                     )
 
                     return {"data": unique_data, "total": totalVal}
+=======
+                                size=size)   
+                            new_results = {"data":response['hits']['hits'],"total":response['hits']['total']['value']}             
+                            # new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size)
+                    unique_data = await self.remove_duplicates(previous_results["data"] if("data" in previous_results) else [] + new_results["data"]  if("data" in new_results) else[])
+                    totalVal = previous_results["total"] if("total" in previous_results) else 0 + new_results["total"]  if("total" in new_results) else 0 
+                    return ({"data":unique_data, "total": totalVal})
+>>>>>>> 9385645 (pagination params)
                 else:
                     if start_date and end_date:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][

@@ -1,6 +1,7 @@
 import orjson
 from app import config
 from splunklib import client, results
+import json
 
 
 class SplunkService:
@@ -51,11 +52,39 @@ class SplunkService:
             if searchList
             else "search index={}".format(self.indice)
         )
+
+        search_query = (
+            "search index={} {} | stats count AS total_records".format(
+                self.indice, searchList
+            )
+            if searchList
+            else "search index={} | stats count AS total_records".format(self.indice)
+        )
+
         try:
+            # Run the job and retrieve results
+            job = self.service.jobs.create(
+                search_query,
+                exec_mode="normal",
+                earliest_time=query["earliest_time"],
+                latest_time=query["latest_time"],
+            )
+
+            # Wait for the job to finish
+            while not job.is_done():
+                job.refresh()
+
             oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
+
         except Exception as e:
             print("Error querying splunk: {}".format(e))
             return None
+
+        # Fetch the results
+        for result in job.results(output_mode="json"):
+            decoded_data = json.loads(result.decode("utf-8"))
+            value = decoded_data.get("results")
+            total_records = value[0]["total_records"]
 
         # Get the results and display them using the JSONResultsReader
         res_array = []
@@ -75,7 +104,7 @@ class SplunkService:
             except Exception as e:
                 print(f"Error on including Splunk record query in results array: {e}")
 
-        return res_array
+        return {"data": res_array, "total": total_records}
 
     async def _stream_results(self, oneshotsearch_results):
         for record in results.JSONResultsReader(oneshotsearch_results):
