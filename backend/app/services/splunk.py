@@ -75,10 +75,15 @@ class SplunkService:
                 job.refresh()
 
             oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
-
         except Exception as e:
             print("Error querying splunk: {}".format(e))
             return None
+
+        # Fetch the results
+        for result in job.results(output_mode="json"):
+            decoded_data = json.loads(result.decode("utf-8"))
+            value = decoded_data.get("results")
+            total_records = value[0]["total_records"]
 
         # Fetch the results
         for result in job.results(output_mode="json"):
