@@ -51,6 +51,7 @@ async def jobs(
     pretty: bool = Query(False, description="Output contet in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
+    totalJobs: int = Query(None, description="Offset Number to fetch jobs from"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -68,23 +69,36 @@ async def jobs(
         )
 
     results_df = pd.DataFrame()
+    total_dict = {}
+    total = 0
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         futures = {
-            executor.submit(fetch_product, product, start_date, end_date): product
+            executor.submit(
+                fetch_product, product, start_date, end_date, size, offset
+            ): product
             for product in products
         }
         for future in as_completed(futures):
             product = futures[future]
             try:
                 result = future.result()
-                results_df = pd.concat([results_df, result])
+                total_dict[product] = result["total"]
+                results_df = pd.concat([results_df, result["data"]])
             except Exception as e:
                 print(f"Error fetching data for product {product}: {e}")
 
+    num = 0 if totalJobs is None else int(totalJobs)
+    if totalJobs == 0:
+        for product in total_dict:
+            total += int(total_dict[product])
+
+    totalJobs = max(total, num)
     response = {
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
         "results": results_df.to_dict("records"),
+        "total": totalJobs,
+        "offset": offset + size,
     }
 
     if pretty:
@@ -95,28 +109,33 @@ async def jobs(
     return jsonstring
 
 
-async def fetch_product_async(product, start_date, end_date):
+async def fetch_product_async(product, start_date, end_date, size, offset):
     try:
-        df = await products[product](start_date, end_date)
-        return (
-            df.loc[
-                :,
-                [
-                    "ciSystem",
-                    "uuid",
-                    "releaseStream",
-                    "jobStatus",
-                    "buildUrl",
-                    "startDate",
-                    "endDate",
-                    "product",
-                    "version",
-                    "testName",
-                ],
-            ]
-            if len(df) != 0
-            else df
-        )
+        response = await products[product](start_date, end_date, size, offset)
+        if response:
+            df = response["data"]
+            return {
+                "data": (
+                    df.loc[
+                        :,
+                        [
+                            "ciSystem",
+                            "uuid",
+                            "releaseStream",
+                            "jobStatus",
+                            "buildUrl",
+                            "startDate",
+                            "endDate",
+                            "product",
+                            "version",
+                            "testName",
+                        ],
+                    ]
+                    if len(df) != 0
+                    else df
+                ),
+                "total": response["total"],
+            }
     except ConnectionError:
         print("Connection Error in mapper for product " + product)
     except Exception as e:
@@ -124,5 +143,36 @@ async def fetch_product_async(product, start_date, end_date):
         return pd.DataFrame()
 
 
-def fetch_product(product, start_date, end_date):
-    return asyncio.run(fetch_product_async(product, start_date, end_date))
+def fetch_product(product, start_date, end_date, size, offset):
+    return asyncio.run(fetch_product_async(product, start_date, end_date, size, offset))
+
+
+def is_requested_size_available(total_count, offset, requested_size):
+    """
+    Check if the requested size of data is available starting from a given offset.
+
+    Args:
+        total_count (int): Total number of available records.
+        offset (int): The starting position in the dataset.
+        requested_size (int): The number of records requested.
+
+    Returns:
+        bool: True if the requested size is available, False otherwise.
+    """
+    return (offset + requested_size) <= total_count
+
+
+def calculate_remaining_data(total_count, offset, requested_size):
+    """
+    Calculate the remaining number of data items that can be fetched based on the requested size.
+
+    Args:
+        total_count (int): Total number of available records.
+        offset (int): The starting position in the dataset.
+        requested_size (int): The number of records requested.
+
+    Returns:
+        int: The number of records that can be fetched, which may be less than or equal to requested_size.
+    """
+    available_data = total_count - offset  # Data available from the offset
+    return min(available_data, requested_size)

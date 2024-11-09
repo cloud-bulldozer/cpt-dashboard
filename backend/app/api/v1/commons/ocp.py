@@ -27,8 +27,7 @@ async def getData(
     tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
-        return {"data": jobs, "total": response["total"]}
-
+        return jobs
     jobs[
         ["masterNodesCount", "workerNodesCount", "infraNodesCount", "totalNodesCount"]
     ] = jobs[
