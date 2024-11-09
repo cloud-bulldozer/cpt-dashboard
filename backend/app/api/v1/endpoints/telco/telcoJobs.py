@@ -53,17 +53,21 @@ async def jobs(
 
     results = await getData(start_date, end_date, size, offset, "telco.splunk")
 
-    if len(results) >= 1:
+    if len(results["data"]) >= 1:
         response = {
             "startDate": start_date.__str__(),
             "endDate": end_date.__str__(),
-            "results": results.to_dict("records"),
+            "results": results["data"].to_dict("records"),
+            "total": results["total"],
+            "offset": offset + size,
         }
     else:
         response = {
             "startDate": start_date.__str__(),
             "endDate": end_date.__str__(),
             "results": [],
+            "total": 0,
+            "offset": 0,
         }
 
     if pretty:

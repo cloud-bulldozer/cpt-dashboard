@@ -291,7 +291,7 @@ async def jobSummary(uuids: list):
     es = ElasticService(configpath="ocp.elasticsearch", index=index)
     response = await es.post(query=query)
     await es.close()
-    runs = [item["_source"] for item in response]
+    runs = [item["_source"] for item in response["data"]]
     return runs
 
 
@@ -424,7 +424,7 @@ async def getBurnerResults(uuid: str, uuids: list, index: str, metric='podLatenc
     es = ElasticService(configpath="ocp.elasticsearch", index=index)
     response = await es.post(query=query)
     await es.close()
-    runs = [item["_source"] for item in response]
+    runs = [item["_source"] for item in response["data"]]
     return runs
 
 
@@ -438,7 +438,7 @@ async def getResults(uuid: str, uuids: list, index: str):
     es = ElasticService(configpath="ocp.elasticsearch", index=index)
     response = await es.post(query=query)
     await es.close()
-    runs = [item["_source"] for item in response]
+    runs = [item["_source"] for item in response["data"]]
     return runs
 
 
@@ -493,7 +493,7 @@ async def getMatchRuns(meta: dict, workerCount: False):
     es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query=query)
     await es.close()
-    runs = [item["_source"] for item in response]
+    runs = [item["_source"] for item in response["data"]]
     uuids = []
     for run in runs:
         uuids.append(run["uuid"])

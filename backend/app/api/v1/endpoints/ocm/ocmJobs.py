@@ -33,6 +33,8 @@ async def jobs(
         examples=["2020-11-15"],
     ),
     pretty: bool = Query(False, description="Output contet in pretty format."),
+    size: int = Query(None, description="Number of jobs to fetch"),
+    offset: int = Query(None, description="Offset Number to fetch jobs from"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -49,19 +51,30 @@ async def jobs(
             status_code=422,
         )
 
-    results = await getData(start_date, end_date, "ocm.elasticsearch")
+    if not offset:
+        offset = 0
 
-    if len(results) >= 1:
+    if not size:
+        size = 10000
+        offset = 0
+
+    results = await getData(start_date, end_date, size, offset, "ocm.elasticsearch")
+
+    if "data" in results and len(results["data"]) >= 1:
         response = {
             "startDate": start_date.__str__(),
             "endDate": end_date.__str__(),
-            "results": results.to_dict("records"),
+            "results": results["data"].to_dict("records"),
+            "total": results["total"],
+            "offset": offset + size,
         }
     else:
         response = {
             "startDate": start_date.__str__(),
             "endDate": end_date.__str__(),
             "results": [],
+            "total": 0,
+            "offset": 0,
         }
 
     if pretty:

@@ -7,7 +7,7 @@ async def getMetadata(uuid: str, configpath: str):
     es = ElasticService(configpath=configpath)
     response = await es.post(query=query)
     await es.close()
-    meta = [item["_source"] for item in response]
+    meta = [item["_source"] for item in response["data"]]
     return meta[0]
 
 
