@@ -32,6 +32,7 @@ import { uid } from "@/utils/helper";
 import { useState } from "react";
 import ILabSummary from "./ILabSummary";
 import ILabMetadata from "./ILabMetadata";
+import MetricsSelect from "./MetricsDropdown";
 
 const IlabCompareComponent = () => {
   // const { data } = props;
