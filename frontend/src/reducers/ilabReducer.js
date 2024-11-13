@@ -15,7 +15,7 @@ const initialState = {
   offset: 0,
   metrics: [],
   periods: [],
-  metrics_selected: {},
+  metrics_selected: [],
   tableData: [],
   comparisonSwitch: false,
   metaRowExpanded: [],

@@ -11,8 +11,10 @@ import {
 } from "@patternfly/react-table";
 import {
   fetchILabJobs,
+  fetchGraphData,
   fetchMetricsInfo,
   fetchPeriods,
+  fetchSummaryData,
   setIlabDateFilter,
   toggleComparisonSwitch,
 } from "@/actions/ilabActions";
@@ -52,8 +54,12 @@ const ILab = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
-      dispatch(fetchPeriods(run.id));
-      dispatch(fetchMetricsInfo(run.id));
+      await Promise.all([
+        await dispatch(fetchPeriods(run.id)),
+        await dispatch(fetchMetricsInfo(run.id)),
+        await dispatch(fetchGraphData(run.id)),
+        await dispatch(fetchSummaryData(run.id)),
+      ]);
     }
   };
 

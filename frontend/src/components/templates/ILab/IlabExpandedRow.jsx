@@ -14,6 +14,7 @@ import MetricsSelect from "./MetricsDropdown";
 import PropTypes from "prop-types";
 import { setMetaRowExpanded } from "@/actions/ilabActions";
 import ILabMetadata from "./ILabMetadata";
+import { uid } from "@/utils/helper";
 
 const IlabRowContent = (props) => {
   const { item } = props;
@@ -34,7 +35,7 @@ const IlabRowContent = (props) => {
   };
   return (
     <Accordion asDefinitionList={false} togglePosition="start">
-      <AccordionItem>
+      <AccordionItem key={uid()}>
         <AccordionToggle
           onClick={() => {
             onToggle(`metadata-toggle-${item.id}`);
@@ -52,7 +53,7 @@ const IlabRowContent = (props) => {
           <ILabMetadata item={item} />
         </AccordionContent>
       </AccordionItem>
-      <AccordionItem>
+      <AccordionItem key={uid()}>
         <AccordionToggle
           onClick={() => {
             onToggle(`graph-toggle-${item.id}`);
@@ -67,12 +68,12 @@ const IlabRowContent = (props) => {
           isHidden={!metaRowExpanded.includes(`graph-toggle-${item.id}`)}
         >
           <div>Metrics:</div>
-          <MetricsSelect item={item} />
+          <MetricsSelect ids={[item.id]} />
           <Stack>
-            <StackItem className="summary-card">
+            <StackItem key={uid()} id="summary" className="summary-card">
               <ILabSummary ids={[item.id]} />
             </StackItem>
-            <StackItem className="graph-card">
+            <StackItem key={uid()} id="graph" className="graph-card">
               <ILabGraph item={item} />
             </StackItem>
           </Stack>
