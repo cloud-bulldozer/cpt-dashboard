@@ -78,8 +78,11 @@ export const setIlabDateFilter =
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
   };
 
-export const fetchMetricsInfo = (uid) => async (dispatch) => {
+export const fetchMetricsInfo = (uid) => async (dispatch, getState) => {
   try {
+    if (getState().ilab.metrics?.find((i) => i.uid == uid)) {
+      return;
+    }
     dispatch({ type: TYPES.LOADING });
     const response = await API.get(`/api/v1/ilab/runs/${uid}/metrics`);
     if (response.status === 200) {
@@ -87,9 +90,10 @@ export const fetchMetricsInfo = (uid) => async (dispatch) => {
         response.data.constructor === Object &&
         Object.keys(response.data).length > 0
       ) {
+        const metrics = Object.keys(response.data).sort();
         dispatch({
           type: TYPES.SET_ILAB_METRICS,
-          payload: { uid, metrics: Object.keys(response.data).sort() },
+          payload: { uid, metrics },
         });
       }
     }
@@ -100,8 +104,11 @@ export const fetchMetricsInfo = (uid) => async (dispatch) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
-export const fetchPeriods = (uid) => async (dispatch) => {
+export const fetchPeriods = (uid) => async (dispatch, getState) => {
   try {
+    if (getState().ilab.periods?.find((i) => i.uid == uid)) {
+      return;
+    }
     dispatch({ type: TYPES.LOADING });
     const response = await API.get(`/api/v1/ilab/runs/${uid}/periods`);
     if (response.status === 200) {
@@ -121,146 +128,147 @@ export const fetchPeriods = (uid) => async (dispatch) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
-export const fetchSummaryData =
-  (uid, metric = null) =>
-  async (dispatch, getState) => {
-    try {
-      const periods = getState().ilab.periods.find((i) => i.uid == uid);
-      const metrics = getState().ilab.metrics_selected[uid];
-      dispatch({ type: TYPES.SET_ILAB_SUMMARY_LOADING });
-      let summaries = [];
-      periods?.periods?.forEach((p) => {
-        if (p.is_primary) {
-          summaries.push({
-            run: uid,
-            metric: p.primary_metric,
-            periods: [p.id],
-          });
-        }
-        if (metrics) {
-          metrics.forEach((metric) =>
+export const fetchSummaryData = (uid) => async (dispatch, getState) => {
+  try {
+    const periods = getState().ilab.periods.find((i) => i.uid == uid);
+    const metrics = getState().ilab.metrics_selected;
+    const avail_metrics = getState().ilab.metrics;
+    dispatch({ type: TYPES.SET_ILAB_SUMMARY_LOADING });
+    let summaries = [];
+    periods?.periods?.forEach((p) => {
+      if (p.is_primary) {
+        summaries.push({
+          run: uid,
+          metric: p.primary_metric,
+          periods: [p.id],
+        });
+      }
+      if (metrics) {
+        metrics.forEach((metric) => {
+          if (
+            avail_metrics.find((m) => m.uid == uid)?.metrics?.includes(metric)
+          ) {
             summaries.push({
               run: uid,
               metric,
               aggregate: true,
               periods: [p.id],
-            })
-          );
-        }
-      });
-      const response = await API.post(
-        `/api/v1/ilab/runs/multisummary`,
-        summaries
-      );
-      if (response.status === 200) {
-        dispatch({
-          type: TYPES.SET_ILAB_SUMMARY_DATA,
-          payload: { uid, data: response.data },
+            });
+          }
         });
       }
-    } catch (error) {
-      console.error(
-        `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data
-        )}`
-      );
-      dispatch(showFailureToast());
-    }
-    dispatch({ type: TYPES.SET_ILAB_SUMMARY_COMPLETE });
-  };
-
-export const handleSummaryData =
-  (uids, metric = null) =>
-  async (dispatch, getState) => {
-    try {
-      const periods = getState().ilab.periods;
-      const pUids = periods.map((i) => i.uid);
-      const missingPeriods = uids.filter(function (x) {
-        return pUids.indexOf(x) < 0;
-      });
-      console.log(`Missing periods for ${missingPeriods}`);
-      await Promise.all(
-        missingPeriods.map(async (uid) => {
-          console.log(`Fetching periods for ${uid}`);
-          await dispatch(fetchPeriods(uid)); // Dispatch each item
-        })
-      );
-      await Promise.all(
-        uids.map(async (uid) => {
-          console.log(`Fetching summary data for ${uid}`);
-          await dispatch(fetchSummaryData(uid, metric));
-        })
-      );
-    } catch (error) {
-      console.error(`ERROR: ${JSON.stringify(error)}`);
-      dispatch(showFailureToast());
-    }
-  };
-
-export const fetchGraphData =
-  (uid, metric = null) =>
-  async (dispatch, getState) => {
-    try {
-      const periods = getState().ilab.periods.find((i) => i.uid == uid);
-      const graphData = cloneDeep(getState().ilab.graphData);
-      const filterData = graphData.filter((i) => i.uid !== uid);
-      const metrics = getState().ilab.metrics_selected[uid];
+    });
+    const response = await API.post(
+      `/api/v1/ilab/runs/multisummary`,
+      summaries
+    );
+    if (response.status === 200) {
       dispatch({
-        type: TYPES.SET_ILAB_GRAPH_DATA,
-        payload: filterData,
+        type: TYPES.SET_ILAB_SUMMARY_DATA,
+        payload: { uid, data: response.data },
       });
-      const copyData = cloneDeep(filterData);
-      dispatch({ type: TYPES.GRAPH_LOADING });
-      let graphs = [];
-      periods?.periods?.forEach((p) => {
-        if (p.is_primary) {
-          graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
-        }
-        if (metrics) {
-          metrics.forEach((metric) =>
+    }
+  } catch (error) {
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.SET_ILAB_SUMMARY_COMPLETE });
+};
+
+export const handleSummaryData = (uids) => async (dispatch, getState) => {
+  try {
+    const periods = getState().ilab.periods;
+    const pUids = periods.map((i) => i.uid);
+    const missingPeriods = uids.filter(function (x) {
+      return pUids.indexOf(x) < 0;
+    });
+    await Promise.all(
+      missingPeriods.map(async (uid) => {
+        await dispatch(fetchPeriods(uid)); // Dispatch each item
+      })
+    );
+    await Promise.all(
+      uids.map(async (uid) => {
+        await dispatch(fetchSummaryData(uid));
+      })
+    );
+  } catch (error) {
+    console.error(`ERROR: ${JSON.stringify(error)}`);
+    dispatch(showFailureToast());
+  }
+};
+
+export const fetchGraphData = (uid) => async (dispatch, getState) => {
+  try {
+    const periods = getState().ilab.periods.find((i) => i.uid == uid);
+    const graphData = cloneDeep(getState().ilab.graphData);
+    const filterData = graphData.filter((i) => i.uid !== uid);
+    const metrics = getState().ilab.metrics_selected;
+    const avail_metrics = getState().ilab.metrics;
+    dispatch({
+      type: TYPES.SET_ILAB_GRAPH_DATA,
+      payload: filterData,
+    });
+    const copyData = cloneDeep(filterData);
+    dispatch({ type: TYPES.GRAPH_LOADING });
+    let graphs = [];
+    periods?.periods?.forEach((p) => {
+      if (p.is_primary) {
+        graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
+      }
+      if (metrics) {
+        metrics.forEach((metric) => {
+          if (
+            avail_metrics.find((m) => m.uid == uid)?.metrics?.includes(metric)
+          ) {
             graphs.push({
               run: uid,
               metric,
               aggregate: true,
               periods: [p.id],
-            })
-          );
-        }
-      });
-      const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
-        name: `graph ${uid}`,
-        graphs,
-      });
-      if (response.status === 200) {
-        response.data.layout["showlegend"] = true;
-        response.data.layout["responsive"] = "true";
-        response.data.layout["autosize"] = "true";
-        response.data.layout["legend"] = {
-          orientation: "h",
-          xanchor: "left",
-          yanchor: "top",
-          y: -0.1,
-        };
-        copyData.push({
-          uid,
-          data: response.data.data,
-          layout: response.data.layout,
-        });
-        dispatch({
-          type: TYPES.SET_ILAB_GRAPH_DATA,
-          payload: copyData,
+            });
+          }
         });
       }
-    } catch (error) {
-      console.error(
-        `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data
-        )}`
-      );
-      dispatch(showFailureToast());
+    });
+    const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
+      name: `graph ${uid}`,
+      graphs,
+    });
+    if (response.status === 200) {
+      response.data.layout["showlegend"] = true;
+      response.data.layout["responsive"] = "true";
+      response.data.layout["autosize"] = "true";
+      response.data.layout["legend"] = {
+        orientation: "h",
+        xanchor: "left",
+        yanchor: "top",
+        y: -0.1,
+      };
+      copyData.push({
+        uid,
+        data: response.data.data,
+        layout: response.data.layout,
+      });
+      dispatch({
+        type: TYPES.SET_ILAB_GRAPH_DATA,
+        payload: copyData,
+      });
     }
-    dispatch({ type: TYPES.GRAPH_COMPLETED });
-  };
+  } catch (error) {
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.GRAPH_COMPLETED });
+};
 
 export const handleMultiGraph = (uids) => async (dispatch, getState) => {
   try {
@@ -292,6 +300,8 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     dispatch({ type: TYPES.LOADING });
     const periods = getState().ilab.periods;
     const filterPeriods = periods.filter((item) => uids.includes(item.uid));
+    const get_metrics = getState().ilab.metrics_selected;
+    const avail_metrics = getState().ilab.metrics;
 
     let graphs = [];
     uids.forEach(async (uid) => {
@@ -304,12 +314,20 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
             periods: [p.id],
           });
         }
-        // graphs.push({
-        //   run: uid,
-        //   metric,
-        //   aggregate: true,
-        //   periods: [p.id],
-        // });
+        if (get_metrics) {
+          get_metrics.forEach((metric) => {
+            if (
+              avail_metrics.find((m) => m.uid == uid)?.metrics?.includes(metric)
+            ) {
+              graphs.push({
+                run: uid,
+                metric,
+                aggregate: true,
+                periods: [p.id],
+              });
+            }
+          });
+        }
       });
     });
     console.log(graphs);
@@ -374,15 +392,13 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   }
 };
 
-export const toggleSelectedMetric = (id, metric) => (dispatch, getState) => {
-  const metrics_selected = cloneDeep(getState().ilab.metrics_selected);
-  var new_selected = metrics_selected[id] ? metrics_selected[id] : [];
-  if (new_selected.includes(metric)) {
-    new_selected = new_selected.filter((m) => m !== metric);
+export const toggleSelectedMetric = (metric) => (dispatch, getState) => {
+  let metrics_selected = getState().ilab.metrics_selected;
+  if (metrics_selected.includes(metric)) {
+    metrics_selected = metrics_selected.filter((m) => m !== metric);
   } else {
-    new_selected = [...new_selected, metric];
+    metrics_selected = [...metrics_selected, metric];
   }
-  metrics_selected[id] = new_selected;
   dispatch({
     type: TYPES.SET_ILAB_SELECTED_METRICS,
     payload: metrics_selected,

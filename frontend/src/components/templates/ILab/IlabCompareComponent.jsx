@@ -18,11 +18,17 @@ import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
-import { handleMultiGraph, handleSummaryData } from "@/actions/ilabActions.js";
+import {
+  fetchPeriods,
+  handleMultiGraph,
+  handleSummaryData,
+  fetchMetricsInfo,
+} from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
 import ILabSummary from "./ILabSummary";
 import ILabMetadata from "./ILabMetadata";
+import MetricsSelect from "./MetricsDropdown";
 
 const IlabCompareComponent = () => {
   const { page, perPage, totalItems, tableData } = useSelector(
@@ -42,6 +48,8 @@ const IlabCompareComponent = () => {
       setSelectedItems(selectedItems.filter((id) => id !== item));
     } else {
       setSelectedItems([...selectedItems, item]);
+      dispatch(fetchPeriods(item));
+      dispatch(fetchMetricsInfo(item));
     }
   };
   const dummy = () => {
@@ -76,9 +84,8 @@ const IlabCompareComponent = () => {
                       <Popover
                         triggerAction="hover"
                         aria-label="Metadata popover"
-                        headerContent={<h3>Metadata</h3>}
+                        headerContent={<b>Metadata</b>}
                         appendTo={() => document.body}
-                        // hasAutoWidth
                         hasNoPadding
                         position="auto"
                         className="mini-metadata"
@@ -109,6 +116,9 @@ const IlabCompareComponent = () => {
         />
       </div>
       <Stack>
+        <StackItem span={12} className="metrics-select">
+          <MetricsSelect ids={selectedItems} />
+        </StackItem>
         <StackItem span={12} className="summary-box">
           {isSummaryLoading ? (
             <div className="loader"></div>
