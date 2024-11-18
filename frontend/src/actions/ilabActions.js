@@ -240,15 +240,7 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
       graphs,
     });
     if (response.status === 200) {
-      response.data.layout["showlegend"] = true;
-      response.data.layout["responsive"] = "true";
-      response.data.layout["autosize"] = "true";
-      response.data.layout["legend"] = {
-        orientation: "h",
-        xanchor: "left",
-        yanchor: "top",
-        y: -0.1,
-      };
+      response.data.layout["width"] = 1500;
       copyData.push({
         uid,
         data: response.data.data,
@@ -334,17 +326,11 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
       name: "comparison",
       relative: true,
+      absolute_relative: true,
       graphs,
     });
     if (response.status === 200) {
-      response.data.layout["showlegend"] = true;
-      response.data.layout["responsive"] = "true";
-      response.data.layout["autosize"] = "true";
-      response.data.layout["legend"] = {
-        orientation: "h",
-        xanchor: "left",
-        yanchor: "top",
-      };
+      response.data.layout["width"] = 1500;
       const graphData = [];
       graphData.push({
         data: response.data.data,

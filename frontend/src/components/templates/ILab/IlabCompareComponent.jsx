@@ -115,7 +115,7 @@ const IlabCompareComponent = () => {
           type={"ilab"}
         />
       </div>
-      <Stack>
+      <Stack hasGutter>
         <StackItem span={12} className="metrics-select">
           <MetricsSelect ids={selectedItems} />
         </StackItem>

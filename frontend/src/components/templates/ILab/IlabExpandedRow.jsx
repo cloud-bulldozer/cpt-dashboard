@@ -69,7 +69,7 @@ const IlabRowContent = (props) => {
         >
           <div>Metrics:</div>
           <MetricsSelect ids={[item.id]} />
-          <Stack>
+          <Stack hasGutter>
             <StackItem key={uid()} id="summary" className="summary-card">
               <ILabSummary ids={[item.id]} />
             </StackItem>

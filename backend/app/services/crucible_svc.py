@@ -68,16 +68,24 @@ class GraphList(BaseModel):
     Normally the X axis will be the actual sample timestamp values; if you
     specify relative=True, the X axis will be the duration from the first
     timestamp of the metric series. This allows graphs of similar runs started
-    at different times to be overlaid.
+    at different times to be overlaid. Plotly (along with other plotting
+    packages like PatternFly's Victory) doesn't support a "delta time" axis
+    unit, so also specifying absolute_relative will report relative times as
+    small absolute times (e.g., "1970-01-01 00:00:01" for 1 second) and a
+    "tick format" of "%H:%M:%S", which will look nice on the graph as long as
+    the total duration doesn't reach 24 hours. Without absolute_relative, the
+    duration is reported as numeric (floating point) seconds.
 
     Fields:
         name: Specify a name for the set of graphs
         relative: True for relative timescale
+        absolute_relative: True to report relative timestamps as absolute
         graphs: a list of Graph objects
     """
 
     name: str
     relative: bool = False
+    absolute_relative: bool = False
     graphs: list[Metric]
 
 
@@ -1861,7 +1869,42 @@ class CrucibleService:
         """
         start = time.time()
         graphlist = []
-        layout: dict[str, Any] = {"width": "1500"}
+        if graphdata.relative:
+            if graphdata.absolute_relative:
+                x_label = "sample runtime (HH:MM:SS)"
+                format = "%H:%M:%S"
+            else:
+                x_label = "sample runtime (seconds)"
+                format = None
+        else:
+            x_label = "sample timestamp"
+            format = "%Y:%M:%d %X %Z"
+        xaxis = {
+            "title": {
+                "text": x_label,
+                "font": {"color": "gray", "variant": "petite-caps", "weight": 1000},
+            },
+        }
+        if format:
+            xaxis["type"] = "date"
+            xaxis["tickformat"] = format
+        layout: dict[str, Any] = {
+            "showlegend": True,
+            "responsive": True,
+            "autosize": True,
+            "xaxis_title": x_label,
+            "yaxis_title": "Metric value",
+            "xaxis": xaxis,
+            "legend": {
+                "xref": "container",
+                "yref": "container",
+                "xanchor": "right",
+                "yanchor": "top",
+                "x": 0.9,
+                "y": 1,
+                "orientation": "h",
+            },
+        }
         axes = {}
         yaxis = None
         cindex = 0
@@ -1883,6 +1926,9 @@ class CrucibleService:
             run_id = g.run
             names = g.names
             metric: str = g.metric
+            run_idx = None
+            if len(run_id_list) > 1:
+                run_idx = f"Run {run_id_list.index(run_id) + 1}"
 
             # The caller can provide a title for each graph; but, if not, we
             # journey down dark overgrown pathways to fabricate a default with
@@ -1964,13 +2010,17 @@ class CrucibleService:
                 if graphdata.relative:
                     if not first:
                         first = p.begin
-                    s = (p.begin - first) / 1000.0
-                    e = (p.end - first) / 1000.0
+                    if graphdata.absolute_relative:
+                        s = self._format_timestamp(p.begin - first)
+                        e = self._format_timestamp(p.end - first)
+                    else:
+                        s = (p.begin - first) / 1000
+                        e = (p.end - first) / 1000
                     x.extend([s, e])
                 else:
-                    x.extend(
-                        [self._format_timestamp(p.begin), self._format_timestamp(p.end)]
-                    )
+                    s = self._format_timestamp(p.begin)
+                    e = self._format_timestamp(p.end)
+                    x.extend([s, e])
                 y.extend([p.value, p.value])
                 y_max = max(y_max, p.value)
 
@@ -1988,11 +2038,14 @@ class CrucibleService:
                 "type": "scatter",
                 "mode": "line",
                 "marker": {"color": color},
-                "labels": {
-                    "x": "sample timestamp",
-                    "y": "samples / second",
-                },
             }
+
+            if run_idx:
+                graphitem["legendgroup"] = run_idx
+                graphitem["legendgrouptitle"] = {
+                    "text": run_idx,
+                    "font": {"variant": "small-caps", "style": "italic"},
+                }
 
             # Y-axis scaling and labeling is divided by benchmark label;
             # so store each we've created to reuse. (E.g., if we graph
