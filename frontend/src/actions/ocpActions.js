@@ -186,10 +186,13 @@ export const setOCPDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-
-    dispatch(fetchOCPJobs());
   };
 
+export const applyOCPDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setOCPDateFilter(start_date, end_date, navigate));
+    dispatch(fetchOCPJobs());
+  };
 export const setFilterFromURL = (searchParams) => ({
   type: TYPES.SET_OCP_APPLIED_FILTERS,
   payload: searchParams,

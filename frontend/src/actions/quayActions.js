@@ -191,7 +191,11 @@ export const setQuayDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  };
 
+export const applyQuayDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setQuayDateFilter(start_date, end_date, navigate));
     dispatch(fetchQuayJobsData());
   };
 

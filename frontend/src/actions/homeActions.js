@@ -211,8 +211,12 @@ export const setCPTDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  };
 
-    // dispatch(fetchOCPJobsData());
+export const applyCPTDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setCPTDateFilter(start_date, end_date, navigate));
+    dispatch(fetchOCPJobsData());
   };
 
 export const setCPTPage = (pageNo) => ({
