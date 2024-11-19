@@ -19,6 +19,5 @@ async def ocmMapper(start_datetime: date, end_datetime: date, size: int, offset:
         df["testName"] = df["attack"]
         df["startDate"] = df["metrics.earliest"]
         df["endDate"] = df["metrics.end"]
-
         return {"data": df, "total": response["total"]}
     return {"data": pd.DataFrame(), "total": 0}
