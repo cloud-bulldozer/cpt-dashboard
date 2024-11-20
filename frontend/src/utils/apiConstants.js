@@ -1,8 +1,20 @@
 export const getUrl = () => {
-  const { hostname, protocol } = window.location;
-  return hostname === "localhost"
-    ? "http://0.0.0.0:8000"
-    : `${protocol}//${hostname}`;
+  const { protocol, hostname, port } = window.location;
+
+  // Try to support three environments. If we're running a development
+  // environment on localhost, map to the API port. If we're running on
+  // the product OpenShift environment with an API reverse proxy, we
+  // won't see a port, and the API calls will be routed correctly without
+  // a port. If we're running a "product" deployment outside of OpenShift
+  // and without a routing reverse proxy, we'll see the origin port 3000
+  // and route to the same protocol/host with port 8000.
+  if (hostname === "localhost") {
+    return "http://0.0.0.0:8000";
+  } else if (port === "3000") {
+    return `${protocol}//${hostname}:8000`;
+  } else {
+    return `${protocol}//${hostname}`;
+  }
 };
 
 export const BASE_URL = getUrl();
