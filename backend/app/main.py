@@ -2,7 +2,7 @@ import os
 import typing
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
 
@@ -20,14 +20,13 @@ ORIGINS_DEV = ["http://localhost:3000", "localhost:3000"]
 
 
 def parse_origins(origins: typing.Optional[str]) -> list[str]:
-    """Parse a comma delimited list of allowed URL Origins.
-    """
+    """Parse a comma delimited list of allowed URL Origins."""
     if not origins:
-        return ORIGINS_DEV.copy()    
+        return ORIGINS_DEV.copy()
     return [
-        raw.strip().rstrip("/")          # strip whitespace and trailing slash
+        raw.strip().rstrip("/")  # strip whitespace and trailing slash
         for raw in origins.split(",")
-        if raw.strip()                   # filter out empty strings
+        if raw.strip()  # filter out empty strings
     ] + ORIGINS_DEV
 
 
@@ -62,6 +61,8 @@ routes_to_reroute = ["/"]
 
 @app.middleware("http")
 async def some_middleware(request: Request, call_next):
+    print(f"origin: {origins}, request: {request.headers}")
+    print(f"{request.app.user_middleware}")
     if request.url.path in routes_to_reroute:
         request.scope["path"] = "/docs"
         headers = dict(request.scope["headers"])
