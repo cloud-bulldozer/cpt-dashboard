@@ -2,6 +2,8 @@ import * as TYPES from "@/actions/types";
 
 const initialState = {
   results: [],
+  runFilters: {},
+  metricTemplate: [],
   start_date: "",
   end_date: "",
   graphData: [],
@@ -76,6 +78,10 @@ const ILabReducer = (state = initialState, action = {}) => {
           payload,
         ],
       };
+    case TYPES.SET_ILAB_RUN_FILTERS:
+      return { ...state, runFilters: payload };
+    case TYPES.SET_ILAB_METRIC_TEMPLATE:
+      return { ...state, metricTemplate: payload };
     default:
       return state;
   }
