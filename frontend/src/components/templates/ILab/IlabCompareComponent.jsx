@@ -19,16 +19,17 @@ import {
 } from "@/actions/ilabActions.js";
 import { useDispatch, useSelector } from "react-redux";
 
-import ILabMetadata from "./ILabMetadata";
-import ILabSummary from "./ILabSummary";
 import { InfoCircleIcon } from "@patternfly/react-icons";
-import MetricsSelect from "./MetricsDropdown";
 import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
+import ILabSummary from "./ILabSummary";
+import ILabMetadata from "./ILabMetadata";
+import MetricsSelect from "./MetricsDropdown";
+import MetricTitle from "./MetricTitle";
 
 const IlabCompareComponent = () => {
   const { page, perPage, totalItems, tableData } = useSelector(
@@ -122,6 +123,9 @@ const IlabCompareComponent = () => {
         <Stack hasGutter>
           <StackItem span={12} className="metrics-select">
             <MetricsSelect ids={selectedItems} />
+          </StackItem>
+          <StackItem span={12}>
+            <MetricTitle />
           </StackItem>
           <StackItem span={12} className="summary-box">
             {isSummaryLoading ? (
