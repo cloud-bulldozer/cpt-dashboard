@@ -11,6 +11,11 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
+/**
+ * Fetch and store InstructLab jobs based on configured filters.
+ *
+ * @param {boolean} [shouldStartFresh=false]
+ */
 export const fetchIlabJobs =
   (shouldStartFresh = false) =>
   async (dispatch, getState) => {
@@ -61,8 +66,11 @@ export const fetchIlabJobs =
       dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.COMPLETED });
-  };
+    };
 
+/**
+ * Apply current filters
+ */
 export const applyFilters = () => (dispatch) => {
   dispatch(setIlabOffset(INITAL_OFFSET));
   dispatch(setIlabPage(START_PAGE));
@@ -71,6 +79,14 @@ export const applyFilters = () => (dispatch) => {
   dispatch(tableReCalcValues());
 };
 
+/**
+ * Store the start & end date filters in redux and as URL
+ * query parameters for page reload.
+ *
+ * @param {string} start_date
+ * @param {string} end_date
+ * @param {React NavigateFunction} navigate
+ */
 export const setIlabDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch({
@@ -83,39 +99,94 @@ export const setIlabDateFilter =
     dispatch(updateURL(navigate));
   };
 
+/**
+ * Set the category filters.
+ *
+ * TODO: currently unimplemented/unused for ILAB
+ *
+ * @param {string} category
+ */
 export const setIlabCatFilters = (category) => (dispatch, getState) => {};
 
+/**
+ * Set applied filters.
+ *
+ * TODO: currently unimplemented/unused for ILAB
+ *
+ * @param {function} navigate hook
+ */
 export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {};
 
+/**
+ * Set summery filters for non-[success|failure]
+ *
+ * TODO: currently unimplemented/unused for ILAB
+ *
+ * @param {string} category
+ */
 export const setIlabOtherSummaryFilter = () => (dispatch, getState) => {};
 
+
+/**
+ * Store the current page number for page fetch.
+ *
+ * @param {number} pageNo
+ */
 export const setIlabPage = (pageNo) => ({
   type: TYPES.SET_ILAB_PAGE,
   payload: pageNo,
 });
 
+/**
+ * Store the current page offset for page fetch.
+ *
+ * @param {number} offset
+ */
 export const setIlabOffset = (offset) => ({
   type: TYPES.SET_ILAB_OFFSET,
   payload: offset,
 });
 
+/**
+ * Store an updated page size and page number.
+ *
+ * @param {number} page
+ * @param {number} perPage
+ */
 export const setIlabPageOptions = (page, perPage) => ({
   type: TYPES.SET_ILAB_PAGE_OPTIONS,
   payload: { page, perPage },
 });
 
+/**
+ * Thunk to update page options
+ */
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().ilab;
 
   dispatch(setIlabPageOptions(page, perPage));
 };
 
+/**
+ * Remove applied filters
+ *
+ * @param {*} filterKey
+ * @param {*} filterValue
+ * @param {*} navigate
+ */
 export const removeIlabAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
 
+/**
+ * Apply a new date filter, resetting pagination
+ *
+ * @param {*} start_date
+ * @param {*} end_date
+ * @param {*} navigate
+ */
 export const applyIlabDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setIlabOffset(INITAL_OFFSET));
@@ -124,6 +195,24 @@ export const applyIlabDateFilter =
     dispatch(fetchIlabJobs());
   };
 
+/**
+ * Fetch the set of possible InstructLab run filters and store them.
+ */
+export const fetchIlabFilters = () => async (dispatch, getState) => {
+  try {
+    const response = await API.get(`/api/v1/ilab/runs/filters`);
+    dispatch({ type: TYPES.SET_ILAB_RUN_FILTERS, payload: response.data });
+  } catch (error) {
+    console.error(error);
+    dispatch(showFailureToast());
+  }
+};
+
+/**
+ * Fetch the recorded metrics for a specific run and store them.
+ *
+ * @param {string} uid of a run
+ */
 export const fetchMetricsInfo = (uid) => async (dispatch, getState) => {
   try {
     if (getState().ilab.metrics?.find((i) => i.uid == uid)) {
@@ -150,6 +239,11 @@ export const fetchMetricsInfo = (uid) => async (dispatch, getState) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
+/**
+ * Fetch the recording periods for a specific run and store them.
+ *
+ * @param {string} uid of a run
+ */
 export const fetchPeriods = (uid) => async (dispatch, getState) => {
   try {
     if (getState().ilab.periods?.find((i) => i.uid == uid)) {
@@ -174,57 +268,139 @@ export const fetchPeriods = (uid) => async (dispatch, getState) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
-export const fetchSummaryData = (uid) => async (dispatch, getState) => {
-  try {
-    const periods = getState().ilab.periods.find((i) => i.uid == uid);
-    const metrics = getState().ilab.metrics_selected;
-    const avail_metrics = getState().ilab.metrics;
-    dispatch({ type: TYPES.SET_ILAB_SUMMARY_LOADING });
-    let summaries = [];
-    periods?.periods?.forEach((p) => {
-      if (p.is_primary) {
-        summaries.push({
-          run: uid,
-          metric: p.primary_metric,
-          periods: [p.id],
-        });
-      }
-      if (metrics) {
-        metrics.forEach((metric) => {
-          if (
-            avail_metrics.find((m) => m.uid == uid)?.metrics?.includes(metric)
-          ) {
-            summaries.push({
-              run: uid,
-              metric,
-              aggregate: true,
-              periods: [p.id],
-            });
-          }
-        });
-      }
-    });
-    const response = await API.post(
-      `/api/v1/ilab/runs/multisummary`,
-      summaries
-    );
-    if (response.status === 200) {
-      dispatch({
-        type: TYPES.SET_ILAB_SUMMARY_DATA,
-        payload: { uid, data: response.data },
-      });
-    }
-  } catch (error) {
-    console.error(
-      `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
-    );
-    dispatch(showFailureToast());
+/**
+ * Construct a metric title based on the metric template store.
+ *
+ * @param {string} uid of a run
+ * @returns {string} metric title based on the template
+ */
+const makeTitle = (run, period, metric, template) => {
+  if (!template) {
+    return null;
   }
-  dispatch({ type: TYPES.SET_ILAB_SUMMARY_COMPLETE });
+  try {
+    const chip = /<((?<section>\w+):)?(?<name>\w+)>/;
+    const params = run?.iterations?.find(
+      (i) => i.iteration === period.iteration
+    )?.params;
+    let title = "";
+    for (const t of template) {
+      const ctx = chip.exec(t);
+      if (ctx !== null) {
+        const section = ctx.groups.section;
+        const name = ctx.groups.name;
+        if (!section) {
+          if (name === "metric") {
+            title += metric;
+          } else if (name == "iteration") {
+            title += period.iteration;
+          } else if (name === "period") {
+            title += period.name;
+          }
+        } else if (section === "run") {
+          title += run?.[name] || t;
+        } else if (section === "param") {
+          title += params?.[name] || t;
+        } else if (section === "tag") {
+          title += run.tags?.[name] || t;
+        } else {
+          title += `<unkn ${t}>`;
+        }
+      } else {
+        title += t;
+      }
+    }
+    return title;
+  } catch (e) {
+    console.error(e);
+    throw e;
+  }
 };
 
+/**
+ * Fetch and store metric statistics for a run.
+ *
+ * This will iterate through all defined recording periods for the run,
+ * generating for each a request for statistics for each specified metric
+ * within the period's time range. In addition, each "primary period" will
+ * include a request for the period's "primary metric".
+ *
+ * To maximize store effectiveness, we store data for each run separately,
+ * and combine data from multiple runs in the comparison table as needed
+ * rather than combining runs in a single request.
+ *
+ * NOTE: we don't try to avoid a duplicate fetch operation for statistics
+ * because the API call depends on the set of metrics selected and not just
+ * the selected run.
+ *
+ * @param {string} uid of a run
+ * @param {boolean} [useTemplate=false]
+ */
+export const fetchSummaryData =
+  (uid, useTemplate = false) =>
+  async (dispatch, getState) => {
+    try {
+      const run = getState().ilab.results.find((i) => i.id == uid);
+      const template = useTemplate ? getState().ilab.metricTemplate : null;
+      const periods = getState().ilab.periods.find((i) => i.uid == uid);
+      const metrics = getState().ilab.metrics_selected;
+      const avail_metrics = getState().ilab.metrics;
+      dispatch({ type: TYPES.SET_ILAB_SUMMARY_LOADING });
+      let summaries = [];
+      periods?.periods?.forEach((p) => {
+        if (p.is_primary) {
+          summaries.push({
+            run: uid,
+            metric: p.primary_metric,
+            periods: [p.id],
+            title: makeTitle(run, p, p.primary_metric, template),
+          });
+        }
+        if (metrics) {
+          metrics.forEach((metric) => {
+            if (
+              avail_metrics.find((m) => m.uid == uid)?.metrics?.includes(metric)
+            ) {
+              summaries.push({
+                run: uid,
+                metric,
+                aggregate: true,
+                periods: [p.id],
+                title: makeTitle(run, p, metric, template),
+              });
+            }
+          });
+        }
+      });
+      const response = await API.post(
+        `/api/v1/ilab/runs/multisummary`,
+        summaries
+      );
+      if (response.status === 200) {
+        dispatch({
+          type: TYPES.SET_ILAB_SUMMARY_DATA,
+          payload: { uid, data: response.data },
+        });
+      }
+    } catch (error) {
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
+      dispatch(showFailureToast());
+    }
+    dispatch({ type: TYPES.SET_ILAB_SUMMARY_COMPLETE });
+  };
+
+/**
+ * A helper to ensure that statistical summary data is available for a
+ * selected set of runs. In general we should expect that all periods have
+ * been fetched, but we make sure of that before fetching summary data for
+ * all specified runs.
+ *
+ * @param {Array[string]} run uids
+ */
 export const handleSummaryData = (uids) => async (dispatch, getState) => {
   try {
     const periods = getState().ilab.periods;
@@ -239,7 +415,7 @@ export const handleSummaryData = (uids) => async (dispatch, getState) => {
     );
     await Promise.all(
       uids.map(async (uid) => {
-        await dispatch(fetchSummaryData(uid));
+        await dispatch(fetchSummaryData(uid, true));
       })
     );
   } catch (error) {
@@ -248,6 +424,17 @@ export const handleSummaryData = (uids) => async (dispatch, getState) => {
   }
 };
 
+/**
+ * Fetch and store Plotly graph data for a specified run.
+ *
+ * This will iterate through all defined recording periods for the run,
+ * generating for each a graph request for each specified metric
+ * within the period's time range. In addition, each "primary period" will
+ * include a graph request for the period's "primary metric".
+ *
+ * @param {string} run uid
+ * @returns {(dispatch: any, getState: any) => any}
+ */
 export const fetchGraphData = (uid) => async (dispatch, getState) => {
   try {
     const periods = getState().ilab.periods.find((i) => i.uid == uid);
@@ -307,6 +494,13 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
 
+/**
+ * A helper to ensure that graph data is available for a selected set of
+ * runs. In general we should expect that all periods have been fetched, but
+ * we make sure of that before fetching graph data for all specified runs.
+ *
+ * @param {Array[string]} run uids
+ */
 export const handleMultiGraph = (uids) => async (dispatch, getState) => {
   try {
     const periods = getState().ilab.periods;
@@ -332,6 +526,17 @@ export const handleMultiGraph = (uids) => async (dispatch, getState) => {
     dispatch(showFailureToast());
   }
 };
+
+/**
+ * Generate a single Plotly graph containing potentially multiple metrics from
+ * all periods of a set of runs.
+ *
+ * For each run, we iterate through the collection periods, generating a graph
+ * for each selected metric over that period's time range. For each "primary
+ * period" we also generate a graph for that period's "primary metric".
+ *
+ * @param {Array[string]} run uids
+ */
 export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
   try {
     dispatch({ type: TYPES.LOADING });
@@ -339,9 +544,11 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
     const filterPeriods = periods.filter((item) => uids.includes(item.uid));
     const get_metrics = getState().ilab.metrics_selected;
     const avail_metrics = getState().ilab.metrics;
+    const template = getState().ilab.metricTemplate;
 
     let graphs = [];
     uids.forEach(async (uid) => {
+      const run = getState().ilab.results.find((i) => i.id === uid);
       const periods = filterPeriods.find((i) => i.uid == uid);
       periods?.periods?.forEach((p) => {
         if (p.is_primary) {
@@ -349,6 +556,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
             run: uid,
             metric: p.primary_metric,
             periods: [p.id],
+            title: makeTitle(run, p, p.primary_metric, template),
           });
         }
         if (get_metrics) {
@@ -361,6 +569,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
                 metric,
                 aggregate: true,
                 periods: [p.id],
+                title: makeTitle(run, p, metric, template),
               });
             }
           });
@@ -396,6 +605,11 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
   dispatch({ type: TYPES.COMPLETED });
 };
 
+/**
+ * Fetch and store a page of results if not already in the store.
+ *
+ * @param {number} newPage
+ */
 export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   const results = cloneDeep(getState().ilab.results);
   const { totalItems, perPage } = getState().ilab;
@@ -412,6 +626,12 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   }
 };
 
+/**
+ * Add a new metric to the selected list if not present, or remove it if it
+ * was previously present.
+ *
+ * @param {string} metric
+ */
 export const toggleSelectedMetric = (metric) => (dispatch, getState) => {
   let metrics_selected = getState().ilab.metrics_selected;
   if (metrics_selected.includes(metric)) {
@@ -425,15 +645,27 @@ export const toggleSelectedMetric = (metric) => (dispatch, getState) => {
   });
 };
 
+/**
+ * Help to manage the set of accordion folds that are open.
+ */
 export const getMetaRowdId = () => (dispatch, getState) => {
   const results = getState().ilab.results;
   const metaId = results.map((item) => `metadata-toggle-${item.id}`);
   dispatch(setMetaRowExpanded(metaId));
 };
+
+/**
+ * Toggle the state of the comparison view.
+ */
 export const toggleComparisonSwitch = () => ({
   type: TYPES.TOGGLE_COMPARISON_SWITCH,
 });
 
+/**
+ * Store the set of expanded rows.
+ *
+ * @param {Array[string]} expandedItems list of currently expanded runs
+ */
 export const setMetaRowExpanded = (expandedItems) => ({
   type: TYPES.SET_EXPANDED_METAROW,
   payload: expandedItems,
