@@ -100,6 +100,7 @@ const Home = () => {
         totalItems={totalJobs}
         addExpansion={false}
         type={"cpt"}
+        shouldSort={false}
       />
     </>
   );

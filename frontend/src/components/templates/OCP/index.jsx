@@ -135,6 +135,7 @@ const OCP = () => {
         setRunExpanded={setRunExpanded}
         graphData={graphData}
         type={"ocp"}
+        shouldSort={true}
       />
     </>
   );

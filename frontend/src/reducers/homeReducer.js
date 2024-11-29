@@ -32,6 +32,7 @@ const initialState = {
   filterData: [],
   activeSortDir: null,
   activeSortIndex: null,
+  sort: "",
   categoryFilterValue: "",
   filterOptions: [],
   appliedFilters: {},
