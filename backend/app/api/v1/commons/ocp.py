@@ -5,7 +5,12 @@ from app.services.search import ElasticService
 
 
 async def getData(
-    start_datetime: date, end_datetime: date, size: int, offset: int, configpath: str
+    start_datetime: date,
+    end_datetime: date,
+    size: int,
+    offset: int,
+    sort: str,
+    configpath: str,
 ):
     query = {
         "size": size,
@@ -14,6 +19,9 @@ async def getData(
             "bool": {"filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}}}
         },
     }
+    if sort:
+        key, direction = sort.split(":")
+        query["sort"] = [{key: {"order": direction}}]
 
     es = ElasticService(configpath=configpath)
     response = await es.post(

@@ -134,6 +134,7 @@ const Quay = () => {
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
+        shouldSort={true}
       />
     </>
   );

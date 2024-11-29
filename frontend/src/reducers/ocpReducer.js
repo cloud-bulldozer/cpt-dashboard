@@ -42,6 +42,7 @@ const initialState = {
   ],
   activeSortDir: null,
   activeSortIndex: null,
+  sort: "",
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
   size: DEFAULT_PER_PAGE,
@@ -133,6 +134,8 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_OCP_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_OCP_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_OCP_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_OCP_PAGE_OPTIONS:

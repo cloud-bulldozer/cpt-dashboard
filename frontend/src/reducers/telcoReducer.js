@@ -58,6 +58,7 @@ const initialState = {
   appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
+  sort: "",
   graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,

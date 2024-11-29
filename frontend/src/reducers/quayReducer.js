@@ -61,6 +61,7 @@ const initialState = {
   appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
+  sort: "",
   graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
@@ -97,6 +98,8 @@ const QuayReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_QUAY_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_QUAY_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_QUAY_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_QUAY_PAGE_OPTIONS:

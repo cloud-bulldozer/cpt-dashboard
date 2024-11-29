@@ -9,7 +9,6 @@ import {
   getFilteredData,
   getRequestParams,
   getSelectedFilter,
-  sortTable,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
@@ -52,7 +51,6 @@ export const fetchOCPJobs = () => async (dispatch) => {
       });
 
       dispatch(applyFilters());
-      dispatch(sortTable("ocp"));
       dispatch(tableReCalcValues());
     }
   } catch (error) {
