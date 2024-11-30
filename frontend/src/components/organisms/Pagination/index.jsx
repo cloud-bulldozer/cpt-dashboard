@@ -21,14 +21,12 @@ const RenderPagination = (props) => {
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
       dispatch(setPage(newPage, props.type));
-      // dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
-      // dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
