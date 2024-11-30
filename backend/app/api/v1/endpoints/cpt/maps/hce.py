@@ -3,7 +3,7 @@ from datetime import date
 
 
 ################################################################
-# This will return a Dictionary with from HCE required by the CPT
+# This will return a Dictionary from HCE required by the CPT
 #  endpoint, it contians totalJobs and a Dataframe with the following columns:
 #   "ciSystem"
 #   "uuid"

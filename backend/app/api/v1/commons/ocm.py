@@ -28,7 +28,7 @@ async def getData(
     tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
-        return jobs
+        return {"data":jobs,"total": 0}
 
     if "buildUrl" not in jobs.columns:
         jobs.insert(len(jobs.columns), "buildUrl", "")
