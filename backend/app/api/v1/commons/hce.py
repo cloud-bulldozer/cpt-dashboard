@@ -23,5 +23,5 @@ async def getData(
     jobs[["group"]] = jobs[["group"]].fillna(0)
     jobs.fillna("", inplace=True)
     if len(jobs) == 0:
-        return jobs
+        return {"data": jobs, "total": 0}
     return {"data": jobs, "total": response["total"]}
