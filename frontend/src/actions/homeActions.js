@@ -52,7 +52,6 @@ export const fetchOCPJobsData =
           payload: {
             total: response.data.total,
             offset: response.data.offset,
-            // currProd: response.data.currProd,
           },
         });
 

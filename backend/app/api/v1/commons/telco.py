@@ -88,6 +88,6 @@ async def getData(
 
     jobs = pd.json_normalize(mapped_list)
     if len(jobs) == 0:
-        return jobs
+        return {'data':jobs, 'total': 0}
 
     return {"data": jobs, "total": response["total"]}

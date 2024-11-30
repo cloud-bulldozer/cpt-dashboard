@@ -48,10 +48,10 @@ async def jobs(
         description="End date for searching jobs, format: 'YYYY-MM-DD'",
         examples=["2020-11-15"],
     ),
-    pretty: bool = Query(False, description="Output contet in pretty format."),
+    pretty: bool = Query(False, description="Output content in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
-    totalJobs: int = Query(None, description="Offset Number to fetch jobs from"),
+    totalJobs: int = Query(None, description="Total number of jobs"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -87,12 +87,11 @@ async def jobs(
             except Exception as e:
                 print(f"Error fetching data for product {product}: {e}")
 
-    num = 0 if totalJobs is None else int(totalJobs)
+    # on first hit, totalJobs is 0
     if totalJobs == 0:
         for product in total_dict:
             total += int(total_dict[product])
-
-    totalJobs = max(total, num)
+        totalJobs = total
     response = {
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
