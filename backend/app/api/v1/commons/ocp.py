@@ -74,3 +74,86 @@ def fillEncryptionType(row):
         return "None"
     else:
         return row["encryptionType"]
+
+
+async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+    start_date = (
+        start_datetime.strftime("%Y-%m-%d")
+        if start_datetime
+        else (datetime.utcnow().date() - timedelta(days=5).strftime("%Y-%m-%d"))
+    )
+    end_date = (
+        end_datetime.strftime("%Y-%m-%d")
+        if end_datetime
+        else datetime.utcnow().strftime("%Y-%m-%d")
+    )
+
+    query = {
+        "aggs": {
+            "min_timestamp": {"min": {"field": start_date}},
+            "max_timestamp": {"max": {"field": end_date}},
+        },
+        "query": {
+            "bool": {
+                "filter": [
+                    {
+                        "range": {
+                            "timestamp": {
+                                "format": "yyyy-MM-dd",
+                                "lte": end_date,
+                                "gte": start_date,
+                            }
+                        }
+                    }
+                ],
+                "should": [],
+                "must_not": [],
+            }
+        },
+    }
+
+    es = ElasticService(configpath=configpath)
+
+    aggregate = utils.buildAggregateQuery()
+    query["aggs"].update(aggregate)
+
+    response = await es.filterPost(query=query)
+    await es.close()
+
+    # print(response)
+    summary = {"total": response["total"]}
+
+    filterData = []
+    filter_ = response["filter_"]
+    summary.update({x["key"]: x["doc_count"] for x in filter_["jobStatus"]["buckets"]})
+    upstreamArr = [x["key"] for x in filter_["upstream"]["buckets"]]
+    keys_to_remove = ["min_timestamp", "max_timestamp", "upstream", "clusterType"]
+
+    filter_ = utils.removeKeys(filter_, keys_to_remove)
+
+    for key, value in response["filter_"].items():
+        filterObj = {"key": key, "value": []}
+        buckets = value["buckets"]
+        for bucket in buckets:
+            filterObj["value"].append(bucket["key"])
+        filterData.append(filterObj)
+
+    jobType = list(
+        set(
+            [
+                "periodic" if "periodic" in item else "pull-request"
+                for item in upstreamArr
+            ]
+        )
+    )
+    isRehearse = list(
+        set(["True" if "rehearse" in item else "False" for item in upstreamArr])
+    )
+
+    jobTypeObj = {"key": "jobType", "value": jobType}
+    isRehearseObj = {"key": "isRehearse", "value": isRehearse}
+
+    filterData.append(jobTypeObj)
+    filterData.append(isRehearseObj)
+
+    return {"filterData": filterData, "summary": summary}
