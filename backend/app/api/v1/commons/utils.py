@@ -38,9 +38,11 @@ def isRehearse(job):
 
 
 def clasifyAWSJobs(job):
-    if ("rosa-hcp" in job["clusterType"]) or ("rosa" in job["clusterType"]
-                                            and job["masterNodesCount"] == 0 
-                                            and job["infraNodesCount"] == 0):
+    if ("rosa-hcp" in job["clusterType"]) or (
+        "rosa" in job["clusterType"]
+        and job["masterNodesCount"] == 0
+        and job["infraNodesCount"] == 0
+    ):
         return "AWS ROSA-HCP"
     if job["clusterType"].__contains__("rosa"):
         return "AWS ROSA"
@@ -114,3 +116,25 @@ def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[in
             400, f"offset {offset} is too big (>= {constants.MAX_PAGE})"
         )
     return offset, size
+
+
+def buildAggregateQuery():
+    aggregate = {}
+    for x, y in constants.FIELD_CONSTANT_DICT.items():
+        obj = {x: {"terms": {"field": y}}}
+        aggregate.update(obj)
+    return aggregate
+
+
+def removeKeys(filterDict, keys_to_remove):
+    for key in keys_to_remove:
+        if key in filterDict:
+            del filterDict[key]
+    return filterDict
+
+
+def find_item_in_list(dict_list, key, value):
+    for item in dict_list:
+        if item.get(key) == value:
+            return item
+    return None

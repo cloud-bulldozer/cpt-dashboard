@@ -3,8 +3,6 @@ import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  buildFilterData,
-  calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
   getRequestParams,
@@ -50,7 +48,6 @@ export const fetchOCPJobs = () => async (dispatch) => {
         },
       });
 
-      dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }
   } catch (error) {
@@ -117,7 +114,7 @@ export const applyFilters = () => (dispatch, getState) => {
     payload: filtered,
   });
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("ocp"));
+  dispatch(buildFilterData());
 };
 
 export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
@@ -209,13 +206,19 @@ export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(tableReCalcValues());
 };
 
-export const getOCPSummary = () => (dispatch, getState) => {
-  const results = [...getState().ocp.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getOCPSummary = (countObj) => (dispatch) => {
+  const other =
+    countObj["total"] -
+    ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: countObj["success"] || 0,
+    failureCount: countObj["failure"] || 0,
+    total: countObj["total"],
+  };
   dispatch({
     type: TYPES.SET_OCP_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
 
@@ -263,6 +266,39 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().ocp;
 
-  dispatch(getOCPSummary());
   dispatch(setOCPPageOptions(page, perPage));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    const { tableFilters, categoryFilterValue } = getState().ocp;
+
+    const params = dispatch(getRequestParams("ocp"));
+
+    const response = await API.get("/api/v1/ocp/filters", { params });
+    if (response.status === 200 && response?.data?.filterData?.length > 0) {
+      let data = cloneDeep(response.data.filterData);
+      for (let i = 0; i < tableFilters.length; i++) {
+        for (let j = 0; j < data.length; j++) {
+          if (tableFilters[i]["value"] === data[j]["key"]) {
+            data[j]["name"] = tableFilters[i]["name"];
+          }
+        }
+      }
+      data.forEach((item) => {
+        if (item["key"] === "ocpVersion") {
+          item["name"] = "Version";
+        }
+      });
+      dispatch(getOCPSummary(response.data.summary));
+      dispatch({
+        type: TYPES.SET_OCP_FILTER_DATA,
+        payload: data,
+      });
+      const activeFilter = categoryFilterValue || tableFilters[0].name;
+      dispatch(setOCPCatFilters(activeFilter));
+    }
+  } catch (error) {
+    console.log(error);
+  }
 };

@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchGraphData,
   fetchOCPJobs,
   setFilterFromURL,
@@ -60,6 +61,7 @@ const OCP = () => {
 
   useEffect(() => {
     dispatch(fetchOCPJobs());
+    dispatch(buildFilterData());
   }, [dispatch]);
 
   //Filter Helper
