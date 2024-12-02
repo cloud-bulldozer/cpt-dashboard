@@ -312,6 +312,27 @@ class ElasticService:
         except Exception as e:
             print(f"Error retrieving indices for alias '{alias}': {e}")
             return []
+    
+    async def filterPost(self, query, indice=None):
+        try:
+            if self.prev_es:
+                self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
+                response =  await self.prev_es.search(
+                    index=self.prev_index+"*",
+                    body=query,
+                    size=0)
+            elif self.new_es:
+                self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)              
+                response =  await self.new_es.search(
+                    index=self.new_index+"*",
+                    body=jsonable_encoder(query),
+                    size=0)
+               
+            total = response["hits"]["total"]["value"] 
+            results = response["aggregations"]
+            return {"filter_":results, "total":total}
+        except Exception as e:
+            print(f"Error retrieving filter data': {e}")
 
     async def close(self):
         """Closes es client connections"""
