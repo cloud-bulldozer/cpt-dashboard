@@ -138,3 +138,16 @@ def find_item_in_list(dict_list, key, value):
         if item.get(key) == value:
             return item
     return None
+
+
+def buildPlatformFilter(upstreamList, clusterypeList):
+    filterOptions = []
+    upstreamCheck = any("rosa-hcp" in s.lower() for s in upstreamList)
+    clusterTypeCheck = any("rosa" in s.lower() for s in clusterypeList)
+
+    if upstreamCheck:
+        filterOptions.append("AWS ROSA-HCP")
+    if clusterTypeCheck:
+        filterOptions.append("AWS ROSA")
+
+    return filterOptions
