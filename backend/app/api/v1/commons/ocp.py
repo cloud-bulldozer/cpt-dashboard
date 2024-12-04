@@ -125,10 +125,13 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
 
     filterData = []
     filter_ = response["filter_"]
-    summary.update({x["key"]: x["doc_count"] for x in filter_["jobStatus"]["buckets"]})
-    upstreamArr = [x["key"] for x in filter_["upstream"]["buckets"]]
-    keys_to_remove = ["min_timestamp", "max_timestamp", "upstream", "clusterType"]
 
+    summary.update({x["key"]: x["doc_count"] for x in filter_["jobStatus"]["buckets"]})
+
+    upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
+    clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
+
+    keys_to_remove = ["min_timestamp", "max_timestamp", "upstream", "clusterType"]
     filter_ = utils.removeKeys(filter_, keys_to_remove)
 
     for key, value in response["filter_"].items():
@@ -136,18 +139,23 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
         buckets = value["buckets"]
         for bucket in buckets:
             filterObj["value"].append(bucket["key"])
+            if key == "platform":
+                platformOptions = utils.buildPlatformFilter(
+                    upstreamList, clusterTypeList
+                )
+                filterObj["value"] += platformOptions
         filterData.append(filterObj)
 
     jobType = list(
         set(
             [
                 "periodic" if "periodic" in item else "pull-request"
-                for item in upstreamArr
+                for item in upstreamList
             ]
         )
     )
     isRehearse = list(
-        set(["True" if "rehearse" in item else "False" for item in upstreamArr])
+        set(["True" if "rehearse" in item else "False" for item in upstreamList])
     )
 
     jobTypeObj = {"key": "jobType", "value": jobType}
