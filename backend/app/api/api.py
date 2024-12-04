@@ -16,26 +16,26 @@ from app.api.v1.endpoints.ocm import ocmJobs
 router = APIRouter()
 
 # OCP endpoints
-router.include_router(ocpJobs.router, tags=['ocp'])
-router.include_router(results.router, tags=['ocp'])
-router.include_router(graph.router, tags=['ocp.graphs'])
+router.include_router(ocpJobs.router, tags=["ocp"])
+router.include_router(results.router, tags=["ocp"])
+router.include_router(graph.router, tags=["ocp.graphs"])
 
 # CPT endpoints
-router.include_router(cptJobs.router, tags=['cpt'])
+router.include_router(cptJobs.router, tags=["cpt"])
 
 # Quay endpoints
-router.include_router(quayJobs.router, tags=['quay'])
-router.include_router(quayGraphs.router, tags=['quay'])
+router.include_router(quayJobs.router, tags=["quay"])
+router.include_router(quayGraphs.router, tags=["quay"])
 
 # Telco endpoints
-router.include_router(telcoJobs.router, tags=['telco'])
-router.include_router(telcoGraphs.router, tags=['telco'])
+router.include_router(telcoJobs.router, tags=["telco"])
+router.include_router(telcoGraphs.router, tags=["telco"])
 
 # Jira endpoints
-router.include_router(jira.router, tags=['jira'])
+router.include_router(jira.router, tags=["jira"])
 
 # Horreum endpoint
-router.include_router(horreum.router, tags=['horreum'])
+router.include_router(horreum.router, tags=["horreum"])
 
 # OCM endpoint
-router.include_router(ocmJobs.router, tags=['ocm'])
+router.include_router(ocmJobs.router, tags=["ocm"])
