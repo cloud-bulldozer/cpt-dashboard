@@ -7,36 +7,35 @@ async def getData(start_datetime: date, end_datetime: date, configpath: str):
     query = {
         "query": {
             "bool": {
-                "filter": {
-                    "range": {
-                        "metrics.earliest": {
-                            "format": "yyyy-MM-dd"
-                        }
-                    }
-                }
+                "filter": {"range": {"metrics.earliest": {"format": "yyyy-MM-dd"}}}
             }
         }
     }
 
     es = ElasticService(configpath=configpath)
-    response = await es.post(query=query, start_date=start_datetime, end_date=end_datetime, timestamp_field='metrics.earliest')
+    response = await es.post(
+        query=query,
+        start_date=start_datetime,
+        end_date=end_datetime,
+        timestamp_field="metrics.earliest",
+    )
     await es.close()
-    tasks = [item['_source'] for item in response]
+    tasks = [item["_source"] for item in response]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
         return jobs
 
-    if 'buildUrl' not in jobs.columns:
+    if "buildUrl" not in jobs.columns:
         jobs.insert(len(jobs.columns), "buildUrl", "")
-    if 'ciSystem' not in jobs.columns:
+    if "ciSystem" not in jobs.columns:
         jobs.insert(len(jobs.columns), "ciSystem", "")
-    jobs.fillna('', inplace=True)
-    jobs['jobStatus'] = jobs.apply(convertJobStatus, axis=1)
+    jobs.fillna("", inplace=True)
+    jobs["jobStatus"] = jobs.apply(convertJobStatus, axis=1)
     return jobs
 
 
 def fillCiSystem(row):
-    currDate = datetime.strptime(row["metrics.earliest"][:26], '%Y-%m-%dT%H:%M:%S.%f')
+    currDate = datetime.strptime(row["metrics.earliest"][:26], "%Y-%m-%dT%H:%M:%S.%f")
     if currDate > datetime(2024, 6, 24):
         return "Jenkins"
     else:
