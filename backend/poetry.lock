@@ -197,7 +197,7 @@ deprecated = "*"
 jmespath = "*"
 oauthlib = "*"
 requests = "*"
-requests_oauthlib = "*"
+requests-oauthlib = "*"
 six = "*"
 
 [package.extras]
@@ -208,7 +208,7 @@ name = "attrs"
 version = "25.3.0"
 description = "Classes Without Boilerplate"
 optional = false
-python-versions = ">=3.8"
+python-versions = ">=3.7"
 groups = ["main"]
 files = [
     {file = "attrs-25.3.0-py3-none-any.whl", hash = "sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3"},
