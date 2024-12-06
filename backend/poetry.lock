@@ -101,7 +101,6 @@ files = [
     {file = "aiohttp-3.11.18-cp39-cp39-win32.whl", hash = "sha256:b2f317d1678002eee6fe85670039fb34a757972284614638f82b903a03feacdc"},
     {file = "aiohttp-3.11.18-cp39-cp39-win_amd64.whl", hash = "sha256:5e7007b8d1d09bce37b54111f593d173691c530b80f27c6493b928dabed9e6ef"},
     {file = "aiohttp-3.11.18.tar.gz", hash = "sha256:ae856e1138612b7e412db63b7708735cff4d38d0399f6a5435d3dac2669f558a"},
-]
 
 [package.dependencies]
 aiohappyeyeballs = ">=2.3.0"
@@ -197,7 +196,7 @@ deprecated = "*"
 jmespath = "*"
 oauthlib = "*"
 requests = "*"
-requests-oauthlib = "*"
+requests_oauthlib = "*"
 six = "*"
 
 [package.extras]
@@ -208,7 +207,7 @@ name = "attrs"
 version = "25.3.0"
 description = "Classes Without Boilerplate"
 optional = false
-python-versions = ">=3.7"
+python-versions = ">=3.8"
 groups = ["main"]
 files = [
     {file = "attrs-25.3.0-py3-none-any.whl", hash = "sha256:427318ce031701fea540783410126f03899a97ffc6f61596ad581ac2e40e3bc3"},
