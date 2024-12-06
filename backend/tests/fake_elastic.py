@@ -31,6 +31,7 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
     args: dict[str, Any]
     closed: bool
     requests: list[Request]
+    requests: list[Request]
 
     # This fake doesn't try to mimic Opensearch query and aggregation logic:
     # instead, the "data" is pre-loaded with a JSON response body that will

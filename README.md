@@ -22,6 +22,11 @@ indice=
 username=
 password=
 
+[<product>.crucible]
+url=
+username=
+password=
+
 [ocp-server]
 port=8000
 
@@ -53,7 +58,7 @@ indice=
 username=
 password=
 ```
-**Note: The below applies only for the elastic search at the moment**  
+**Note: The below applies only for the elastic search at the moment**
 If you also have an archived internal instance that keeps track of older data, it can be specified with '.internal' suffix. Example of our `OCP` internal archived instance's configuration.
 ```toml
 [ocp.elasticsearch.internal]

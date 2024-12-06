@@ -68,7 +68,7 @@ allowlist_externals = ["bash", "echo", "coverage"]
 commands = [
     ["echo", "{env:COVERAGE}"],
     ["pip", "list"],
-    ["pytest", "-s", "--cov-branch", "--cov=app", "{posargs}", "tests"],
+    ["pytest", "-s", "--cov-branch", "--cov=app", "tests"],
     ["coverage", "html", "--directory={env:COVERAGE}/html"],
     ["bash", "-c", "coverage report --format=markdown >{env:COVERAGE}/coverage.txt"],
 ]
