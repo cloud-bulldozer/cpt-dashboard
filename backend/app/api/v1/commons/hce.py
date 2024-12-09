@@ -20,8 +20,10 @@ async def getData(
     await es.close()
     tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
+    if len(jobs) == 0:
+        return {"data": jobs, "total": response["total"]}
+
     jobs[["group"]] = jobs[["group"]].fillna(0)
     jobs.fillna("", inplace=True)
-    if len(jobs) == 0:
-        return {"data": jobs, "total": 0}
+
     return {"data": jobs, "total": response["total"]}
