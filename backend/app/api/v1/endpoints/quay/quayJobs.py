@@ -1,7 +1,7 @@
 import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from ...commons.quay import getData
 from ...commons.example_responses import quay_200_response, response_422
 from fastapi.param_functions import Query
@@ -54,28 +54,26 @@ async def jobs(
     if not offset:
         offset = 0
 
-    if not size:
+    if not offset and not size:
         size = 10000
         offset = 0
 
+    if offset and not size:
+        raise HTTPException(400, f"offset {offset} specified without size")
+
     results = await getData(start_date, end_date, size, offset, "quay.elasticsearch")
 
+    jobs = []
     if "data" in results and len(results["data"]) >= 1:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": results["data"].to_dict("records"),
-            "total": results["total"],
-            "offset": offset + size,
-        }
-    else:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": [],
-            "total": 0,
-            "offset": 0,
-        }
+        jobs = results["data"].to_dict("records")
+
+    response = {
+        "startDate": start_date.__str__(),
+        "endDate": end_date.__str__(),
+        "results": jobs,
+        "total": 0,
+        "offset": 0,
+    }
 
     if pretty:
         json_str = json.dumps(response, indent=4)
