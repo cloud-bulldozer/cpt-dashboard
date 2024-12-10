@@ -44,5 +44,4 @@ async def getData(
 
     cleanJobs = jobs[jobs["platform"] != ""]
 
-    jbs = cleanJobs
-    return {"data": jbs, "total": response["total"]}
+    return {"data": cleanJobs, "total": response["total"]}

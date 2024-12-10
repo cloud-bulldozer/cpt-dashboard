@@ -52,23 +52,17 @@ async def jobs(
         )
 
     results = await getData(start_date, end_date, size, offset, "telco.splunk")
-
+    jobs = []
     if len(results["data"]) >= 1:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": results["data"].to_dict("records"),
-            "total": results["total"],
-            "offset": offset + size,
-        }
-    else:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": [],
-            "total": 0,
-            "offset": 0,
-        }
+        jobs = results["data"].to_dict("records")
+
+    response = {
+        "startDate": start_date.__str__(),
+        "endDate": end_date.__str__(),
+        "results": jobs,
+        "total": 0,
+        "offset": 0,
+    }
 
     if pretty:
         json_str = json.dumps(response, indent=4)
