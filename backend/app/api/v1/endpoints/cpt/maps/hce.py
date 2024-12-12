@@ -1,6 +1,6 @@
 from ....commons.hce import getData
 from datetime import date
-
+import pandas as pd
 
 ################################################################
 # This will return a Dictionary from HCE required by the CPT
@@ -16,7 +16,6 @@ from datetime import date
 #   "version"
 #   "testName"
 ################################################################
-import pandas as pd
 
 
 async def hceMapper(start_datetime: date, end_datetime: date, size: int, offset: int):
