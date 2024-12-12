@@ -87,16 +87,21 @@ async def jobs(
             except Exception as e:
                 print(f"Error fetching data for product {product}: {e}")
 
+    jobsCount = totalJobs
+    # The total is determined by summing the counts of all products and is included in the response.
+    # However, during pagination, if the count of any product drops to zero,
+    # the total becomes lower than the actual value, which is undesirable.
+
     # on first hit, totalJobs is 0
     if totalJobs == 0:
         for product in total_dict:
             total += int(total_dict[product])
-        totalJobs = total
+        jobsCount = total
     response = {
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
         "results": results_df.to_dict("records"),
-        "total": totalJobs,
+        "total": jobsCount,
         "offset": offset + size,
     }
 
