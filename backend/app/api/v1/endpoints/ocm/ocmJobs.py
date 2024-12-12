@@ -51,15 +51,13 @@ async def jobs(
             status_code=422,
         )
 
-    if not offset:
-        offset = 0
-
-    if not offset and not size:
-        size = 10000
-        offset = 0
-
     if offset and not size:
         raise HTTPException(400, f"offset {offset} specified without size")
+    elif not offset and not size:
+        size = 10000
+        offset = 0
+    elif not offset:
+        offset = 0
 
     results = await getData(start_date, end_date, size, offset, "ocm.elasticsearch")
 
