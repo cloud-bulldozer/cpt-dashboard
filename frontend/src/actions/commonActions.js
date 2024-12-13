@@ -141,7 +141,6 @@ export const getSelectedFilter =
 
 export const getRequestParams = (type) => (dispatch, getState) => {
   const { start_date, end_date, size, offset, sort } = getState()[type];
-  // const sortParam = `${activeSortIndex}:${activeSortDir}`;
   const params = {
     pretty: true,
     ...(start_date && { start_date }),
