@@ -60,9 +60,6 @@ async def jobs(
     elif not offset:
         offset = 0
 
-    if not sort:
-        sort = None
-
     results = await getData(
         start_date, end_date, size, offset, sort, "quay.elasticsearch"
     )

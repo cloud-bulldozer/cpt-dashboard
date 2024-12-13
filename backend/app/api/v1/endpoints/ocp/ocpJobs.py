@@ -51,8 +51,7 @@ async def jobs(
             ),
             status_code=422,
         )
-    if not sort:
-        sort = None
+
     if offset and not size:
         raise HTTPException(400, f"offset {offset} specified without size")
     elif not offset and not size:
