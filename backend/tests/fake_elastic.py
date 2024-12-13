@@ -1,12 +1,36 @@
+from collections import defaultdict
+from dataclasses import dataclass
 from typing import Any, Optional, Union
 
 from elasticsearch import AsyncElasticsearch
+
+
+@dataclass
+class Request:
+    index: str
+    body: dict[str, Any]
+    doc_type: Optional[str] = None
+    params: Optional[Any] = None
+    headers: Optional[Any] = None
+    kwargs: Optional[dict[str, Any]] = None
+
+    def __eq__(self, other) -> bool:
+        iok = self.index == other.index
+        bok = self.body == other.body
+        dok = self.doc_type == other.doc_type
+        pok = self.params == other.params
+        hok = self.headers == other.headers
+
+        # make empty dict and None match
+        kok = (not self.kwargs and not other.kwargs) or self.kwargs == other.kwargs
+        return iok and bok and dok and pok and hok and kok
 
 
 class FakeAsyncElasticsearch(AsyncElasticsearch):
     hosts: Union[str, list[str]]
     args: dict[str, Any]
     closed: bool
+    requests: list[Request]
 
     # This fake doesn't try to mimic Opensearch query and aggregation logic:
     # instead, the "data" is pre-loaded with a JSON response body that will
@@ -18,20 +42,37 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
         self.hosts = hosts
         self.args = kwargs
         self.closed = False
-        self.data = {}
+        self.data = defaultdict(list)
+        self.requests = []
 
     # Testing helpers to manage fake searches
     def set_query(
         self,
         root_index: str,
         hit_list: Optional[list[dict[str, Any]]] = None,
-        aggregation_list: Optional[dict[str, Any]] = None,
+        aggregations: Optional[dict[str, Any]] = None,
         version: int = 7,
+        repeat: int = 1,
     ):
+        """Add a canned response to an Opensearch query
+
+        The overall response and items in the hit and aggregation lists will be
+        augmented with the usual boilerplate.
+
+        Multiple returns for a single index can be queued, in order, via
+        successive calls. To return the same result on multiple calls, specify
+        a "repeat" value greater than 1.
+
+        Args:
+            root_index: CDM index name (run, period, etc)
+            hit_list: list of hit objects to be returned
+            aggregation_list: list of aggregation objects to return
+            version: CDM version
+            repeat:
+        """
         ver = f"v{version:d}dev"
         index = f"cdm{ver}-{root_index}"
         hits = []
-        aggregations = None
         if hit_list:
             for d in hit_list:
                 source = d
@@ -44,16 +85,18 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
                         "_source": source,
                     }
                 )
-        if aggregation_list:
-            aggregations = {
-                k: {
-                    "doc_count_error_upper_bound": 0,
-                    "sum_other_doc_count": 0,
-                    "buckets": v,
-                }
-                for k, v in aggregation_list.items()
-            }
-        self.data[index] = {
+        aggregate_response = {}
+        if aggregations:
+            for agg, val in aggregations.items():
+                if isinstance(val, list):
+                    aggregate_response[agg] = {
+                        "doc_count_error_upper_bound": 0,
+                        "sum_other_doc_count": 0,
+                        "buckets": val,
+                    }
+                else:
+                    aggregate_response[agg] = val
+        response = {
             "took": 1,
             "timed_out": False,
             "_shards": {"total": 1, "successful": 1, "skipped": 0, "failed": 0},
@@ -63,8 +106,10 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
                 "hits": hits,
             },
         }
-        if aggregations:
-            self.data[index]["aggregations"] = aggregations
+        if aggregate_response:
+            response["aggregations"] = aggregate_response
+        for c in range(repeat):
+            self.data[index].append(response)
 
     # Faked AsyncElasticsearch methods
     async def close(self):
@@ -79,9 +124,34 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
     async def search(
         self, body=None, index=None, doc_type=None, params=None, headers=None, **kwargs
     ):
-        if index in self.data:
-            target = self.data[index]
-            del self.data[index]
+        """Return a canned response to a search query.
+
+        Args:
+            body: query body
+            index: Opensearch index name
+            doc_type: document type (rarely used)
+            params: Opensearch search parameters (rarely used)
+            headers: HTTP headers (rarely used)
+            kwargs: whatever else you might pass to search
+
+        Only the index is used here; to verify the correct Opensearch query
+        bodies and parameters, the full request is recorded for inspection.
+
+        Return:
+            A JSON dict with the first canned result for the index, or an error
+        """
+        self.requests.append(
+            Request(
+                index=index,
+                body=body,
+                doc_type=doc_type,
+                params=params,
+                headers=headers,
+                kwargs=kwargs,
+            )
+        )
+        if index in self.data and len(self.data[index]) > 0:
+            target = self.data[index].pop(0)
             return target
         return {
             "error": {
