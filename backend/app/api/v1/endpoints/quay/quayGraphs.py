@@ -239,7 +239,7 @@ async def getMatchRuns(meta: dict):
     es = ElasticService(configpath="quay.elasticsearch")
     response = await es.post(query=query)
     await es.close()
-    runs = [item["_source"] for item in response]
+    runs = [item["_source"] for item in response["data"]]
     uuids = []
     for run in runs:
         uuids.append(run["uuid"])
