@@ -10,13 +10,14 @@ breakout subsets or collection periods as either raw data points, statistical
 aggregate, or Plotly graph format for UI display.
 """
 
-import time
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
+import time
 from typing import Any, Iterator, Optional, Tuple, Union
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
@@ -86,7 +87,7 @@ class Point:
     value: float
 
 
-colors = [
+COLOR_NAMES = [
     "black",
     "aqua",
     "blue",
@@ -272,6 +273,15 @@ class CrucibleService:
         "source",
     )
 
+    # Set up a Logger at class level rather than at each instance creation
+    formatter = logging.Formatter(
+        "%(asctime)s %(process)d:%(thread)d %(levelname)s %(module)s:%(lineno)d %(message)s"
+    )
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = logging.getLogger("CrucibleService")
+    logger.addHandler(handler)
+
     def __init__(self, configpath: str = "crucible"):
         """Initialize a Crucible CDM (OpenSearch) connection.
 
@@ -291,10 +301,22 @@ class CrucibleService:
         self.auth = (self.user, self.password) if self.user or self.password else None
         self.url = self.cfg.get(configpath + ".url")
         self.elastic = AsyncElasticsearch(self.url, basic_auth=self.auth)
+        self.logger.info("Initializing CDM V7 service to %s", self.url)
 
     @staticmethod
     def _get_index(root: str) -> str:
+        """Expand the root index name to the full name"""
         return "cdmv7dev-" + root
+
+    @staticmethod
+    def _get(source: dict[str, Any], fields: list[str], default: Optional[Any] = None):
+        """Safely traverse nested dictionaries with a default value"""
+        r = source
+        last_missing = False
+        for f in fields:
+            last_missing = f not in r
+            r = r.get(f, {})
+        return default if last_missing else r
 
     @staticmethod
     def _split_list(alist: Optional[list[str]] = None) -> list[str]:
@@ -342,26 +364,24 @@ class CrucibleService:
                 return value
             elif isinstance(value, datetime):
                 return int(value.timestamp() * 1000.0)
-            elif isinstance(value, str):
+            else:
+                # If it's a stringified int, convert & return; otherwise try
+                # to decode as a date string.
                 try:
                     return int(value)
                 except ValueError:
                     pass
-                try:
-                    d = datetime.fromisoformat(value)
-                    return int(d.timestamp() * 1000.0)
-                except ValueError:
-                    pass
+                d = datetime.fromisoformat(value)
+                return int(d.timestamp() * 1000.0)
         except Exception as e:
-            print(f"normalizing {type(value).__name__} {value} failed with {str(e)}")
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                f"Date representation {value} is not a date string or timestamp",
+                f"Date representation {value} is not valid: {str(e)!r}",
             )
 
-    @staticmethod
+    @classmethod
     def _hits(
-        payload: dict[str, Any], fields: Optional[list[str]] = None
+        cls, payload: dict[str, Any], fields: Optional[list[str]] = None
     ) -> Iterator[dict[str, Any]]:
         """Helper to iterate through OpenSearch query matches
 
@@ -377,20 +397,19 @@ class CrucibleService:
         Returns:
             Yields each object from the "greatest hits" list
         """
-        if "hits" not in payload:
+        if "hits" not in payload or not isinstance(payload["hits"], dict):
             raise HTTPException(
                 status_code=500, detail=f"Attempt to iterate hits for {payload}"
             )
-        hits = payload.get("hits", {}).get("hits", [])
+        hits = cls._get(payload, ["hits", "hits"], [])
         for h in hits:
             source = h["_source"]
-            if fields:
-                for f in fields:
-                    source = source[f]
-            yield source
+            yield source if not fields else cls._get(source, fields)
 
-    @staticmethod
-    def _aggs(payload: dict[str, Any], aggregation: str) -> Iterator[dict[str, Any]]:
+    @classmethod
+    def _aggs(
+        cls, payload: dict[str, Any], aggregation: str
+    ) -> Iterator[dict[str, Any]]:
         """Helper to access OpenSearch aggregations
 
         Iteratively yields the name and value of each aggregation returned
@@ -403,18 +422,20 @@ class CrucibleService:
         Returns:
             Yields each aggregation from an aggregation bucket list
         """
-        if "aggregations" not in payload:
+        if "aggregations" not in payload or not isinstance(
+            payload["aggregations"], dict
+        ):
             raise HTTPException(
                 status_code=500,
                 detail=f"Attempt to iterate missing aggregations for {payload}",
             )
         aggs = payload["aggregations"]
-        if aggregation not in aggs:
+        if aggregation not in aggs or not isinstance(aggs[aggregation], dict):
             raise HTTPException(
                 status_code=500,
-                detail=f"Attempt to iterate missing aggregation {aggregation} for {payload}",
+                detail=f"Attempt to iterate missing aggregation {aggregation!r} for {payload}",
             )
-        for agg in aggs[aggregation]["buckets"]:
+        for agg in cls._get(aggs, [aggregation, "buckets"], []):
             yield agg
 
     @staticmethod
@@ -423,7 +444,9 @@ class CrucibleService:
         try:
             ts = int(timestamp)
         except Exception as e:
-            print(f"ERROR: invalid {timestamp!r}: {str(e)!r}")
+            CrucibleService.logger.warning(
+                "invalid timestamp %r: %r", timestamp, str(e)
+            )
             ts = 0
         return str(datetime.fromtimestamp(ts / 1000.00, timezone.utc))
 
@@ -581,7 +604,7 @@ class CrucibleService:
                 n, v = e.split("=", maxsplit=1)
             except ValueError:
                 raise HTTPException(
-                    status.HTTP_400_BAD_REQUEST, f"Filter item {e} must be '<k>=<v>'"
+                    status.HTTP_400_BAD_REQUEST, f"Filter item {e!r} must be '<k>=<v>'"
                 )
             filters.append({"term": {f"metric_desc.names.{n}": v}})
         return filters
@@ -656,7 +679,7 @@ class CrucibleService:
         )
 
     @classmethod
-    def _build_sort_terms(cls, sorters: Optional[list[str]]) -> list[dict[str, str]]:
+    def _build_sort_terms(cls, sorters: Optional[list[str]]) -> list[dict[str, Any]]:
         """Build sort term list
 
         Sorters may reference any native `run` index field and must specify
@@ -676,16 +699,16 @@ class CrucibleService:
                 if dir not in cls.DIRECTIONS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
-                        f"Sort direction {dir!r} must be one of {','.join(DIRECTIONS)}",
+                        f"Sort direction {dir!r} must be one of {','.join(cls.DIRECTIONS)}",
                     )
                 if key not in cls.FIELDS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
-                        f"Sort key {key!r} must be one of {','.join(FIELDS)}",
+                        f"Sort key {key!r} must be one of {','.join(cls.FIELDS)}",
                     )
-                sort_terms.append({f"run.{key}": dir})
+                sort_terms.append({f"run.{key}": {"order": dir}})
         else:
-            sort_terms = [{"run.begin": "asc"}]
+            sort_terms = [{"run.begin": {"order": "asc"}}]
         return sort_terms
 
     async def _search(
@@ -704,9 +727,11 @@ class CrucibleService:
         idx = self._get_index(index)
         start = time.time()
         value = await self.elastic.search(index=idx, body=query, **kwargs)
-        print(
-            f"QUERY on {idx} took {time.time() - start} seconds, "
-            f"hits: {value.get('hits', {}).get('total')}"
+        self.logger.info(
+            "QUERY on %s took %.3f seconds, hits: %d",
+            idx,
+            time.time() - start,
+            value.get("hits", {}).get("total"),
         )
         return value
 
@@ -777,6 +802,11 @@ class CrucibleService:
         422 HTTP error (UNPROCESSABLE CONTENT) with a response body showing
         the unsatisfied breakouts (name and available values).
 
+        TODO: Instead of either single metric or aggregation across multiple
+        metrics, we should support "breakouts", which would individually
+        process (graph, summarize, or list) data for each "loose" breakout
+        name. E.g., Busy-CPU might list per-core, or per-processor mode.
+
         Args:
             run: run ID
             metric: combined metric name (e.g., sar-net::packets-sec)
@@ -823,7 +853,7 @@ class CrucibleService:
         # We want to help filter a consistent summary, so only show those
         # breakout names with more than one value.
         response["names"] = {n: sorted(v) for n, v in names.items() if v and len(v) > 1}
-        response["periods"] = list(periods)
+        response["periods"] = sorted(periods)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=response
         )
@@ -851,30 +881,26 @@ class CrucibleService:
             )
             start = None
             end = None
+            name = "<unknown>"
             for h in self._hits(matches):
                 p = h["period"]
-                st = p["begin"]
-                et = p["end"]
-
-                # If any period is missing a timestamp, use the run's timestamp
-                # instead to avoid blowing up on a CDM error.
-                if st is None:
-                    st = h["run"]["begin"]
-                if et is None:
-                    et = h["run"]["end"]
+                st = p.get("begin")
+                et = p.get("end")
+                if not st or not et:
+                    name = (
+                        f"run {self._get(h, ['run', 'benchmark'])}:"
+                        f"{self._get(h, ['run', 'begin'])},"
+                        f"iteration {self._get(h, ['iteration', 'num'])},"
+                        f"sample {self._get(h, ['sample', 'num'])}"
+                    )
                 if st and (not start or st < start):
                     start = st
                 if et and (not end or et > end):
                     end = et
             if start is None or end is None:
-                name = (
-                    f"{h['run']['benchmark']}:{h['run']['begin']}-"
-                    f"{h['iteration']['num']}-{h['sample']['num']}-"
-                    f"{p['name']}"
-                )
                 raise HTTPException(
                     status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    f"Unable to compute {name!r} time range {start!r} -> {end!r}",
+                    f"Unable to compute {name!r} time range: the run is missing period timestamps",
                 )
             return [
                 {"range": {"metric_data.begin": {"gte": str(start)}}},
@@ -901,7 +927,7 @@ class CrucibleService:
         filtered = await self.search(
             index, source="run.id", filters=filters, ignore_unavailable=True
         )
-        print(f"HITS: {filtered['hits']['hits']}")
+        self.logger.debug("HITS: %s", filtered["hits"]["hits"])
         return set([x for x in self._hits(filtered, ["run", "id"])])
 
     async def get_run_filters(self) -> dict[str, dict[str, list[str]]]:
@@ -1078,10 +1104,12 @@ class CrucibleService:
                 s = self._normalize_date(start)
                 results["startDate"] = datetime.fromtimestamp(
                     s / 1000.0, tz=timezone.utc
-                )
+                ).isoformat()
             if end:
                 e = self._normalize_date(end)
-                results["endDate"] = datetime.fromtimestamp(e / 1000.0, tz=timezone.utc)
+                results["endDate"] = datetime.fromtimestamp(
+                    e / 1000.0, tz=timezone.utc
+                ).isoformat()
 
             if s and e and s > e:
                 raise HTTPException(
@@ -1185,7 +1213,7 @@ class CrucibleService:
                 run["begin_date"] = self._format_timestamp(run["begin"])
                 run["end_date"] = self._format_timestamp(run["end"])
             except KeyError as e:
-                print(f"Missing 'run' key {str(e)} in {run}")
+                self.logger.warning("Missing 'run' key %r in %s", str(e), run)
                 run["begin_date"] = self._format_timestamp("0")
                 run["end_date"] = self._format_timestamp("0")
 
@@ -1254,8 +1282,11 @@ class CrucibleService:
             iter = param["iteration"]["id"]
             arg = param["param"]["arg"]
             val = param["param"]["val"]
-            if response.get(iter) and response.get(iter).get(arg):
-                print(f"Duplicate param {arg} for iteration {iter}")
+            old = self._get(response, [iter, arg])
+            if old:
+                self.logger.warning(
+                    "Duplicate param %s for iteration %s (%r, %r)", arg, iter, old, val
+                )
             response[iter][arg] = val
 
         # Filter out all parameter values that don't exist in all or which have
@@ -1313,11 +1344,9 @@ class CrucibleService:
         )
         samples = []
         for s in self._hits(hits):
-            print(f"SAMPLE's ITERATION {s['iteration']}")
             sample = s["sample"]
             sample["iteration"] = s["iteration"]["num"]
             sample["primary_metric"] = s["iteration"]["primary-metric"]
-            sample["status"] = s["iteration"]["status"]
             samples.append(sample)
         return samples
 
@@ -1372,61 +1401,6 @@ class CrucibleService:
             body.append(period)
         return body
 
-    async def get_timeline(self, run: str, **kwargs) -> dict[str, Any]:
-        """Report the relative timeline of a run
-
-        With nested object lists, show runs to iterations to samples to
-        periods.
-
-        Args:
-            run: run ID
-            kwargs: additional OpenSearch parameters
-        """
-        itr = await self.search(
-            index="iteration",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        sam = await self.search(
-            index="sample",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        per = await self.search(
-            index="period",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        samples = defaultdict(list)
-        periods = defaultdict(list)
-
-        for s in self._hits(sam):
-            samples[s["iteration"]["id"]].append(s)
-        for p in self._hits(per):
-            periods[p["sample"]["id"]].append(p)
-
-        iterations = []
-        robj = {"id": run, "iterations": iterations}
-        body = {"run": robj}
-        for i in self._hits(itr):
-            if "begin" not in robj:
-                robj["begin"] = self._format_timestamp(i["run"]["begin"])
-                robj["end"] = self._format_timestamp(i["run"]["end"])
-            iteration = i["iteration"]
-            iterations.append(iteration)
-            iteration["samples"] = []
-            for s in samples.get(iteration["id"], []):
-                sample = s["sample"]
-                sample["periods"] = []
-                for pr in periods.get(sample["id"], []):
-                    period = self._format_period(pr["period"])
-                    sample["periods"].append(period)
-                iteration["samples"].append(sample)
-        return body
-
     async def get_metrics_list(self, run: str, **kwargs) -> dict[str, Any]:
         """Return a list of metrics available for a run
 
@@ -1466,12 +1440,14 @@ class CrucibleService:
             if name in met:
                 record = met[name]
             else:
-                record = {"periods": [], "breakouts": defaultdict(set)}
+                record = {"periods": [], "breakouts": defaultdict(list)}
                 met[name] = record
             if "period" in h:
                 record["periods"].append(h["period"]["id"])
             for n, v in desc["names"].items():
-                record["breakouts"][n].add(v)
+                # mimic a set, since the set type doesn't serialize
+                if v not in record["breakouts"][n]:
+                    record["breakouts"][n].append(v)
         return met
 
     async def get_metric_breakouts(
@@ -1527,8 +1503,8 @@ class CrucibleService:
                 f"Metric name {metric_name} not found for run {run}",
             )
         classes = set()
-        response = {"label": metric, "class": classes}
-        breakouts = defaultdict(set)
+        response = {"label": metric}
+        breakouts = defaultdict(list)
         pl = set()
         for m in self._hits(metrics):
             desc = m["metric_desc"]
@@ -1539,14 +1515,15 @@ class CrucibleService:
             if "period" in m:
                 pl.add(m["period"]["id"])
             for n, v in desc["names"].items():
-                breakouts[n].add(v)
+                if v not in breakouts[n]:
+                    breakouts[n].append(v)
         # We want to help filter a consistent summary, so only show those
         # names with more than one value.
         if len(pl) > 1:
-            response["periods"] = pl
+            response["periods"] = sorted(pl)
+        response["class"] = sorted(classes)
         response["breakouts"] = {n: v for n, v in breakouts.items() if len(v) > 1}
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return response
 
     async def get_metrics_data(
@@ -1607,6 +1584,9 @@ class CrucibleService:
         filters.extend(await self._build_timestamp_range_filters(periods))
 
         response = []
+
+        # NOTE -- _get_metric_ids already failed if we found multiple IDs but
+        # aggregation wasn't specified.
         if len(ids) > 1:
             # Find the minimum sample interval of the selected metrics
             aggdur = await self.search(
@@ -1645,8 +1625,7 @@ class CrucibleService:
             for h in self._hits(data, ["metric_data"]):
                 response.append(self._format_data(h))
         response.sort(key=lambda a: a["end"])
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return response
 
     async def get_metrics_summary(
@@ -1687,8 +1666,7 @@ class CrucibleService:
             filters=filters,
             aggregations={"score": {"stats": {"field": "metric_data.value"}}},
         )
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return data["aggregations"]["score"]
 
     async def _graph_title(
@@ -1936,9 +1914,9 @@ class CrucibleService:
             if g.color:
                 color = g.color
             else:
-                color = colors[cindex]
+                color = COLOR_NAMES[cindex]
                 cindex += 1
-                if cindex >= len(colors):
+                if cindex >= len(COLOR_NAMES):
                     cindex = 0
             graphitem = {
                 "x": x,
@@ -1983,6 +1961,5 @@ class CrucibleService:
                 axes[metric] = yref
             graphitem["yaxis"] = yref
             graphlist.append(graphitem)
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return {"data": graphlist, "layout": layout}
