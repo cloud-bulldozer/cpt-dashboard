@@ -16,8 +16,7 @@ async def getData(
     }
 
     if sort:
-        key, direction = sort.split(":")
-        query["sort"] = [{key: {"order": direction}}]
+        query["sort"] = utils.build_sort_terms(sort)
 
     es = ElasticService(configpath=configpath)
     response = await es.post(

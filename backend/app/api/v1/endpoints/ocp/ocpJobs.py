@@ -32,16 +32,10 @@ async def jobs(
         description="End date for searching jobs, format: 'YYYY-MM-DD'",
         examples=["2020-11-15"],
     ),
-<<<<<<< HEAD
-    pretty: bool = Query(False, description="Output content in pretty format."),
-    size: int = Query(None, description="Number of jobs to fetch"),
-    offset: int = Query(None, description="Offset Number to fetch jobs from"),
-=======
     pretty: bool = Query(False, description="Output contet in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
-    sort: str = Query(None, descption="To sort fields on specified direction"),
->>>>>>> bd597e7 (Sorting)
+    sort: str = Query(None, description="To sort fields on specified direction"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -58,7 +52,6 @@ async def jobs(
             status_code=422,
         )
 
-<<<<<<< HEAD
     if offset and not size:
         raise HTTPException(400, f"offset {offset} specified without size")
     elif not offset and not size:
@@ -79,38 +72,6 @@ async def jobs(
         "total": results["total"],
         "offset": offset + size,
     }
-=======
-    if not offset:
-        offset = 0
-
-    if not size:
-        size = 10000
-        offset = 0
-
-    if not sort:
-        sort = None
-
-    results = await getData(
-        start_date, end_date, size, offset, sort, "ocp.elasticsearch"
-    )
-
-    if "data" in results and len(results["data"]) >= 1:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": results["data"].to_dict("records"),
-            "total": results["total"],
-            "offset": offset + size,
-        }
-    else:
-        response = {
-            "startDate": start_date.__str__(),
-            "endDate": end_date.__str__(),
-            "results": [],
-            "total": 0,
-            "offset": 0,
-        }
->>>>>>> bd597e7 (Sorting)
 
     if pretty:
         json_str = json.dumps(response, indent=4)
