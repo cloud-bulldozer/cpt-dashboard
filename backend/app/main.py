@@ -49,8 +49,6 @@ routes_to_reroute = ['/']
 
 @app.middleware('http')
 async def some_middleware(request: Request, call_next):
-    print(f"origin: {origins}, request: {request.headers}")
-    print(f"{request.app.user_middleware}")
     if request.url.path in routes_to_reroute:
         request.scope['path'] = '/docs'
         headers = dict(request.scope['headers'])

@@ -133,7 +133,7 @@ class TestFormatters:
         }
         assert expect == CrucibleService._format_data(raw)
 
-    def test_format_period(self):
+    def test_format_period(self, fake_crucible: CrucibleService):
         raw = {
             "begin": "1726165775123",
             "end": "1726165785234",
@@ -146,7 +146,7 @@ class TestFormatters:
             "id": "ABC-123",
             "name": "measurement",
         }
-        assert expect == CrucibleService._format_period(raw)
+        assert expect == fake_crucible._format_period(raw)
 
 
 class TestHits:
@@ -379,7 +379,7 @@ class TestFilterBuilders:
         assert "Filter item 'xya:x' must be '<k>=<v>'"
 
     @pytest.mark.parametrize("periods", ([], ["10"], ["10", "20"]))
-    def test_build_period_filters(self, periods):
+    def test_build_period_filters(self, fake_crucible: CrucibleService, periods):
         expected = (
             []
             if not periods
@@ -394,7 +394,7 @@ class TestFilterBuilders:
                 }
             ]
         )
-        assert expected == CrucibleService._build_period_filters(periods)
+        assert expected == fake_crucible._build_period_filters(periods)
 
     @pytest.mark.parametrize(
         "term,message",
@@ -750,6 +750,7 @@ class TestCrucible:
         """Test run summary"""
         fake_crucible.elastic.set_query("run", [])
         fake_crucible.elastic.set_query("iteration", [])
+        fake_crucible.elastic.set_query("period", [])
         fake_crucible.elastic.set_query("tag", [])
         fake_crucible.elastic.set_query("param", [])
         assert {
@@ -764,6 +765,7 @@ class TestCrucible:
         """Test run summary"""
         fake_crucible.elastic.set_query("run", [])
         fake_crucible.elastic.set_query("iteration", [])
+        fake_crucible.elastic.set_query("period", [])
         fake_crucible.elastic.set_query("tag", [])
         fake_crucible.elastic.set_query("param", [])
         with pytest.raises(HTTPException) as exc:
@@ -793,8 +795,11 @@ class TestCrucible:
             ({"filter": ["tag:a=42", "param:z=xyzzy"]}, False, False, True),
         ),
     )
+    @pytest.mark.parametrize(
+        "begin,end", (("0", "5000"), (None, None), ("0", None), (None, "5000"))
+    )
     async def test_get_runs_queries(
-        self, args, miss, notag, noparam, fake_crucible: CrucibleService
+        self, args, miss, notag, noparam, begin, end, fake_crucible: CrucibleService
     ):
         """Test processing of various query parameters
 
@@ -805,7 +810,7 @@ class TestCrucible:
         although that's mostly covered by earlier tests.
         """
         runs = [
-            {"run": {"id": "r1", "begin": "0", "end": "5000", "benchmark": "test"}},
+            {"run": {"id": "r1", "begin": begin, "end": end, "benchmark": "test"}},
         ]
         if miss:
             # Add additional runs which will be rejected by filters
@@ -862,6 +867,21 @@ class TestCrucible:
                         "primary-metric": "src::tst1",
                         "status": "fail",
                     },
+                },
+            ],
+        )
+        fake_crucible.elastic.set_query(
+            "period",
+            [
+                {
+                    "run": {"id": "r1"},
+                    "iteration": {"id": "i1"},
+                    "period": {"begin": 0, "end": 100, "name": "default"},
+                },
+                {
+                    "run": {"id": "r1"},
+                    "iteration": {"id": "i2"},
+                    "period": {"begin": 100, "end": 5000, "name": "default"},
                 },
             ],
         )
@@ -1170,21 +1190,9 @@ class TestCrucible:
             },
         ]
         raw_samples = [
-            {
-                "num": "1",
-                "path": None,
-                "id": "one",
-            },
-            {
-                "id": "two",
-                "num": "2",
-                "path": None,
-            },
-            {
-                "id": "three",
-                "num": "3",
-                "path": None,
-            },
+            {"num": "1", "path": None, "id": "one", "status": "pass"},
+            {"id": "two", "num": "2", "path": None, "status": "pass"},
+            {"id": "three", "num": "3", "path": None, "status": "pass"},
         ]
         fake_crucible.elastic.set_query(
             "sample",

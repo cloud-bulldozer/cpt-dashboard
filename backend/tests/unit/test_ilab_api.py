@@ -9,8 +9,20 @@ from app.services.crucible_svc import CrucibleService, GraphList, Metric
 
 
 @pytest.fixture
-def client():
-    """Create a Starlette test client."""
+def client(monkeypatch):
+    """Create a Starlette test client.
+
+    At the API level, we try to auto-detect the CDM version; while we ought to
+    test both versions, for now we just ensure that the CrucibleService doesn't
+    attempt to query the Opensearch indices, leaving the default v7.
+    """
+
+    async def fake_select(self):
+        pass
+
+    monkeypatch.setattr(
+        "app.api.v1.endpoints.ilab.ilab.CrucibleService.detect_cdm", fake_select
+    )
     yield TestClient(fastapi_app)
 
 
