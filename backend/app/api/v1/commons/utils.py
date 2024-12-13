@@ -1,4 +1,6 @@
 from app.services.search import ElasticService
+from fastapi import HTTPException, status
+import re
 
 
 async def getMetadata(uuid: str, configpath: str):
@@ -67,3 +69,28 @@ def getReleaseStream(row):
     elif row["releaseStream"].__contains__("ec"):
         return "Engineering Candidate"
     return "Stable"
+
+
+def build_sort_terms(sort_string: str) -> list[dict[str, str]]:
+    """
+
+    Validates and transforms a sort string in the format 'sort=key:direction' to
+    a list of dictionaries [{key: {"order": direction}}].
+
+    :param sort_string: str, input string in the format 'sort=key:direction'
+
+    :return: list, transformed sort structure or raises a ValueError for invalid input
+
+    """
+
+    pattern = r"^([\w]+):(asc|desc)$"
+    match = re.match(pattern, sort_string)
+
+    if not match:
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            f"Invalid sort string format. Expected 'sort=key:direction' with direction as 'asc' or 'desc'.",
+        )
+
+    key, direction = match.groups()
+    return [{key: {"order": direction}}]
