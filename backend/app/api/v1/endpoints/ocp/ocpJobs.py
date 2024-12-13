@@ -12,7 +12,7 @@ router = APIRouter()
 @router.get(
     "/api/v1/ocp/jobs",
     summary="Returns a job list",
-    description="Returns a list of jobs in the specified dates of requested size. \
+    description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
@@ -51,7 +51,8 @@ async def jobs(
             ),
             status_code=422,
         )
-
+    if not sort:
+        sort = None
     if offset and not size:
         raise HTTPException(400, f"offset {offset} specified without size")
     elif not offset and not size:
@@ -60,7 +61,9 @@ async def jobs(
     elif not offset:
         offset = 0
 
-    results = await getData(start_date, end_date, size, offset, "ocp.elasticsearch")
+    results = await getData(
+        start_date, end_date, size, offset, sort, "ocp.elasticsearch"
+    )
     jobs = []
     if "data" in results and len(results["data"]) >= 1:
         jobs = results["data"].to_dict("records")

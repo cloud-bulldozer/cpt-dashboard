@@ -48,7 +48,6 @@ const initialState = {
   size: DEFAULT_PER_PAGE,
   offset: INITAL_OFFSET,
   totalJobs: 0,
-  //tableData: [],
   filterData: [],
   categoryFilterValue: "",
   filterOptions: [],

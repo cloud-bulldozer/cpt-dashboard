@@ -45,8 +45,6 @@ class SplunkService:
         """
         query["count"] = size
         query["offset"] = offset
-        query["sort_dir"] = "asc"
-        query["sort_key"] = "test_type"
 
         # If additional search parameters are provided, include those in searchindex
         searchindex = (

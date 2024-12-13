@@ -32,7 +32,7 @@ async def jobs(
         description="End date for searching jobs, format: 'YYYY-MM-DD'",
         examples=["2020-11-15"],
     ),
-    pretty: bool = Query(False, description="Output contet in pretty format."),
+    pretty: bool = Query(False, description="Output content in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
     sort: str = Query(None, description="To sort fields on specified direction"),
@@ -60,7 +60,12 @@ async def jobs(
     elif not offset:
         offset = 0
 
-    results = await getData(start_date, end_date, size, offset, "quay.elasticsearch")
+    if not sort:
+        sort = None
+
+    results = await getData(
+        start_date, end_date, size, offset, sort, "quay.elasticsearch"
+    )
 
     jobs = []
     if "data" in results and len(results["data"]) >= 1:
