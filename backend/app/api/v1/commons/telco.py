@@ -38,8 +38,6 @@ async def getData(
         "earliest_time": "{}T00:00:00".format(start_datetime.strftime("%Y-%m-%d")),
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
-        "sort_dir": "asc",
-        "sort_key": "test_type",
     }
     searchList = " OR ".join(
         ['test_type="{}"'.format(test_type) for test_type in test_types]
