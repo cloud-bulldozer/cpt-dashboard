@@ -1,7 +1,7 @@
 import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 from ...commons.telco import getData
 from ...commons.example_responses import telco_200_response, response_422
 from fastapi.param_functions import Query
@@ -50,6 +50,13 @@ async def jobs(
             ),
             status_code=422,
         )
+    if offset and not size:
+        raise HTTPException(400, f"offset {offset} specified without size")
+    elif not offset and not size:
+        size = 10000
+        offset = 0
+    elif not offset:
+        offset = 0
 
     results = await getData(start_date, end_date, size, offset, "telco.splunk")
     jobs = []
@@ -60,8 +67,8 @@ async def jobs(
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
         "results": jobs,
-        "total": 0,
-        "offset": 0,
+        "total": results["total"],
+        "offset": offset + size if size else 0,
     }
 
     if pretty:
