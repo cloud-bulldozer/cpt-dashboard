@@ -27,6 +27,7 @@ const RenderPagination = (props) => {
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
       dispatch(setPageOptions(newPage, newPerPage, props.type));
+      dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
@@ -51,8 +52,11 @@ const RenderPagination = (props) => {
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
+      onPreviousClick={onNextClick}
       onNextClick={onNextClick}
       onPageInput={onNextClick}
+      onFirstClick={onNextClick}
+      onLastClick={onNextClick}
       isCompact={props.type === "cpt" ? true : false}
     />
   );

@@ -72,8 +72,8 @@ async def jobs(
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
         "results": jobs,
-        "total": 0,
-        "offset": 0,
+        "total": results["total"],
+        "offset": offset + size if size else 0,
     }
 
     if pretty:

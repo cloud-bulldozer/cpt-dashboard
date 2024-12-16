@@ -65,7 +65,6 @@ const initialState = {
   graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
-  size: DEFAULT_PER_PAGE,
   offset: INITAL_OFFSET,
   totalJobs: 0,
   summary: {},
