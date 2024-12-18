@@ -139,6 +139,7 @@ def process_cpu_util(json_data: str, is_row: bool):
    total_avg_cpu = 0.0
    minus_max_cpu = 0.0
    minus_avg_cpu = 0.0
+   total_avg_mem = 0.0
    defined_threshold = 3.0
    for each_scenario in json_data["scenarios"]:
       if each_scenario["scenario_name"] == "steadyworkload":
@@ -160,8 +161,8 @@ def process_cpu_util(json_data: str, is_row: bool):
          "cpu_util": [
             {
                "name": "Data Points",
-               "x": ["total_max_cpu", "total_avg_cpu"],
-               "y": [total_max_cpu, total_avg_cpu],
+               "x": ["total_max_cpu", "total_avg_cpu", "total_avg_mem"],
+               "y": [total_max_cpu, total_avg_cpu, total_avg_mem],
                "mode": "markers",
                "marker": {
                   "size": 10,
