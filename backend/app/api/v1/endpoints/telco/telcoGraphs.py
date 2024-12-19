@@ -148,6 +148,7 @@ def process_cpu_util(json_data: str, is_row: bool):
    minus_avg_cpu = 0.0
    total_avg_mem = 0.0
    defined_threshold = 3.0
+   bytes_per_gb = 1024 * 1024 * 1024
    for each_scenario in json_data["scenarios"]:
       if each_scenario["scenario_name"] == "steadyworkload":
          for each_type in each_scenario["types"]:
@@ -160,7 +161,8 @@ def process_cpu_util(json_data: str, is_row: bool):
       minus_max_cpu = total_max_cpu - defined_threshold
    if total_avg_cpu > defined_threshold:
       minus_avg_cpu = total_avg_cpu - defined_threshold
-
+   # Convert memory from bytes to GB
+   total_avg_mem /= bytes_per_gb
    if is_row:
       return 1 if (minus_avg_cpu != 0 or minus_max_cpu != 0) else 0
    else:
