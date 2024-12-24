@@ -84,7 +84,11 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     response = await es.filterPost(start_datetime, end_datetime, aggregate)
     await es.close()
 
+<<<<<<< HEAD
     upstreamList = response["upstreamList"]
+=======
+    summary = {"total": response["total"]}
+>>>>>>> 5274da2 (OCP Filters)
 
     jobType = getJobType(upstreamList)
     isRehearse = getIsRehearse(upstreamList)
@@ -96,12 +100,27 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     }
     isRehearseObj = {"key": "isRehearse", "value": isRehearse, "name": "Rehearse"}
 
+<<<<<<< HEAD
     response["filterData"].append(jobTypeObj)
     response["filterData"].append(isRehearseObj)
 
     return {"filterData": response["filterData"], "summary": response["summary"]}
+=======
+    upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
+    clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
+    buildList = [x["key"] for x in filter_["build"]["buckets"]]
+    keys_to_remove = [
+        "min_timestamp",
+        "max_timestamp",
+        "upstream",
+        "clusterType",
+        "build",
+    ]
+    filter_ = utils.removeKeys(filter_, keys_to_remove)
+>>>>>>> 5274da2 (OCP Filters)
 
 
+<<<<<<< HEAD
 def getJobType(upstreamList: list):
     return list(
         {"periodic" if "periodic" in item else "pull-request" for item in upstreamList}
@@ -110,3 +129,34 @@ def getJobType(upstreamList: list):
 
 def getIsRehearse(upstreamList: list):
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})
+=======
+    jobType = getJobType(upstreamList)
+    isRehearse = getIsRehearse(upstreamList)
+    build = utils.getBuildFilter(buildList)
+    buildObj = {"key": "build", "value": build}
+    jobTypeObj = {"key": "jobType", "value": jobType}
+    isRehearseObj = {"key": "isRehearse", "value": isRehearse}
+
+    filterData.append(jobTypeObj)
+    filterData.append(buildObj)
+    filterData.append(isRehearseObj)
+
+    return {"filterData": filterData, "summary": summary}
+
+
+def getJobType(upstreamList: list):
+    return list(
+        set(
+            [
+                "periodic" if "periodic" in item else "pull-request"
+                for item in upstreamList
+            ]
+        )
+    )
+
+
+def getIsRehearse(upstreamList: list):
+    return list(
+        set(["True" if "rehearse" in item else "False" for item in upstreamList])
+    )
+>>>>>>> 5274da2 (OCP Filters)
