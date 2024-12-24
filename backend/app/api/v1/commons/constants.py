@@ -40,3 +40,14 @@ FIELD_CONSTANT_DICT = {
     "upstream": "upstreamJob.keyword",
     "clusterType": "clusterType.keyword",
 }
+
+RELEASE_STREAM_DICT = {
+    "fast": "Fast",
+    "stable": "Stable",
+    "eus": "EUS",
+    "candidate": "Release Candidate",
+    "rc": "Release Candidate",
+    "nightly": "Nightly",
+    "ci": "ci",
+    "ec": "Engineering Candidate",
+}
