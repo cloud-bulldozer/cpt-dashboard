@@ -57,11 +57,36 @@ def getBuild(job):
 
 
 def getReleaseStream(row):
+<<<<<<< HEAD
     releaseStream = next(
         (
             v
             for k, v in constants.RELEASE_STREAM_DICT.items()
             if k in row["releaseStream"]
+=======
+    # if row["releaseStream"].__contains__("fast"):
+    #     return "Fast"
+    # elif row["releaseStream"].__contains__("stable"):
+    #     return "Stable"
+    # elif row["releaseStream"].__contains__("eus"):
+    #     return "EUS"
+    # elif row["releaseStream"].__contains__("candidate"):
+    #     return "Release Candidate"
+    # elif row["releaseStream"].__contains__("rc"):
+    #     return "Release Candidate"
+    # elif row["releaseStream"].__contains__("nightly"):
+    #     return "Nightly"
+    # elif row["releaseStream"].__contains__("ci"):
+    #     return "ci"
+    # elif row["releaseStream"].__contains__("ec"):
+    #     return "Engineering Candidate"
+    # return "Stable"
+    releaseStream = next(
+        (
+            value
+            for key, value in constants.RELEASE_STREAM_DICT.items()
+            if key in row["releaseStream"]
+>>>>>>> 5274da2 (OCP Filters)
         ),
         "Stable",
     )
@@ -119,6 +144,29 @@ def buildAggregateQuery(constant_dict):
     return aggregate
 
 
+<<<<<<< HEAD
+=======
+def removeKeys(filterDict, keys_to_remove):
+    for key in keys_to_remove:
+        if key in filterDict:
+            del filterDict[key]
+    return filterDict
+
+
+def buildPlatformFilter(upstreamList, clusterypeList):
+    filterOptions = []
+    upstreamCheck = any("rosa-hcp" in s.lower() for s in upstreamList)
+    clusterTypeCheck = any("rosa" in s.lower() for s in clusterypeList)
+
+    if upstreamCheck:
+        filterOptions.append("AWS ROSA-HCP")
+    if clusterTypeCheck:
+        filterOptions.append("AWS ROSA")
+
+    return filterOptions
+
+
+>>>>>>> 5274da2 (OCP Filters)
 def buildReleaseStreamFilter(input_array):
     mapped_array = []
     for item in input_array:
@@ -132,4 +180,13 @@ def buildReleaseStreamFilter(input_array):
             "Stable",
         )
         mapped_array.append(match)
+<<<<<<< HEAD
     return list(set(mapped_array))
+=======
+    return mapped_array
+
+
+def getBuildFilter(input_list):
+    result = ["-".join(item.split("-")[-4:]) for item in input_list]
+    return result
+>>>>>>> 5274da2 (OCP Filters)
