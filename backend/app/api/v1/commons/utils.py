@@ -1,4 +1,5 @@
 from app.services.search import ElasticService
+
 from fastapi import HTTPException, status
 import re
 import app.api.v1.commons.constants as constants
@@ -56,23 +57,32 @@ def getBuild(job):
 
 
 def getReleaseStream(row):
-    if row["releaseStream"].__contains__("fast"):
-        return "Fast"
-    elif row["releaseStream"].__contains__("stable"):
-        return "Stable"
-    elif row["releaseStream"].__contains__("eus"):
-        return "EUS"
-    elif row["releaseStream"].__contains__("candidate"):
-        return "Release Candidate"
-    elif row["releaseStream"].__contains__("rc"):
-        return "Release Candidate"
-    elif row["releaseStream"].__contains__("nightly"):
-        return "Nightly"
-    elif row["releaseStream"].__contains__("ci"):
-        return "ci"
-    elif row["releaseStream"].__contains__("ec"):
-        return "Engineering Candidate"
-    return "Stable"
+    # if row["releaseStream"].__contains__("fast"):
+    #     return "Fast"
+    # elif row["releaseStream"].__contains__("stable"):
+    #     return "Stable"
+    # elif row["releaseStream"].__contains__("eus"):
+    #     return "EUS"
+    # elif row["releaseStream"].__contains__("candidate"):
+    #     return "Release Candidate"
+    # elif row["releaseStream"].__contains__("rc"):
+    #     return "Release Candidate"
+    # elif row["releaseStream"].__contains__("nightly"):
+    #     return "Nightly"
+    # elif row["releaseStream"].__contains__("ci"):
+    #     return "ci"
+    # elif row["releaseStream"].__contains__("ec"):
+    #     return "Engineering Candidate"
+    # return "Stable"
+    releaseStream = next(
+        (
+            value
+            for key, value in constants.RELEASE_STREAM_DICT.items()
+            if key in row["releaseStream"]
+        ),
+        "Stable",
+    )
+    return releaseStream
 
 
 def build_sort_terms(sort_string: str) -> list[dict[str, str]]:
@@ -133,13 +143,6 @@ def removeKeys(filterDict, keys_to_remove):
     return filterDict
 
 
-def find_item_in_list(dict_list, key, value):
-    for item in dict_list:
-        if item.get(key) == value:
-            return item
-    return None
-
-
 def buildPlatformFilter(upstreamList, clusterypeList):
     filterOptions = []
     upstreamCheck = any("rosa-hcp" in s.lower() for s in upstreamList)
@@ -151,3 +154,20 @@ def buildPlatformFilter(upstreamList, clusterypeList):
         filterOptions.append("AWS ROSA")
 
     return filterOptions
+
+
+def buildReleaseStreamFilter(input_array):
+    mapped_array = []
+    for item in input_array:
+        # Find the first matching key in the map
+        match = next(
+            (value for key, value in RELEASE_STREAM_DICT.items() if key in item),
+            "Stable",
+        )
+        mapped_array.append(match)
+    return mapped_array
+
+
+def getBuildFilter(input_list):
+    result = ["-".join(item.split("-")[-4:]) for item in input_list]
+    return result

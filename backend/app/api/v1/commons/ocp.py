@@ -120,7 +120,6 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     response = await es.filterPost(query=query)
     await es.close()
 
-    # print(response)
     summary = {"total": response["total"]}
 
     filterData = []
@@ -130,8 +129,14 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
 
     upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
     clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
-
-    keys_to_remove = ["min_timestamp", "max_timestamp", "upstream", "clusterType"]
+    buildList = [x["key"] for x in filter_["build"]["buckets"]]
+    keys_to_remove = [
+        "min_timestamp",
+        "max_timestamp",
+        "upstream",
+        "clusterType",
+        "build",
+    ]
     filter_ = utils.removeKeys(filter_, keys_to_remove)
 
     for key, value in response["filter_"].items():
@@ -146,7 +151,22 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
                 filterObj["value"] += platformOptions
         filterData.append(filterObj)
 
-    jobType = list(
+    jobType = getJobType(upstreamList)
+    isRehearse = getIsRehearse(upstreamList)
+    build = utils.getBuildFilter(buildList)
+    buildObj = {"key": "build", "value": build}
+    jobTypeObj = {"key": "jobType", "value": jobType}
+    isRehearseObj = {"key": "isRehearse", "value": isRehearse}
+
+    filterData.append(jobTypeObj)
+    filterData.append(buildObj)
+    filterData.append(isRehearseObj)
+
+    return {"filterData": filterData, "summary": summary}
+
+
+def getJobType(upstreamList: list):
+    return list(
         set(
             [
                 "periodic" if "periodic" in item else "pull-request"
@@ -154,14 +174,9 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
             ]
         )
     )
-    isRehearse = list(
+
+
+def getIsRehearse(upstreamList: list):
+    return list(
         set(["True" if "rehearse" in item else "False" for item in upstreamList])
     )
-
-    jobTypeObj = {"key": "jobType", "value": jobType}
-    isRehearseObj = {"key": "isRehearse", "value": isRehearse}
-
-    filterData.append(jobTypeObj)
-    filterData.append(isRehearseObj)
-
-    return {"filterData": filterData, "summary": summary}
