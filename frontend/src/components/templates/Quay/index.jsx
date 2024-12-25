@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchGraphData,
   fetchQuayJobsData,
   setFilterFromURL,
@@ -41,10 +42,6 @@ const Quay = () => {
   } = useSelector((state) => state.quay);
 
   useEffect(() => {
-    dispatch(fetchQuayJobsData());
-  }, [dispatch]);
-
-  useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
       const startDate = searchParams.get("start_date");
@@ -62,6 +59,11 @@ const Quay = () => {
       dispatch(setQuayDateFilter(startDate, endDate, navigate));
     }
   }, []);
+
+  useEffect(() => {
+    dispatch(buildFilterData());
+    dispatch(fetchQuayJobsData());
+  }, [dispatch]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(
@@ -96,6 +98,7 @@ const Quay = () => {
   const setColumns = (value, isAdding) => {
     dispatch(setTableColumns(value, isAdding));
   };
+
   return (
     <>
       <MetricsTab
