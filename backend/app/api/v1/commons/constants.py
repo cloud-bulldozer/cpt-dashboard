@@ -22,7 +22,8 @@ FIELDS = (
     "totalNodesCount",
 )
 MAX_PAGE = 10000
-FIELD_CONSTANT_DICT = {
+
+OCP_FIELD_CONSTANT_DICT = {
     "ciSystem": "ciSystem.keyword",
     "platform": "platform.keyword",
     "benchmark": "benchmark.keyword",
@@ -36,6 +37,17 @@ FIELD_CONSTANT_DICT = {
     "encrypted": "encrypted.keyword",
     "ipsec": "ipsec.keyword",
     "ocpVersion": "ocpVersion.keyword",
+    "build": "ocpVersion.keyword",
+    "upstream": "upstreamJob.keyword",
+    "clusterType": "clusterType.keyword",
+}
+
+QUAY_FIELD_CONSTANT_DICT = {
+    "benchmark": "benchmark.keyword",
+    "platform": "platform.keyword",
+    "releaseStream": "releaseStream.keyword",
+    "workerNodesCount": "workerNodesCount",
+    "jobStatus": "jobStatus.keyword",
     "build": "ocpVersion.keyword",
     "upstream": "upstreamJob.keyword",
     "clusterType": "clusterType.keyword",
