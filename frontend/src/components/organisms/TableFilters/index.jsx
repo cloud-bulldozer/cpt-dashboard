@@ -69,7 +69,6 @@ const TableFilter = (props) => {
   const endDateChangeHandler = (date, key) => {
     setDateFilter(key, date, navigation, type);
   };
-
   return (
     <>
       <Toolbar id="filter-toolbar">

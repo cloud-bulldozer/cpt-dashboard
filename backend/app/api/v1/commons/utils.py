@@ -128,9 +128,9 @@ def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[in
     return offset, size
 
 
-def buildAggregateQuery():
+def buildAggregateQuery(constant_dict):
     aggregate = {}
-    for x, y in constants.FIELD_CONSTANT_DICT.items():
+    for x, y in constant_dict.items():
         obj = {x: {"terms": {"field": y}}}
         aggregate.update(obj)
     return aggregate
@@ -161,7 +161,11 @@ def buildReleaseStreamFilter(input_array):
     for item in input_array:
         # Find the first matching key in the map
         match = next(
-            (value for key, value in RELEASE_STREAM_DICT.items() if key in item),
+            (
+                value
+                for key, value in constants.RELEASE_STREAM_DICT.items()
+                if key in item
+            ),
             "Stable",
         )
         mapped_array.append(match)

@@ -2,6 +2,7 @@ from datetime import date
 import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
+from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
 
 
 async def getData(
@@ -114,7 +115,7 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
 
     es = ElasticService(configpath=configpath)
 
-    aggregate = utils.buildAggregateQuery()
+    aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
     query["aggs"].update(aggregate)
 
     response = await es.filterPost(query=query)
@@ -126,6 +127,7 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     filter_ = response["filter_"]
 
     summary.update({x["key"]: x["doc_count"] for x in filter_["jobStatus"]["buckets"]})
+    summary_dict = {key.lower(): value for key, value in summary.items()}
 
     upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
     clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
@@ -162,7 +164,7 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     filterData.append(buildObj)
     filterData.append(isRehearseObj)
 
-    return {"filterData": filterData, "summary": summary}
+    return {"filterData": filterData, "summary": summary_dict}
 
 
 def getJobType(upstreamList: list):

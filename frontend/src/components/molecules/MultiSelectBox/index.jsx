@@ -108,7 +108,7 @@ const MultiSelectBox = (props) => {
 MultiSelectBox.propTypes = {
   options: PropTypes.array,
   onChange: PropTypes.func,
-  selected: PropTypes.array,
+  selected: PropTypes.object,
   applyMethod: PropTypes.func,
   currCategory: PropTypes.string,
   width: PropTypes.string,
