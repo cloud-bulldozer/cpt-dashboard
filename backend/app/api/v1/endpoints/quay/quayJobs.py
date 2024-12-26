@@ -2,7 +2,7 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
-from ...commons.quay import getData
+from ...commons.quay import getData, getFilterData
 from ...commons.example_responses import quay_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
