@@ -115,7 +115,6 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
-                            # previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size)
                 if self.prev_es and self.new_es:
                     self.new_index = self.new_index_prefix + (
                         self.new_index if indice is None else indice
@@ -157,7 +156,6 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
-                            # new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size)
                     unique_data = await self.remove_duplicates(
                         previous_results["data"]
                         if ("data" in previous_results)
