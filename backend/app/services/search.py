@@ -4,6 +4,7 @@ from datetime import datetime, timedelta
 from app import config
 import bisect
 import re
+from app.api.v1.commons.constants import RELEASE_STREAM_DICT
 
 
 class ElasticService:
@@ -114,6 +115,7 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
+                            # previous_results = await self.scan_indices(self.prev_es, self.prev_index, query, timestamp_field, start_date, new_end_date, size)
                 if self.prev_es and self.new_es:
                     self.new_index = self.new_index_prefix + (
                         self.new_index if indice is None else indice
@@ -155,6 +157,7 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
+                            # new_results = await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, new_start_date, end_date, size)
                     unique_data = await self.remove_duplicates(
                         previous_results["data"]
                         if ("data" in previous_results)
@@ -174,6 +177,8 @@ class ElasticService:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][
                             "lte"
                         ] = str(end_date)
+                        # return await self.scan_indices(self.new_es, self.new_index, query, timestamp_field, start_date, end_date, size)
+                        # else:
                         response = await self.new_es.search(
                             index=self.new_index + "*",
                             body=jsonable_encoder(query),
@@ -312,27 +317,126 @@ class ElasticService:
         except Exception as e:
             print(f"Error retrieving indices for alias '{alias}': {e}")
             return []
-    
-    async def filterPost(self, query, indice=None):
+
+    async def buildFilterData(self, filter_, total):
+        """Return the data to build the filter"""
         try:
-            if self.prev_es:
-                self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
-                response =  await self.prev_es.search(
-                    index=self.prev_index+"*",
-                    body=query,
-                    size=0)
-            elif self.new_es:
-                self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)              
-                response =  await self.new_es.search(
-                    index=self.new_index+"*",
-                    body=jsonable_encoder(query),
-                    size=0)
-               
-            total = response["hits"]["total"]["value"] 
-            results = response["aggregations"]
-            return {"filter_":results, "total":total}
+            summary = {"total": total}
+
+            filterData = []
+
+            summary.update(
+                {
+                    x["key"].lower(): x["doc_count"]
+                    for x in filter_["jobStatus"]["buckets"]
+                }
+            )
+
+            upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
+            clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
+            buildList = [x["key"] for x in filter_["build"]["buckets"]]
+            keys_to_remove = [
+                "min_timestamp",
+                "max_timestamp",
+                "upstream",
+                "clusterType",
+                "build",
+            ]
+            filter_ = removeKeys(filter_, keys_to_remove)
+
+            build = getBuildFilter(buildList)
+            buildObj = {"key": "build", "value": build}
+
+            for key, value in filter_.items():
+                filterObj = {"key": key, "value": []}
+                buckets = value["buckets"]
+                for bucket in buckets:
+                    filterObj["value"].append(bucket["key"])
+                filterData.append(filterObj)
+
+            filterData.append(buildObj)
+
+            platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
+            for item in filterData:
+                if item["key"] == "platform":
+                    item["value"].extend(platformOptions)
+                    break
+            return {
+                "filterData": filterData,
+                "summary": summary,
+                "upstreamList": upstreamList,
+            }
         except Exception as e:
-            print(f"Error retrieving filter data': {e}")
+            print(f"Error building filter data: {e}")
+            return {"filterData": [], "summary": {}, "upstreamList": []}
+
+    async def buildFilterQuery(self, start_datetime, end_datetime, aggregate):
+        start_date = (
+            start_datetime.strftime("%Y-%m-%d")
+            if start_datetime
+            else (datetime.utcnow().date() - timedelta(days=5).strftime("%Y-%m-%d"))
+        )
+        end_date = (
+            end_datetime.strftime("%Y-%m-%d")
+            if end_datetime
+            else datetime.utcnow().strftime("%Y-%m-%d")
+        )
+
+        query = {
+            "aggs": {
+                "min_timestamp": {"min": {"field": start_date}},
+                "max_timestamp": {"max": {"field": end_date}},
+            },
+            "query": {
+                "bool": {
+                    "filter": [
+                        {
+                            "range": {
+                                "timestamp": {
+                                    "format": "yyyy-MM-dd",
+                                    "lte": end_date,
+                                    "gte": start_date,
+                                }
+                            }
+                        }
+                    ],
+                    "should": [],
+                    "must_not": [],
+                }
+            },
+        }
+        query["aggs"].update(aggregate)
+        return query
+
+    async def filterPost(self, start_datetime, end_datetime, aggregate, indice=None):
+        try:
+            query = await self.buildFilterQuery(start_datetime, end_datetime, aggregate)
+            if self.prev_es:
+                self.prev_index = self.prev_index_prefix + (
+                    self.prev_index if indice is None else indice
+                )
+                response = await self.prev_es.search(
+                    index=self.prev_index + "*", body=query, size=0
+                )
+            elif self.new_es:
+                self.new_index = self.new_index_prefix + (
+                    self.new_index if indice is None else indice
+                )
+                response = await self.new_es.search(
+                    index=self.new_index + "*", body=jsonable_encoder(query), size=0
+                )
+
+            total = response["hits"]["total"]["value"]
+            results = response["aggregations"]
+            x = await self.buildFilterData(results, total)
+
+            return {
+                "filterData": x["filterData"],
+                "summary": x["summary"],
+                "upstreamList": x["upstreamList"],
+            }
+        except Exception as e:
+            print(f"Error retrieving filter data: {e}")
 
     async def close(self):
         """Closes es client connections"""
@@ -399,3 +503,40 @@ def flatten_dict(d, parent_key="", sep="."):
         else:
             items.append((new_key, v))
     return dict(items)
+
+
+def removeKeys(filterDict, keys_to_remove):
+    for key in keys_to_remove:
+        if key in filterDict:
+            del filterDict[key]
+    return filterDict
+
+
+def buildPlatformFilter(upstreamList, clusterypeList):
+    filterOptions = []
+    upstreamCheck = any("rosa-hcp" in s.lower() for s in upstreamList)
+    clusterTypeCheck = any("rosa" in s.lower() for s in clusterypeList)
+
+    if upstreamCheck:
+        filterOptions.append("AWS ROSA-HCP")
+    if clusterTypeCheck:
+        filterOptions.append("AWS ROSA")
+
+    return list(set(filterOptions))
+
+
+def buildReleaseStreamFilter(input_array):
+    mapped_array = []
+    for item in input_array:
+        # Find the first matching key in the map
+        match = next(
+            (value for key, value in RELEASE_STREAM_DICT.items() if key in item),
+            "Stable",
+        )
+        mapped_array.append(match)
+    return mapped_array
+
+
+def getBuildFilter(input_list):
+    result = ["-".join(item.split("-")[-4:]) for item in input_list]
+    return result

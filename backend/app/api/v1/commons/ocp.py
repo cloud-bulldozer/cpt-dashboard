@@ -78,93 +78,25 @@ def fillEncryptionType(row):
 
 
 async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
-    start_date = (
-        start_datetime.strftime("%Y-%m-%d")
-        if start_datetime
-        else (datetime.utcnow().date() - timedelta(days=5).strftime("%Y-%m-%d"))
-    )
-    end_date = (
-        end_datetime.strftime("%Y-%m-%d")
-        if end_datetime
-        else datetime.utcnow().strftime("%Y-%m-%d")
-    )
-
-    query = {
-        "aggs": {
-            "min_timestamp": {"min": {"field": start_date}},
-            "max_timestamp": {"max": {"field": end_date}},
-        },
-        "query": {
-            "bool": {
-                "filter": [
-                    {
-                        "range": {
-                            "timestamp": {
-                                "format": "yyyy-MM-dd",
-                                "lte": end_date,
-                                "gte": start_date,
-                            }
-                        }
-                    }
-                ],
-                "should": [],
-                "must_not": [],
-            }
-        },
-    }
-
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
-    query["aggs"].update(aggregate)
 
-    response = await es.filterPost(query=query)
+    response = await es.filterPost(start_datetime, end_datetime, aggregate)
     await es.close()
 
-    summary = {"total": response["total"]}
-
-    filterData = []
-    filter_ = response["filter_"]
-
-    summary.update({x["key"]: x["doc_count"] for x in filter_["jobStatus"]["buckets"]})
-    summary_dict = {key.lower(): value for key, value in summary.items()}
-
-    upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
-    clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
-    buildList = [x["key"] for x in filter_["build"]["buckets"]]
-    keys_to_remove = [
-        "min_timestamp",
-        "max_timestamp",
-        "upstream",
-        "clusterType",
-        "build",
-    ]
-    filter_ = utils.removeKeys(filter_, keys_to_remove)
-
-    for key, value in response["filter_"].items():
-        filterObj = {"key": key, "value": []}
-        buckets = value["buckets"]
-        for bucket in buckets:
-            filterObj["value"].append(bucket["key"])
-            if key == "platform":
-                platformOptions = utils.buildPlatformFilter(
-                    upstreamList, clusterTypeList
-                )
-                filterObj["value"] += platformOptions
-        filterData.append(filterObj)
+    upstreamList = response["upstreamList"]
 
     jobType = getJobType(upstreamList)
     isRehearse = getIsRehearse(upstreamList)
-    build = utils.getBuildFilter(buildList)
-    buildObj = {"key": "build", "value": build}
+
     jobTypeObj = {"key": "jobType", "value": jobType}
     isRehearseObj = {"key": "isRehearse", "value": isRehearse}
 
-    filterData.append(jobTypeObj)
-    filterData.append(buildObj)
-    filterData.append(isRehearseObj)
+    response["filterData"].append(jobTypeObj)
+    response["filterData"].append(isRehearseObj)
 
-    return {"filterData": filterData, "summary": summary_dict}
+    return {"filterData": response["filterData"], "summary": response["summary"]}
 
 
 def getJobType(upstreamList: list):
