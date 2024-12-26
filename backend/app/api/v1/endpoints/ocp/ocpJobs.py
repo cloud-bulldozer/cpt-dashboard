@@ -2,7 +2,7 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
-from ...commons.ocp import getData
+from ...commons.ocp import getData, getFilterData
 from ...commons.example_responses import ocp_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
