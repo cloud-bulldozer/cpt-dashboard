@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchGraphData,
   fetchTelcoJobsData,
   setFilterFromURL,
@@ -40,10 +41,6 @@ const Telco = () => {
   } = useSelector((state) => state.telco);
 
   useEffect(() => {
-    dispatch(fetchTelcoJobsData());
-  }, [dispatch]);
-
-  useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
       const startDate = searchParams.get("start_date");
@@ -61,6 +58,11 @@ const Telco = () => {
       dispatch(setTelcoDateFilter(startDate, endDate, navigate));
     }
   }, []);
+
+  useEffect(() => {
+    dispatch(fetchTelcoJobsData());
+    dispatch(buildFilterData());
+  }, [dispatch]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

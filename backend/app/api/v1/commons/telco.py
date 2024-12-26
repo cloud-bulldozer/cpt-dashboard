@@ -47,7 +47,6 @@ async def getData(
         query=query, size=size, offset=offset, searchList=searchList
     )
     mapped_list = []
-
     for each_response in response["data"]:
         end_timestamp = int(each_response["timestamp"])
         test_data = each_response["data"]
@@ -89,3 +88,49 @@ async def getData(
     jobs = pd.json_normalize(mapped_list)
 
     return {"data": jobs, "total": response["total"]}
+
+
+async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+    test_types = [
+        "oslat",
+        "cyclictest",
+        "cpu_util",
+        "deployment",
+        "ptp",
+        "reboot",
+        "rfc-2544",
+    ]
+    cfg = config.get_config()
+    try:
+        jenkins_url = cfg.get("telco.config.job_url")
+    except Exception as e:
+        print(f"Error reading telco configuration: {e}")
+
+    query = {
+        "earliest_time": "{}T00:00:00".format(start_datetime.strftime("%Y-%m-%d")),
+        "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
+        "output_mode": "json",
+    }
+    searchList = " OR ".join(
+        ['test_type="{}"'.format(test_type) for test_type in test_types]
+    )
+    splunk = SplunkService(configpath=configpath)
+    response = await splunk.filterPost(query=query, searchList=searchList)
+    filterData = []
+    print(response["data"])
+    if len(response["data"]) > 0:
+        for item in response["data"]:
+            for field, value in item.items():
+                currDict = {
+                    "key": field,
+                    "value": (
+                        utils.buildReleaseStreamFilter(value)
+                        if field == "releaseStream"
+                        else value
+                    ),
+                }
+                filterData.append(currDict)
+    # can be removed once python scripts to determine success or failure are executed direclty
+    # in the splunk dashboard
+    filterData.append({"key": "jobStatus", "value": ["success", "failure"]})
+    return {"data": filterData, "total": 0}

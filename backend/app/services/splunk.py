@@ -69,7 +69,6 @@ class SplunkService:
                 earliest_time=query["earliest_time"],
                 latest_time=query["latest_time"],
             )
-
             # Wait for the job to finish
             while not job.is_done():
                 job.refresh()
@@ -80,6 +79,7 @@ class SplunkService:
             return None
 
         # Fetch the results
+        total_records = 0
         for result in job.results(output_mode="json"):
             decoded_data = json.loads(result.decode("utf-8"))
             value = decoded_data.get("results")
@@ -108,6 +108,60 @@ class SplunkService:
     async def _stream_results(self, oneshotsearch_results):
         for record in results.JSONResultsReader(oneshotsearch_results):
             yield record
+
+    async def filterPost(self, query, searchList=""):
+        """
+        Query data to construct filter from splunk server using splunk lib sdk
+
+        Args:
+            query (string): splunk query
+            OPTIONAL: searchList (string): additional query parameters for index
+        """
+
+        try:
+
+            print(query)
+            # If additional search parameters are provided, include those in searchindex
+            searchindex = (
+                "search index={} {}".format(self.indice, searchList)
+                if searchList
+                else "search index={}".format(self.indice)
+            )
+            # cluster_artifacts.cpu_models{}.cpu
+            search_query = (
+                "search index={} {} | stats values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocp_version, values(ocp_build) AS releaseStream".format(
+                    self.indice, searchList
+                )
+                if searchList
+                else "search index={} | stats values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocp_version, values(ocp_build) AS releaseStream".format(
+                    self.indice
+                )
+            )
+
+            try:
+                # Run the job and retrieve results
+                job = self.service.jobs.create(
+                    search_query,
+                    exec_mode="blocking",
+                    earliest_time=query["earliest_time"],
+                    latest_time=query["latest_time"],
+                )
+                # Wait for the job to finish
+                while not job.is_done():
+                    job.refresh()
+
+            except Exception as e:
+                print("Error querying in filters splunk: {}".format(e))
+                return None
+
+            value = []
+            for result in job.results(output_mode="json"):
+                decoded_data = json.loads(result.decode("utf-8"))
+                value = decoded_data.get("results")
+            print(value)
+            return {"data": value, "total": 0}
+        except Exception as e:
+            print(f"Error on building data for filters: {e}")
 
     async def close(self):
         """Closes splunk client connections"""
