@@ -3,7 +3,6 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  buildFilterData,
   calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
@@ -52,7 +51,7 @@ export const fetchTelcoJobsData = () => async (dispatch) => {
         },
       });
 
-      dispatch(applyFilters());
+      // dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }
   } catch (error) {
@@ -129,7 +128,7 @@ export const applyFilters = () => (dispatch, getState) => {
     payload: filtered,
   });
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("telco"));
+  dispatch(buildFilterData());
 };
 export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().telco;
@@ -287,4 +286,35 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().telco;
   dispatch(getTelcoSummary());
   dispatch(setTelcoPageOptions(page, perPage));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    const { tableFilters, categoryFilterValue } = getState().telco;
+
+    const params = dispatch(getRequestParams("telco"));
+
+    const response = await API.get("/api/v1/telco/filters", { params });
+
+    if (response.status === 200 && response?.data?.filterData?.length > 0) {
+      let data = cloneDeep(response.data.filterData);
+      for (let i = 0; i < tableFilters.length; i++) {
+        for (let j = 0; j < data.length; j++) {
+          if (tableFilters[i]["value"] === data[j]["key"]) {
+            data[j]["name"] = tableFilters[i]["name"];
+          }
+        }
+      }
+
+      dispatch(getTelcoSummary());
+      dispatch({
+        type: TYPES.SET_TELCO_FILTER_DATA,
+        payload: data,
+      });
+      const activeFilter = categoryFilterValue || tableFilters[0].name;
+      dispatch(setTelcoCatFilters(activeFilter));
+    }
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
 };
