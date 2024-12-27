@@ -275,7 +275,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
 
     const params = dispatch(getRequestParams("ocp"));
 
-    const response = await API.get("/api/v1/ocp/filters", { params });
+    const response = await API.get(API_ROUTES.OCP_FILTERS_API_V1, { params });
     if (response.status === 200 && response?.data?.filterData?.length > 0) {
       let data = cloneDeep(response.data.filterData);
       for (let i = 0; i < tableFilters.length; i++) {

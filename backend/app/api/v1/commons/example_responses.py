@@ -160,6 +160,14 @@ def telco_200_response():
     return response_200(telco_response_example)
 
 
+def ocp_filter_200_response():
+    return response_200(ocp_filter_example)
+
+
+def quay_filter_200_response():
+    return response_200(quay_filter_example)
+
+
 cpt_response_example = {
     "startDate": "2023-11-18",
     "endDate": "2023-11-23",
@@ -189,6 +197,31 @@ cpt_response_example = {
             "testName": "node-density-heavy",
         },
     ],
+}
+
+ocp_filter_example = {
+    "filterData": [
+        {"key": "jobStatus", "value": ["success", "failure"]},
+        {"key": "workerNodesCount", "value": [24, 6, 9, 3, 120, 249, 252, 25, 4, 240]},
+        {"key": "jobType", "value": ["pull-request", "periodic"]},
+        {"key": "isRehearse", "value": ["True", "False"]},
+        {"key": "networkType", "value": ["OVNKubernetes", "OpenShiftSDN"]},
+    ],
+    "summary": {"total": 259, "success": 254, "failure": 5},
+}
+
+quay_filter_example = {
+    "filterData": [
+        {"key": "jobStatus", "value": ["success", "failure"]},
+        {"key": "workerNodesCount", "value": [24]},
+        {"key": "platform", "value": ["AWS"]},
+        {"key": "benchmark", "value": ["quay-load-test"]},
+        {
+            "key": "build",
+            "value": ["2024-10-12-102620"],
+        },
+    ],
+    "summary": {"total": 3, "success": 3},
 }
 
 

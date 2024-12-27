@@ -48,7 +48,7 @@ class ElasticService:
         self,
         query,
         indice=None,
-        size=None,
+        size=10000,
         start_date=None,
         end_date=None,
         timestamp_field=None,
@@ -175,7 +175,6 @@ class ElasticService:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][
                             "lte"
                         ] = str(end_date)
-
                         response = await self.new_es.search(
                             index=self.new_index + "*",
                             body=jsonable_encoder(query),
@@ -531,7 +530,7 @@ def buildReleaseStreamFilter(input_array):
             "Stable",
         )
         mapped_array.append(match)
-    return mapped_array
+    return list(set(mapped_array))
 
 
 def getBuildFilter(input_list):
