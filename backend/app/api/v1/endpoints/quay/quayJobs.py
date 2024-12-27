@@ -3,7 +3,11 @@ from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
 from ...commons.quay import getData, getFilterData
-from ...commons.example_responses import quay_200_response, response_422
+from ...commons.example_responses import (
+    quay_200_response,
+    response_422,
+    quay_filter_200_response,
+)
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 
@@ -81,13 +85,13 @@ async def jobs(
 
 @router.get(
     "/api/v1/quay/filters",
-    summary="Returns a filter list",
+    summary="Returns the data to construct filters",
     description="Returns the data to build filters in the specified dates. \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={
-        200: quay_200_response(),
+        200: quay_filter_200_response(),
         422: response_422(),
     },
 )

@@ -85,12 +85,6 @@ class SplunkService:
             value = decoded_data.get("results")
             total_records = value[0]["total_records"]
 
-        # Fetch the results
-        for result in job.results(output_mode="json"):
-            decoded_data = json.loads(result.decode("utf-8"))
-            value = decoded_data.get("results")
-            total_records = value[0]["total_records"]
-
         # Get the results and display them using the JSONResultsReader
         res_array = []
         async for record in self._stream_results(oneshotsearch_results):

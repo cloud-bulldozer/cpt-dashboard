@@ -281,7 +281,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
 
     const params = dispatch(getRequestParams("quay"));
 
-    const response = await API.get("/api/v1/quay/filters", { params });
+    const response = await API.get(API_ROUTES.QUAY_FILTERS_API_V1, { params });
     if (response.status === 200 && response?.data?.filterData?.length > 0) {
       let data = cloneDeep(response.data.filterData);
       for (let i = 0; i < tableFilters.length; i++) {
