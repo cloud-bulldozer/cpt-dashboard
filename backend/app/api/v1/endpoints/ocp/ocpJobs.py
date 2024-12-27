@@ -3,7 +3,11 @@ from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
 from ...commons.ocp import getData, getFilterData
-from ...commons.example_responses import ocp_200_response, response_422
+from ...commons.example_responses import (
+    ocp_200_response,
+    response_422,
+    ocp_filter_200_response,
+)
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 
@@ -80,13 +84,13 @@ async def jobs(
 
 @router.get(
     "/api/v1/ocp/filters",
-    summary="Returns a job list",
-    description="Returns a list of jobs in the specified dates. \
+    summary="Returns the data to construct filters",
+    description="Returns the data to build filters in the specified dates. \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={
-        200: ocp_200_response(),
+        200: ocp_filter_200_response(),
         422: response_422(),
     },
 )
