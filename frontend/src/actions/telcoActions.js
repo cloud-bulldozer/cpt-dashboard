@@ -3,7 +3,6 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  calculateMetrics,
   deleteAppliedFilters,
   getFilteredData,
   getRequestParams,
@@ -46,13 +45,10 @@ export const fetchTelcoJobsData = () => async (dispatch) => {
       dispatch({
         type: TYPES.SET_TELCO_PAGE_TOTAL,
         payload: {
-          total: response.data.total,
+          total: Number(response.data.total),
           offset: response.data.offset,
         },
       });
-
-      // dispatch(applyFilters());
-      dispatch(tableReCalcValues());
     }
   } catch (error) {
     dispatch(showFailureToast());
@@ -201,13 +197,19 @@ export const applyTelcoDateFilter =
     dispatch(fetchTelcoJobsData());
   };
 
-export const getTelcoSummary = () => (dispatch, getState) => {
-  const results = [...getState().telco.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getTelcoSummary = (countObj) => (dispatch) => {
+  const other =
+    countObj["total"] -
+    ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: Number(countObj["success"]) || 0,
+    failureCount: Number(countObj["failure"]) || 0,
+    total: Number(countObj["total"]),
+  };
   dispatch({
     type: TYPES.SET_TELCO_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
 
@@ -306,7 +308,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
         }
       }
 
-      dispatch(getTelcoSummary());
+      dispatch(getTelcoSummary(response.data.summary));
       dispatch({
         type: TYPES.SET_TELCO_FILTER_DATA,
         payload: data,

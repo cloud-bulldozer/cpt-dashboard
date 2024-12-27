@@ -119,8 +119,6 @@ class SplunkService:
         """
 
         try:
-
-            print(query)
             # If additional search parameters are provided, include those in searchindex
             searchindex = (
                 "search index={} {}".format(self.indice, searchList)
@@ -129,11 +127,11 @@ class SplunkService:
             )
             # cluster_artifacts.cpu_models{}.cpu
             search_query = (
-                "search index={} {} | stats values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocp_version, values(ocp_build) AS releaseStream".format(
+                "search index={} {} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
                     self.indice, searchList
                 )
                 if searchList
-                else "search index={} | stats values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocp_version, values(ocp_build) AS releaseStream".format(
+                else "search index={} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
                     self.indice
                 )
             )
@@ -155,11 +153,13 @@ class SplunkService:
                 return None
 
             value = []
+            total_records = 0
             for result in job.results(output_mode="json"):
                 decoded_data = json.loads(result.decode("utf-8"))
                 value = decoded_data.get("results")
-            print(value)
-            return {"data": value, "total": 0}
+                total_records = value[0]["total_records"]
+
+            return {"data": value, "total": total_records}
         except Exception as e:
             print(f"Error on building data for filters: {e}")
 
