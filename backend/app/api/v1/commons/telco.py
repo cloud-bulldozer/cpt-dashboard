@@ -117,20 +117,21 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     splunk = SplunkService(configpath=configpath)
     response = await splunk.filterPost(query=query, searchList=searchList)
     filterData = []
-    print(response["data"])
+
     if len(response["data"]) > 0:
         for item in response["data"]:
             for field, value in item.items():
-                currDict = {
-                    "key": field,
-                    "value": (
-                        utils.buildReleaseStreamFilter(value)
-                        if field == "releaseStream"
-                        else value
-                    ),
-                }
-                filterData.append(currDict)
+                if field != "total_records":
+                    currDict = {
+                        "key": field,
+                        "value": (
+                            utils.buildReleaseStreamFilter(value)
+                            if field == "releaseStream"
+                            else value
+                        ),
+                    }
+                    filterData.append(currDict)
     # can be removed once python scripts to determine success or failure are executed direclty
     # in the splunk dashboard
     filterData.append({"key": "jobStatus", "value": ["success", "failure"]})
-    return {"data": filterData, "total": 0}
+    return {"data": filterData, "total": response["total"]}

@@ -117,7 +117,6 @@ async def filters(
         )
 
     results = await getFilterData(start_date, end_date, "telco.splunk")
-    print(results)
 
     response = {"filterData": results["data"], "summary": {"total": results["total"]}}
 
