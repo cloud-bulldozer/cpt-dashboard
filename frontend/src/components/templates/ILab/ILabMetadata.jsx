@@ -1,6 +1,3 @@
-import PropType from "prop-types";
-import { uid } from "@/utils/helper";
-import MetaRow from "./MetaRow";
 import {
   Accordion,
   AccordionContent,
@@ -9,9 +6,13 @@ import {
   Split,
   SplitItem,
 } from "@patternfly/react-core";
-import { Table, Tbody, Th, Thead, Tr, Td } from "@patternfly/react-table";
-import { setMetaRowExpanded } from "@/actions/ilabActions";
+import { Table, Tbody, Td, Th, Thead, Tr } from "@patternfly/react-table";
 import { useDispatch, useSelector } from "react-redux";
+
+import MetaRow from "./MetaRow";
+import PropType from "prop-types";
+import { setMetaRowExpanded } from "@/actions/ilabActions";
+import { uid } from "@/utils/helper";
 
 const ILabMetadata = (props) => {
   const { item } = props;
@@ -42,8 +43,8 @@ const ILabMetadata = (props) => {
             ["name", item.name],
             ["email", item.email],
             ["source", item.source],
-            ["start_date", (new Date(item.begin)).toLocaleString()],
-            ["end_date", (new Date(item.end)).toLocaleString()],
+            ["start_date", new Date(item.begin).toLocaleString()],
+            ["end_date", new Date(item.end).toLocaleString()],
             ["status", item.status],
           ]}
         />
@@ -101,7 +102,7 @@ const ILabMetadata = (props) => {
                       Object.entries(i.params)
                         .filter((p) => !(p[0] in item.params))
                         .map((p) => (
-                          <Tr>
+                          <Tr key={uid()}>
                             <Td>{i.iteration}</Td>
                             <Td>{p[0]}</Td>
                             <Td>{p[1]}</Td>

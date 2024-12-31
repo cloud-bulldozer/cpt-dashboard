@@ -45,8 +45,9 @@ const MetricsSelect = (props) => {
   };
 
   const onOpenChange = async (nextOpen) => {
-    if (!nextOpen) {
+    if (!nextOpen && ids.length > 0) {
       // If we're closing, fetch data
+
       if (ids.length === 1) {
         await Promise.all([
           await dispatch(fetchGraphData(ids[0])),
@@ -58,7 +59,7 @@ const MetricsSelect = (props) => {
           await dispatch(handleSummaryData(ids)),
         ]);
       }
-    };
+    }
     setIsOpen(nextOpen);
   };
 

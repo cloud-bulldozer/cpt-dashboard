@@ -9,9 +9,11 @@ import {
 import PropTypes from "prop-types";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const RenderPagination = (props) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const perPageOptions = [
     { title: "10", value: 10 },
