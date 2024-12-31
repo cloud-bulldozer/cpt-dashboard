@@ -10,13 +10,15 @@ import {
   Tr,
 } from "@patternfly/react-table";
 import {
-  fetchILabJobs,
   fetchGraphData,
+  fetchILabJobs,
   fetchMetricsInfo,
   fetchPeriods,
   fetchSummaryData,
   setIlabDateFilter,
   toggleComparisonSwitch,
+  updateFromURL,
+  updateURL,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
@@ -76,13 +78,19 @@ const ILab = () => {
       for (const key in params) {
         obj[key] = params[key].split(",");
       }
-      dispatch(setIlabDateFilter(startDate, endDate, navigate));
+      if (startDate || endDate) {
+        dispatch(setIlabDateFilter(startDate, endDate, navigate));
+      }
+
+      dispatch(updateFromURL(obj));
+    } else {
+      dispatch(updateURL(navigate));
     }
   }, []);
 
   useEffect(() => {
     dispatch(fetchILabJobs());
-  }, [dispatch]);
+  }, [dispatch, navigate]);
 
   const columnNames = {
     benchmark: "Benchmark",
@@ -97,6 +105,7 @@ const ILab = () => {
 
   const onSwitchChange = () => {
     dispatch(toggleComparisonSwitch());
+    dispatch(updateURL(navigate));
   };
   return (
     <>

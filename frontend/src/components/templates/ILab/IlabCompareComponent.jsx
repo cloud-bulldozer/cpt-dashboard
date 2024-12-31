@@ -11,24 +11,24 @@ import {
   StackItem,
   Title,
 } from "@patternfly/react-core";
+import {
+  fetchMetricsInfo,
+  fetchPeriods,
+  handleMultiGraph,
+  handleSummaryData,
+} from "@/actions/ilabActions.js";
 import { useDispatch, useSelector } from "react-redux";
 
+import ILabMetadata from "./ILabMetadata";
+import ILabSummary from "./ILabSummary";
 import { InfoCircleIcon } from "@patternfly/react-icons";
+import MetricsSelect from "./MetricsDropdown";
 import Plot from "react-plotly.js";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
-import {
-  fetchPeriods,
-  handleMultiGraph,
-  handleSummaryData,
-  fetchMetricsInfo,
-} from "@/actions/ilabActions.js";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
-import ILabSummary from "./ILabSummary";
-import ILabMetadata from "./ILabMetadata";
-import MetricsSelect from "./MetricsDropdown";
 
 const IlabCompareComponent = () => {
   const { page, perPage, totalItems, tableData } = useSelector(
@@ -90,12 +90,15 @@ const IlabCompareComponent = () => {
                         position="auto"
                         className="mini-metadata"
                         bodyContent={
-                          <div position="auto" className="mini-metadata">
+                          <div className="mini-metadata">
                             <ILabMetadata item={item} />
                           </div>
                         }
                       >
-                        <Button icon={<InfoCircleIcon aria-hidden />}></Button>
+                        <Button
+                          variant="plain"
+                          icon={<InfoCircleIcon aria-hidden />}
+                        ></Button>
                       </Popover>
                     }
                   >
@@ -115,35 +118,37 @@ const IlabCompareComponent = () => {
           type={"ilab"}
         />
       </div>
-      <Stack hasGutter>
-        <StackItem span={12} className="metrics-select">
-          <MetricsSelect ids={selectedItems} />
-        </StackItem>
-        <StackItem span={12} className="summary-box">
-          {isSummaryLoading ? (
-            <div className="loader"></div>
-          ) : summaryData.filter((i) => selectedItems.includes(i.uid)).length ==
-            selectedItems.length ? (
-            <ILabSummary ids={selectedItems} />
-          ) : (
-            <div>No data to summarize</div>
-          )}
-        </StackItem>
-        <StackItem span={12} className="chart-box">
-          {isGraphLoading ? (
-            <div className="loader"></div>
-          ) : graphDataCopy?.length > 0 &&
-            graphDataCopy?.[0]?.data?.length > 0 ? (
-            <Plot
-              data={graphDataCopy[0]?.data}
-              layout={graphDataCopy[0]?.layout}
-              key={uid()}
-            />
-          ) : (
-            <div>No data to compare</div>
-          )}
-        </StackItem>
-      </Stack>
+      <div className="chart-container">
+        <Stack hasGutter>
+          <StackItem span={12} className="metrics-select">
+            <MetricsSelect ids={selectedItems} />
+          </StackItem>
+          <StackItem span={12} className="summary-box">
+            {isSummaryLoading ? (
+              <div className="loader"></div>
+            ) : summaryData.filter((i) => selectedItems.includes(i.uid))
+                .length == selectedItems.length ? (
+              <ILabSummary ids={selectedItems} />
+            ) : (
+              <div>No data to summarize</div>
+            )}
+          </StackItem>
+          <StackItem span={12} className="chart-box">
+            {isGraphLoading ? (
+              <div className="loader"></div>
+            ) : graphDataCopy?.length > 0 &&
+              graphDataCopy?.[0]?.data?.length > 0 ? (
+              <Plot
+                data={graphDataCopy[0]?.data}
+                layout={graphDataCopy[0]?.layout}
+                key={uid()}
+              />
+            ) : (
+              <div>No data to compare</div>
+            )}
+          </StackItem>
+        </Stack>
+      </div>
     </div>
   );
 };
