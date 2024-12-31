@@ -1,8 +1,9 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
+import { appendDateFilter, appendQueryString } from "@/utils/helper";
+
 import API from "@/utils/axiosInstance";
-import { appendQueryString } from "@/utils/helper";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 import {
@@ -25,23 +26,26 @@ export const fetchIlabJobs =
         },
       });
       if (response.status === 200) {
-        const startDate = response.data.startDate,
-          endDate = response.data.endDate;
+        const startDate = new Date(response.data.startDate),
+          endDate = new Date(response.data.endDate);
         dispatch({
           type: TYPES.SET_ILAB_JOBS_DATA,
           payload: shouldStartFresh
             ? response.data.results
             : [...results, ...response.data.results],
         });
+        const start_date = startDate.toISOString().split("T")[0],
+          end_date = endDate.toISOString().split("T")[0];
 
         dispatch({
           type: TYPES.SET_ILAB_DATE_FILTER,
           payload: {
-            start_date: startDate,
-            end_date: endDate,
+            start_date,
+            end_date,
           },
         });
 
+        appendDateFilter(start_date, end_date);
         dispatch({
           type: TYPES.SET_ILAB_TOTAL_ITEMS,
           payload: response.data.total,
@@ -68,9 +72,7 @@ export const applyFilters = () => (dispatch) => {
 };
 
 export const setIlabDateFilter =
-  (start_date, end_date, navigate) => (dispatch, getState) => {
-    const appliedFilters = getState().ilab.appliedFilters;
-
+  (start_date, end_date, navigate) => (dispatch) => {
     dispatch({
       type: TYPES.SET_ILAB_DATE_FILTER,
       payload: {
@@ -78,8 +80,7 @@ export const setIlabDateFilter =
         end_date,
       },
     });
-
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(updateURL(navigate));
   };
 
 export const setIlabCatFilters = (category) => (dispatch, getState) => {};
@@ -285,7 +286,7 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
       graphs,
     });
     if (response.status === 200) {
-      response.data.layout["width"] = 1500;
+      // response.data.layout["width"] = 1500;
       copyData.push({
         uid,
         data: response.data.data,
@@ -438,3 +439,49 @@ export const setMetaRowExpanded = (expandedItems) => ({
   type: TYPES.SET_EXPANDED_METAROW,
   payload: expandedItems,
 });
+
+export const updateURL = (navigate) => (dispatch, getState) => {
+  const { perPage, offset, page, comparisonSwitch, start_date, end_date } =
+    getState().ilab;
+
+  appendQueryString(
+    {
+      size: perPage,
+      offset,
+      page,
+      comparisonSwitch,
+      ...(start_date ? { start_date } : {}),
+      ...(end_date ? { end_date } : {}),
+    },
+    navigate
+  );
+};
+
+export const updateFromURL = (searchParams) => (dispatch, getState) => {
+  const { perPage, offset, page, comparisonSwitch } = getState().ilab;
+  if (
+    "comparisonSwitch" in searchParams &&
+    String(comparisonSwitch) !== searchParams["comparisonSwitch"][0]
+  ) {
+    dispatch(toggleComparisonSwitch());
+  }
+  if (
+    "offset" in searchParams &&
+    String(offset) !== searchParams["offset"][0]
+  ) {
+    dispatch({
+      type: TYPES.SET_ILAB_OFFSET,
+      payload: searchParams["offset"][0],
+    });
+  }
+  if ("page" in searchParams) {
+    if (String(page) !== searchParams["page"][0]) {
+      dispatch(setIlabPage(searchParams["page"][0]));
+    }
+    if ("size" in searchParams && String(perPage) !== searchParams["size"][0]) {
+      dispatch(
+        setIlabPageOptions(searchParams["page"][0], searchParams["size"][0])
+      );
+    }
+  }
+};

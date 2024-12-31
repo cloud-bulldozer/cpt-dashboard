@@ -17,6 +17,8 @@ import {
   fetchSummaryData,
   setIlabDateFilter,
   toggleComparisonSwitch,
+  updateFromURL,
+  updateURL,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
@@ -82,13 +84,19 @@ const ILab = () => {
       for (const key in params) {
         obj[key] = params[key].split(",");
       }
-      dispatch(setIlabDateFilter(startDate, endDate, navigate));
+      if (startDate || endDate) {
+        dispatch(setIlabDateFilter(startDate, endDate, navigate));
+      }
+
+      dispatch(updateFromURL(obj));
+    } else {
+      dispatch(updateURL(navigate));
     }
   }, []);
 
   useEffect(() => {
     dispatch(fetchIlabJobs());
-  }, [dispatch]);
+  }, [dispatch, navigate]);
 
   const columnNames = {
     benchmark: "Benchmark",
@@ -113,6 +121,7 @@ const ILab = () => {
 
   const onSwitchChange = () => {
     dispatch(toggleComparisonSwitch());
+    dispatch(updateURL(navigate));
   };
 
   return (
@@ -150,7 +159,7 @@ const ILab = () => {
             <Tbody>
               {results.map((item, rowIndex) => (
                 <>
-                  <Tr key={uid()}>
+                  <Tr key={item.id}>
                     <Td
                       expand={{
                         rowIndex,
@@ -168,7 +177,7 @@ const ILab = () => {
                       <StatusCell value={item.status} />
                     </Td>
                   </Tr>
-                  <Tr key={uid()} isExpanded={isResultExpanded(item.id)}>
+                  <Tr key={`${item.id}-exp`} isExpanded={isResultExpanded(item.id)}>
                     <Td colSpan={8}>
                       <ExpandableRowContent>
                         <IlabRowContent item={item} />
