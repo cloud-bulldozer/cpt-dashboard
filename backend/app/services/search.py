@@ -315,7 +315,7 @@ class ElasticService:
             print(f"Error retrieving indices for alias '{alias}': {e}")
             return []
 
-    async def buildFilterData(self, filter_, total):
+    async def buildFilterData(self, filter, total):
         """Return the data to build the filter"""
         try:
             summary = {"total": total}
@@ -325,13 +325,13 @@ class ElasticService:
             summary.update(
                 {
                     x["key"].lower(): x["doc_count"]
-                    for x in filter_["jobStatus"]["buckets"]
+                    for x in filter["jobStatus"]["buckets"]
                 }
             )
 
-            upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
-            clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
-            buildList = [x["key"] for x in filter_["build"]["buckets"]]
+            upstreamList = [x["key"] for x in filter["upstream"]["buckets"]]
+            clusterTypeList = [x["key"] for x in filter["clusterType"]["buckets"]]
+            buildList = [x["key"] for x in filter["build"]["buckets"]]
             keys_to_remove = [
                 "min_timestamp",
                 "max_timestamp",
@@ -339,25 +339,20 @@ class ElasticService:
                 "clusterType",
                 "build",
             ]
-            filter_ = removeKeys(filter_, keys_to_remove)
+            refiner = removeKeys(filter, keys_to_remove)
 
             build = getBuildFilter(buildList)
             buildObj = {"key": "build", "value": build}
 
-            for key, value in filter_.items():
-                filterObj = {"key": key, "value": []}
-                buckets = value["buckets"]
-                for bucket in buckets:
-                    filterObj["value"].append(bucket["key"])
-                filterData.append(filterObj)
+            for key, value in refiner.items():
+                values = [bucket["key"] for bucket in value["buckets"]]
+                if key == "platform":
+                    platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
+                    values = values + platformOptions
+                filterData.append({"key": key, "value": values})
 
             filterData.append(buildObj)
 
-            platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
-            for item in filterData:
-                if item["key"] == "platform":
-                    item["value"].extend(platformOptions)
-                    break
             return {
                 "filterData": filterData,
                 "summary": summary,
@@ -622,24 +617,20 @@ def flatten_dict(d, parent_key="", sep="."):
     return dict(items)
 
 
-def removeKeys(filterDict, keys_to_remove):
-    for key in keys_to_remove:
-        if key in filterDict:
-            del filterDict[key]
-    return filterDict
+def removeKeys(filterDict: dict[str, any], keys_to_remove: list[str]) -> dict[str, any]:
+    return {k: v for k, v in filterDict.items() if k not in keys_to_remove}
 
 
-def buildPlatformFilter(upstreamList, clusterypeList):
-    filterOptions = []
-    upstreamCheck = any("rosa-hcp" in s.lower() for s in upstreamList)
-    clusterTypeCheck = any("rosa" in s.lower() for s in clusterypeList)
+def buildPlatformFilter(upstream_list, cluster_type_list):
+    filter_options = set()
 
-    if upstreamCheck:
-        filterOptions.append("AWS ROSA-HCP")
-    if clusterTypeCheck:
-        filterOptions.append("AWS ROSA")
+    if any("rosa-hcp" in item.lower() for item in upstream_list):
+        filter_options.add("AWS ROSA-HCP")
 
-    return list(set(filterOptions))
+    if any("rosa" in item.lower() for item in cluster_type_list):
+        filter_options.add("AWS ROSA")
+
+    return list(filter_options)
 
 
 def buildReleaseStreamFilter(input_array):
