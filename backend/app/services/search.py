@@ -314,7 +314,7 @@ class ElasticService:
             print(f"Error retrieving indices for alias '{alias}': {e}")
             return []
 
-    async def buildFilterData(self, filter_, total):
+    async def buildFilterData(self, filter, total):
         """Return the data to build the filter"""
         try:
             summary = {"total": total}
@@ -324,13 +324,13 @@ class ElasticService:
             summary.update(
                 {
                     x["key"].lower(): x["doc_count"]
-                    for x in filter_["jobStatus"]["buckets"]
+                    for x in filter["jobStatus"]["buckets"]
                 }
             )
 
-            upstreamList = [x["key"] for x in filter_["upstream"]["buckets"]]
-            clusterTypeList = [x["key"] for x in filter_["clusterType"]["buckets"]]
-            buildList = [x["key"] for x in filter_["build"]["buckets"]]
+            upstreamList = [x["key"] for x in filter["upstream"]["buckets"]]
+            clusterTypeList = [x["key"] for x in filter["clusterType"]["buckets"]]
+            buildList = [x["key"] for x in filter["build"]["buckets"]]
             keys_to_remove = [
                 "min_timestamp",
                 "max_timestamp",
@@ -338,25 +338,20 @@ class ElasticService:
                 "clusterType",
                 "build",
             ]
-            filter_ = removeKeys(filter_, keys_to_remove)
+            refiner = removeKeys(filter, keys_to_remove)
 
             build = getBuildFilter(buildList)
             buildObj = {"key": "build", "value": build}
 
-            for key, value in filter_.items():
-                filterObj = {"key": key, "value": []}
-                buckets = value["buckets"]
-                for bucket in buckets:
-                    filterObj["value"].append(bucket["key"])
-                filterData.append(filterObj)
+            for key, value in refiner.items():
+                values = [bucket["key"] for bucket in value["buckets"]]
+                if key == "platform":
+                    platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
+                    values = values + platformOptions
+                filterData.append({"key": key, "value": values})
 
             filterData.append(buildObj)
 
-            platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
-            for item in filterData:
-                if item["key"] == "platform":
-                    item["value"].extend(platformOptions)
-                    break
             return {
                 "filterData": filterData,
                 "summary": summary,
