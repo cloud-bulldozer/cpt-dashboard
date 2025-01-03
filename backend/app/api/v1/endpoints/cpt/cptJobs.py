@@ -2,7 +2,7 @@ import json
 import asyncio
 from concurrent.futures import ProcessPoolExecutor, as_completed
 from multiprocessing import cpu_count
-from fastapi import Response
+from fastapi import Response, HTTPException
 import pandas as pd
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
@@ -67,6 +67,14 @@ async def jobs(
             ),
             status_code=422,
         )
+
+    if offset and not size:
+        raise HTTPException(400, f"offset {offset} specified without size")
+    elif not offset and not size:
+        size = 10000
+        offset = 0
+    elif not offset:
+        offset = 0
 
     results_df = pd.DataFrame()
     total_dict = {}
