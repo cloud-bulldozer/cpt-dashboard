@@ -131,7 +131,7 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
                         ),
                     }
                     filterData.append(currDict)
-    # can be removed once python scripts to determine success or failure are executed direclty
+    # can be removed once python scripts to determine success or failure are executed directly
     # in the splunk dashboard
     filterData.append({"key": "jobStatus", "value": ["success", "failure"]})
     return {"data": filterData, "total": response["total"]}
