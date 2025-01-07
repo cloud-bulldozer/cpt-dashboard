@@ -2,6 +2,7 @@ from app.services.search import ElasticService
 from fastapi import HTTPException, status
 import re
 import app.api.v1.commons.constants as constants
+from typing import Optional
 
 
 async def getMetadata(uuid: str, configpath: str):
@@ -98,3 +99,18 @@ def build_sort_terms(sort_string: str) -> list[dict[str, str]]:
             )
         sort_terms.append({f"{key}": {"order": dir}})
     return sort_terms
+
+
+def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[int, int]:
+    if offset and not size:
+        raise HTTPException(400, f"offset {offset} specified without size")
+    elif not offset and not size:
+        size = constants.MAX_PAGE
+        offset = 0
+    elif not offset:
+        offset = 0
+    elif offset >= constants.MAX_PAGE:
+        raise HTTPException(
+            400, f"offset {offset} is too big (>= {constants.MAX_PAGE})"
+        )
+    return offset, size

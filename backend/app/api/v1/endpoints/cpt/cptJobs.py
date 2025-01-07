@@ -13,6 +13,7 @@ from .maps.telco import telcoMapper
 from .maps.ocm import ocmMapper
 from ...commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
+from app.api.v1.commons.utils import normalize_pagination
 
 router = APIRouter()
 
@@ -68,13 +69,7 @@ async def jobs(
             status_code=422,
         )
 
-    if offset and not size:
-        raise HTTPException(400, f"offset {offset} specified without size")
-    elif not offset and not size:
-        size = 10000
-        offset = 0
-    elif not offset:
-        offset = 0
+    offset, size = normalize_pagination(offset, size)
 
     results_df = pd.DataFrame()
     total_dict = {}
@@ -110,7 +105,7 @@ async def jobs(
         "endDate": end_date.__str__(),
         "results": results_df.to_dict("records"),
         "total": jobsCount,
-        "offset": (offset + size) if size != 10000 else 0,
+        "offset": offset + size,
     }
 
     if pretty:
