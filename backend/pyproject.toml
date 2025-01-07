@@ -1,32 +1,32 @@
-[tool.poetry]
+[project]
 name = "openshift_perfscale_api"
 version = "0.1.1"
-description = "python transformer of openshift performance and scale test results"
-authors = ["mleader <mleader@redhat.com>"]
+description = "Python transformer of OpenShift performance and scale test results"
+authors = [{name = "mleader", email = "mleader@redhat.com"}]
+dependencies = [
+    "cryptography>=3.4.8,<4.0.0",
+    "pandas==1.2.4",
+    "vyper-config==1.0.0",
+    "semver==2.13.0",
+    "splunk-sdk==2.0.1",
+    "uvloop>=0.15.2,<1.0.0",
+    "httptools>=0.2.0,<1.0.0",
+    "elasticsearch==7.13.4",
+    "fastapi>=0.104.1,<1.0.0",
+    "pydantic>=2.3.0,<3.0.0",
+    "uvicorn>=0.14.0,<1.0.0",
+    "trio>=0.18.0,<1.0.0",
+    "aiohttp>=3.7.4,<4.0.0",
+    "httpx>=0.18.1,<1.0.0",
+    "orjson>=3.5.3,<4.0.0",
+    "atlassian-python-api>=3.41.9,<4.0.0",
+    "python-keycloak>=3.12.0,<4.0.0"
+]
+requires-python = ">=3.9,<4.0"
 
-[tool.poetry.dependencies]
-python = "^3.9"
-cryptography = "^3.4.8"
-pandas = "1.2.4"
-vyper-config = "1.0.0"
-semver = "2.13.0"
-splunk-sdk = "2.0.1"
-uvloop = "^0.15.2"
-httptools = "^0.2.0"
-elasticsearch = "7.13.4"
-fastapi = "^0.104.1"
-pydantic = "2.3.0"
-uvicorn = "^0.14.0"
-trio = "^0.18.0"
-aiohttp = "^3.7.4"
-httpx = "^0.18.1"
-orjson = "^3.5.3"
-atlassian-python-api = "^3.41.9"
-python-keycloak = "^3.12.0"
-
-[tool.poetry.dev-dependencies]
+[tool.poetry.group.dev.dependencies]
 watchgod = "^0.7"
 
 [build-system]
-requires = ["poetry-core>=1.0.0"]
+requires = ["poetry-core>=1.5.0"]
 build-backend = "poetry.core.masonry.api"
