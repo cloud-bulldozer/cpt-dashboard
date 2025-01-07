@@ -299,19 +299,19 @@ export const buildFilterData = () => async (dispatch, getState) => {
     const response = await API.get("/api/v1/telco/filters", { params });
 
     if (response.status === 200 && response?.data?.filterData?.length > 0) {
-      let data = cloneDeep(response.data.filterData);
-      for (let i = 0; i < tableFilters.length; i++) {
-        for (let j = 0; j < data.length; j++) {
-          if (tableFilters[i]["value"] === data[j]["key"]) {
-            data[j]["name"] = tableFilters[i]["name"];
-          }
-        }
-      }
+      // let data = cloneDeep(response.data.filterData);
+      // for (let i = 0; i < tableFilters.length; i++) {
+      //   for (let j = 0; j < data.length; j++) {
+      //     if (tableFilters[i]["value"] === data[j]["key"]) {
+      //       data[j]["name"] = tableFilters[i]["name"];
+      //     }
+      //   }
+      // }
 
       dispatch(getTelcoSummary(response.data.summary));
       dispatch({
         type: TYPES.SET_TELCO_FILTER_DATA,
-        payload: data,
+        payload: response.data.filterData,
       });
       const activeFilter = categoryFilterValue || tableFilters[0].name;
       dispatch(setTelcoCatFilters(activeFilter));

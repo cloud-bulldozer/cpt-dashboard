@@ -1,5 +1,5 @@
 # Define the keywords for sorting.
-# numeric values take no .keyword
+# numeric fields are without .keyword
 DIRECTIONS = ("asc", "desc")
 FIELDS = (
     "ciSystem.keyword",
@@ -63,4 +63,36 @@ RELEASE_STREAM_DICT = {
     "nightly": "Nightly",
     "ci": "ci",
     "ec": "Engineering Candidate",
+}
+
+TELCO_FIELDS_DICT = {
+    "cpu": "CPU",
+    "benchmark": "Benchmark",
+    "releaseStream": "Release Stream",
+    "nodeName": "Node Name",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "jobStatus": "Status",
+    "ocpVersion": "Build",
+}
+
+FILEDS_DISPLAY_NAMES = {
+    "ciSystem": "CI System",
+    "platform": "Platform",
+    "benchmark": "Benchmark",
+    "releaseStream": "Release Stream",
+    "networkType": "Network Type",
+    "workerNodesCount": "Worker Count",
+    "jobStatus": "Status",
+    "controlPlaneArch": "Control Plane Architecture",
+    "publish": "Control Plane Access",
+    "fips": "FIPS Enabled",
+    "encrypted": "Is Encrypted",
+    "ipsec": "Has IPSEC",
+    "ocpVersion": "Versions",
+    "build": "Build",
+    "computeArch": "Compute Architecture",
+    "jobStatus": "Status",
+    "startDate": "Start Date",
+    "endDate": "End Date",
 }

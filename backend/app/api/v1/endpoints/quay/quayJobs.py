@@ -18,7 +18,7 @@ router = APIRouter()
     "/api/v1/quay/jobs",
     summary="Returns a job list",
     description="Returns a list of jobs in the specified dates of requested size. \
-            If not dates are provided the API will default the values. \
+            If not dates are provided the API will use the following values as defaults. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={
@@ -87,7 +87,7 @@ async def jobs(
     "/api/v1/quay/filters",
     summary="Returns the data to construct filters",
     description="Returns the data to build filters in the specified dates. \
-            If not dates are provided the API will default the values. \
+            If not dates are provided the API will use the following values as defaults. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={

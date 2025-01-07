@@ -6,6 +6,7 @@ import app.api.v1.commons.hasher as hasher
 from datetime import datetime, timezone
 import app.api.v1.commons.utils as utils
 import app.api.v1.endpoints.telco.telcoGraphs as telcoGraphs
+import app.api.v1.commons.constants as constants
 
 
 async def getData(
@@ -117,21 +118,40 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     splunk = SplunkService(configpath=configpath)
     response = await splunk.filterPost(query=query, searchList=searchList)
     filterData = []
-
+    print(response["data"])
     if len(response["data"]) > 0:
         for item in response["data"]:
             for field, value in item.items():
-                if field != "total_records":
-                    currDict = {
-                        "key": field,
-                        "value": (
-                            utils.buildReleaseStreamFilter(value)
-                            if field == "releaseStream"
-                            else value
-                        ),
-                    }
-                    filterData.append(currDict)
+                if field == "total_records":
+                    continue
+
+                # Determine the appropriate value transformation
+                if isinstance(value, str):
+                    v = [value] if value else []
+                elif not isinstance(value, list):
+                    v = [value]
+                else:
+                    v = value
+
+                # Build the dictionary for the current field
+                transformed_value = (
+                    utils.buildReleaseStreamFilter(value)
+                    if field == "releaseStream"
+                    else v
+                )
+
+                currDict = {
+                    "key": field,
+                    "value": transformed_value,
+                    "name": constants.TELCO_FIELDS_DICT.get(field, "Unknown Field"),
+                }
+
+                # Append the dictionary to filterData
+                filterData.append(currDict)
+
     # can be removed once python scripts to determine success or failure are executed directly
     # in the splunk dashboard
-    filterData.append({"key": "jobStatus", "value": ["success", "failure"]})
+    filterData.append(
+        {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"}
+    )
     return {"data": filterData, "total": response["total"]}
