@@ -21,3 +21,4 @@ FIELDS = (
     "infraNodesCount",
     "totalNodesCount",
 )
+MAX_PAGE = 10000
