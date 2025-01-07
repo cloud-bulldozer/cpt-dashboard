@@ -59,9 +59,9 @@ def getBuild(job):
 def getReleaseStream(row):
     releaseStream = next(
         (
-            value
-            for key, value in constants.RELEASE_STREAM_DICT.items()
-            if key in row["releaseStream"]
+            v
+            for k, v in constants.RELEASE_STREAM_DICT.items()
+            if k in row["releaseStream"]
         ),
         "Stable",
     )
