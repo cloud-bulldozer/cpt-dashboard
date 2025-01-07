@@ -2,8 +2,8 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
-from ...commons.telco import getData, getFilterData
-from ...commons.example_responses import telco_200_response, response_422
+from app.api.v1.commons.telco import getData, getFilterData
+from app.api.v1.commons.example_responses import telco_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 
@@ -14,7 +14,7 @@ router = APIRouter()
     "/api/v1/telco/jobs",
     summary="Returns a job list",
     description="Returns a list of jobs in the specified dates of requested size. \
-            If not dates are provided the API will default the values. \
+            If not dates are provided the API will use the following values as defaults. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={
@@ -78,7 +78,7 @@ async def jobs(
     "/api/v1/telco/filters",
     summary="Returns data to build the filter",
     description="Returns a list of jobs in the specified dates of requested size. \
-            If not dates are provided the API will default the values. \
+            If not dates are provided the API will use the following values as defaults. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={

@@ -2,8 +2,8 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, HTTPException
-from ...commons.ocm import getData
-from ...commons.example_responses import ocp_200_response, response_422
+from app.api.v1.commons.ocm import getData
+from app.api.v1.commons.example_responses import ocp_200_response, response_422
 from fastapi.param_functions import Query
 
 router = APIRouter()

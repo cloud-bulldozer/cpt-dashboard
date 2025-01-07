@@ -283,19 +283,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
 
     const response = await API.get(API_ROUTES.QUAY_FILTERS_API_V1, { params });
     if (response.status === 200 && response?.data?.filterData?.length > 0) {
-      let data = cloneDeep(response.data.filterData);
-      for (let i = 0; i < tableFilters.length; i++) {
-        for (let j = 0; j < data.length; j++) {
-          if (tableFilters[i]["value"] === data[j]["key"]) {
-            data[j]["name"] = tableFilters[i]["name"];
-          }
-        }
-      }
-
       dispatch(getQuaySummary(response.data.summary));
       dispatch({
         type: TYPES.SET_QUAY_FILTER_DATA,
-        payload: data,
+        payload: response.data.filterData,
       });
       const activeFilter = categoryFilterValue || tableFilters[0].name;
       dispatch(setQuayCatFilters(activeFilter));

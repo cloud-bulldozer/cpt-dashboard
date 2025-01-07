@@ -1,5 +1,5 @@
-from ....commons.telco import getData
-from ....commons.utils import getReleaseStream
+from .app.api.v1.commons.telco import getData
+from .app.api.v1.commons.utils import getReleaseStream
 from datetime import date
 import pandas as pd
 
