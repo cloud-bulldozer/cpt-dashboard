@@ -5,6 +5,7 @@ from fastapi import APIRouter, HTTPException
 from ...commons.quay import getData
 from ...commons.example_responses import quay_200_response, response_422
 from fastapi.param_functions import Query
+from app.api.v1.commons.utils import normalize_pagination
 
 router = APIRouter()
 
@@ -52,13 +53,7 @@ async def jobs(
             status_code=422,
         )
 
-    if offset and not size:
-        raise HTTPException(400, f"offset {offset} specified without size")
-    elif not offset and not size:
-        size = 10000
-        offset = 0
-    elif not offset:
-        offset = 0
+    offset, size = normalize_pagination(offset, size)
 
     results = await getData(
         start_date, end_date, size, offset, sort, "quay.elasticsearch"
@@ -73,7 +68,7 @@ async def jobs(
         "endDate": end_date.__str__(),
         "results": jobs,
         "total": results["total"],
-        "offset": (offset + size) if size != 10000 else 0,
+        "offset": offset + size,
     }
 
     if pretty:
