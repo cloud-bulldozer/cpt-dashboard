@@ -39,7 +39,9 @@ def isRehearse(job):
 
 
 def clasifyAWSJobs(job):
-    if job["upstreamJob"].__contains__("rosa-hcp"):
+    if ("rosa-hcp" in job["clusterType"]) or ("rosa" in job["clusterType"]
+                                            and job["masterNodesCount"] == 0 
+                                            and job["infraNodesCount"] == 0):
         return "AWS ROSA-HCP"
     if job["clusterType"].__contains__("rosa"):
         return "AWS ROSA"
