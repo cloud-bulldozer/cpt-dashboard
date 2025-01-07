@@ -1,4 +1,5 @@
 # Define the keywords for sorting.
+# numeric values take no .keyword
 DIRECTIONS = ("asc", "desc")
 FIELDS = (
     "ciSystem.keyword",

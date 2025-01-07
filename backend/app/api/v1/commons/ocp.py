@@ -101,16 +101,9 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
 
 def getJobType(upstreamList: list):
     return list(
-        set(
-            [
-                "periodic" if "periodic" in item else "pull-request"
-                for item in upstreamList
-            ]
-        )
+        {"periodic" if "periodic" in item else "pull-request" for item in upstreamList}
     )
 
 
 def getIsRehearse(upstreamList: list):
-    return list(
-        set(["True" if "rehearse" in item else "False" for item in upstreamList])
-    )
+    return list({"True" if "rehearse" in item else "False" for item in upstreamList})
