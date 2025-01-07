@@ -341,14 +341,20 @@ class ElasticService:
             refiner = removeKeys(filter, keys_to_remove)
 
             build = getBuildFilter(buildList)
-            buildObj = {"key": "build", "value": build}
+            buildObj = {"key": "build", "value": build, "name": "Build"}
 
             for key, value in refiner.items():
                 values = [bucket["key"] for bucket in value["buckets"]]
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
-                filterData.append({"key": key, "value": values})
+                filterData.append(
+                    {
+                        "key": key,
+                        "value": values,
+                        "name": constants.FILEDS_DISPLAY_NAMES[key],
+                    }
+                )
 
             filterData.append(buildObj)
 
