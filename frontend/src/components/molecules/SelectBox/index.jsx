@@ -45,7 +45,7 @@ const SelectBox = (props) => {
       >
         <SelectList>
           {props.options.map((option) => (
-            <SelectOption value={option.name} key={option.value}>
+            <SelectOption value={option.name} key={option.key}>
               {option.name}
             </SelectOption>
           ))}

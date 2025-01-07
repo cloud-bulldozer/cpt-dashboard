@@ -11,7 +11,7 @@ from .maps.quay import quayMapper
 from .maps.hce import hceMapper
 from .maps.telco import telcoMapper
 from .maps.ocm import ocmMapper
-from ...commons.example_responses import cpt_200_response, response_422
+from app.api.v1.commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 

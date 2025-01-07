@@ -63,16 +63,12 @@ class SplunkService:
 
         try:
             # Run the job and retrieve results
-            job = self.service.jobs.create(
+            job = await self.service.jobs.create(
                 search_query,
                 exec_mode="normal",
                 earliest_time=query["earliest_time"],
                 latest_time=query["latest_time"],
             )
-            # Wait for the job to finish
-            while not job.is_done():
-                job.refresh()
-
             oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
         except Exception as e:
             print("Error querying splunk: {}".format(e))
@@ -121,33 +117,28 @@ class SplunkService:
         try:
             # If additional search parameters are provided, include those in searchindex
             searchindex = (
-                "search index={} {}".format(self.indice, searchList)
+                f"search index={self.indice} {searchList}"
                 if searchList
-                else "search index={}".format(self.indice)
+                else f"search index={self.indice}"
             )
-            # cluster_artifacts.cpu_models{}.cpu
-            search_query = (
-                "search index={} {} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
+            search_query = ""
+            if searchList:
+                search_query = "search index={} {} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
                     self.indice, searchList
                 )
-                if searchList
-                else "search index={} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
+            else:
+                search_query = "search index={} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
                     self.indice
                 )
-            )
 
             try:
                 # Run the job and retrieve results
-                job = self.service.jobs.create(
+                job = await self.service.jobs.create(
                     search_query,
                     exec_mode="blocking",
                     earliest_time=query["earliest_time"],
                     latest_time=query["latest_time"],
                 )
-                # Wait for the job to finish
-                while not job.is_done():
-                    job.refresh()
-
             except Exception as e:
                 print("Error querying in filters splunk: {}".format(e))
                 return None

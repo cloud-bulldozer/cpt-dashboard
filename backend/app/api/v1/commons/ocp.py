@@ -2,7 +2,6 @@ from datetime import date
 import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
-from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
 
 
 async def getData(
@@ -80,7 +79,7 @@ def fillEncryptionType(row):
 async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
     es = ElasticService(configpath=configpath)
 
-    aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
+    aggregate = utils.buildAggregateQuery("OCP_FIELD_CONSTANT_DICT")
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate)
     await es.close()
@@ -90,8 +89,12 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
     jobType = getJobType(upstreamList)
     isRehearse = getIsRehearse(upstreamList)
 
-    jobTypeObj = {"key": "jobType", "value": jobType}
-    isRehearseObj = {"key": "isRehearse", "value": isRehearse}
+    jobTypeObj = {
+        "key": "jobType",
+        "value": jobType,
+        "name": "Job Type",
+    }
+    isRehearseObj = {"key": "isRehearse", "value": isRehearse, "name": "Rehearse"}
 
     response["filterData"].append(jobTypeObj)
     response["filterData"].append(isRehearseObj)
