@@ -30,7 +30,7 @@ products = {
     "/api/v1/cpt/jobs",
     summary="Returns a job list from all the products.",
     description="Returns a list of jobs in the specified dates of requested size \
-            If not dates are provided the API will default the values. \
+            If dates are not provided the API will default the values: \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={

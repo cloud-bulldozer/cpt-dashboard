@@ -18,7 +18,7 @@ router = APIRouter()
     "/api/v1/ocp/jobs",
     summary="Returns a job list",
     description="Returns a list of jobs in the specified dates. \
-            If not dates are provided the API will use the following values as defaults.. \
+            If dates are not provided the API will use the following values as defaults: \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
     responses={
