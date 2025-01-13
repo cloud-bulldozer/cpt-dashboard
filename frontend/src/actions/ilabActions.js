@@ -24,7 +24,7 @@ export const fetchIlabJobs =
           ...(offset && { offset }),
         },
       });
-      if (response.status === 200 && response?.data?.results.length > 0) {
+      if (response.status === 200) {
         const startDate = response.data.startDate,
           endDate = response.data.endDate;
         dispatch({
