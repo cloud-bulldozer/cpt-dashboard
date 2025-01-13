@@ -45,7 +45,8 @@ class SplunkService:
         """
         query["count"] = size
         query["offset"] = offset
-
+        values = ["cyclictest"]
+        filter_values = ",".join([f'"{v}"' for v in values])
         # If additional search parameters are provided, include those in searchindex
         searchindex = (
             "search index={} {}".format(self.indice, searchList)
@@ -54,21 +55,22 @@ class SplunkService:
         )
 
         search_query = (
-            "search index={} {} | stats count AS total_records".format(
-                self.indice, searchList
-            )
+            f"search index={self.indice} {searchList}"
             if searchList
-            else "search index={} | stats count AS total_records".format(self.indice)
+            else f"search index={self.indice}"
         )
-
+        print("query")
+        print(search_query)
         try:
             # Run the job and retrieve results
-            job = await self.service.jobs.create(
+            job = self.service.jobs.create(
                 search_query,
                 exec_mode="normal",
                 earliest_time=query["earliest_time"],
                 latest_time=query["latest_time"],
             )
+            while not job.is_done():
+                job.refresh()
             oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
         except Exception as e:
             print("Error querying splunk: {}".format(e))
@@ -76,11 +78,18 @@ class SplunkService:
 
         # Fetch the results
         total_records = 0
+        print("doneee")
+        # print(job.results)
         for result in job.results(output_mode="json"):
             decoded_data = json.loads(result.decode("utf-8"))
+            #   print(decoded_data)
             value = decoded_data.get("results")
-            total_records = value[0]["total_records"]
-
+            print("dummpy")
+        #    print(value)
+        # total_records = value[0]["total_records"]
+        # for result in results.ResultsReader(job.results()):
+        #     if isinstance(result, dict):
+        #         print(result)
         # Get the results and display them using the JSONResultsReader
         res_array = []
         async for record in self._stream_results(oneshotsearch_results):
@@ -133,7 +142,7 @@ class SplunkService:
 
             try:
                 # Run the job and retrieve results
-                job = await self.service.jobs.create(
+                job = self.service.jobs.create(
                     search_query,
                     exec_mode="blocking",
                     earliest_time=query["earliest_time"],

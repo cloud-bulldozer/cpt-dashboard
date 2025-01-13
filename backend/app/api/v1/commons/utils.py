@@ -133,3 +133,29 @@ def buildReleaseStreamFilter(input_array):
         )
         mapped_array.append(match)
     return list(set(mapped_array))
+
+
+def get_dict_from_qs(query_string):
+    print("qs")
+    print(query_string)
+    query_dict = parse_qs(query_string)
+    print(query_dict)
+    cleaned_dict = {
+        key: [v.strip("'") for v in values] for key, values in query_dict.items()
+    }
+
+    return cleaned_dict
+
+
+def construct_query(filter_dict):
+    print(filter_dict)
+    query_parts = []
+    if isinstance(filter_dict, dict):
+        for key, values in filter_dict.items():
+            k = constants.FIELDS_FILTER_DICT[key]
+            if len(values) > 1:
+                or_clause = " or ".join([f'{k}="{value}"' for value in values])
+                query_parts.append(f"{or_clause}")
+            else:
+                query_parts.append(f'{k}="{values[0]}"')
+        return " ".join(query_parts)
