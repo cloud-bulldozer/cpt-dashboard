@@ -155,7 +155,8 @@ def process_cpu_util(json_data: str, is_row: bool):
             if each_type["type_name"] == "total":
                total_max_cpu = each_type.get("max_cpu", 0)
                break
-         total_avg_cpu = each_scenario.get("avg_cpu_total", 0)
+         total_avg_cpu = each_scenario.get("avg_cpu_total") or 0
+         total_avg_mem = each_scenario.get("avg_mem_total") or 0
          break
    if total_max_cpu > defined_threshold:
       minus_max_cpu = total_max_cpu - defined_threshold
