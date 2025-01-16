@@ -44,19 +44,12 @@ class TestParser:
         assert ("x", None) == t._next_token([":", "="], optional=True)
 
     def test_parse_missing(self):
-<<<<<<< HEAD
         """Test exception when a required delimiter is not found"""
-=======
-        """Test exception when a delimiter is missing"""
->>>>>>> fbf133f (Add a simple unit test framework.)
 
         t = Parser("foo:bar=x")
         assert ("foo", ":") == t._next_token([":", "="])
         assert ("bar", "=") == t._next_token([":", "="])
-<<<<<<< HEAD
         # Without optional=True, expect exception after exhausting the term
-=======
->>>>>>> fbf133f (Add a simple unit test framework.)
         with pytest.raises(HTTPException) as e:
             t._next_token(delimiters=[":", "="])
         assert 400 == e.value.status_code
