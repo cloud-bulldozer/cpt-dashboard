@@ -361,55 +361,6 @@ async def iteration_samples(
 
 
 @router.get(
-    "/api/v1/ilab/runs/{run}/timeline",
-    summary="Returns the 'timeline' of a run",
-    description="Describes the sequence of iterations, samples, and periods.",
-    responses={
-        200: example_response(
-            {
-                "run": {
-                    "id": "70d3b53f-c588-49a3-91c2-7fcf3927be7e",
-                    "iterations": [
-                        {
-                            "id": "BFC16DA6-60C8-11EF-AB10-CF940109872B",
-                            "num": 1,
-                            "path": None,
-                            "primary-metric": "ilab::train-samples-sec",
-                            "primary-period": "measurement",
-                            "status": "pass",
-                            "samples": [
-                                {
-                                    "id": "C021BECC-60C8-11EF-A619-E0BC70D6C320",
-                                    "num": "1",
-                                    "path": None,
-                                    "status": "pass",
-                                    "periods": [
-                                        {
-                                            "begin": "2024-08-22 19:09:08.642000+00:00",
-                                            "end": "2024-08-22 20:04:32.889000+00:00",
-                                            "id": "C022CDC6-60C8-11EF-BA80-AFE7B4B2692B",
-                                            "name": "measurement",
-                                        }
-                                    ],
-                                }
-                            ],
-                        }
-                    ],
-                    "begin": "2024-08-22 19:09:08.642000+00:00",
-                    "end": "2024-08-22 20:04:32.889000+00:00",
-                }
-            }
-        ),
-        400: example_error("Parameter error"),
-    },
-)
-async def timeline(
-    crucible: Annotated[CrucibleService, Depends(crucible_svc)], run: str
-):
-    return await crucible.get_timeline(run)
-
-
-@router.get(
     "/api/v1/ilab/runs/{run}/metrics",
     summary="Describe the metrics collected for a run",
     description="Returns metric labels along with breakout names and values.",
