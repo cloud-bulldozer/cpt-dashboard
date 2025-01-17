@@ -9,6 +9,7 @@ dependencies = [
     "vyper-config==1.0.0",
     "semver==2.13.0",
     "splunk-sdk==2.0.1",
+    "numpy==1.26.4",
     "uvloop>=0.15.2,<1.0.0",
     "httptools>=0.2.0,<1.0.0",
     "elasticsearch==7.13.4",
