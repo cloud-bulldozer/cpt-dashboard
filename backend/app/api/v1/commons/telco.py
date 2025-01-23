@@ -48,24 +48,16 @@ async def getData(
     test_type_filter = " OR ".join(
         ['test_type="{}"'.format(test_type) for test_type in test_types]
     )
-    # nodeName='cnfdg18','cnfdg19'&cpu='Intel 8,benchmark=cyclictest'
-    print("filter")
-    print(filter)
+
+    searchList = test_type_filter
     if filter:
         filter_dict = utils.get_dict_from_qs(filter)
-        print("dict")
-        print(filter_dict)
         searchQuery = utils.construct_query(filter_dict)
-        print("query")
-        print(searchQuery)
         if "benchmark" in filter_dict:
             searchList = searchQuery
         else:
             searchList = searchQuery + " " + test_type_filter
-    else:
-        searchList = test_type_filter
-    # searchList = test_type_filter
-    print(searchList)
+
     splunk = SplunkService(configpath=configpath)
     response = await splunk.query(
         query=query, size=size, offset=offset, searchList=searchList
@@ -115,7 +107,9 @@ async def getData(
     return {"data": jobs, "total": response["total"]}
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
     test_types = [
         "oslat",
         "cyclictest",
@@ -136,10 +130,18 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
-    searchList = " OR ".join(
+    test_type_filter = " OR ".join(
         ['test_type="{}"'.format(test_type) for test_type in test_types]
     )
-    # searchList = 'test_type="cyclictest"'
+    searchList = test_type_filter
+    if filter:
+        filter_dict = utils.get_dict_from_qs(filter)
+        searchQuery = utils.construct_query(filter_dict)
+        if "benchmark" in filter_dict:
+            searchList = searchQuery
+        else:
+            searchList = searchQuery + " " + test_type_filter
+
     splunk = SplunkService(configpath=configpath)
     response = await splunk.filterPost(query=query, searchList=searchList)
     filterData = []

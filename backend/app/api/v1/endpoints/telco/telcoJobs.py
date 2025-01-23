@@ -101,6 +101,7 @@ async def filters(
     pretty: bool = Query(False, description="Output content in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
+    filter: str = Query(None, description="Query to filter the jobs"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -117,7 +118,7 @@ async def filters(
             status_code=422,
         )
 
-    results = await getFilterData(start_date, end_date, "telco.splunk")
+    results = await getFilterData(start_date, end_date, filter, "telco.splunk")
 
     response = {"filterData": results["data"], "summary": {"total": results["total"]}}
 
