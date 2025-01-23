@@ -90,7 +90,6 @@ async def getData(
 async def getFilterData(
     start_datetime: date, end_datetime: date, filter: str, configpath: str
 ):
-
     cfg = config.get_config()
     try:
         jenkins_url = cfg.get("telco.config.job_url")
