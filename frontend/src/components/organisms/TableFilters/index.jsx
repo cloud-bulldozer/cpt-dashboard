@@ -60,8 +60,8 @@ const TableFilter = (props) => {
     setAppliedFilters(navigation, type);
   };
   const deleteItem = (key, value) => {
-    removeAppliedFilters(key, value, navigation, type);
     updateSelectedFilter(key, value, false);
+    removeAppliedFilters(key, value, navigation, type);
   };
   const startDateChangeHandler = (date, key) => {
     setDateFilter(date, key, navigation, type);
