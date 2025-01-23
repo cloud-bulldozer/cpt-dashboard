@@ -11,6 +11,7 @@ async def getData(
     size: int,
     offset: int,
     sort: str,
+    filter: str,
     configpath: str,
 ):
     query = {
@@ -77,14 +78,16 @@ def fillEncryptionType(row):
         return row["encryptionType"]
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
-
     response = await es.filterPost(start_datetime, end_datetime, aggregate)
+    print("carrot")
     await es.close()
-
+    print("drums")
     upstreamList = response["upstreamList"]
 
     jobType = getJobType(upstreamList)
