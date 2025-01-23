@@ -3,10 +3,6 @@ import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
-from app.api.v1.commons.utils import (
-    construct_ES_filter_query,
-    get_dict_from_qs,
-)
 
 
 async def getData(

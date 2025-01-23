@@ -69,9 +69,6 @@ async def getFilterData(
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(QUAY_FIELD_CONSTANT_DICT)
-    refiner = ""
-    if filter:
-        refiner = utils.transform_filter(filter)
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
