@@ -45,22 +45,16 @@ class SplunkService:
         """
         query["count"] = size
         query["offset"] = offset
-        values = ["cyclictest"]
-        filter_values = ",".join([f'"{v}"' for v in values])
+
         # If additional search parameters are provided, include those in searchindex
-        searchindex = (
-            "search index={} {}".format(self.indice, searchList)
-            if searchList
-            else "search index={}".format(self.indice)
-        )
+        base_query = f"search index={self.indice}"
+        searchindex = f"{base_query} {searchList}" if searchList else base_query
 
         search_query = (
-            f"search index={self.indice} {searchList}"
+            f"search index={self.indice} {searchList} | stats count AS total_records"
             if searchList
-            else f"search index={self.indice}"
+            else f"search index={self.indice} | stats count AS total_records"
         )
-        print("query")
-        print(search_query)
         try:
             # Run the job and retrieve results
             job = self.service.jobs.create(
@@ -78,18 +72,10 @@ class SplunkService:
 
         # Fetch the results
         total_records = 0
-        print("doneee")
-        # print(job.results)
         for result in job.results(output_mode="json"):
             decoded_data = json.loads(result.decode("utf-8"))
-            #   print(decoded_data)
             value = decoded_data.get("results")
-            print("dummpy")
-        #    print(value)
-        # total_records = value[0]["total_records"]
-        # for result in results.ResultsReader(job.results()):
-        #     if isinstance(result, dict):
-        #         print(result)
+            total_records = value[0]["total_records"]
         # Get the results and display them using the JSONResultsReader
         res_array = []
         async for record in self._stream_results(oneshotsearch_results):
@@ -125,20 +111,11 @@ class SplunkService:
 
         try:
             # If additional search parameters are provided, include those in searchindex
-            searchindex = (
-                f"search index={self.indice} {searchList}"
-                if searchList
-                else f"search index={self.indice}"
-            )
             search_query = ""
             if searchList:
-                search_query = "search index={} {} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
-                    self.indice, searchList
-                )
+                search_query = f"search index={self.indice} {searchList} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
             else:
-                search_query = "search index={} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
-                    self.indice
-                )
+                search_query = f"search index={self.indice} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
 
             try:
                 # Run the job and retrieve results
