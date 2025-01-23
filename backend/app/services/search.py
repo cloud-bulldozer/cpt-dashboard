@@ -348,6 +348,7 @@ class ElasticService:
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
+                print(constants.FILEDS_DISPLAY_NAMES[key])
                 filterData.append(
                     {
                         "key": key,
