@@ -4,12 +4,12 @@ import * as TYPES from "@/actions/types.js";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   deleteAppliedFilters,
-  getFilteredData,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
@@ -48,6 +48,7 @@ export const fetchQuayJobsData = () => async (dispatch) => {
           offset: response.data.offset,
         },
       });
+
       dispatch(tableReCalcValues());
     }
   } catch (error) {
@@ -111,25 +112,11 @@ export const removeQuayAppliedFilters =
     dispatch(applyFilters());
   };
 
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().quay;
-
-  const results = [...getState().quay.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_QUAY_FILTERED_DATA,
-    payload: filtered,
-  });
-  dispatch(tableReCalcValues());
+export const applyFilters = () => (dispatch) => {
+  dispatch(setQuayOffset(INITAL_OFFSET));
+  dispatch(fetchQuayJobsData());
   dispatch(buildFilterData());
+  dispatch(tableReCalcValues());
 };
 export const setQuayAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().quay;

@@ -41,6 +41,7 @@ async def jobs(
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
     sort: str = Query(None, description="To sort fields on specified direction"),
+    filter: str = Query(None, description="Query to filter the jobs"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -60,7 +61,7 @@ async def jobs(
     offset, size = normalize_pagination(offset, size)
 
     results = await getData(
-        start_date, end_date, size, offset, sort, "ocp.elasticsearch"
+        start_date, end_date, size, offset, sort, filter, "ocp.elasticsearch"
     )
     jobs = []
     if "data" in results and len(results["data"]) >= 1:
@@ -106,6 +107,7 @@ async def filters(
         examples=["2020-11-15"],
     ),
     pretty: bool = Query(False, description="Output content in pretty format."),
+    filter: str = Query(None, description="Query to filter the jobs"),
 ):
     if start_date is None:
         start_date = datetime.utcnow().date()
@@ -122,7 +124,7 @@ async def filters(
             status_code=422,
         )
 
-    results = await getFilterData(start_date, end_date, "ocp.elasticsearch")
+    results = await getFilterData(start_date, end_date, filter, "ocp.elasticsearch")
 
     if len(results["filterData"]) > 0:
         json_str = json.dumps(results, indent=4)
