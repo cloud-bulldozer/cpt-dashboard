@@ -105,7 +105,7 @@ async def getFilterData(
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
-
+    print("drums")
     upstreamList = response["upstreamList"]
 
     jobType = getJobType(upstreamList)
