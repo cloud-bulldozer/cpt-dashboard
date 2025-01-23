@@ -4,6 +4,7 @@ from fastapi import HTTPException, status
 import re
 import app.api.v1.commons.constants as constants
 from typing import Optional
+from urllib.parse import parse_qs
 
 
 async def getMetadata(uuid: str, configpath: str):
@@ -136,10 +137,7 @@ def buildReleaseStreamFilter(input_array):
 
 
 def get_dict_from_qs(query_string):
-    print("qs")
-    print(query_string)
     query_dict = parse_qs(query_string)
-    print(query_dict)
     cleaned_dict = {
         key: [v.strip("'") for v in values] for key, values in query_dict.items()
     }
@@ -148,7 +146,6 @@ def get_dict_from_qs(query_string):
 
 
 def construct_query(filter_dict):
-    print(filter_dict)
     query_parts = []
     if isinstance(filter_dict, dict):
         for key, values in filter_dict.items():

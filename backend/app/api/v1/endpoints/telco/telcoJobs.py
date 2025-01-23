@@ -54,7 +54,7 @@ async def jobs(
         )
     offset, size = normalize_pagination(offset, size)
 
-    results = await getData(start_date, end_date, size, offset, "telco.splunk")
+    results = await getData(start_date, end_date, size, offset, filter, "telco.splunk")
 
     jobs = []
     if "data" in results and len(results["data"]) >= 1:
