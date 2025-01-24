@@ -156,3 +156,51 @@ def construct_query(filter_dict):
             else:
                 query_parts.append(f'{k}="{values[0]}"')
         return " ".join(query_parts)
+
+
+def get_match_phrase(key, item):
+    match_phrase = {"match_phrase": {key: item}}
+    return match_phrase
+
+
+def construct_ES_filter_query(filter):
+    should_part = []
+    must_part = []
+
+    key_to_field = {
+        "build": "ocpVersion",
+        "jobType": "upstreamJob",
+        "isRehearse": "upstreamJob",
+    }
+
+    search_value = {
+        "isRehearse": "rehearse",
+        "jobType": "periodic",
+    }
+
+    for key, values in filter.items():
+        field = key_to_field.get(key, key)
+        for value in values:
+            if key in search_value:
+                match_clause = get_match_phrase(field, search_value[key])
+                if key == "isRehearse":
+                    target_list = must_part if not value else should_part
+                elif key == "jobType":
+                    target_list = should_part if value == "periodic" else must_part
+                target_list.append(match_clause)
+            else:
+                should_part.append(get_match_phrase(field, value))
+
+    return {
+        "query": should_part,
+        "must_query": must_part,
+        "min_match": len(should_part),
+    }
+
+
+def transform_filter(filter):
+    filter_dict = get_dict_from_qs(filter)
+    refiner = construct_ES_filter_query(filter_dict)
+    print(refiner)
+    print(refiner["query"])
+    return refiner
