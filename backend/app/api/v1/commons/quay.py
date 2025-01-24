@@ -30,6 +30,11 @@ async def getData(
 
     if sort:
         query["sort"] = utils.build_sort_terms(sort)
+    if filter:
+        refiner = utils.transform_filter(filter)
+        query["query"]["bool"]["should"] = refiner["query"]
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+        query["query"]["bool"]["must_not"] = refiner["must_query"]
 
     if filter:
         refiner = utils.transform_filter(filter)
