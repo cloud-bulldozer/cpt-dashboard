@@ -11,6 +11,7 @@ from ...commons.example_responses import (
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 
+
 router = APIRouter()
 
 
