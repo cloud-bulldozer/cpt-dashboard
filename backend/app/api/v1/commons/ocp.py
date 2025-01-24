@@ -3,6 +3,10 @@ import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
+from app.api.v1.commons.utils import (
+    construct_ES_filter_query,
+    get_dict_from_qs,
+)
 
 
 async def getData(
@@ -32,7 +36,6 @@ async def getData(
         query["query"]["bool"]["should"] = refiner["query"]
         query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
         query["query"]["bool"]["must_not"] = refiner["must_query"]
-
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -99,7 +102,7 @@ async def getFilterData(
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
-    print("drums")
+
     upstreamList = response["upstreamList"]
 
     jobType = getJobType(upstreamList)
@@ -125,4 +128,5 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
+    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})
