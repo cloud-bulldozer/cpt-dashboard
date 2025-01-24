@@ -24,6 +24,11 @@ async def getData(
 
     if sort:
         query["sort"] = utils.build_sort_terms(sort)
+    if filter:
+        refiner = utils.transform_filter(filter)
+        query["query"]["bool"]["should"] = refiner["query"]
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+        query["query"]["bool"]["must_not"] = refiner["must_query"]
 
     es = ElasticService(configpath=configpath)
     response = await es.post(
@@ -64,8 +69,11 @@ async def getFilterData(
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(QUAY_FIELD_CONSTANT_DICT)
+    refiner = ""
+    if filter:
+        refiner = utils.transform_filter(filter)
 
-    response = await es.filterPost(start_datetime, end_datetime, aggregate)
+    response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
     return {"filterData": response["filterData"], "summary": response["summary"]}
