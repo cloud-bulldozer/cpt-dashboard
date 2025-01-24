@@ -105,7 +105,7 @@ async def getFilterData(
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
-    print("drums")
+
     upstreamList = response["upstreamList"]
 
     jobType = getJobType(upstreamList)
@@ -131,4 +131,5 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
+    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})
