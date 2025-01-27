@@ -1,4 +1,4 @@
-from .app.api.v1.commons.ocm import getData
+from app.api.v1.commons.ocm import getData
 from datetime import date
 import pandas as pd
 

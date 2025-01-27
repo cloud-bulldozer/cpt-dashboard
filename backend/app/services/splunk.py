@@ -47,28 +47,24 @@ class SplunkService:
         query["offset"] = offset
 
         # If additional search parameters are provided, include those in searchindex
-        searchindex = (
-            "search index={} {}".format(self.indice, searchList)
-            if searchList
-            else "search index={}".format(self.indice)
-        )
+        base_query = f"search index={self.indice}"
+        searchindex = f"{base_query} {searchList}" if searchList else base_query
 
         search_query = (
-            "search index={} {} | stats count AS total_records".format(
-                self.indice, searchList
-            )
+            f"search index={self.indice} {searchList} | stats count AS total_records"
             if searchList
-            else "search index={} | stats count AS total_records".format(self.indice)
+            else f"search index={self.indice} | stats count AS total_records"
         )
-
         try:
             # Run the job and retrieve results
-            job = await self.service.jobs.create(
+            job = self.service.jobs.create(
                 search_query,
                 exec_mode="normal",
                 earliest_time=query["earliest_time"],
                 latest_time=query["latest_time"],
             )
+            while not job.is_done():
+                job.refresh()
             oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
         except Exception as e:
             print("Error querying splunk: {}".format(e))
@@ -80,7 +76,6 @@ class SplunkService:
             decoded_data = json.loads(result.decode("utf-8"))
             value = decoded_data.get("results")
             total_records = value[0]["total_records"]
-
         # Get the results and display them using the JSONResultsReader
         res_array = []
         async for record in self._stream_results(oneshotsearch_results):
@@ -116,24 +111,15 @@ class SplunkService:
 
         try:
             # If additional search parameters are provided, include those in searchindex
-            searchindex = (
-                f"search index={self.indice} {searchList}"
-                if searchList
-                else f"search index={self.indice}"
-            )
             search_query = ""
             if searchList:
-                search_query = "search index={} {} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
-                    self.indice, searchList
-                )
+                search_query = f"search index={self.indice} {searchList} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
             else:
-                search_query = "search index={} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream".format(
-                    self.indice
-                )
+                search_query = f"search index={self.indice} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
 
             try:
                 # Run the job and retrieve results
-                job = await self.service.jobs.create(
+                job = self.service.jobs.create(
                     search_query,
                     exec_mode="blocking",
                     earliest_time=query["earliest_time"],

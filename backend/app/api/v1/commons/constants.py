@@ -96,3 +96,11 @@ FILEDS_DISPLAY_NAMES = {
     "startDate": "Start Date",
     "endDate": "End Date",
 }
+
+FIELDS_FILTER_DICT = {
+    "nodeName": "node_name",
+    "cpu": "cpu",
+    "benchmark": "test_type",
+    "ocpVersion": "ocp_version",
+    "releaseStream": "ocp_build",
+}

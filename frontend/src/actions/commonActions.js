@@ -139,8 +139,21 @@ export const getSelectedFilter =
     return selectedFilters;
   };
 
+const convertObjectToQS = (filter) => {
+  const queryString = Object.entries(filter)
+    .map(([key, values]) => `${key}='${values.join("','")}'`)
+    .join("&");
+
+  return queryString;
+};
 export const getRequestParams = (type) => (dispatch, getState) => {
-  const { start_date, end_date, perPage, offset, sort } = getState()[type];
+  const { start_date, end_date, perPage, offset, sort, appliedFilters } =
+    getState()[type];
+
+  let filter = "";
+  if (Object.keys(appliedFilters).length > 0) {
+    filter = convertObjectToQS(appliedFilters);
+  }
   const params = {
     pretty: true,
     ...(start_date && { start_date }),
@@ -148,6 +161,7 @@ export const getRequestParams = (type) => (dispatch, getState) => {
     size: perPage,
     offset: offset,
     ...(sort && { sort }),
+    ...(filter && { filter }),
   };
 
   return params;

@@ -10,17 +10,13 @@ import app.api.v1.commons.constants as constants
 
 
 async def getData(
-    start_datetime: date, end_datetime: date, size: int, offset: int, configpath: str
+    start_datetime: date,
+    end_datetime: date,
+    size: int,
+    offset: int,
+    filter: str,
+    configpath: str,
 ):
-    test_types = [
-        "oslat",
-        "cyclictest",
-        "cpu_util",
-        "deployment",
-        "ptp",
-        "reboot",
-        "rfc-2544",
-    ]
     cfg = config.get_config()
     try:
         jenkins_url = cfg.get("telco.config.job_url")
@@ -40,67 +36,61 @@ async def getData(
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
-    searchList = " OR ".join(
-        ['test_type="{}"'.format(test_type) for test_type in test_types]
-    )
+    searchList = constructFilterQuery(filter)
+
     splunk = SplunkService(configpath=configpath)
     response = await splunk.query(
         query=query, size=size, offset=offset, searchList=searchList
     )
     mapped_list = []
-    for each_response in response["data"]:
-        end_timestamp = int(each_response["timestamp"])
-        test_data = each_response["data"]
-        threshold = await telcoGraphs.process_json(test_data, True)
-        hash_digest, encrypted_data = hasher.hash_encrypt_json(each_response)
-        execution_time_seconds = test_type_execution_times.get(
-            test_data["test_type"], 0
-        )
-        start_timestamp = end_timestamp - execution_time_seconds
-        start_time_utc = datetime.fromtimestamp(start_timestamp, tz=timezone.utc)
-        end_time_utc = datetime.fromtimestamp(end_timestamp, tz=timezone.utc)
-        kernel = test_data["kernel"] if "kernel" in test_data else "Undefined"
+    if response:
+        for each_response in response["data"]:
+            end_timestamp = int(each_response["timestamp"])
+            test_data = each_response["data"]
+            threshold = await telcoGraphs.process_json(test_data, True)
+            hash_digest, encrypted_data = hasher.hash_encrypt_json(each_response)
+            execution_time_seconds = test_type_execution_times.get(
+                test_data["test_type"], 0
+            )
+            start_timestamp = end_timestamp - execution_time_seconds
+            start_time_utc = datetime.fromtimestamp(start_timestamp, tz=timezone.utc)
+            end_time_utc = datetime.fromtimestamp(end_timestamp, tz=timezone.utc)
+            kernel = test_data["kernel"] if "kernel" in test_data else "Undefined"
 
-        mapped_list.append(
-            {
-                "uuid": hash_digest,
-                "encryptedData": encrypted_data.decode("utf-8"),
-                "ciSystem": "Jenkins",
-                "benchmark": test_data["test_type"],
-                "kernel": kernel,
-                "shortVersion": test_data["ocp_version"],
-                "ocpVersion": test_data["ocp_build"],
-                "releaseStream": utils.getReleaseStream(
-                    {"releaseStream": test_data["ocp_build"]}
-                ),
-                "nodeName": test_data["node_name"],
-                "cpu": test_data["cpu"],
-                "formal": test_data["formal"],
-                "startDate": str(start_time_utc),
-                "endDate": str(end_time_utc),
-                "buildUrl": jenkins_url
-                + "/"
-                + str(test_data["cluster_artifacts"]["ref"]["jenkins_build"]),
-                "jobStatus": "failure" if (threshold != 0) else "success",
-                "jobDuration": execution_time_seconds,
-            }
-        )
+            mapped_list.append(
+                {
+                    "uuid": hash_digest,
+                    "encryptedData": encrypted_data.decode("utf-8"),
+                    "ciSystem": "Jenkins",
+                    "benchmark": test_data["test_type"],
+                    "kernel": kernel,
+                    "shortVersion": test_data["ocp_version"],
+                    "ocpVersion": test_data["ocp_build"],
+                    "releaseStream": utils.getReleaseStream(
+                        {"releaseStream": test_data["ocp_build"]}
+                    ),
+                    "nodeName": test_data["node_name"],
+                    "cpu": test_data["cpu"],
+                    "formal": test_data["formal"],
+                    "startDate": str(start_time_utc),
+                    "endDate": str(end_time_utc),
+                    "buildUrl": jenkins_url
+                    + "/"
+                    + str(test_data["cluster_artifacts"]["ref"]["jenkins_build"]),
+                    "jobStatus": "failure" if (threshold != 0) else "success",
+                    "jobDuration": execution_time_seconds,
+                }
+            )
 
     jobs = pd.json_normalize(mapped_list)
 
-    return {"data": jobs, "total": response["total"]}
+    return {"data": jobs, "total": response["total"] if response else 0}
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
-    test_types = [
-        "oslat",
-        "cyclictest",
-        "cpu_util",
-        "deployment",
-        "ptp",
-        "reboot",
-        "rfc-2544",
-    ]
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
+
     cfg = config.get_config()
     try:
         jenkins_url = cfg.get("telco.config.job_url")
@@ -112,13 +102,11 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
-    searchList = " OR ".join(
-        ['test_type="{}"'.format(test_type) for test_type in test_types]
-    )
+    searchList = constructFilterQuery(filter)
+
     splunk = SplunkService(configpath=configpath)
     response = await splunk.filterPost(query=query, searchList=searchList)
     filterData = []
-    print(response["data"])
     if len(response["data"]) > 0:
         for item in response["data"]:
             for field, value in item.items():
@@ -155,3 +143,31 @@ async def getFilterData(start_datetime: date, end_datetime: date, configpath: st
         {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"}
     )
     return {"data": filterData, "total": response["total"]}
+
+
+def constructFilterQuery(filter):
+    test_types = [
+        "oslat",
+        "cyclictest",
+        "cpu_util",
+        "deployment",
+        "ptp",
+        "reboot",
+        "rfc-2544",
+    ]
+    test_type_filter = " OR ".join(
+        f'test_type="{test_type}"' for test_type in test_types
+    )
+    search_list = test_type_filter
+
+    if filter:
+        filter_dict = utils.get_dict_from_qs(filter)
+        search_query = utils.construct_query(filter_dict)
+
+        # Update `search_list` based on the presence of "benchmark" in `filter_dict`
+        search_list = (
+            search_query
+            if "benchmark" in filter_dict
+            else f"{search_query} {test_type_filter}"
+        )
+    return search_list

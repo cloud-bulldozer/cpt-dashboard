@@ -4,12 +4,12 @@ import * as TYPES from "@/actions/types.js";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   deleteAppliedFilters,
-  getFilteredData,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
 
@@ -106,25 +106,12 @@ export const removeTelcoAppliedFilters =
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().telco;
+export const applyFilters = () => (dispatch) => {
+  dispatch(setTelcoOffset(INITAL_OFFSET));
 
-  const results = [...getState().telco.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_TELCO_FILTERED_DATA,
-    payload: filtered,
-  });
-  dispatch(tableReCalcValues());
+  dispatch(fetchTelcoJobsData());
   dispatch(buildFilterData());
+  dispatch(tableReCalcValues());
 };
 export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().telco;
@@ -286,7 +273,6 @@ export const fetchGraphData =
   };
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().telco;
-  dispatch(getTelcoSummary());
   dispatch(setTelcoPageOptions(page, perPage));
 };
 

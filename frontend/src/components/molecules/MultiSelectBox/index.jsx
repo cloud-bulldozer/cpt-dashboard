@@ -44,7 +44,7 @@ const MultiSelectBox = (props) => {
           height: "36px",
         }}
       >
-        {Array.isArray(props.selected.value) &&
+        {Array.isArray(props.selected?.value) &&
         props.selected.value.length > 0 ? (
           <TextInputGroup>
             <TextInputGroupMain>
