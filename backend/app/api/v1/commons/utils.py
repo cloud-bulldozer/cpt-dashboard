@@ -151,7 +151,7 @@ def construct_query(filter_dict):
         for key, values in filter_dict.items():
             k = constants.FIELDS_FILTER_DICT[key]
             if len(values) > 1:
-                or_clause = " or ".join([f'{k}="{value}"' for value in values])
+                or_clause = " OR ".join([f'{k}="{value}"' for value in values])
                 query_parts.append(f"{or_clause}")
             else:
                 query_parts.append(f'{k}="{values[0]}"')

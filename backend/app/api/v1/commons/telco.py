@@ -17,15 +17,6 @@ async def getData(
     filter: str,
     configpath: str,
 ):
-    test_types = [
-        "oslat",
-        "cyclictest",
-        "cpu_util",
-        "deployment",
-        "ptp",
-        "reboot",
-        "rfc-2544",
-    ]
     cfg = config.get_config()
     try:
         jenkins_url = cfg.get("telco.config.job_url")
@@ -45,18 +36,7 @@ async def getData(
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
-    test_type_filter = " OR ".join(
-        ['test_type="{}"'.format(test_type) for test_type in test_types]
-    )
-
-    searchList = test_type_filter
-    if filter:
-        filter_dict = utils.get_dict_from_qs(filter)
-        searchQuery = utils.construct_query(filter_dict)
-        if "benchmark" in filter_dict:
-            searchList = searchQuery
-        else:
-            searchList = searchQuery + " " + test_type_filter
+    searchList = constructFilterQuery(filter)
 
     splunk = SplunkService(configpath=configpath)
     response = await splunk.query(
@@ -104,21 +84,13 @@ async def getData(
 
     jobs = pd.json_normalize(mapped_list)
 
-    return {"data": jobs, "total": response["total"]}
+    return {"data": jobs, "total": response["total"] if response else 0}
 
 
 async def getFilterData(
     start_datetime: date, end_datetime: date, filter: str, configpath: str
 ):
-    test_types = [
-        "oslat",
-        "cyclictest",
-        "cpu_util",
-        "deployment",
-        "ptp",
-        "reboot",
-        "rfc-2544",
-    ]
+
     cfg = config.get_config()
     try:
         jenkins_url = cfg.get("telco.config.job_url")
@@ -130,17 +102,7 @@ async def getFilterData(
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
-    test_type_filter = " OR ".join(
-        ['test_type="{}"'.format(test_type) for test_type in test_types]
-    )
-    searchList = test_type_filter
-    if filter:
-        filter_dict = utils.get_dict_from_qs(filter)
-        searchQuery = utils.construct_query(filter_dict)
-        if "benchmark" in filter_dict:
-            searchList = searchQuery
-        else:
-            searchList = searchQuery + " " + test_type_filter
+    searchList = constructFilterQuery(filter)
 
     splunk = SplunkService(configpath=configpath)
     response = await splunk.filterPost(query=query, searchList=searchList)
@@ -181,3 +143,31 @@ async def getFilterData(
         {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"}
     )
     return {"data": filterData, "total": response["total"]}
+
+
+def constructFilterQuery(filter):
+    test_types = [
+        "oslat",
+        "cyclictest",
+        "cpu_util",
+        "deployment",
+        "ptp",
+        "reboot",
+        "rfc-2544",
+    ]
+    test_type_filter = " OR ".join(
+        f'test_type="{test_type}"' for test_type in test_types
+    )
+    search_list = test_type_filter
+
+    if filter:
+        filter_dict = utils.get_dict_from_qs(filter)
+        search_query = utils.construct_query(filter_dict)
+
+        # Update `search_list` based on the presence of "benchmark" in `filter_dict`
+        search_list = (
+            search_query
+            if "benchmark" in filter_dict
+            else f"{search_query} {test_type_filter}"
+        )
+    return search_list
