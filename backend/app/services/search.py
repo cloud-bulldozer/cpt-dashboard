@@ -348,6 +348,9 @@ class ElasticService:
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
+                elif key == "ocpVersion":
+                    v = [str(value)[0:6] for value in values]
+                    values = list(set(v))
                 filterData.append(
                     {
                         "key": key,
@@ -407,8 +410,6 @@ class ElasticService:
             query["query"]["bool"]["should"] = refiner["query"]
             query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
             query["query"]["bool"]["must_not"] = refiner["must_query"]
-        print("inside filter")
-        print(query)
         return query
 
     async def filterPost(
