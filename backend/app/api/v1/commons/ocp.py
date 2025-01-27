@@ -36,8 +36,7 @@ async def getData(
         query["query"]["bool"]["should"] = refiner["query"]
         query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
         query["query"]["bool"]["must_not"] = refiner["must_query"]
-    print("query")
-    print(query)
+
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -130,5 +129,4 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
-    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})
