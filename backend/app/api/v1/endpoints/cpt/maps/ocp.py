@@ -1,4 +1,4 @@
-from app.api.v1.commons.ocp import getData
+from app.api.v1.commons.ocp import getData, getFilterData
 from app.api.v1.commons.utils import getReleaseStream
 from datetime import date
 import pandas as pd
@@ -7,10 +7,16 @@ import pandas as pd
 ################################################################
 # This will return a DataFrame from OCP required by the CPT endpoint
 ################################################################
-async def ocpMapper(start_datetime: date, end_datetime: date, size: int, offset: int):
+async def ocpMapper(
+    start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
+):
     response = await getData(
-        start_datetime, end_datetime, size, offset, f"ocp.elasticsearch"
+        start_datetime, end_datetime, size, offset, filter, f"ocp.elasticsearch"
     )
+    filterData = await getFilterData(
+        start_datetime, end_datetime, filter, f"ocp.elasticsearch"
+    )
+    print(filterData)
     if not isinstance(response, pd.DataFrame) and response:
         df = response["data"]
         if len(df) == 0:

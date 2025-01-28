@@ -1,4 +1,4 @@
-from app.api.v1.commons.quay import getData
+from app.api.v1.commons.quay import getData, getFilterData
 from datetime import date
 import pandas as pd
 
@@ -6,9 +6,14 @@ import pandas as pd
 #####################################################################################
 # This will return a DataFrame from Quay required by the CPT endpoint with Total jobs
 #####################################################################################
-async def quayMapper(start_datetime: date, end_datetime: date, size: int, offset: int):
+async def quayMapper(
+    start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
+):
     response = await getData(
-        start_datetime, end_datetime, size, offset, f"quay.elasticsearch"
+        start_datetime, end_datetime, size, offset, filter, f"quay.elasticsearch"
+    )
+    response1 = await getFilterData(
+        start_datetime, end_datetime, filter, f"quay.elasticsearch"
     )
     if not isinstance(response, pd.DataFrame) and response:
         df = response["data"]
