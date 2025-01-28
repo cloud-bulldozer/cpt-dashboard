@@ -52,6 +52,7 @@ async def jobs(
     pretty: bool = Query(False, description="Output content in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
+    filter: str = Query(None, description="Query to filter the jobs"),
     totalJobs: int = Query(None, description="Total number of jobs"),
 ):
     if start_date is None:
@@ -77,7 +78,7 @@ async def jobs(
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         futures = {
             executor.submit(
-                fetch_product, product, start_date, end_date, size, offset
+                fetch_product, product, start_date, end_date, size, offset, filter
             ): product
             for product in products
         }
@@ -116,9 +117,9 @@ async def jobs(
     return jsonstring
 
 
-async def fetch_product_async(product, start_date, end_date, size, offset):
+async def fetch_product_async(product, start_date, end_date, size, offset, filter):
     try:
-        response = await products[product](start_date, end_date, size, offset)
+        response = await products[product](start_date, end_date, size, offset, filter)
         if response:
             df = response["data"]
             return {
@@ -150,8 +151,10 @@ async def fetch_product_async(product, start_date, end_date, size, offset):
         return pd.DataFrame()
 
 
-def fetch_product(product, start_date, end_date, size, offset):
-    return asyncio.run(fetch_product_async(product, start_date, end_date, size, offset))
+def fetch_product(product, start_date, end_date, size, offset, filter):
+    return asyncio.run(
+        fetch_product_async(product, start_date, end_date, size, offset, filter)
+    )
 
 
 def is_requested_size_available(total_count, offset, requested_size):

@@ -1,6 +1,8 @@
 from datetime import date, datetime
 import pandas as pd
 from app.services.search import ElasticService
+import app.api.v1.commons.utils as utils
+from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
 
 
 async def getData(
@@ -37,6 +39,17 @@ async def getData(
     jobs.fillna("", inplace=True)
     jobs["jobStatus"] = jobs.apply(convertJobStatus, axis=1)
     return {"data": jobs, "total": response["total"]}
+
+
+async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+    es = ElasticService(configpath=configpath)
+
+    aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
+
+    response = await es.filterPost(start_datetime, end_datetime, aggregate)
+    await es.close()
+
+    return {"filterData": response["filterData"], "summary": response["summary"]}
 
 
 def fillCiSystem(row):

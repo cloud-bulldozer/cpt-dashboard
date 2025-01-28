@@ -1,4 +1,4 @@
-from app.api.v1.commons.hce import getData
+from app.api.v1.commons.hce import getData, getFilterData
 from datetime import date
 import pandas as pd
 
@@ -17,9 +17,14 @@ import pandas as pd
 #   "version"
 #   "testName"
 ################################################################
-async def hceMapper(start_datetime: date, end_datetime: date, size: int, offset: int):
+async def hceMapper(
+    start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
+):
     response = await getData(
-        start_datetime, end_datetime, size, offset, f"hce.elasticsearch"
+        start_datetime, end_datetime, size, offset, filter, f"hce.elasticsearch"
+    )
+    response1 = await getFilterData(
+        start_datetime, end_datetime, filter, f"hce.elasticsearch"
     )
     if response:
         df = response["data"]

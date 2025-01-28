@@ -3,10 +3,6 @@ import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
-from app.api.v1.commons.utils import (
-    construct_ES_filter_query,
-    get_dict_from_qs,
-)
 
 
 async def getData(
@@ -15,7 +11,6 @@ async def getData(
     size: int,
     offset: int,
     sort: str,
-    filter: str,
     configpath: str,
 ):
     should = []
@@ -95,15 +90,13 @@ def fillEncryptionType(row):
         return row["encryptionType"]
 
 
-async def getFilterData(
-    start_datetime: date, end_datetime: date, filter: str, configpath: str
-):
+async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
     refiner = utils.transform_filter(filter) if filter else ""
 
-    response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
+    response = await es.filterPost(start_datetime, end_datetime, aggregate)
     await es.close()
 
     upstreamList = response["upstreamList"]
