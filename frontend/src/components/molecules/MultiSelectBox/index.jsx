@@ -93,8 +93,7 @@ const MultiSelectBox = (props) => {
               key={option.value}
               className={option.className}
               id={createItemId(option.value)}
-              name={option.name}
-              value={option.value?.toString().toLowerCase()}
+              {...option}
               ref={null}
             >
               {option.value}

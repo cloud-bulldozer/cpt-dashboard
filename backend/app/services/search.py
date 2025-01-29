@@ -349,8 +349,8 @@ class ElasticService:
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
                 elif key == "ocpVersion":
-                    v = [str(value)[0:6] for value in values]
-                    values = list(set(v))
+                    short_versions = [str(value)[0:6] for value in values]
+                    values = list(set(short_versions))
                 filterData.append(
                     {
                         "key": key,

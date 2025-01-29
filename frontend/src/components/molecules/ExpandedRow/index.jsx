@@ -3,13 +3,13 @@ import "./index.less";
 import * as CONSTANTS from "@/assets/constants/metadataConstants";
 
 import { Card, CardBody, Grid, GridItem, Title } from "@patternfly/react-core";
+import React, { useMemo } from "react";
 
 import MetadataRow from "../MetaDataRow";
 import PlotGraph from "@/components/atoms/PlotGraph";
 import PropTypes from "prop-types";
 import TasksInfo from "@/components/molecules/TasksInfo";
 import { uid } from "@/utils/helper.js";
-import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const RowContent = (props) => {
@@ -26,9 +26,17 @@ const RowContent = (props) => {
 
   const content = useMemo(() => {
     return [
-      { heading: "Cluster config", category: CONSTANTS.CLUSTER },
-      { heading: "Node Type", category: CONSTANTS.NODE_TYPE },
-      { heading: "Node Count", category: CONSTANTS.NODE_COUNT },
+      {
+        heading: "Cluster config",
+        category: CONSTANTS.CLUSTER,
+        key: "cluster-key",
+      },
+      { heading: "Node Type", category: CONSTANTS.NODE_TYPE, key: "node-type" },
+      {
+        heading: "Node Count",
+        category: CONSTANTS.NODE_COUNT,
+        key: "node-count",
+      },
     ];
   }, []);
   const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
@@ -46,16 +54,16 @@ const RowContent = (props) => {
         <Card>
           <CardBody>
             {content.map((unit) => (
-              <>
+              <React.Fragment key={props.item.uuid}>
                 <MetadataRow
-                  key={uid()}
+                  key={unit.key}
                   heading={unit.heading}
                   metadata={props.item}
                   category={unit.category}
                   type={props.type}
                 />
                 <div className="divider" />
-              </>
+              </React.Fragment>
             ))}
             <Title headingLevel="h4" className="type_heading">
               Tasks ran
