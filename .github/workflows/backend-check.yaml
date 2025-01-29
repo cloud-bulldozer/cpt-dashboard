@@ -62,3 +62,7 @@ jobs:
             path: ${{ env.COVERAGE }}/html
             if-no-files-found: warn
             retention-days: 30
+      - name: Run functional tests in pod
+        run: |
+          cd backend
+          tests/functional/setup/test.sh
