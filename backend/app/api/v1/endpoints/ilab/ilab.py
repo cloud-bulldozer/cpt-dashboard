@@ -135,6 +135,10 @@ async def run_filters(crucible: Annotated[CrucibleService, Depends(crucible_svc)
 )
 async def runs(
     crucible: Annotated[CrucibleService, Depends(crucible_svc)],
+    all: Annotated[
+        bool,
+        Query(description="Don't apply default date range", examples=["all=true"]),
+    ] = False,
     start_date: Annotated[
         Optional[str],
         Query(description="Start time for search", examples=["2020-11-10"]),
@@ -161,7 +165,7 @@ async def runs(
         Query(description="Page offset to start", examples=[10]),
     ] = 0,
 ):
-    if start_date is None and end_date is None:
+    if not all and start_date is None and end_date is None:
         now = datetime.now(timezone.utc)
         start = now - timedelta(days=30)
         end = now
