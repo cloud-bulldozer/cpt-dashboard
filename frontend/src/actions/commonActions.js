@@ -123,10 +123,8 @@ export const getSelectedFilter =
     const selectedFilters = cloneDeep(getState()[currState].selectedFilters);
 
     const obj = selectedFilters.find((i) => i.name === selectedCategory);
-    selectedOption = selectedOption?.toString()?.toLowerCase();
 
-    const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
-
+    const objValue = obj.value;
     if (objValue.includes(selectedOption)) {
       const arr = objValue.filter((selection) => selection !== selectedOption);
       obj.value = arr;
