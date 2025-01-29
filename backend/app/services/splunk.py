@@ -111,11 +111,19 @@ class SplunkService:
 
         try:
             # If additional search parameters are provided, include those in searchindex
-            search_query = ""
+            search_query = f"search index={self.indice} "
+
             if searchList:
-                search_query = f"search index={self.indice} {searchList} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
-            else:
-                search_query = f"search index={self.indice} | stats count AS total_records, values(cpu) AS cpu, values(node_name) AS nodeName, values(test_type) AS benchmark, values(ocp_version) AS ocpVersion, values(ocp_build) AS releaseStream"
+                search_query += f"{searchList} | "
+
+            search_query += (
+                "stats count AS total_records, "
+                "values(cpu) AS cpu, "
+                "values(node_name) AS nodeName, "
+                "values(test_type) AS benchmark, "
+                "values(ocp_version) AS ocpVersion, "
+                "values(ocp_build) AS releaseStream"
+            )
 
             try:
                 # Run the job and retrieve results
