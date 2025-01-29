@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 from collections import defaultdict
 from datetime import datetime, timezone
 import json
@@ -15,6 +16,52 @@ from app.services.crucible_svc import (
     Parser,
 )
 from tests.unit.fake_elastic import Request
+=======
+from elasticsearch import AsyncElasticsearch
+from fastapi import HTTPException
+import pytest
+from vyper import Vyper
+
+import app.config
+<<<<<<<< HEAD:backend/tests/test_crucible.py
+from app.services.crucible_svc import CommonParams, CrucibleService, Parser
+from tests.fake_elastic import FakeAsyncElasticsearch
+
+
+@pytest.fixture
+def fake_config(monkeypatch):
+    """Provide a fake configuration"""
+
+    vyper = Vyper(config_name="ocpperf")
+    vyper.set("TEST.url", "http://elastic.example.com:9200")
+    monkeypatch.setattr("app.config.get_config", lambda: vyper)
+
+
+@pytest.fixture
+def fake_elastic(monkeypatch, fake_config):
+    """Replace the actual elastic client with a fake"""
+
+    monkeypatch.setattr(
+        "app.services.crucible_svc.AsyncElasticsearch", FakeAsyncElasticsearch
+    )
+
+
+@pytest.fixture
+async def fake_crucible(fake_elastic):
+    crucible = CrucibleService("TEST")
+    yield crucible
+    await crucible.close()
+========
+from app.services.crucible_svc import (
+    CommonParams,
+    CrucibleService,
+    Graph,
+    GraphList,
+    Parser,
+)
+from tests.unit.fake_elastic import Request
+>>>>>>>> 914ed18 (CPT dashboard functional test framework):backend/tests/unit/test_crucible.py
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
 
 
 class TestParser:
@@ -70,6 +117,7 @@ class TestCommonParams:
         assert {"one": 1} == c.render()
 
 
+<<<<<<< HEAD
 class TestList:
 
     @pytest.mark.parametrize(
@@ -151,6 +199,21 @@ class TestFormatters:
 
 
 class TestHits:
+=======
+class TestCrucible:
+
+    async def test_create(self, fake_crucible):
+        """Create and close a CrucibleService instance"""
+
+        assert fake_crucible
+        assert isinstance(fake_crucible, CrucibleService)
+        assert isinstance(fake_crucible.elastic, AsyncElasticsearch)
+        assert app.config.get_config().get("TEST.url") == fake_crucible.url
+        elastic = fake_crucible.elastic
+        await fake_crucible.close()
+        assert fake_crucible.elastic is None
+        assert elastic.closed
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
 
     def test_no_hits(self):
         """Expect an exception because 'hits' is missing"""
@@ -165,7 +228,11 @@ class TestHits:
         """Expect successful iteration of no hits"""
 
         for a in CrucibleService._hits({"hits": {"hits": []}}):
+<<<<<<< HEAD
             assert f"Unexpected result {a}"
+=======
+            assert f"Unexpected result {type(a)}"
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
 
     def test_hits(self):
         """Test that iteration through hits works"""
@@ -183,6 +250,7 @@ class TestHits:
             CrucibleService._hits({"hits": {"hits": payload}}, ["f"])
         )
 
+<<<<<<< HEAD
 
 class TestAggregates:
 
@@ -548,21 +616,34 @@ class TestCrucible:
             )
         ] == fake_crucible.elastic.requests
 
+=======
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
     async def test_metric_ids_none(self, fake_crucible):
         """A simple query for failure matching metric IDs"""
 
         fake_crucible.elastic.set_query("metric_desc", [])
+<<<<<<< HEAD
         result = await fake_crucible._get_metric_ids("runid", "source::type")
         assert result == []
 
     @pytest.mark.parametrize(
         "found,expected,aggregate",
+=======
+        with pytest.raises(HTTPException) as e:
+            await fake_crucible._get_metric_ids("runid", "source::type")
+        assert 400 == e.value.status_code
+        assert "No matches for source::type" == e.value.detail
+
+    @pytest.mark.parametrize(
+        "found,expected",
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
         (
             (
                 [
                     {"metric_desc": {"id": "one-metric"}},
                 ],
                 ["one-metric"],
+<<<<<<< HEAD
                 False,
             ),
             (
@@ -571,6 +652,8 @@ class TestCrucible:
                 ],
                 ["one-metric"],
                 True,
+=======
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
             ),
             (
                 [
@@ -578,17 +661,25 @@ class TestCrucible:
                     {"metric_desc": {"id": "two-metric"}},
                 ],
                 ["one-metric", "two-metric"],
+<<<<<<< HEAD
                 True,
             ),
         ),
     )
     async def test_metric_ids(self, fake_crucible, found, expected, aggregate):
+=======
+            ),
+        ),
+    )
+    async def test_metric_ids(self, fake_crucible, found, expected):
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
         """A simple query for matching metric IDs"""
 
         fake_crucible.elastic.set_query("metric_desc", found)
         assert expected == await fake_crucible._get_metric_ids(
             "runid",
             "source::type",
+<<<<<<< HEAD
             aggregate=aggregate,
         )
 
@@ -636,6 +727,11 @@ class TestCrucible:
             "names": message[2],
         } == exc.value.detail
 
+=======
+            aggregate=len(expected) > 1,
+        )
+
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
     async def test_run_filters(self, fake_crucible):
         """Test aggregations
 
@@ -645,7 +741,11 @@ class TestCrucible:
 
         fake_crucible.elastic.set_query(
             "tag",
+<<<<<<< HEAD
             aggregations={
+=======
+            aggregation_list={
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
                 "key": [
                     {
                         "key": "topology",
@@ -685,7 +785,11 @@ class TestCrucible:
         )
         fake_crucible.elastic.set_query(
             "param",
+<<<<<<< HEAD
             aggregations={
+=======
+            aggregation_list={
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
                 "key": [
                     {
                         "key": "bucket",
@@ -701,7 +805,11 @@ class TestCrucible:
         )
         fake_crucible.elastic.set_query(
             "run",
+<<<<<<< HEAD
             aggregations={
+=======
+            aggregation_list={
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
                 "begin": [{"key": 123456789, "doc_count": 1}],
                 "benchmark": [{"key": "ilab", "doc_count": 25}],
                 "desc": [],
@@ -732,6 +840,7 @@ class TestCrucible:
         assert sorted(filters["run"]["benchmark"]) == ["ilab"]
         assert sorted(filters["run"]["email"]) == ["me@example.com", "you@example.com"]
         assert sorted(filters["run"]["host"]) == ["one.example.com", "two.example.com"]
+<<<<<<< HEAD
 
     async def test_get_run_ids(self, fake_crucible: CrucibleService):
         """_get_run_ids
@@ -2157,3 +2266,5 @@ class TestCrucible:
                 ),
             )
         assert fake_crucible.elastic.requests == expected_requests
+=======
+>>>>>>> 914ed18 (CPT dashboard functional test framework)
