@@ -52,7 +52,7 @@ order_by_type = false             # sort alphabetic regardless of case
 
 [tool.tox]
 requires = ["tox>=4.23.2"]
-env_list = ["unit", "format", "lint", "isort"]
+env_list = ["functional", "unit", "format", "lint", "isort"]
 
 [tool.tox.env_run_base]
 description = "Run test under {base_python}"
@@ -63,14 +63,25 @@ deps = [
     "pytest-cov",
     "coverage",
 ]
+
+[tool.tox.env.unit]
 set_env.COVERAGE = { replace = "env", name = "COVERAGE", default = "/var/tmp/{env:USER}" }
 allowlist_externals = ["bash", "echo", "coverage"]
 commands = [
     ["echo", "{env:COVERAGE}"],
     ["pip", "list"],
-    ["pytest", "-s", "--cov-branch", "--cov=app", "tests"],
+    ["pytest", "-s", "--cov-branch", "--cov=app", "{posargs}", "tests/unit"],
     ["coverage", "html", "--directory={env:COVERAGE}/html"],
     ["bash", "-c", "coverage report --format=markdown >{env:COVERAGE}/coverage.txt"],
+]
+
+[tool.tox.env.functional]
+requires = ["requests"]
+set_env.SERVER = { replace = "env", name = "SERVER", default = "http://localhost:8000" }
+allowlist_externals = ["echo", "tests/functional/setup/test.sh"]
+commands = [
+    ["echo", "functional tests against {env:SERVER}"],
+    ["tests/functional/setup/test.sh"]
 ]
 
 [tool.tox.env.format]
