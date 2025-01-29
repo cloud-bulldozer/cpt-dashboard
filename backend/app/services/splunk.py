@@ -111,7 +111,7 @@ class SplunkService:
 
         try:
             # If additional search parameters are provided, include those in searchindex
-            search_query = f"search index={self.indice} "
+            search_query = f"search index={self.indice} | "
 
             if searchList:
                 search_query += f"{searchList} | "
