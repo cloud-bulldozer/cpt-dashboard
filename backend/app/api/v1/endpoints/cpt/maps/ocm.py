@@ -12,9 +12,6 @@ async def ocmMapper(
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"ocm.elasticsearch"
     )
-    response1 = await getFilterData(
-        start_datetime, end_datetime, filter, f"ocm.elasticsearch"
-    )
     if not isinstance(response, pd.DataFrame) and response:
         df = response["data"]
         if len(df) == 0:
@@ -24,5 +21,8 @@ async def ocmMapper(
         df["testName"] = df["attack"]
         df["startDate"] = df["metrics.earliest"]
         df["endDate"] = df["metrics.end"]
-        return {"data": df, "total": response["total"]}
+        return {
+            "data": df,
+            "total": response["total"],
+        }
     return {"data": pd.DataFrame(), "total": 0}

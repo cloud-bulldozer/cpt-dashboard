@@ -8,12 +8,13 @@ from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from .maps.ocp import ocpMapper
 from .maps.quay import quayMapper
-from .maps.hce import hceMapper
-from .maps.telco import telcoMapper
+from .maps.hce import hceMapper, hceFilter
+from .maps.telco import telcoMapper, telcoFilter
 from .maps.ocm import ocmMapper
 from app.api.v1.commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
+from collections import defaultdict
 
 router = APIRouter()
 
@@ -23,6 +24,11 @@ products = {
     "hce": hceMapper,
     "telco": telcoMapper,
     "ocm": ocmMapper,
+}
+
+productsFilter = {
+    "telco": telcoFilter,
+    "hce": hceFilter,
 }
 
 
@@ -157,6 +163,29 @@ def fetch_product(product, start_date, end_date, size, offset, filter):
     )
 
 
+async def fetch_product_filter_async(product, start_date, end_date, filter):
+    try:
+        response = await productsFilter[product](start_date, end_date, filter)
+        print(response)
+        if response:
+            return {
+                "filterData": response["filterData"],
+                "total": response["total"],
+                "summary": {},
+            }
+    except ConnectionError:
+        print("Connection Error in filter for product " + product)
+    except Exception as e:
+        print(f"Error in filter for product {product}: {e}")
+        return pd.DataFrame()
+
+
+def fetch_product_filter(product, start_date, end_date, filter):
+    return asyncio.run(
+        fetch_product_filter_async(product, start_date, end_date, filter)
+    )
+
+
 def is_requested_size_available(total_count, offset, requested_size):
     """
     Check if the requested size of data is available starting from a given offset.
@@ -186,3 +215,82 @@ def calculate_remaining_data(total_count, offset, requested_size):
     """
     available_data = total_count - offset  # Data available from the offset
     return min(available_data, requested_size)
+
+
+@router.get(
+    "/api/v1/cpt/filters",
+    summary="Returns the data to construct filters",
+    description="Returns the data to build filters in the specified dates. \
+            If not dates are provided the API will default the values. \
+            `startDate`: will be set to the day of the request minus 5 days.\
+            `endDate`: will be set to the day of the request.",
+    responses={
+        200: cpt_200_response(),
+        422: response_422(),
+    },
+)
+async def filters(
+    start_date: date = Query(
+        None,
+        description="Start date for searching jobs, format: 'YYYY-MM-DD'",
+        examples=["2020-11-10"],
+    ),
+    end_date: date = Query(
+        None,
+        description="End date for searching jobs, format: 'YYYY-MM-DD'",
+        examples=["2020-11-15"],
+    ),
+    pretty: bool = Query(False, description="Output content in pretty format."),
+    filter: str = Query(None, description="Query to filter the jobs"),
+):
+    if start_date is None:
+        start_date = datetime.utcnow().date()
+        start_date = start_date - timedelta(days=5)
+
+    if end_date is None:
+        end_date = datetime.utcnow().date()
+
+    if start_date > end_date:
+        return Response(
+            content=json.dumps(
+                {"error": "invalid date format, start_date must be less than end_date"}
+            ),
+            status_code=422,
+        )
+    total_dict = {}
+    total = 0
+    result_dict = defaultdict(list)
+    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+        futures = {
+            executor.submit(
+                fetch_product_filter, product, start_date, end_date, filter
+            ): product
+            for product in productsFilter
+        }
+        for future in as_completed(futures):
+            product = futures[future]
+            try:
+                result = future.result()
+                merged_json = defaultdict(list)
+                total_dict[product] = result["total"]
+                for d in (result_dict, result["filterData"]):
+                    for key, value in d.items():
+                        merged_json[key].extend(value)
+                result_dict = dict(merged_json)
+                print(result_dict)
+            except Exception as e:
+                print(f"Error fetching filter for product {product}: {e}")
+
+    response = {
+        "startDate": start_date.__str__(),
+        "endDate": end_date.__str__(),
+        "filterData": result_dict,
+        "total": 25,
+    }
+
+    if pretty:
+        json_str = json.dumps(response, indent=4)
+        return Response(content=json_str, media_type="application/json")
+
+    jsonstring = json.dumps(response)
+    return jsonstring

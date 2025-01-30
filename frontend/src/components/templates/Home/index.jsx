@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchOCPJobsData,
   setCPTDateFilter,
   setFilterFromURL,
@@ -56,7 +57,8 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchOCPJobsData());
+    // dispatch(fetchOCPJobsData());
+    dispatch(buildFilterData());
   }, [dispatch]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {

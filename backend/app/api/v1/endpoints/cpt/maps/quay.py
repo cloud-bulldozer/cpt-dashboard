@@ -12,9 +12,7 @@ async def quayMapper(
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"quay.elasticsearch"
     )
-    response1 = await getFilterData(
-        start_datetime, end_datetime, filter, f"quay.elasticsearch"
-    )
+
     if not isinstance(response, pd.DataFrame) and response:
         df = response["data"]
         if len(df) == 0:

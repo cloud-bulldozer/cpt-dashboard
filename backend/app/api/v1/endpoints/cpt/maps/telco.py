@@ -13,16 +13,34 @@ async def telcoMapper(
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"telco.splunk"
     )
-    response1 = await getFilterData(
-        start_datetime, end_datetime, filter, f"telco.splunk"
-    )
-    if not isinstance(response, pd.DataFrame) and response:
-        df = response["data"]
-        if len(df) == 0:
-            return df
-        df.insert(len(df.columns), "product", "telco")
-        df["releaseStream"] = df.apply(getReleaseStream, axis=1)
-        df["version"] = df["shortVersion"]
-        df["testName"] = df["benchmark"]
-        return {"data": df, "total": response["total"]}
-    return {"data": pd.DataFrame(), "total": 0}
+
+    if isinstance(response, pd.DataFrame) or not response:
+        return {
+            "data": pd.DataFrame(),
+            "total": 0,
+        }
+
+    df = response.get("data", pd.DataFrame())
+
+    if df.empty:
+        return df
+
+    df["product"] = "telco"
+    df["releaseStream"] = df.apply(getReleaseStream, axis=1)
+    df["version"] = df.get("shortVersion", "")
+    df["testName"] = df.get("benchmark", "")
+
+    return {"data": df, "total": response.get("total", 0)}
+
+
+async def telcoFilter(start_datetime: date, end_datetime: date, filter: str):
+
+    response = await getFilterData(start_datetime, end_datetime, filter, "telco.splunk")
+
+    if isinstance(response, pd.DataFrame) or not response:
+        return {"total": 0, "filterData": []}
+
+    return {
+        "total": response.get("total", 0),
+        "filterData": response.get("data", []),
+    }
