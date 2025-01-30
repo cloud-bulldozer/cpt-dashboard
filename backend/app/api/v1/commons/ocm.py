@@ -41,7 +41,9 @@ async def getData(
     return {"data": jobs, "total": response["total"]}
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
