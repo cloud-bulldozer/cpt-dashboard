@@ -111,13 +111,13 @@ class SplunkService:
 
         try:
             # If additional search parameters are provided, include those in searchindex
-            search_query = f"search index={self.indice} | "
+            search_query = f"search index={self.indice} "
 
             if searchList:
-                search_query += f"{searchList} | "
+                search_query += f"{searchList} "
 
             search_query += (
-                "stats count AS total_records, "
+                "| stats count AS total_records, "
                 "values(cpu) AS cpu, "
                 "values(node_name) AS nodeName, "
                 "values(test_type) AS benchmark, "
