@@ -13,10 +13,7 @@ async def ocpMapper(
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"ocp.elasticsearch"
     )
-    filterData = await getFilterData(
-        start_datetime, end_datetime, filter, f"ocp.elasticsearch"
-    )
-    print(filterData)
+
     if not isinstance(response, pd.DataFrame) and response:
         df = response["data"]
         if len(df) == 0:

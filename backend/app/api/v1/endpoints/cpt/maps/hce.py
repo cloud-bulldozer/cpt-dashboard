@@ -23,9 +23,7 @@ async def hceMapper(
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"hce.elasticsearch"
     )
-    response1 = await getFilterData(
-        start_datetime, end_datetime, filter, f"hce.elasticsearch"
-    )
+
     if response:
         df = response["data"]
         if len(df) == 0:
@@ -54,3 +52,18 @@ def dropColumns(df):
         columns=["group", "test", "result", "result_id", "link", "date", "release"]
     )
     return df
+
+
+async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
+    response = await getFilterData(
+        start_datetime, end_datetime, filter, f"hce.elasticsearch"
+    )
+
+    if isinstance(response, pd.DataFrame) or not response:
+        return {"total": 0, "filterData": [], "summary": {}}
+
+    return {
+        "total": response.get("total", 0),
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+    }
