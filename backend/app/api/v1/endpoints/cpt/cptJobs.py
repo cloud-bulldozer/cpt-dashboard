@@ -7,7 +7,7 @@ import pandas as pd
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from .maps.ocp import ocpMapper, ocpFilter
-from .maps.quay import quayMapper
+from .maps.quay import quayMapper, quayFilter
 from .maps.hce import hceMapper, hceFilter
 from .maps.telco import telcoMapper, telcoFilter
 from .maps.ocm import ocmMapper, ocmFilter
@@ -20,8 +20,8 @@ from collections import defaultdict
 router = APIRouter()
 
 products = {
-    "ocp": ocpMapper,
-    # "quay": quayMapper,
+    # "ocp": ocpMapper,
+    "quay": quayMapper,
     # "hce": hceMapper,
     # "telco": telcoMapper,
     # "ocm": ocmMapper,
@@ -31,7 +31,8 @@ productsFilter = {
     # "telco": telcoFilter,
     # "hce": hceFilter,
     # "ocm": ocmFilter,
-    "ocp": ocpFilter
+    # "ocp": ocpFilter
+    "quay": quayFilter
 }
 
 

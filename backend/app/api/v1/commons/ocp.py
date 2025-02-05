@@ -10,8 +10,8 @@ async def getData(
     end_datetime: date,
     size: int,
     offset: int,
-    sort: str,
     configpath: str,
+    sort=None,
 ):
     should = []
     must_not = []
@@ -101,7 +101,10 @@ async def getFilterData(
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
-    upstreamList = response["upstreamList"]
+    if not response.get("filterData") or response.get("total", 0) == 0:
+        return {"total": response.get("total", 0), "filterData": [], "summary": {}}
+
+    upstreamList = response.get("upstreamList", [])
 
     jobType = getJobType(upstreamList)
     isRehearse = getIsRehearse(upstreamList)

@@ -10,9 +10,9 @@ async def getData(
     end_datetime: date,
     size,
     offset,
-    sort: str,
     filter: str,
     configpath: str,
+    sort=None,
 ):
     should = []
     must_not = []
@@ -89,4 +89,8 @@ async def getFilterData(
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
-    return {"filterData": response["filterData"], "summary": response["summary"]}
+    return {
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+        "total": response.get("total", 0),
+    }
