@@ -116,9 +116,11 @@ class ElasticService:
                                 "total": response["hits"]["total"]["value"],
                             }
                 if self.prev_es and self.new_es:
+                    print("both es")
                     self.new_index = self.new_index_prefix + (
                         self.new_index if indice is None else indice
                     )
+                    print(self.new_index)
                     today = datetime.today().date()
                     seven_days_ago = today - timedelta(days=7)
                     if end_date and end_date < seven_days_ago:
@@ -142,6 +144,8 @@ class ElasticService:
                                 body=jsonable_encoder(query),
                                 size=size,
                             )
+                            print("hydrogen")
+                            print(response)
                             new_results = {
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
@@ -152,6 +156,8 @@ class ElasticService:
                                 body=jsonable_encoder(query),
                                 size=size,
                             )
+                            print("helium")
+                            print(response)
                             new_results = {
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
@@ -166,6 +172,7 @@ class ElasticService:
                         if ("total" in previous_results)
                         else 0 + new_results["total"] if ("total" in new_results) else 0
                     )
+                    print("neon")
                     return {"data": unique_data, "total": totalVal}
                 else:
                     if start_date and end_date:
@@ -175,11 +182,18 @@ class ElasticService:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][
                             "lte"
                         ] = str(end_date)
+                        print("li q")
+                        print(query)
                         response = await self.new_es.search(
                             index=self.new_index + "*",
                             body=jsonable_encoder(query),
                             size=size,
                         )
+                        print("above li")
+                        print(self.new_index)
+                        print("lithium")
+                        # print(response["aggregations"])
+                        # print(response)
                         return {
                             "data": response["hits"]["hits"],
                             "total": response["hits"]["total"]["value"],
@@ -187,6 +201,7 @@ class ElasticService:
             else:
                 """Handles queries that do not have a timestamp field"""
                 previous_results = []
+                print("not here")
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
@@ -196,6 +211,8 @@ class ElasticService:
                         body=jsonable_encoder(query),
                         size=size,
                     )
+                    print("bery")
+                    print(response)
                     previous_results = {
                         "data": response["hits"]["hits"],
                         "total": response["hits"]["total"]["value"],
@@ -206,6 +223,8 @@ class ElasticService:
                 response = await self.new_es.search(
                     index=self.new_index + "*", body=jsonable_encoder(query), size=size
                 )
+                print("boron")
+                print(response)
                 new_results = {
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
@@ -317,20 +336,23 @@ class ElasticService:
     async def buildFilterData(self, filter, total):
         """Return the data to build the filter"""
         try:
-            summary = {"total": total}
-
+            summary = await self.getSummary(filter, total)
             filterData = []
+            upstreamList = [
+                x.get("key")
+                for x in filter.get("upstream", {}).get("buckets", [])
+                if "key" in x
+            ]
+            clusterTypeList = [
+                x.get("key")
+                for x in filter.get("clusterType", {}).get("buckets", [])
+                if "key" in x
+            ]
 
-            summary.update(
-                {
-                    x["key"].lower(): x["doc_count"]
-                    for x in filter["jobStatus"]["buckets"]
-                }
-            )
+            if "build" in filter and "buckets" in filter["build"]:
+                buildObj = self.buildFilterValues(filter)
+                filterData.append(buildObj)
 
-            upstreamList = [x["key"] for x in filter["upstream"]["buckets"]]
-            clusterTypeList = [x["key"] for x in filter["clusterType"]["buckets"]]
-            buildList = [x["key"] for x in filter["build"]["buckets"]]
             keys_to_remove = [
                 "min_timestamp",
                 "max_timestamp",
@@ -340,10 +362,9 @@ class ElasticService:
             ]
             refiner = removeKeys(filter, keys_to_remove)
 
-            build = getBuildFilter(buildList)
-            buildObj = {"key": "build", "value": build, "name": "Build"}
-
+            print(refiner)
             for key, value in refiner.items():
+                field = key
                 values = [bucket["key"] for bucket in value["buckets"]]
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
@@ -353,16 +374,26 @@ class ElasticService:
                         str(value)[: constants.OCP_SHORT_VER_LEN] for value in values
                     ]
                     values = list(set(short_versions))
+                elif key == "result":
+                    updated_result = list(
+                        set(
+                            [
+                                constants.JOB_STATUS_MAP.get(x.lower(), "other")
+                                for x in values
+                            ]
+                        )
+                    )
+                    values = updated_result
+                    field = "jobStatus"
                 filterData.append(
                     {
-                        "key": key,
+                        "key": field,
                         "value": values,
                         "name": constants.FILEDS_DISPLAY_NAMES[key],
                     }
                 )
 
-            filterData.append(buildObj)
-
+            print(filterData)
             return {
                 "filterData": filterData,
                 "summary": summary,
@@ -372,7 +403,37 @@ class ElasticService:
             print(f"Error building filter data: {e}")
             return {"filterData": [], "summary": {}, "upstreamList": []}
 
-    async def buildFilterQuery(self, start_datetime, end_datetime, aggregate, refiner):
+    async def getSummary(self, filter, total):
+        summary = {"total": total}
+
+        for key in ("jobStatus", "result"):
+            buckets = filter.get(key, {}).get("buckets")
+            if buckets:
+                summary.update(
+                    {
+                        constants.JOB_STATUS_MAP.get(x["key"].lower(), "other"): x[
+                            "doc_count"
+                        ]
+                        for x in buckets
+                    }
+                )
+                break
+
+        return summary
+
+    async def buildFilterValues(filter):
+        buildList = [
+            x.get("key")
+            for x in filter.get("build", {}).get("buckets", [])
+            if "key" in x
+        ]
+        build = getBuildFilter(buildList)
+        buildObj = {"key": "build", "value": build, "name": "Build"}
+        return buildObj
+
+    async def buildFilterQuery(
+        self, start_datetime, end_datetime, aggregate, refiner, timestamp_field
+    ):
         start_date = (
             start_datetime.strftime("%Y-%m-%d")
             if start_datetime
@@ -385,25 +446,18 @@ class ElasticService:
         )
 
         query = {
-            "aggs": {
-                "min_timestamp": {"min": {"field": start_date}},
-                "max_timestamp": {"max": {"field": end_date}},
-            },
+            "aggs": {},
             "query": {
                 "bool": {
-                    "filter": [
-                        {
-                            "range": {
-                                "timestamp": {
-                                    "format": "yyyy-MM-dd",
-                                    "lte": end_date,
-                                    "gte": start_date,
-                                }
+                    "filter": {
+                        "range": {
+                            timestamp_field: {
+                                "format": "yyyy-MM-dd",
+                                "lte": end_date,
+                                "gte": start_date,
                             }
                         }
-                    ],
-                    "should": [],
-                    "must_not": [],
+                    },
                 }
             },
         }
@@ -415,27 +469,61 @@ class ElasticService:
         return query
 
     async def filterPost(
-        self, start_datetime, end_datetime, aggregate, refiner, indice=None
+        self,
+        start_datetime,
+        end_datetime,
+        aggregate,
+        refiner,
+        timestamp_field="timestamp",
+        indice=None,
     ):
         try:
             query = await self.buildFilterQuery(
-                start_datetime, end_datetime, aggregate, refiner
+                start_datetime, end_datetime, aggregate, refiner, timestamp_field
             )
+            print(query)
             if self.prev_es:
+                print("lol")
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
                 )
+                print(self.prev_index)
                 response = await self.prev_es.search(
-                    index=self.prev_index + "*", body=query, size=0
+                    index=self.prev_index + "*", body=jsonable_encoder(query), size=0
                 )
             elif self.new_es:
+                print("rofl")
                 self.new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
+                print(self.new_index)
+                print(query)
                 response = await self.new_es.search(
                     index=self.new_index + "*", body=jsonable_encoder(query), size=0
                 )
-
+            else:
+                print("grin")
+                response = await self.new_es.search(
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                )
+            # if self.prev_es:
+            #     self.prev_index = self.prev_index_prefix + (
+            #         self.prev_index if indice is None else indice
+            #     )
+            #     response = await self.prev_es.search(
+            #         index=self.prev_index + "*", body=query, size=0
+            #     )
+            # elif self.new_es:
+            #     self.new_index = self.new_index_prefix + (
+            #         self.new_index if indice is None else indice
+            #     )
+            #     response = await self.new_es.search(
+            #         index=self.new_index + "*", body=jsonable_encoder(query), size=0
+            #     )
+            print("inside filter")
+            # print(response)
             total = response["hits"]["total"]["value"]
             results = response["aggregations"]
             x = await self.buildFilterData(results, total)
@@ -444,6 +532,7 @@ class ElasticService:
                 "filterData": x["filterData"],
                 "summary": x["summary"],
                 "upstreamList": x["upstreamList"],
+                "total": total,
             }
         except Exception as e:
             print(f"Error retrieving filter data: {e}")

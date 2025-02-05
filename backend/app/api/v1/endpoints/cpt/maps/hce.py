@@ -1,6 +1,7 @@
 from app.api.v1.commons.hce import getData, getFilterData
 from datetime import date
 import pandas as pd
+from app.api.v1.commons.constants import keys_to_keep
 
 
 ################################################################
@@ -62,8 +63,24 @@ async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
     if isinstance(response, pd.DataFrame) or not response:
         return {"total": 0, "filterData": [], "summary": {}}
 
+    if not response.get("filterData") or response.get("total", 0) == 0:
+        return {"total": response.get("total", 0), "filterData": [], "summary": {}}
+
+    # Add predefined filters
+    filters_to_add = [
+        {"key": "ciSystem", "name": "CI System", "value": ["Jenkins"]},
+        {"key": "releaseStream", "name": "Release Stream", "value": ["Nightly"]},
+    ]
+    response["filterData"].extend(filters_to_add)
+
+    # Filter data based on allowed keys
+    filtered_data = [
+        item for item in response["filterData"] if item.get("key") in keys_to_keep
+    ]
+    print("gce map")
+    print(filtered_data)
     return {
         "total": response.get("total", 0),
-        "filterData": response.get("filterData", []),
+        "filterData": filtered_data,
         "summary": response.get("summary", {}),
     }

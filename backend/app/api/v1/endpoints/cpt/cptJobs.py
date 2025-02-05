@@ -10,25 +10,27 @@ from .maps.ocp import ocpMapper
 from .maps.quay import quayMapper
 from .maps.hce import hceMapper, hceFilter
 from .maps.telco import telcoMapper, telcoFilter
-from .maps.ocm import ocmMapper
+from .maps.ocm import ocmMapper, ocmFilter
 from app.api.v1.commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
 from collections import defaultdict
 
+
 router = APIRouter()
 
 products = {
-    "ocp": ocpMapper,
-    "quay": quayMapper,
+    # "ocp": ocpMapper,
+    # "quay": quayMapper,
     "hce": hceMapper,
-    "telco": telcoMapper,
-    "ocm": ocmMapper,
+    # "telco": telcoMapper,
+    # "ocm": ocmMapper,
 }
 
 productsFilter = {
-    "telco": telcoFilter,
+    # "telco": telcoFilter,
     "hce": hceFilter,
+    # "ocm": ocmFilter
 }
 
 
@@ -82,6 +84,8 @@ async def jobs(
     total_dict = {}
     total = 0
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+        for product in products:
+            print(product)
         futures = {
             executor.submit(
                 fetch_product, product, start_date, end_date, size, offset, filter
@@ -166,6 +170,7 @@ def fetch_product(product, start_date, end_date, size, offset, filter):
 async def fetch_product_filter_async(product, start_date, end_date, filter):
     try:
         response = await productsFilter[product](start_date, end_date, filter)
+        print("fetch prod filter")
         print(response)
         if response:
             return {
@@ -259,7 +264,7 @@ async def filters(
         )
     total_dict = {}
     total = 0
-    result_dict = defaultdict(list)
+    result_dict = []
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
         futures = {
             executor.submit(
@@ -271,12 +276,13 @@ async def filters(
             product = futures[future]
             try:
                 result = future.result()
-                merged_json = defaultdict(list)
+                # merged_json = defaultdict(list)
                 total_dict[product] = result["total"]
-                for d in (result_dict, result["filterData"]):
-                    for key, value in d.items():
-                        merged_json[key].extend(value)
-                result_dict = dict(merged_json)
+                # print(result["filterData"])
+                # for d in (result_dict, result["filterData"]):
+                #     for key, value in d.items():
+                #         merged_json[key].extend(value)
+                result_dict = result_dict + result["filterData"]
                 print(result_dict)
             except Exception as e:
                 print(f"Error fetching filter for product {product}: {e}")
