@@ -57,7 +57,7 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    // dispatch(fetchOCPJobsData());
+    dispatch(fetchOCPJobsData());
     dispatch(buildFilterData());
   }, [dispatch]);
   // Filter Helper

@@ -90,13 +90,15 @@ def fillEncryptionType(row):
         return row["encryptionType"]
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
     refiner = utils.transform_filter(filter) if filter else ""
 
-    response = await es.filterPost(start_datetime, end_datetime, aggregate)
+    response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
     upstreamList = response["upstreamList"]
