@@ -1,5 +1,6 @@
 from app.api.v1.commons.telco import getData, getFilterData
 from app.api.v1.commons.utils import getReleaseStream
+from app.api.v1.commons.constants import keys_to_keep
 from datetime import date
 import pandas as pd
 
@@ -40,7 +41,26 @@ async def telcoFilter(start_datetime: date, end_datetime: date, filter: str):
     if isinstance(response, pd.DataFrame) or not response:
         return {"total": 0, "filterData": []}
 
+    if not response.get("data") or response.get("total", 0) == 0:
+        return {"total": response.get("total", 0), "filterData": []}
+
+    for item in response["data"]:
+        if item.get("key") == "benchmark":
+            item.update({"key": "testName", "name": "Test Name"})
+
+    # Add predefined filters
+    filters_to_add = [
+        {"key": "product", "name": "Product", "value": ["telco"]},
+        {"key": "ciSystem", "name": "CI System", "value": ["Jenkins"]},
+    ]
+    response["data"].extend(filters_to_add)
+
+    # Filter data based on allowed keys
+    filtered_data = [
+        item for item in response["data"] if item.get("key") in keys_to_keep
+    ]
+
     return {
         "total": response.get("total", 0),
-        "filterData": response.get("data", []),
+        "filterData": filtered_data,
     }

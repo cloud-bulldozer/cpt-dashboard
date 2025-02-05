@@ -156,7 +156,7 @@ export const getRequestParams = (type) => (dispatch, getState) => {
     pretty: true,
     ...(start_date && { start_date }),
     ...(end_date && { end_date }),
-    size: perPage,
+    size: 2,
     offset: offset,
     ...(sort && { sort }),
     ...(filter && { filter }),
