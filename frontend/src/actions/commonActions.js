@@ -152,12 +152,13 @@ export const getRequestParams = (type) => (dispatch, getState) => {
   if (Object.keys(appliedFilters).length > 0) {
     filter = convertObjectToQS(appliedFilters);
   }
+  console.log(offset);
   const params = {
     pretty: true,
     ...(start_date && { start_date }),
     ...(end_date && { end_date }),
     size: 2,
-    offset: offset,
+    offset: 0,
     ...(sort && { sort }),
     ...(filter && { filter }),
   };
