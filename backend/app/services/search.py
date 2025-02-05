@@ -350,7 +350,7 @@ class ElasticService:
             ]
 
             if "build" in filter and "buckets" in filter["build"]:
-                buildObj = self.buildFilterValues(filter)
+                buildObj = await self.buildFilterValues(filter)
                 filterData.append(buildObj)
 
             keys_to_remove = [
@@ -421,7 +421,7 @@ class ElasticService:
 
         return summary
 
-    async def buildFilterValues(filter):
+    async def buildFilterValues(self, filter):
         buildList = [
             x.get("key")
             for x in filter.get("build", {}).get("buckets", [])
@@ -523,7 +523,7 @@ class ElasticService:
             #         index=self.new_index + "*", body=jsonable_encoder(query), size=0
             #     )
             print("inside filter")
-            # print(response)
+            print(response["hits"]["total"]["value"])
             total = response["hits"]["total"]["value"]
             results = response["aggregations"]
             x = await self.buildFilterData(results, total)
