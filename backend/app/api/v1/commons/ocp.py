@@ -116,7 +116,11 @@ async def getFilterData(
     response["filterData"].append(jobTypeObj)
     response["filterData"].append(isRehearseObj)
 
-    return {"filterData": response["filterData"], "summary": response["summary"]}
+    return {
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+        "total": response.get("total", 0),
+    }
 
 
 def getJobType(upstreamList: list):
