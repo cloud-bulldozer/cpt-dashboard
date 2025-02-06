@@ -10,19 +10,22 @@ from app.api.v1.commons.constants import keys_to_keep
 async def quayMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+    sort = None
     response = await getData(
-        start_datetime, end_datetime, size, offset, filter, f"quay.elasticsearch"
+        start_datetime, end_datetime, size, offset, sort, filter, f"quay.elasticsearch"
     )
 
-    if not isinstance(response, pd.DataFrame) and response:
-        df = response["data"]
-        if len(df) == 0:
-            return df
-        df.insert(len(df.columns), "product", "quay")
-        df["version"] = df["releaseStream"]
-        df["testName"] = df["benchmark"]
-        return {"data": df, "total": response["total"]}
-    return {"data": pd.DataFrame(), "total": 0}
+    if isinstance(response, pd.DataFrame) or not response:
+        return {"data": pd.DataFrame(), "total": 0}
+
+    df = response.get("data", pd.DataFrame())
+    if df.empty:
+        return {"data": df, "total": response.get("total", 0)}
+
+    df.insert(len(df.columns), "product", "quay")
+    df["version"] = df["releaseStream"]
+    df["testName"] = df["benchmark"]
+    return {"data": df, "total": response.get("total", 0)}
 
 
 async def quayFilter(start_datetime: date, end_datetime: date, filter: str):

@@ -145,7 +145,6 @@ class ElasticService:
                                 size=size,
                             )
                             print("hydrogen")
-                            print(response)
                             new_results = {
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
@@ -157,7 +156,6 @@ class ElasticService:
                                 size=size,
                             )
                             print("helium")
-                            print(response)
                             new_results = {
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
@@ -212,7 +210,6 @@ class ElasticService:
                         size=size,
                     )
                     print("bery")
-                    print(response)
                     previous_results = {
                         "data": response["hits"]["hits"],
                         "total": response["hits"]["total"]["value"],
@@ -224,7 +221,6 @@ class ElasticService:
                     index=self.new_index + "*", body=jsonable_encoder(query), size=size
                 )
                 print("boron")
-                print(response)
                 new_results = {
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
@@ -392,8 +388,6 @@ class ElasticService:
                         "name": constants.FILEDS_DISPLAY_NAMES[key],
                     }
                 )
-
-            print(filterData)
             return {
                 "filterData": filterData,
                 "summary": summary,
@@ -404,19 +398,14 @@ class ElasticService:
             return {"filterData": [], "summary": {}, "upstreamList": []}
 
     async def getSummary(self, filter, total):
-        summary = {"total": total}
+        summary = {"total": total, "success": 0, "failure": 0, "other": 0}
 
         for key in ("jobStatus", "result"):
             buckets = filter.get(key, {}).get("buckets")
             if buckets:
-                summary.update(
-                    {
-                        constants.JOB_STATUS_MAP.get(x["key"].lower(), "other"): x[
-                            "doc_count"
-                        ]
-                        for x in buckets
-                    }
-                )
+                for x in buckets:
+                    field = constants.JOB_STATUS_MAP.get(x["key"].lower(), "other")
+                    summary[field] = summary.get(field, 0) + x.get("doc_count", 0)
                 break
 
         return summary
