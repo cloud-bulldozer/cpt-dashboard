@@ -1,6 +1,6 @@
 import json
 import asyncio
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor, as_completed
 from multiprocessing import cpu_count
 from fastapi import Response, HTTPException
 import pandas as pd
@@ -14,25 +14,24 @@ from .maps.ocm import ocmMapper, ocmFilter
 from app.api.v1.commons.example_responses import cpt_200_response, response_422
 from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination
-from collections import defaultdict
-
+from app.api.v1.commons.constants import FILEDS_DISPLAY_NAMES
 
 router = APIRouter()
 
 products = {
-    # "ocp": ocpMapper,
+    "ocp": ocpMapper,
     "quay": quayMapper,
-    # "hce": hceMapper,
-    # "telco": telcoMapper,
-    # "ocm": ocmMapper,
+    "hce": hceMapper,
+    "telco": telcoMapper,
+    "ocm": ocmMapper,
 }
 
 productsFilter = {
+    "ocp": ocpFilter,
+    "quay": quayFilter,
+    "hce": hceFilter,
     # "telco": telcoFilter,
-    # "hce": hceFilter,
-    # "ocm": ocmFilter,
-    # "ocp": ocpFilter
-    "quay": quayFilter
+    "ocm": ocmFilter,
 }
 
 
@@ -65,6 +64,7 @@ async def jobs(
     filter: str = Query(None, description="Query to filter the jobs"),
     totalJobs: int = Query(None, description="Total number of jobs"),
 ):
+    print("im here first")
     if start_date is None:
         start_date = datetime.utcnow().date()
         start_date = start_date - timedelta(days=5)
@@ -172,13 +172,11 @@ def fetch_product(product, start_date, end_date, size, offset, filter):
 async def fetch_product_filter_async(product, start_date, end_date, filter):
     try:
         response = await productsFilter[product](start_date, end_date, filter)
-        print("fetch prod filter")
-        print(response)
         if response:
             return {
                 "filterData": response["filterData"],
                 "total": response["total"],
-                "summary": {},
+                "summary": response["summary"],
             }
     except ConnectionError:
         print("Connection Error in filter for product " + product)
@@ -250,6 +248,7 @@ async def filters(
     pretty: bool = Query(False, description="Output content in pretty format."),
     filter: str = Query(None, description="Query to filter the jobs"),
 ):
+    print("im here second")
     if start_date is None:
         start_date = datetime.utcnow().date()
         start_date = start_date - timedelta(days=5)
@@ -266,8 +265,9 @@ async def filters(
         )
     total_dict = {}
     total = 0
-    result_dict = []
-    with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
+    result_dict = {}
+    summary_dict = {"success": 0, "failure": 0, "other": 0, "total": 0}
+    with ThreadPoolExecutor(max_workers=cpu_count() * 2) as executor:
         futures = {
             executor.submit(
                 fetch_product_filter, product, start_date, end_date, filter
@@ -278,22 +278,45 @@ async def filters(
             product = futures[future]
             try:
                 result = future.result()
-                # merged_json = defaultdict(list)
                 total_dict[product] = result["total"]
-                # print(result["filterData"])
-                # for d in (result_dict, result["filterData"]):
-                #     for key, value in d.items():
-                #         merged_json[key].extend(value)
-                result_dict = result_dict + result["filterData"]
-                print(result_dict)
+                if "summary" in result:
+                    summary = result.get("summary", {})
+                    for key in summary_dict:
+                        summary_dict[key] += summary.get(key, 0)
+
+                for item in result["filterData"]:
+                    key = item["key"]
+                    values = item["value"]
+
+                    # If the key already exists, merge the values
+                    if key in result_dict:
+                        if isinstance(values[0], str):
+                            existing_values = {v.lower(): v for v in result_dict[key]}
+                            for val in values:
+                                if val.lower() not in existing_values and val != "":
+                                    result_dict[key].append(val)
+                        else:
+                            # For numbers (version), just avoid duplicates
+                            result_dict[key] = list(set(result_dict[key] + values))
+                    else:
+                        result_dict[key] = values
+                merged_result = [
+                    {"key": k, "value": v, "name": FILEDS_DISPLAY_NAMES[k]}
+                    for k, v in result_dict.items()
+                ]
+                total = 0
+                for product in total_dict:
+                    total += int(total_dict[product])
+
             except Exception as e:
                 print(f"Error fetching filter for product {product}: {e}")
 
     response = {
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
-        "filterData": result_dict,
-        "total": 25,
+        "filterData": merged_result,
+        "summary": summary_dict,
+        "total": total,
     }
 
     if pretty:

@@ -57,8 +57,18 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchOCPJobsData());
-    dispatch(buildFilterData());
+    const fetchDataConcurrently = async () => {
+      try {
+        await Promise.all([
+          dispatch(buildFilterData()), // 🚀 Both dispatched simultaneously
+          // dispatch(fetchOCPJobsData()),
+        ]);
+      } catch (error) {
+        console.error("Error fetching data:", error);
+      }
+    };
+
+    fetchDataConcurrently();
   }, [dispatch]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {

@@ -16,7 +16,7 @@ async def ocmMapper(
     if isinstance(response, pd.DataFrame) or not response:
         df = response["data"]
         if len(df) == 0:
-            return df
+            return {"data": df, "total": 0}
         df.insert(len(df.columns), "product", "ocm")
         df.insert(len(df.columns), "releaseStream", "Nightly")
         df["testName"] = df["attack"]
