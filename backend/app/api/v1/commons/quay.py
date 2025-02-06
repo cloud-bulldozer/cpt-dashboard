@@ -10,9 +10,9 @@ async def getData(
     end_datetime: date,
     size,
     offset,
+    sort: str,
     filter: str,
     configpath: str,
-    sort=None,
 ):
     should = []
     must_not = []

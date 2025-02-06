@@ -24,7 +24,7 @@ async def telcoMapper(
     df = response.get("data", pd.DataFrame())
 
     if df.empty:
-        return df
+        return {"data": df, "total": response.get("total", 0)}
 
     df["product"] = "telco"
     df["releaseStream"] = df.apply(getReleaseStream, axis=1)

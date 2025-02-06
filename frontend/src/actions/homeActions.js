@@ -251,9 +251,9 @@ export const buildFilterData = () => async (dispatch, getState) => {
     });
     if (status !== 200 || !data?.filterData?.length) return;
 
-    dispatch(getCPTSummary(data.summary));
+    dispatch(getCPTSummary(data?.summary));
     dispatch({
-      type: TYPES.SET_OCP_FILTER_DATA,
+      type: TYPES.SET_CPT_FILTER_DATA,
       payload: data.filterData,
     });
 
