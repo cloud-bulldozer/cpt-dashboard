@@ -3,6 +3,7 @@ from app.api.v1.commons.utils import getReleaseStream
 from app.api.v1.commons.constants import keys_to_keep
 from datetime import date
 import pandas as pd
+from urllib.parse import urlencode, parse_qs
 
 
 #####################################################################
@@ -11,6 +12,7 @@ import pandas as pd
 async def telcoMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"telco.splunk"
     )
@@ -36,7 +38,17 @@ async def telcoMapper(
 
 async def telcoFilter(start_datetime: date, end_datetime: date, filter: str):
 
-    response = await getFilterData(start_datetime, end_datetime, filter, "telco.splunk")
+    updated_filter = ""
+    if filter:
+        query_params = parse_qs(filter)
+        # Change a field if it exists
+        if "testName" in query_params:
+            query_params["benchmark"] = query_params.pop("testName")
+        updated_filter = urlencode(query_params, doseq=True)
+
+    response = await getFilterData(
+        start_datetime, end_datetime, updated_filter, "telco.splunk"
+    )
 
     if isinstance(response, pd.DataFrame) or not response:
         return {"total": 0, "filterData": []}
