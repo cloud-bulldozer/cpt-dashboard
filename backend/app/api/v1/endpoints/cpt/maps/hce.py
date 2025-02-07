@@ -2,6 +2,7 @@ from app.api.v1.commons.hce import getData, getFilterData
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
+from urllib.parse import urlencode, parse_qs
 
 
 ################################################################
@@ -57,8 +58,16 @@ def dropColumns(df):
 
 
 async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
+    updated_filter = filter
+    if filter:
+        query_params = parse_qs(filter)
+        # Change a field if it exists
+        if "jobStatus" in query_params:
+            query_params["result"] = query_params.pop("jobStatus")
+            updated_filter = urlencode(query_params, doseq=True)
+    print(updated_filter)
     response = await getFilterData(
-        start_datetime, end_datetime, filter, f"hce.elasticsearch"
+        start_datetime, end_datetime, updated_filter, f"hce.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:

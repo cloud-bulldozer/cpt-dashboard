@@ -1,10 +1,10 @@
 from app.services.search import ElasticService
 
 from fastapi import HTTPException, status
-import re
 import app.api.v1.commons.constants as constants
 from typing import Optional
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
+import ast
 
 
 async def getMetadata(uuid: str, configpath: str):
@@ -136,13 +136,28 @@ def buildReleaseStreamFilter(input_array):
     return list(set(mapped_array))
 
 
-def get_dict_from_qs(query_string):
-    query_dict = parse_qs(query_string)
-    cleaned_dict = {
-        key: [v.strip("'") for v in values] for key, values in query_dict.items()
-    }
+def get_dict_from_qs(qs):
+    if not qs:
+        return {}
 
-    return cleaned_dict
+    parsed_qs = parse_qs(qs)
+    result = {}
+    for key, values in parsed_qs.items():
+        processed_values = []
+        for value_str in values:
+            try:
+                # Safely evaluate the string if it looks like a list
+                evaluated_value = ast.literal_eval(value_str)
+                if isinstance(evaluated_value, (list, tuple)):
+                    print(evaluated_value)
+                    processed_values.extend([str(item) for item in evaluated_value])
+                else:
+                    processed_values.append(str(evaluated_value))
+            except (SyntaxError, ValueError):
+
+                processed_values.append(str(value_str))
+        result[key] = processed_values
+    return result
 
 
 def construct_query(filter_dict):
@@ -171,6 +186,7 @@ def construct_ES_filter_query(filter):
         "build": "ocpVersion",
         "jobType": "upstreamJob",
         "isRehearse": "upstreamJob",
+        "product": "group",
     }
 
     # W.R.T jobType(job) and isRehearse(job) of the utils.py file
@@ -183,13 +199,12 @@ def construct_ES_filter_query(filter):
     #  When filtering if the value is True it should be included in the `should_part`
     #  Otherwise, it should be in the `must_not_part`
 
-    search_value = {
-        "isRehearse": "rehearse",
-        "jobType": "periodic",
-    }
-
+    search_value = {"isRehearse": "rehearse", "jobType": "periodic", "result": "PASS"}
+    min_match = 0
     for key, values in filter.items():
         field = key_to_field.get(key, key)
+        min_match += 1
+        print("field")
         for value in values:
             if key in search_value:
                 match_clause = create_match_phrase(field, search_value[key])
@@ -197,6 +212,8 @@ def construct_ES_filter_query(filter):
                     target_list = must_not_part if not value else should_part
                 elif key == "jobType":
                     target_list = should_part if value == "periodic" else must_not_part
+                elif key == "result":
+                    target_list = must_not_part if value == "failure" else should_part
                 target_list.append(match_clause)
             else:
                 should_part.append(create_match_phrase(field, value))
@@ -204,11 +221,12 @@ def construct_ES_filter_query(filter):
     return {
         "query": should_part,
         "must_query": must_not_part,
-        "min_match": len(should_part),
+        "min_match": min_match - len(must_not_part),
     }
 
 
 def transform_filter(filter):
     filter_dict = get_dict_from_qs(filter)
+    print("calling from here")
     refiner = construct_ES_filter_query(filter_dict)
     return refiner
