@@ -2,6 +2,7 @@ from app.api.v1.commons.quay import getData, getFilterData
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
+from urllib.parse import urlencode, parse_qs
 
 
 #####################################################################################
@@ -29,8 +30,16 @@ async def quayMapper(
 
 
 async def quayFilter(start_datetime: date, end_datetime: date, filter: str):
+    updated_filter = ""
+    if filter:
+        query_params = parse_qs(filter)
+        # Change a field if it exists
+        if "testName" in query_params:
+            query_params["benchmark"] = query_params.pop("testName")
+        updated_filter = urlencode(query_params, doseq=True)
+
     response = await getFilterData(
-        start_datetime, end_datetime, filter, f"quay.elasticsearch"
+        start_datetime, end_datetime, updated_filter, f"quay.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:

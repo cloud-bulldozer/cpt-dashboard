@@ -5,6 +5,7 @@ from app import config
 import bisect
 import re
 import app.api.v1.commons.constants as constants
+import traceback
 
 
 class ElasticService:
@@ -371,6 +372,8 @@ class ElasticService:
                     ]
                     values = list(set(short_versions))
                 elif key == "result":
+                    print("result")
+                    print(values)
                     updated_result = list(
                         set(
                             [
@@ -480,7 +483,7 @@ class ElasticService:
                 response = await self.prev_es.search(
                     index=self.prev_index + "*", body=jsonable_encoder(query), size=0
                 )
-            elif self.new_es:
+            elif self.new_es and self.prev_es:
                 print("rofl")
                 self.new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
@@ -490,6 +493,7 @@ class ElasticService:
                 response = await self.new_es.search(
                     index=self.new_index + "*", body=jsonable_encoder(query), size=0
                 )
+                # print(response)
             else:
                 print("grin")
                 response = await self.new_es.search(
@@ -512,7 +516,7 @@ class ElasticService:
             #         index=self.new_index + "*", body=jsonable_encoder(query), size=0
             #     )
             print("inside filter")
-            print(response["hits"]["total"]["value"])
+            # print(response["hits"]["total"]["value"])
             total = response["hits"]["total"]["value"]
             results = response["aggregations"]
             x = await self.buildFilterData(results, total)
@@ -524,7 +528,9 @@ class ElasticService:
                 "total": total,
             }
         except Exception as e:
+            print(f"elaborate error")
             print(f"Error retrieving filter data: {e}")
+            print(traceback.format_exc())
 
     async def close(self):
         """Closes es client connections"""

@@ -3,6 +3,7 @@ from app.api.v1.commons.utils import getReleaseStream, buildReleaseStreamFilter
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
+from urllib.parse import urlencode, parse_qs
 
 
 ################################################################
@@ -31,8 +32,16 @@ async def ocpMapper(
 
 
 async def ocpFilter(start_datetime: date, end_datetime: date, filter: str):
+    updated_filter = ""
+    if filter:
+        query_params = parse_qs(filter)
+        # Change a field if it exists
+        if "testName" in query_params:
+            query_params["benchmark"] = query_params.pop("testName")
+        updated_filter = urlencode(query_params, doseq=True)
+
     response = await getFilterData(
-        start_datetime, end_datetime, filter, f"ocp.elasticsearch"
+        start_datetime, end_datetime, updated_filter, f"ocp.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:
