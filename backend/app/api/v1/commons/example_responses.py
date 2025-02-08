@@ -143,6 +143,57 @@ telco_response_example ={
     ]
 }
 
+ols_response_example = {
+    "startDate": "2025-02-01",
+    "endDate": "2025-02-07",
+    "results": [    
+        {
+        "ciSystem": "PROW",
+        "uuid": "4c28dc49-98b1-425c-a3a3-4109a1576ceb",
+        "releaseStream": "4.15.0-0.nightly",
+        "platform": "AWS",
+        "clusterType": "self-managed",
+        "benchmark": "ols-load-generator",
+        "masterNodesCount": 3,
+        "workerNodesCount": 3,
+        "infraNodesCount": 3,
+        "masterNodesType": "m6a.xlarge",
+        "workerNodesType": "m6i.xlarge",
+        "infraNodesType": "r5.xlarge",
+        "totalNodesCount": 9,
+        "clusterName": "ci-op-33k29hx2-3e7b8-l6hlg",
+        "ocpVersion": "4.15.0-0.nightly-2025-02-03-164127",
+        "networkType": "OVNKubernetes",
+        "buildTag": "1886955825944072192",
+        "jobStatus": "success",
+        "buildUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/openshift_release/60981/rehearse-60981-periodic-ci-openshift-ols-load-generator-main-ols-load-test-100workers/1886955825944072192",
+        "upstreamJob": "rehearse-60981-periodic-ci-openshift-ols-load-generator-main-ols-load-test-100workers",
+        "upstreamJobBuild": "778dd992-8353-4cec-9807-7343290267f8",
+        "executionDate": "2025-02-05T03:19:50Z",
+        "jobDuration": "3396",
+        "startDate": "2025-02-05T03:19:50Z",
+        "endDate": "2025-02-05T04:16:26Z",
+        "startDateUnixTimestamp": "1738725590",
+        "endDateUnixTimestamp": "1738728986",
+        "timestamp": "2025-02-05T04:16:37Z",
+        "ipsec": "false",
+        "ipsecMode": "Disabled",
+        "fips": "false",
+        "encrypted": "false",
+        "encryptionType": "None",
+        "publish": "External",
+        "computeArch": "amd64",
+        "controlPlaneArch": "amd64",
+        "olsTestWorkers": 100,
+        "olsTestDuration": "5m",
+        "jobType": "periodic",
+        "isRehearse": "True",
+        "build": "2025-02-03-164127",
+        "shortVersion": "4.15"
+        },
+    ]
+}
+
 def ocp_200_response():
     return response_200(ocp_response_example)
 
@@ -151,6 +202,9 @@ def quay_200_response():
 
 def telco_200_response():
     return response_200(telco_response_example)
+
+def ols_200_response():
+    return response_200(ols_response_example)
 
 cpt_response_example ={
   "startDate": "2023-11-18",

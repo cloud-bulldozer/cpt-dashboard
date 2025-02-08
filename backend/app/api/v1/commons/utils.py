@@ -71,3 +71,8 @@ def getReleaseStream(row):
     elif row["releaseStream"].__contains__("ec"):
         return "Engineering Candidate"
     return "Stable"
+
+def safe_add(source, output, key, target_key):
+    value = source.get(key, {}).get('value', 0.0)
+    if value is not None:
+        output[target_key] += value
