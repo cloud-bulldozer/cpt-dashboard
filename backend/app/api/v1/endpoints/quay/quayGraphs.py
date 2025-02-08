@@ -2,7 +2,7 @@ import json
 from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
-from app.api.v1.commons.utils import getMetadata
+from app.api.v1.commons.utils import getMetadata, safe_add
 from app.services.search import ElasticService
 
 
@@ -15,12 +15,14 @@ async def graph(uuid: str):
     image_push_pull_index = "quay-push-pull"
     meta = await getMetadata(uuid, 'quay.elasticsearch')
     uuids = await getMatchRuns(meta)
+    if uuid in uuids:
+        uuids.remove(uuid)
     prevApiData = await getQuayMetrics(uuids, api_index)
     prevImagesData = await getImageMetrics(uuids, image_push_pull_index)
     apiResults = []
     imageResults = []
     latencyResults = []
-    if len(uuids) > 1:
+    if len(uuids) > 0:
         currentApiData = await getQuayMetrics([uuid], api_index)
         currentImagesData = await getImageMetrics([uuid], image_push_pull_index)
     else:
@@ -95,12 +97,6 @@ async def graph(uuid: str):
         'imageResults': imageResults,
         'latencyResults': latencyResults
     }
-
-
-def safe_add(source, output, key, target_key):
-    value = source.get(key, {}).get('value', 0.0)
-    if value is not None:
-        output[target_key] += value
 
 
 async def parseApiResults(data: dict):
@@ -283,7 +279,6 @@ async def getQuayMetrics(uuids: list, index: str):
 
 
 async def getMatchRuns(meta: dict):
-    version = meta["ocpVersion"][:4]
     query = {
         "query": {
             "bool": {
