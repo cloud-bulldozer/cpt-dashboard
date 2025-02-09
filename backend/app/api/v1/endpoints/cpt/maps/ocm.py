@@ -2,6 +2,8 @@ from app.api.v1.commons.ocm import getData, getFilterData
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
+from urllib.parse import urlencode
+from app.api.v1.commons.utils import get_dict_from_qs
 
 
 ################################################################
@@ -10,6 +12,8 @@ from app.api.v1.commons.constants import keys_to_keep
 async def ocmMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+    updated_filter = await get_updated_filter(filter)
+
     response = await getData(
         start_datetime, end_datetime, size, offset, filter, f"ocm.elasticsearch"
     )
@@ -30,8 +34,10 @@ async def ocmMapper(
 
 
 async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
+    updated_filter = await get_updated_filter(filter)
+
     response = await getFilterData(
-        start_datetime, end_datetime, filter, f"ocm.elasticsearch"
+        start_datetime, end_datetime, updated_filter, f"ocm.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -56,3 +62,20 @@ async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
         "filterData": filtered_data,
         "summary": response.get("summary", {}),
     }
+
+
+async def get_updated_filter(filter):
+    if not filter:
+        return ""
+
+    query_params = get_dict_from_qs(filter)
+
+    # ReleaseStream is Nightly for all jobs in OCM
+    if "releaseStream" in query_params and not any(
+        item.lower() == "nightly" for item in query_params.get("releaseStream", [])
+    ):
+        return {"total": 0, "filterData": [], "summary": {}}
+
+    query_params.pop("releaseStream", None)
+
+    return urlencode(query_params, doseq=True) if query_params else ""

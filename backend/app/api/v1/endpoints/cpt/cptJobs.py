@@ -16,6 +16,7 @@ from fastapi.param_functions import Query
 from app.api.v1.commons.utils import normalize_pagination, get_dict_from_qs
 from app.api.v1.commons.constants import FILEDS_DISPLAY_NAMES
 from urllib.parse import urlencode
+import traceback
 
 router = APIRouter()
 
@@ -31,7 +32,7 @@ productsFilter = {
     "ocp": ocpFilter,
     "quay": quayFilter,
     "hce": hceFilter,
-    # "telco": telcoFilter,
+    "telco": telcoFilter,
     "ocm": ocmFilter,
 }
 
@@ -65,7 +66,7 @@ async def jobs(
     filter: str = Query(None, description="Query to filter the jobs"),
     totalJobs: int = Query(None, description="Total number of jobs"),
 ):
-    print("im here first")
+
     if start_date is None:
         start_date = datetime.utcnow().date()
         start_date = start_date - timedelta(days=5)
@@ -85,10 +86,8 @@ async def jobs(
 
     results_df = pd.DataFrame()
     total_dict = {}
-    total = 0
+
     with ProcessPoolExecutor(max_workers=cpu_count()) as executor:
-        for product in products:
-            print(product)
         futures = {
             executor.submit(
                 fetch_product, product, start_date, end_date, size, offset, filter
@@ -104,16 +103,15 @@ async def jobs(
             except Exception as e:
                 print(f"Error fetching data for product {product}: {e}")
 
-    jobsCount = totalJobs
     # The total is determined by summing the counts of all products and is included in the response.
     # However, during pagination, if the count of any product drops to zero,
     # the total becomes lower than the actual value, which is undesirable.
 
     # on first hit, totalJobs is 0
-    if totalJobs == 0:
-        for product in total_dict:
-            total += int(total_dict[product])
-        jobsCount = total
+    jobsCount = (
+        sum(int(v) for v in total_dict.values()) if totalJobs == 0 else totalJobs
+    )
+
     response = {
         "startDate": start_date.__str__(),
         "endDate": end_date.__str__(),
@@ -172,56 +170,25 @@ def fetch_product(product, start_date, end_date, size, offset, filter):
 
 async def fetch_product_filter_async(product, start_date, end_date, filter):
     try:
-        print(product)
         response = await productsFilter[product](start_date, end_date, filter)
         if response:
             return {
-                "filterData": response["filterData"],
-                "total": response["total"],
-                "summary": response["summary"],
+                "filterData": response.get("filterData", []),
+                "total": response.get("total", 0),
+                "summary": response.get("summary", {}),
             }
     except ConnectionError:
         print("Connection Error in filter for product " + product)
     except Exception as e:
         print(f"Error in filter for product {product}: {e}")
-        return pd.DataFrame()
+        print(traceback.format_exc())
+        return {}
 
 
 def fetch_product_filter(product, start_date, end_date, filter):
     return asyncio.run(
         fetch_product_filter_async(product, start_date, end_date, filter)
     )
-
-
-def is_requested_size_available(total_count, offset, requested_size):
-    """
-    Check if the requested size of data is available starting from a given offset.
-
-    Args:
-        total_count (int): Total number of available records.
-        offset (int): The starting position in the dataset.
-        requested_size (int): The number of records requested.
-
-    Returns:
-        bool: True if the requested size is available, False otherwise.
-    """
-    return (offset + requested_size) <= total_count
-
-
-def calculate_remaining_data(total_count, offset, requested_size):
-    """
-    Calculate the remaining number of data items that can be fetched based on the requested size.
-
-    Args:
-        total_count (int): Total number of available records.
-        offset (int): The starting position in the dataset.
-        requested_size (int): The number of records requested.
-
-    Returns:
-        int: The number of records that can be fetched, which may be less than or equal to requested_size.
-    """
-    available_data = total_count - offset  # Data available from the offset
-    return min(available_data, requested_size)
 
 
 @router.get(
@@ -278,12 +245,10 @@ async def filters(
             else ["hce"]
         )
 
-        print(refiner if "product" in filter_dict else filter)
-
         prod_list = refiner if "product" in filter_dict else productsFilter
     else:
         prod_list = productsFilter
-    print(prod_list)
+
     with ThreadPoolExecutor(max_workers=cpu_count() * 2) as executor:
         futures = {
             executor.submit(
@@ -328,7 +293,7 @@ async def filters(
         "endDate": end_date.__str__(),
         "filterData": merged_result,
         "summary": summary_dict,
-        "total": sum(total_dict.values()),
+        "total": sum(int(v) for v in total_dict.values()),
     }
 
     if pretty:

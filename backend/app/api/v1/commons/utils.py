@@ -3,7 +3,7 @@ from app.services.search import ElasticService
 from fastapi import HTTPException, status
 import app.api.v1.commons.constants as constants
 from typing import Optional
-from urllib.parse import parse_qs, unquote
+from urllib.parse import parse_qs
 import ast
 
 
@@ -139,7 +139,6 @@ def buildReleaseStreamFilter(input_array):
 def get_dict_from_qs(qs):
     if not qs:
         return {}
-
     parsed_qs = parse_qs(qs)
     result = {}
     for key, values in parsed_qs.items():
@@ -149,7 +148,6 @@ def get_dict_from_qs(qs):
                 # Safely evaluate the string if it looks like a list
                 evaluated_value = ast.literal_eval(value_str)
                 if isinstance(evaluated_value, (list, tuple)):
-                    print(evaluated_value)
                     processed_values.extend([str(item) for item in evaluated_value])
                 else:
                     processed_values.append(str(evaluated_value))
@@ -204,7 +202,6 @@ def construct_ES_filter_query(filter):
     for key, values in filter.items():
         field = key_to_field.get(key, key)
         min_match += 1
-        print("field")
         for value in values:
             if key in search_value:
                 match_clause = create_match_phrase(field, search_value[key])
@@ -227,6 +224,5 @@ def construct_ES_filter_query(filter):
 
 def transform_filter(filter):
     filter_dict = get_dict_from_qs(filter)
-    print("calling from here")
     refiner = construct_ES_filter_query(filter_dict)
     return refiner

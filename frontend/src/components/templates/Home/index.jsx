@@ -60,8 +60,8 @@ const Home = () => {
     const fetchDataConcurrently = async () => {
       try {
         await Promise.all([
-          dispatch(buildFilterData()), // 🚀 Both dispatched simultaneously
-          // dispatch(fetchOCPJobsData()),
+          dispatch(buildFilterData()),
+          dispatch(fetchOCPJobsData()),
         ]);
       } catch (error) {
         console.error("Error fetching data:", error);
