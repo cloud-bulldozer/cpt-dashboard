@@ -10,7 +10,8 @@ router = APIRouter()
 async def graph(uuid: str):
     latencyResults = []
     apiResults = []
-    api_index = "ols-load-test-results"
+    currentApiData = None
+    api_index = "ols-load-test-results*"
     metric_names = [
         "get_readiness", "get_liveness", "post_authorized",
         "get_metrics", "get_feedback_status", "post_feedback",
@@ -19,12 +20,11 @@ async def graph(uuid: str):
     ]
     metadata = await getMetadata(uuid, 'ocp.elasticsearch')
     uuids = await getMatchRuns(metadata)
-    if uuid in uuids:
+    if uuid in uuids and len(uuids) > 1:
         uuids.remove(uuid)
-    previousApiData = await getApiMetrics(uuids, metric_names, api_index)
-    if len(uuids) > 0:
         currentApiData = await getApiMetrics([uuid], metric_names, api_index)
-    else:
+    previousApiData = await getApiMetrics(uuids, metric_names, api_index)
+    if currentApiData is None:
         currentApiData = previousApiData
     previousLatencies, previousApiResults = await parseApiResults(previousApiData)
     currentLatencies, currentApiResults = await parseApiResults(currentApiData)

@@ -54,7 +54,7 @@ class ElasticService:
                     index=self.prev_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
-            if previous_results['hits']['total']['value'] == 0:
+            if previous_results is None or len(previous_results['hits']['hits']) == 0:
                 self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                 return await self.new_es.search(
                     index=self.new_index+"*",
