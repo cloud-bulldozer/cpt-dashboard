@@ -3,7 +3,8 @@ from app.api.v1.commons.utils import getReleaseStream, buildReleaseStreamFilter
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
-from urllib.parse import urlencode, parse_qs
+from urllib.parse import urlencode
+from app.api.v1.commons.utils import get_dict_from_qs
 
 
 ################################################################
@@ -12,9 +13,18 @@ from urllib.parse import urlencode, parse_qs
 async def ocpMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
-    sort = None
+    sort = None  # Home page table has no sorting feature
+
+    updated_filter = await get_updated_filter(filter)
+
     response = await getData(
-        start_datetime, end_datetime, size, offset, sort, filter, f"ocp.elasticsearch"
+        start_datetime,
+        end_datetime,
+        size,
+        offset,
+        sort,
+        updated_filter,
+        f"ocp.elasticsearch",
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -32,13 +42,7 @@ async def ocpMapper(
 
 
 async def ocpFilter(start_datetime: date, end_datetime: date, filter: str):
-    updated_filter = ""
-    if filter:
-        query_params = parse_qs(filter)
-        # Change a field if it exists
-        if "testName" in query_params:
-            query_params["benchmark"] = query_params.pop("testName")
-        updated_filter = urlencode(query_params, doseq=True)
+    updated_filter = await get_updated_filter(filter)
 
     response = await getFilterData(
         start_datetime, end_datetime, updated_filter, f"ocp.elasticsearch"
@@ -74,3 +78,15 @@ async def ocpFilter(start_datetime: date, end_datetime: date, filter: str):
         "filterData": filtered_data,
         "summary": response.get("summary", {}),
     }
+
+
+async def get_updated_filter(filter):
+    if not filter:
+        return ""
+    query_params = get_dict_from_qs(filter)
+
+    # Rename testName to benchmark
+    if "testName" in query_params:
+        query_params["benchmark"] = query_params.pop("testName")
+
+    return urlencode(query_params, doseq=True) if query_params else ""

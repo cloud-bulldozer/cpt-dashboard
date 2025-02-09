@@ -2,7 +2,9 @@ from app.api.v1.commons.hce import getData, getFilterData
 from datetime import date
 import pandas as pd
 from app.api.v1.commons.constants import keys_to_keep
-from urllib.parse import urlencode, parse_qs
+from urllib.parse import urlencode
+from app.api.v1.commons.utils import get_dict_from_qs
+import traceback
 
 
 ################################################################
@@ -22,8 +24,10 @@ from urllib.parse import urlencode, parse_qs
 async def hceMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+    updated_filter = await get_updated_filter(filter)
+
     response = await getData(
-        start_datetime, end_datetime, size, offset, filter, f"hce.elasticsearch"
+        start_datetime, end_datetime, size, offset, updated_filter, f"hce.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -58,39 +62,63 @@ def dropColumns(df):
 
 
 async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
-    updated_filter = filter
-    if filter:
-        query_params = parse_qs(filter)
-        # Change a field if it exists
-        if "jobStatus" in query_params:
-            query_params["result"] = query_params.pop("jobStatus")
-            updated_filter = urlencode(query_params, doseq=True)
-    print(updated_filter)
-    response = await getFilterData(
-        start_datetime, end_datetime, updated_filter, f"hce.elasticsearch"
-    )
+    try:
+        updated_filter = await get_updated_filter(filter)
 
-    if isinstance(response, pd.DataFrame) or not response:
-        return {"total": 0, "filterData": [], "summary": {}}
+        response = await getFilterData(
+            start_datetime, end_datetime, updated_filter, f"hce.elasticsearch"
+        )
 
-    if not response.get("filterData") or response.get("total", 0) == 0:
-        return {"total": response.get("total", 0), "filterData": [], "summary": {}}
+        if isinstance(response, pd.DataFrame) or not response:
+            return {"total": 0, "filterData": [], "summary": {}}
 
-    # Add predefined filters
-    filters_to_add = [
-        {"key": "ciSystem", "name": "CI System", "value": ["Jenkins"]},
-        {"key": "releaseStream", "name": "Release Stream", "value": ["Nightly"]},
-    ]
-    response["filterData"].extend(filters_to_add)
+        if not response.get("filterData") or response.get("total", 0) == 0:
+            return {"total": response.get("total", 0), "filterData": [], "summary": {}}
 
-    # Filter data based on allowed keys
-    filtered_data = [
-        item for item in response["filterData"] if item.get("key") in keys_to_keep
-    ]
-    print("hce summary")
-    print(response["summary"])
-    return {
-        "total": response.get("total", 0),
-        "filterData": filtered_data,
-        "summary": response.get("summary", {}),
+        # Add predefined filters
+        filters_to_add = [
+            {"key": "ciSystem", "name": "CI System", "value": ["Jenkins"]},
+            {"key": "releaseStream", "name": "Release Stream", "value": ["Nightly"]},
+        ]
+        response["filterData"].extend(filters_to_add)
+
+        # Filter data based on allowed keys
+        filtered_data = [
+            item for item in response["filterData"] if item.get("key") in keys_to_keep
+        ]
+
+        return {
+            "total": response.get("total", 0),
+            "filterData": filtered_data,
+            "summary": response.get("summary", {}),
+        }
+    except Exception as e:
+        print(f"Error retrieving filter data: {e}")
+
+
+async def get_updated_filter(filter):
+    if not filter:
+        return ""
+
+    query_params = get_dict_from_qs(filter)
+    # Validation checks
+    mandatory_fields = {
+        "releaseStream": "nightly",
+        "ciSystem": "jenkins",
     }
+
+    for key, required_value in mandatory_fields.items():
+        if key in query_params and not any(
+            item.lower() == required_value for item in query_params[key]
+        ):
+            return {"total": 0, "filterData": [], "summary": {}}
+
+    # Map jobStatus to result
+    if "jobStatus" in query_params:
+        query_params["result"] = query_params.pop("jobStatus")
+
+    # Remove unnecessary fields
+    for key in ["releaseStream", "ciSystem"]:
+        query_params.pop(key, None)
+
+    return urlencode(query_params, doseq=True) if query_params else ""
