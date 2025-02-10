@@ -128,5 +128,4 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
-    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})
