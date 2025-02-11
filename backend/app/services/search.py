@@ -47,18 +47,20 @@ class ElasticService:
         """Runs a query and returns the results"""
         if size == 0:
             """Handles aggregation queries logic"""
+            previous_results = None
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (self.prev_index if indice is None else indice)
-                return await self.prev_es.search(
+                previous_results = await self.prev_es.search(
                     index=self.prev_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
-            else:
+            if previous_results is None or len(previous_results['hits']['hits']) == 0:
                 self.new_index = self.new_index_prefix + (self.new_index if indice is None else indice)
                 return await self.new_es.search(
                     index=self.new_index+"*",
                     body=jsonable_encoder(query),
                     size=size)
+            return previous_results
         else:
             """Handles queries that require data from ES docs"""
             if timestamp_field:
@@ -155,7 +157,7 @@ class ElasticService:
         seen = set()
         filtered_results = []
         for each_result in all_results:
-            flat_doc = flatten_dict(each_result)
+            flat_doc = flatten_dict(each_result['_source'])
             if tuple(sorted(flat_doc.items())) in seen:
                 continue
             else:
