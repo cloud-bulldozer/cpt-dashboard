@@ -15,3 +15,8 @@ personal_access_token=
 url=
 username=
 password=
+
+[crucible]
+url=
+username=
+password=
