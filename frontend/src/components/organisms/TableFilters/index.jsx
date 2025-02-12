@@ -119,18 +119,14 @@ const TableFilter = (props) => {
                 />
               </ToolbarItem>
               <ToolbarItem>
-                {filterOptions.length > 0 ? (
-                  <MultiSelectBox
-                    options={filterOptions}
-                    onChange={updateSelectedFilter}
-                    applyMethod={onOptionsChange}
-                    currCategory={category}
-                    selected={selectedFilters?.find((i) => i.name === category)}
-                    width={"300px"}
-                  />
-                ) :
-                  <Banner status="warning">No options for category "{category}"</Banner>
-                }
+                <MultiSelectBox
+                  options={filterOptions}
+                  onChange={updateSelectedFilter}
+                  applyMethod={onOptionsChange}
+                  currCategory={category}
+                  selected={selectedFilters?.find((i) => i.name === category)}
+                  width={"300px"}
+                />
               </ToolbarItem>
             </ToolbarContent>
           ) :
