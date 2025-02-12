@@ -13,6 +13,13 @@ import TableColumnIcon from "@/components/atoms/TableColumnIcon";
 import { uid } from "@/utils/helper";
 import { useSelector } from "react-redux";
 
+/**
+ * @param {*} props
+ *  - type: The project ID type within the CPT Dashboard.
+ *  - setColumns: A callback with two inputs, value and isAdding:
+ *   - value: The column to modify
+ *   - isAdding: True if adding the column, False if removing it.
+ */
 const ColumnMenuFilter = (props) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -72,6 +79,7 @@ const ColumnMenuFilter = (props) => {
     </Select>
   );
 };
+
 
 ColumnMenuFilter.propTypes = {
   type: PropTypes.string,
