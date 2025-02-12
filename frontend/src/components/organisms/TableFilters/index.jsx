@@ -3,6 +3,7 @@ import "react-calendar/dist/Calendar.css";
 import "./index.less";
 
 import {
+  Banner,
   Chip,
   ChipGroup,
   Toolbar,
@@ -25,7 +26,9 @@ import SelectBox from "@/components/molecules/SelectBox";
 import { formatDate } from "@/utils/helper";
 
 /**
- * A component that provides a filter selector, a date selector, and navigation components.
+ * A component that provides an all-in-one toolbar for the tables in this project.
+ * 
+ * Includes a filter selector, a date selector, a column selector, and navigation components.
  * This component utilizes filterActions to modify the data store.
  *
  * @param {*} props:
@@ -64,15 +67,9 @@ const TableFilter = (props) => {
     updateSelectedFilter,
   } = props;
 
-
-  tableFilters.forEach(function(entry) {
-    console.log(entry);
-  });
-
-
   const getFilterID = (name) => {
     if (!(tableFilters?.length > 0)) {
-      return "no-filters";
+      return "";
     }
     const filterResults = tableFilters.filter((item) => item.name === name);
     if (filterResults.length == 0) {
@@ -110,7 +107,7 @@ const TableFilter = (props) => {
     <>
       <Toolbar id="filter-toolbar">
         {tableFilters != null && filterOptions != null && updateSelectedFilter != null && (
-          tableFilters.length > 0 && filterOptions.length > 0 ? (
+          tableFilters.length > 0 ? (
             <ToolbarContent className="field-filter">
               <ToolbarItem style={{ marginInlineEnd: 0 }}>
                 <SelectBox
@@ -122,7 +119,7 @@ const TableFilter = (props) => {
                 />
               </ToolbarItem>
               <ToolbarItem>
-                {category != false ? (
+                {filterOptions.length > 0 ? (
                   <MultiSelectBox
                     options={filterOptions}
                     onChange={updateSelectedFilter}

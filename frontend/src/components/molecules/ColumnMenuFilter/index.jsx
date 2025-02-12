@@ -14,11 +14,15 @@ import { uid } from "@/utils/helper";
 import { useSelector } from "react-redux";
 
 /**
+ * A component that displays a list of columns available for the project
+ * ID type, and allows the user to select or deselect them.
+ * Selection changes are communicated through the callback.
+ * 
  * @param {*} props
  *  - type: The project ID type within the CPT Dashboard.
- *  - setColumns: A callback with two inputs, value and isAdding:
+ *  - setColumns: A callback with two inputs, `value` and `isAdding`:
  *   - value: The column to modify
- *   - isAdding: True if adding the column, False if removing it.
+ *   - isAdding: `true` if adding the column, `false` if removing it.
  */
 const ColumnMenuFilter = (props) => {
   const [isOpen, setIsOpen] = React.useState(false);
