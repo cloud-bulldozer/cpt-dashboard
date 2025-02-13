@@ -101,6 +101,7 @@ class ElasticService:
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             previous_results = {
                                 "data": response["hits"]["hits"],
@@ -111,6 +112,7 @@ class ElasticService:
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             previous_results = {
                                 "data": response["hits"]["hits"],
@@ -144,6 +146,7 @@ class ElasticService:
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             print("hydrogen")
                             new_results = {
@@ -155,6 +158,7 @@ class ElasticService:
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             print("helium")
                             new_results = {
@@ -187,6 +191,7 @@ class ElasticService:
                             index=self.new_index + "*",
                             body=jsonable_encoder(query),
                             size=size,
+                            request_timeout=50,
                         )
                         print("above li")
                         print(self.new_index)
@@ -209,6 +214,7 @@ class ElasticService:
                         index=self.prev_index + "*",
                         body=jsonable_encoder(query),
                         size=size,
+                        request_timeout=50,
                     )
                     print("bery")
                     previous_results = {
@@ -219,7 +225,10 @@ class ElasticService:
                     self.new_index if indice is None else indice
                 )
                 response = await self.new_es.search(
-                    index=self.new_index + "*", body=jsonable_encoder(query), size=size
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=size,
+                    request_timeout=50,
                 )
                 print("boron")
                 new_results = {
@@ -267,7 +276,10 @@ class ElasticService:
                 max(start_date, each_index.timestamps[0])
             )
             response = await es_client.search(
-                index=each_index.index, body=jsonable_encoder(query), size=size
+                index=each_index.index,
+                body=jsonable_encoder(query),
+                size=size,
+                request_timeout=50,
             )
             results.extend(response["hits"]["hits"])
             total += response["hits"]["total"]["value"]
@@ -481,7 +493,10 @@ class ElasticService:
                 )
                 print(self.prev_index)
                 response = await self.prev_es.search(
-                    index=self.prev_index + "*", body=jsonable_encoder(query), size=0
+                    index=self.prev_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                    request_timeout=50,
                 )
             elif self.new_es and self.prev_es:
                 print("rofl")
@@ -491,7 +506,10 @@ class ElasticService:
                 print(self.new_index)
                 print(query)
                 response = await self.new_es.search(
-                    index=self.new_index + "*", body=jsonable_encoder(query), size=0
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                    request_timeout=50,
                 )
                 # print(response)
             else:
@@ -500,6 +518,7 @@ class ElasticService:
                     index=self.new_index + "*",
                     body=jsonable_encoder(query),
                     size=0,
+                    request_timeout=50,
                 )
             # if self.prev_es:
             #     self.prev_index = self.prev_index_prefix + (
