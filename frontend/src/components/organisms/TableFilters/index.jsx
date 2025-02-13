@@ -67,15 +67,8 @@ const TableFilter = (props) => {
     updateSelectedFilter,
   } = props;
 
-  const getFilterID = (name) => {
-    if (!(tableFilters?.length > 0)) {
-      return "";
-    }
-    const filterResults = tableFilters.filter((item) => item.name === name);
-    if (filterResults.length == 0) {
-      return "";
-    }
-    return filterResults[0].value
+  const getFilterCategory = (name) => {
+    return tableFilters.filter((item) => item.name === name)?.[0].value
   }
 
   const getFilterName = (key) => {
@@ -85,7 +78,7 @@ const TableFilter = (props) => {
     return filter.name;
   };
 
-  const category = getFilterID(categoryFilterValue);
+  const category = getFilterCategory(categoryFilterValue);
 
   const onCategoryChange = (_event, value) => {
     setCatFilters(value, type);
