@@ -18,24 +18,29 @@ async def getData(
     filter: str,
     configpath: str,
 ):
+    should = []
+    must_not = []
     query = {
         "size": size,
         "from": offset,
         "query": {
             "bool": {
                 "filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}},
-                "should": [],
-                "must_not": [],
+                "should": should,
+                "must_not": must_not,
             }
         },
     }
     if sort:
         query["sort"] = utils.build_sort_terms(sort)
+
     if filter:
         refiner = utils.transform_filter(filter)
-        query["query"]["bool"]["should"] = refiner["query"]
+
+        should.exted(refiner["query"])
+        must_not.exted(refiner["must_query"])
         query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
-        query["query"]["bool"]["must_not"] = refiner["must_query"]
+
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -96,9 +101,7 @@ async def getFilterData(
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(OCP_FIELD_CONSTANT_DICT)
-    refiner = ""
-    if filter:
-        refiner = utils.transform_filter(filter)
+    refiner = utils.transform_filter(filter) if filter else ""
 
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
