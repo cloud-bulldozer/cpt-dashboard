@@ -111,7 +111,6 @@ const Telco = () => {
         tableFilters={modifidedTableFilters}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
-        filterData={filterData}
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}

@@ -13,6 +13,18 @@ import TableColumnIcon from "@/components/atoms/TableColumnIcon";
 import { uid } from "@/utils/helper";
 import { useSelector } from "react-redux";
 
+/**
+ * A component that displays a list of columns available for the project
+ * ID type, and allows the user to select or deselect them.
+ * Selection changes are communicated through the callback.
+ * 
+ * @param {*} props
+ *  - type: The project ID type within the CPT Dashboard as used in
+ *      the commonActions action file.
+ *  - setColumns: A callback with two inputs, `value` and `isAdding`:
+ *   - value: The column to modify
+ *   - isAdding: `true` if adding the column, `false` if removing it.
+ */
 const ColumnMenuFilter = (props) => {
   const [isOpen, setIsOpen] = React.useState(false);
 
@@ -72,6 +84,7 @@ const ColumnMenuFilter = (props) => {
     </Select>
   );
 };
+
 
 ColumnMenuFilter.propTypes = {
   type: PropTypes.string,
