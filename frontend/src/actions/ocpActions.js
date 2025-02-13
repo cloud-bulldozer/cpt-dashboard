@@ -4,12 +4,12 @@ import * as TYPES from "./types.js";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   deleteAppliedFilters,
-  getFilteredData,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "./toastActions";
 
@@ -95,25 +95,11 @@ export const setOCPCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().ocp;
-
-  const results = [...getState().ocp.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    !Object.values(appliedFilters).includes("");
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_OCP_FILTERED_DATA,
-    payload: filtered,
-  });
-  dispatch(tableReCalcValues());
+export const applyFilters = () => (dispatch) => {
+  dispatch(setOCPOffset(INITAL_OFFSET));
+  dispatch(fetchOCPJobs());
   dispatch(buildFilterData());
+  dispatch(tableReCalcValues());
 };
 
 export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {

@@ -6,18 +6,37 @@ from app.api.v1.commons.constants import QUAY_FIELD_CONSTANT_DICT
 
 
 async def getData(
-    start_datetime: date, end_datetime: date, size, offset, sort: str, configpath: str
+    start_datetime: date,
+    end_datetime: date,
+    size,
+    offset,
+    sort: str,
+    filter: str,
+    configpath: str,
 ):
+    should = []
+    must_not = []
     query = {
         "size": size,
         "from": offset,
         "query": {
-            "bool": {"filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}}}
+            "bool": {
+                "filter": {"range": {"timestamp": {"format": "yyyy-MM-dd"}}},
+                "should": should,
+                "must_not": must_not,
+            }
         },
     }
 
     if sort:
         query["sort"] = utils.build_sort_terms(sort)
+
+    if filter:
+        refiner = utils.transform_filter(filter)
+
+        should.extend(refiner["query"])
+        must_not.extend(refiner["must_query"])
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
 
     es = ElasticService(configpath=configpath)
     response = await es.post(
@@ -51,13 +70,18 @@ async def getData(
     return {"data": cleanJobs, "total": response["total"]}
 
 
-async def getFilterData(start_datetime: date, end_datetime: date, configpath: str):
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
 
     es = ElasticService(configpath=configpath)
 
     aggregate = utils.buildAggregateQuery(QUAY_FIELD_CONSTANT_DICT)
+    refiner = ""
+    if filter:
+        refiner = utils.transform_filter(filter)
 
-    response = await es.filterPost(start_datetime, end_datetime, aggregate)
+    response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
     return {"filterData": response["filterData"], "summary": response["summary"]}

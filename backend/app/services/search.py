@@ -348,6 +348,11 @@ class ElasticService:
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
+                elif key == "ocpVersion":
+                    short_versions = [
+                        str(value)[: constants.OCP_SHORT_VER_LEN] for value in values
+                    ]
+                    values = list(set(short_versions))
                 filterData.append(
                     {
                         "key": key,
@@ -367,7 +372,7 @@ class ElasticService:
             print(f"Error building filter data: {e}")
             return {"filterData": [], "summary": {}, "upstreamList": []}
 
-    async def buildFilterQuery(self, start_datetime, end_datetime, aggregate):
+    async def buildFilterQuery(self, start_datetime, end_datetime, aggregate, refiner):
         start_date = (
             start_datetime.strftime("%Y-%m-%d")
             if start_datetime
@@ -403,11 +408,19 @@ class ElasticService:
             },
         }
         query["aggs"].update(aggregate)
+        if refiner:
+            query["query"]["bool"]["should"] = refiner["query"]
+            query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+            query["query"]["bool"]["must_not"] = refiner["must_query"]
         return query
 
-    async def filterPost(self, start_datetime, end_datetime, aggregate, indice=None):
+    async def filterPost(
+        self, start_datetime, end_datetime, aggregate, refiner, indice=None
+    ):
         try:
-            query = await self.buildFilterQuery(start_datetime, end_datetime, aggregate)
+            query = await self.buildFilterQuery(
+                start_datetime, end_datetime, aggregate, refiner
+            )
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
