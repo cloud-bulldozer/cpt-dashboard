@@ -37,8 +37,8 @@ async def getData(
     if filter:
         refiner = utils.transform_filter(filter)
 
-        should.exted(refiner["query"])
-        must_not.exted(refiner["must_query"])
+        should.extend(refiner["query"])
+        must_not.extend(refiner["must_query"])
         query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
 
     es = ElasticService(configpath=configpath)
