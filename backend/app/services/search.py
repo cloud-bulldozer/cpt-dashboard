@@ -350,8 +350,7 @@ class ElasticService:
                     values = values + platformOptions
                 elif key == "ocpVersion":
                     short_versions = [
-                        str(value)[0 : constants.OCP_SHORT_VERSION_LENGTH]
-                        for value in values
+                        str(value)[: constants.OCP_SHORT_VER_LEN] for value in values
                     ]
                     values = list(set(short_versions))
                 filterData.append(
