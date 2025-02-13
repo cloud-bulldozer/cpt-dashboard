@@ -23,7 +23,7 @@ FIELDS = (
     "totalNodesCount",
 )
 MAX_PAGE = 10000
-OCP_SHORT_VERSION_LENGTH = 7
+OCP_SHORT_VER_LEN = 6
 
 OCP_FIELD_CONSTANT_DICT = {
     "ciSystem": "ciSystem.keyword",
