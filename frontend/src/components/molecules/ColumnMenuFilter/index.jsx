@@ -19,7 +19,7 @@ import { useSelector } from "react-redux";
  * Selection changes are communicated through the callback.
  * 
  * @param {*} props
- *  - type: The project ID type within the CPT Dashboard that as used in
+ *  - type: The project ID type within the CPT Dashboard as used in
  *      the commonActions action file.
  *  - setColumns: A callback with two inputs, `value` and `isAdding`:
  *   - value: The column to modify

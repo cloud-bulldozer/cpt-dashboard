@@ -24,7 +24,7 @@ import { useState } from "react";
  *   - `name`: The name of the category.
  *   - `value`: An array of all selected values as strings.
  *  - applyMethod: A callback that is called when it is time to apply the changes (like when
- *      the multi-select is closed).
+ *      the multi-select is closed). Takes no parameters.
  *  - currCategory: A string specifying the current category.
  *  - width: the CSS value for the width of the outer sub-component.
  */
