@@ -53,6 +53,7 @@ QUAY_FIELD_CONSTANT_DICT = {
     "build": "ocpVersion.keyword",
     "upstream": "upstreamJob.keyword",
     "clusterType": "clusterType.keyword",
+    "ciSystem": "ciSystem.keyword",
 }
 
 RELEASE_STREAM_DICT = {

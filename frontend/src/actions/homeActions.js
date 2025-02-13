@@ -217,9 +217,10 @@ export const setCPTPageOptions = (page, perPage) => ({
 });
 
 export const getCPTSummary = (countObj) => (dispatch) => {
-  const other =
-    countObj["total"] -
-    ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const other = countObj["other"]
+    ? countObj["other"]
+    : countObj["total"] -
+      ((countObj["success"] || 0) + (countObj["failure"] || 0));
   const summary = {
     othersCount: other,
     successCount: countObj["success"] || 0,
@@ -246,18 +247,34 @@ export const buildFilterData = () => async (dispatch, getState) => {
 
     const params = dispatch(getRequestParams("cpt"));
 
-    const { status, data } = await API.get(API_ROUTES.CPT_FILTERS_API_V1, {
-      params,
-    });
-    if (status !== 200 || !data?.filterData?.length) return;
+    const response = await API.get(API_ROUTES.CPT_FILTERS_API_V1, { params });
 
-    dispatch(getCPTSummary(data?.summary));
-    dispatch({
-      type: TYPES.SET_CPT_FILTER_DATA,
-      payload: data.filterData,
-    });
+    if (response.status !== 200 || !response.data?.filterData?.length) {
+      console.warn("No filter data received from API");
+      dispatch(getCPTSummary({}));
+      dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: [] });
+      return;
+    }
 
-    dispatch(setCPTCatFilters(categoryFilterValue || tableFilters[0]?.name));
+    const { summary, filterData } = response.data;
+
+    dispatch(getCPTSummary(summary));
+    dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: filterData });
+
+    const defaultCategory = categoryFilterValue || tableFilters?.[0]?.name;
+    dispatch(setCPTCatFilters(defaultCategory));
+  } catch (error) {
+    console.error("Error fetching filter data:", error);
+    dispatch(showFailureToast());
+  }
+};
+
+export const fetchDataConcurrently = () => async (dispatch) => {
+  try {
+    await Promise.all([
+      dispatch(buildFilterData()),
+      dispatch(fetchOCPJobsData()),
+    ]);
   } catch (error) {
     dispatch(showFailureToast());
   }
