@@ -232,6 +232,8 @@ async def graph(uuid: str):
 
 
 async def jobSummary(uuids: list):
+    # if not uuids:
+    #     return []
     index = "ripsaw-kube-burner*"
     ids = '" OR uuid: "'.join(uuids)
     query = {
@@ -266,6 +268,9 @@ async def processNetperf(data: dict):
 
 
 def jobFilter(pdata: dict, data: dict):
+    # need at least one record to avoid out of bounds error
+    if not pdata:
+        return []
     columns = ["uuid", "jobConfig.jobIterations"]
     pdf = pd.json_normalize(pdata)
     pick_df = pd.DataFrame(pdf, columns=columns)
