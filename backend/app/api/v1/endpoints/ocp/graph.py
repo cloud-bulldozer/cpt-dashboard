@@ -278,6 +278,8 @@ async def graph(uuid: str):
 
 
 async def jobSummary(uuids: list):
+    # if not uuids:
+    #     return []
     index = "ripsaw-kube-burner*"
     ids = '" OR uuid: "'.join(uuids)
     query = {
@@ -312,7 +314,6 @@ async def processNetperf(data: dict):
 
 
 def jobFilter(pdata: dict, data: dict):
-    columns = ["uuid", "jobConfig.jobIterations"]
     # need at least one record to avoid out of bounds error
     if not pdata or not data:
         return []
