@@ -204,9 +204,6 @@ async def graph(uuid: str):
     return metrics
 
 async def jobSummary(uuids: list):
-    # do not want every job summary
-    if not uuids:
-        return []
     index = "ripsaw-kube-burner*"
     ids = "\" OR uuid: \"".join(uuids)
     query = {
