@@ -1917,6 +1917,7 @@ class TestCrucible:
                 "layout": {
                     "autosize": True,
                     "legend": {
+                        "groupclick": "toggleitem",
                         "orientation": "h",
                         "x": 0.9,
                         "xanchor": "right",
@@ -1975,6 +1976,7 @@ class TestCrucible:
                 "layout": {
                     "autosize": True,
                     "legend": {
+                        "groupclick": "toggleitem",
                         "orientation": "h",
                         "x": 0.9,
                         "xanchor": "right",
