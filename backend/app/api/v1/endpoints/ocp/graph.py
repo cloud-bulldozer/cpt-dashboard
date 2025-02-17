@@ -239,7 +239,7 @@ async def processNetperf(data: dict) :
 
 def jobFilter(pdata: dict, data: dict):
     # need at least one record to avoid out of bounds error
-    if not pdata:
+    if not pdata or not data:
         return []
     columns = ['uuid','jobConfig.jobIterations']
     pdf = pd.json_normalize(pdata)
