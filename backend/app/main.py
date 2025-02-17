@@ -1,7 +1,8 @@
+import socket
 import typing
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
 
@@ -17,8 +18,10 @@ class ORJSONResponse(JSONResponse):
 
 origins = [
     "http://localhost:3000",
-    "localhost:3000"
+    "localhost:3000",
+    f"http://{socket.gethostname()}:3000",
 ]
+
 
 app = FastAPI(default_response_class=ORJSONResponse,
               docs_url="/docs",
