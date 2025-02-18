@@ -1,6 +1,7 @@
 import "./index.less";
 
 import * as CONSTANTS from "@/assets/constants/metadataConstants";
+import * as BENCHMARK_CONSTANTS from "@/assets/constants/grafanaConstants";
 
 import { Card, CardBody, Grid, GridItem, Title } from "@patternfly/react-core";
 
@@ -13,6 +14,8 @@ import { useMemo } from "react";
 import { useSelector } from "react-redux";
 
 const RowContent = (props) => {
+  console.log("We are here")
+  console.log(props)
   const getGraphData = (uuid) => {
     const data = props.graphData?.filter((a) => a.uuid === uuid);
 
@@ -34,11 +37,19 @@ const RowContent = (props) => {
   const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
 
   const graphTitle = useMemo(() => {
-    return {
-      apiResults: CONSTANTS.API_RESULTS,
-      latencyResults: CONSTANTS.LATENCY_RESULTS,
-      imageResults: CONSTANTS.IMAGE_RESULTS,
-    };
+    if (props.item.benchmark === BENCHMARK_CONSTANTS.QUAY_LOAD_TEST) {
+      return {
+        apiResults: CONSTANTS.QUAY_API_RESULTS,
+        latencyResults: CONSTANTS.QUAY_LATENCY_RESULTS,
+        imageResults: CONSTANTS.QUAY_IMAGE_RESULTS,
+      };
+    } else if (props.item.benchmark === BENCHMARK_CONSTANTS.OLS_LOAD_GENERATOR) {
+      return {
+        apiResults: CONSTANTS.OLS_API_RESULTS,
+        latencyResults: CONSTANTS.OLS_LATENCY_RESULTS,
+      };
+    }
+    return {}
   }, []);
   return (
     <Grid hasGutter>
