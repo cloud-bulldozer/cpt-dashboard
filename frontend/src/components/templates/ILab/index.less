@@ -1,0 +1,50 @@
+.pf-v5-c-accordion__expandable-content-body {
+    display: block;
+}
+.metadata-wrapper {
+    display: flex;
+    flex-direction: row;
+    .metadata-card {
+        flex: 1; /* additionally, equal width */
+        padding: 1em;
+    }
+}
+.comparison-container {
+    display: flex;
+    width: 100%;
+    height: 80%;
+    .metrics-container {
+        width: 40%;
+        padding: 10px;
+        .compare-btn {
+            margin: 2vh 0;
+        }
+        .pf-v5-c-menu {
+            height: 75%;
+            box-shadow: unset;
+        }
+    }
+    .chart-container {
+        width: 80%;
+        .js-plotly-plot {
+            width: 100%;
+            height: 100%;
+            overflow-x: auto;
+            overflow-y: visible;
+        }
+    }
+    .title {
+        margin-bottom: 2vh;
+    }
+}
+.mini-metadata {
+    display: inline flex;
+    // transform: scale(.75);
+}
+.summary-box {
+    display: inline flex;
+    width: 100%;
+    height: 100%;
+    overflow-x: auto;
+    overflow-y: visible;
+}
