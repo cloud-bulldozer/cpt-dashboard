@@ -172,6 +172,7 @@ def construct_ES_filter_query(filter):
         "jobType": "upstreamJob",
         "isRehearse": "upstreamJob",
     }
+
     # W.R.T jobType(job) and isRehearse(job) of the utils.py file
 
     # if the job contains "periodic" set `jobType` as "periodic" else "pull-request"
