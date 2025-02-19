@@ -99,8 +99,8 @@ const TableFilter = (props) => {
   return (
     <>
       <Toolbar id="filter-toolbar">
-        {tableFilters != null && filterOptions != null && updateSelectedFilter != null && (
-          tableFilters.length > 0 ? (
+        {tableFilters.length > 0 ?
+          (
             <ToolbarContent className="field-filter">
               <ToolbarItem style={{ marginInlineEnd: 0 }}>
                 <SelectBox
@@ -126,7 +126,7 @@ const TableFilter = (props) => {
             <ToolbarContent>
               <ToolbarItem variant="label">No filters present</ToolbarItem>
             </ToolbarContent>
-        )}
+        }
 
         <ToolbarContent className="date-filter">
           <ToolbarItem>
@@ -172,9 +172,9 @@ const TableFilter = (props) => {
 };
 
 TableFilter.propTypes = {
-  tableFilters: PropTypes.array,
+  tableFilters: PropTypes.array.isRequired,
   categoryFilterValue: PropTypes.string,
-  filterOptions: PropTypes.array,
+  filterOptions: PropTypes.array.isRequired,
   appliedFilters: PropTypes.object,
   start_date: PropTypes.string,
   end_date: PropTypes.string,
@@ -182,7 +182,7 @@ TableFilter.propTypes = {
   showColumnMenu: PropTypes.bool,
   setColumns: PropTypes.func,
   selectedFilters: PropTypes.array,
-  updateSelectedFilter: PropTypes.func,
+  updateSelectedFilter: PropTypes.func.isRequired,
   navigation: PropTypes.func,
 };
 export default TableFilter;
