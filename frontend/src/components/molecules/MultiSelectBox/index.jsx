@@ -12,6 +12,22 @@ import {
 import PropTypes from "prop-types";
 import { useState } from "react";
 
+/**
+ * A multi-select box that allows selecting values for a category.
+ *
+ * @param {*} props:
+ *  - options: an array of options that can be selected.
+ *  - onChange: a callback function that is called with inputs `category` and `value`
+ *   - `category`: The value from currCategory.
+ *   - `value`: The value that was selected.
+ *  - selected: The currently selected options in the form of an object with fields `name` and `value`
+ *   - `name`: The name of the category.
+ *   - `value`: An array of all selected values as strings.
+ *  - applyMethod: A callback that is called when it is time to apply the changes (like when
+ *      the multi-select is closed). Takes no parameters.
+ *  - currCategory: A string specifying the current category.
+ *  - width: the CSS value for the width of the outer sub-component.
+ */
 const MultiSelectBox = (props) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
@@ -31,6 +47,8 @@ const MultiSelectBox = (props) => {
     }
     setIsDirty(false);
   };
+  const message = props.options.length > 0 ? "Select a value" : "No values present";
+
   const toggle = (toggleRef) => {
     return (
       <MenuToggle
@@ -66,7 +84,7 @@ const MultiSelectBox = (props) => {
           </TextInputGroup>
         ) : (
           <TextInputGroup>
-            <TextInputGroupMain value={"Select a value"} />
+            <TextInputGroupMain value={message} />
           </TextInputGroup>
         )}
       </MenuToggle>

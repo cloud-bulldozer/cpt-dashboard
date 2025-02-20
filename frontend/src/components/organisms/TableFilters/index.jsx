@@ -3,6 +3,7 @@ import "react-calendar/dist/Calendar.css";
 import "./index.less";
 
 import {
+  Banner,
   Chip,
   ChipGroup,
   Toolbar,
@@ -24,12 +25,37 @@ import PropTypes from "prop-types";
 import SelectBox from "@/components/molecules/SelectBox";
 import { formatDate } from "@/utils/helper";
 
+/**
+ * A component that provides an all-in-one toolbar for the tables in this project.
+ * 
+ * Includes a filter selector, a date selector, a column selector, and navigation components.
+ * This component utilizes filterActions to modify the data store.
+ *
+ * @param {*} props:
+ *   - tableFilters: A array of name-value pairs mapping the name of the filter category
+ *      to the ID of the filter category.
+ *   - categoryFilterValue: The ID of the currently selected category. See filterActions.setCatFilters
+ *      for relevant code that can influence this input.
+ *   - filterOptions: The array of options for the selected category. Used in the multi-select box.
+ *      See filterActions.setCatFilters for relevant code that can influence this input.
+ *   - appliedFilters: A map/object key-value pairs of the filters that are active.
+ *   - start_date: The filter start date
+ *   - end_date: The filter end date
+ *   - navigation: The react navigate function.
+ *   - type: A string that corresponds with the ID used in the commonActions action file.
+ *   - showColumnMenu: When true, a toolbar item will display the selectable columns. Requires setColumns.
+ *   - setColumns: A callback to set the column with inputs `value`, and `isAdding`. Allows setting
+ *      which columns are shown. See ColumnMenuFilter for more information.
+ *   - selectedFilters: An array of objects with fields `name` and `value`. `name` is the ID of
+ *      the category, and `value` is an array of selected filters within the category.
+ *   - updateSelectedFilter: A callback function with inputs `key`, `value`, and `selected` that takes a
+ *      key and value for a filter, followed by whether the filter is selected. Used for a multi-select box.
+ */
 const TableFilter = (props) => {
   const {
     tableFilters,
     categoryFilterValue,
     filterOptions,
-    filterData,
     appliedFilters,
     start_date,
     end_date,
@@ -41,10 +67,9 @@ const TableFilter = (props) => {
     updateSelectedFilter,
   } = props;
 
-  const category =
-    filterData?.length > 0 &&
-    categoryFilterValue &&
-    filterData.filter((item) => item.name === categoryFilterValue)?.[0]?.key;
+  const getFilterCategory = (name) => {
+    return tableFilters.filter((item) => item.name === name)?.[0]?.value
+  }
 
   const getFilterName = (key) => {
     const filter =
@@ -52,6 +77,8 @@ const TableFilter = (props) => {
       tableFilters?.find((item) => item.value === key);
     return filter.name;
   };
+
+  const category = getFilterCategory(categoryFilterValue);
 
   const onCategoryChange = (_event, value) => {
     setCatFilters(value, type);
@@ -72,29 +99,34 @@ const TableFilter = (props) => {
   return (
     <>
       <Toolbar id="filter-toolbar">
-        {filterData?.length > 0 && (
-          <ToolbarContent className="field-filter">
-            <ToolbarItem style={{ marginInlineEnd: 0 }}>
-              <SelectBox
-                options={filterData}
-                onChange={onCategoryChange}
-                selected={categoryFilterValue}
-                icon={<FilterIcon />}
-                width={"200px"}
-              />
-            </ToolbarItem>
-            <ToolbarItem>
-              <MultiSelectBox
-                options={filterOptions}
-                onChange={updateSelectedFilter}
-                applyMethod={onOptionsChange}
-                currCategory={category}
-                selected={selectedFilters?.find((i) => i.name === category)}
-                width={"300px"}
-              />
-            </ToolbarItem>
-          </ToolbarContent>
-        )}
+        {tableFilters.length > 0 ?
+          (
+            <ToolbarContent className="field-filter">
+              <ToolbarItem style={{ marginInlineEnd: 0 }}>
+                <SelectBox
+                  options={tableFilters}
+                  onChange={onCategoryChange}
+                  selected={categoryFilterValue}
+                  icon={<FilterIcon />}
+                  width={"200px"}
+                />
+              </ToolbarItem>
+              <ToolbarItem>
+                <MultiSelectBox
+                  options={filterOptions}
+                  onChange={updateSelectedFilter}
+                  applyMethod={onOptionsChange}
+                  currCategory={category}
+                  selected={selectedFilters?.find((i) => i.name === category)}
+                  width={"300px"}
+                />
+              </ToolbarItem>
+            </ToolbarContent>
+          ) :
+            <ToolbarContent>
+              <ToolbarItem variant="label">No filters present</ToolbarItem>
+            </ToolbarContent>
+        }
 
         <ToolbarContent className="date-filter">
           <ToolbarItem>
@@ -140,10 +172,9 @@ const TableFilter = (props) => {
 };
 
 TableFilter.propTypes = {
-  tableFilters: PropTypes.array,
+  tableFilters: PropTypes.array.isRequired,
   categoryFilterValue: PropTypes.string,
-  filterOptions: PropTypes.array,
-  filterData: PropTypes.array,
+  filterOptions: PropTypes.array.isRequired,
   appliedFilters: PropTypes.object,
   start_date: PropTypes.string,
   end_date: PropTypes.string,
@@ -151,7 +182,7 @@ TableFilter.propTypes = {
   showColumnMenu: PropTypes.bool,
   setColumns: PropTypes.func,
   selectedFilters: PropTypes.array,
-  updateSelectedFilter: PropTypes.func,
+  updateSelectedFilter: PropTypes.func.isRequired,
   navigation: PropTypes.func,
 };
 export default TableFilter;
