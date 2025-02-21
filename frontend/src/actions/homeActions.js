@@ -175,7 +175,7 @@ export const removeCPTAppliedFilters =
 
 export const applyFilters = () => (dispatch) => {
   dispatch(setCPTOffset(INITAL_OFFSET));
-  // dispatch(fetchOCPJobsData(true));
+  dispatch(fetchOCPJobsData(true));
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
 };
