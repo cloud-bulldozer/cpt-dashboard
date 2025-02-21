@@ -22,9 +22,6 @@ async def getData(
             }
         },
     }
-    print("im ocm")
-    # aggregate = utils.buildAggregateQuery(OCM_FIELD_CONSTANT_DICT)
-    # query["aggs"] = aggregate
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -34,8 +31,6 @@ async def getData(
         timestamp_field="metrics.earliest",
     )
     await es.close()
-    print("ocm data")
-    print(response)
     tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
     if len(jobs) == 0:
