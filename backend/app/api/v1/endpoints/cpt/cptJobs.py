@@ -4,6 +4,7 @@ import traceback
 from multiprocessing import cpu_count
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter, Query, Response
+from fastapi.responses import ORJSONResponse
 import pandas as pd
 
 from .maps.ocp import ocpMapper, ocpFilter
@@ -20,16 +21,16 @@ router = APIRouter()
 products = {
     # "ocp": ocpMapper,
     # "quay": quayMapper,
-    # "hce": hceMapper,
-    "telco": telcoMapper,
+    "hce": hceMapper,
+    # "telco": telcoMapper,
     # "ocm": ocmMapper,
 }
 
 productsFilter = {
     # "ocp": ocpFilter,
     # "quay": quayFilter,
-    # "hce": hceFilter,
-    "telco": telcoFilter,
+    "hce": hceFilter,
+    # "telco": telcoFilter,
     # "ocm": ocmFilter,
 }
 
@@ -63,9 +64,7 @@ async def fetch_data(
         response = await fetch_function(*args)
 
         if not response:
-            print("ice cream")
             return {"data": pd.DataFrame(), "total": 0} if not is_filter else {}
-        print("eyes")
 
         return {
             "data": (
@@ -110,12 +109,6 @@ async def jobs(
     offset, size = normalize_pagination(offset, size)
 
     # Run all fetches concurrently
-    # results = await asyncio.gather(
-    #     *[
-    #         fetch_data(product, start_date, end_date, size, offset, filter)
-    #         for product in products
-    #     ]
-    # )
     results = await asyncio.gather(
         *[
             fetch_data_limited(product, start_date, end_date, size, offset, filter)
@@ -136,10 +129,7 @@ async def jobs(
         "offset": offset + size,
     }
 
-    return Response(
-        content=json.dumps(response, indent=4 if pretty else None),
-        media_type="application/json",
-    )
+    return ORJSONResponse(content=response, media_type="application/json")
 
 
 ### **Filters Endpoint**
@@ -171,43 +161,29 @@ async def filters(
     prod_list = filter_dict.pop("product", list(productsFilter.keys()))
 
     # Fetch filters concurrently
-    # results = await asyncio.gather(
-    #     *[
-    #         fetch_data(product, start_date, end_date, filter=filter, is_filter=True)
-    #         for product in prod_list
-    #     ]
-    # )
     results = await asyncio.gather(
         *[
             fetch_data_limited(
                 product, start_date, end_date, filter=filter, is_filter=True
             )
-            for product in products
+            for product in prod_list
         ]
     )
-    print("lollipop")
+
     total_dict, summary_dict, result_dict = (
         {},
         {"success": 0, "failure": 0, "other": 0, "total": 0},
         {},
     )
-    print("ears")
+
     for result in results:
-        print("nose")
-        print(result)
         total_dict[result.get("product", "")] = result.get("total", 0)
 
         for key, value in result.get("summary", {}).items():
             summary_dict[key] += value
 
         for item in result.get("data", []):
-            # key, values = item["key"], item["value"]
-            # if key in result_dict:
-            #     result_dict[key].extend(v for v in values if v not in result_dict[key])
-            # else:
-            #     result_dict[key] = values
             key, values = item["key"], item["value"]
-            print("cheeks")
             # If the key already exists, merge the values
             if key in result_dict:
                 if isinstance(values[0], str):
@@ -220,8 +196,7 @@ async def filters(
                     result_dict[key] = list(set(result_dict[key] + values))
             else:
                 result_dict[key] = [s for s in values if str(s).strip()]
-    print("hands")
-    print(result_dict)
+
     merged_result = [
         {"key": k, "value": v, "name": FILEDS_DISPLAY_NAMES.get(k, k)}
         for k, v in result_dict.items()
@@ -235,7 +210,9 @@ async def filters(
         "total": sum(int(v) for v in total_dict.values()),
     }
 
-    return Response(
-        content=json.dumps(response, indent=4 if pretty else None),
-        media_type="application/json",
-    )
+    if pretty:
+        json_str = json.dumps(response, indent=4)
+        return Response(content=json_str, media_type="application/json")
+
+    jsonstring = json.dumps(response)
+    return jsonstring
