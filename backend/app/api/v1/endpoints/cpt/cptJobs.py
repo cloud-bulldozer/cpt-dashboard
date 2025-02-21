@@ -19,19 +19,19 @@ from app.api.v1.commons.constants import FILEDS_DISPLAY_NAMES
 router = APIRouter()
 
 products = {
-    # "ocp": ocpMapper,
-    # "quay": quayMapper,
+    "ocp": ocpMapper,
+    "quay": quayMapper,
     "hce": hceMapper,
-    # "telco": telcoMapper,
-    # "ocm": ocmMapper,
+    "telco": telcoMapper,
+    "ocm": ocmMapper,
 }
 
 productsFilter = {
-    # "ocp": ocpFilter,
-    # "quay": quayFilter,
+    "ocp": ocpFilter,
+    "quay": quayFilter,
     "hce": hceFilter,
-    # "telco": telcoFilter,
-    # "ocm": ocmFilter,
+    "telco": telcoFilter,
+    "ocm": ocmFilter,
 }
 
 
