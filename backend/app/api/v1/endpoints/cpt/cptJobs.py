@@ -41,15 +41,10 @@ def get_default_dates(start_date, end_date):
     return (start_date or today - timedelta(days=5), end_date or today)
 
 
-SEMAPHORE = asyncio.Semaphore(5)
-
-
 async def fetch_data_limited(product, *args, **kwargs):
-    async with SEMAPHORE:
-        return await fetch_data(product, *args, **kwargs)
+    return await fetch_data(product, *args, **kwargs)
 
 
-### **Unified Fetch Function**
 async def fetch_data(
     product, start_date, end_date, size=None, offset=None, filter=None, is_filter=False
 ):
@@ -108,17 +103,20 @@ async def jobs(
 
     offset, size = normalize_pagination(offset, size)
 
-    # Run all fetches concurrently
     results = await asyncio.gather(
         *[
             fetch_data_limited(product, start_date, end_date, size, offset, filter)
             for product in products
-        ]
+        ],
+        return_exceptions=True,
     )
+
+    results = [res for res in results if isinstance(res, dict)]
 
     results_df = pd.concat(
         [res["data"] for res in results if not res["data"].empty], ignore_index=True
     )
+
     total_jobs_count = sum(int(res["total"]) for res in results)
 
     response = {
@@ -160,7 +158,6 @@ async def filters(
     filter_dict = get_dict_from_qs(filter) if filter else {}
     prod_list = filter_dict.pop("product", list(productsFilter.keys()))
 
-    # Fetch filters concurrently
     results = await asyncio.gather(
         *[
             fetch_data_limited(
@@ -210,9 +207,10 @@ async def filters(
         "total": sum(int(v) for v in total_dict.values()),
     }
 
-    if pretty:
-        json_str = json.dumps(response, indent=4)
-        return Response(content=json_str, media_type="application/json")
+    # if pretty:
+    #     json_str = json.dumps(response, indent=4)
+    #     return Response(content=json_str, media_type="application/json")
 
-    jsonstring = json.dumps(response)
-    return jsonstring
+    # jsonstring = json.dumps(response)
+    # return jsonstring
+    return ORJSONResponse(content=response)
