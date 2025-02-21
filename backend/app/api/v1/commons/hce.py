@@ -21,7 +21,6 @@ async def getData(
     aggregate = utils.buildAggregateQuery(HCE_FIELD_CONSTANT_DICT)
     query["aggs"] = aggregate
     es = ElasticService(configpath=configpath)
-    print("im hce")
 
     response = await es.post(
         query=query,

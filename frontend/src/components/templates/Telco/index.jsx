@@ -61,7 +61,7 @@ const Telco = () => {
 
   useEffect(() => {
     dispatch(fetchTelcoJobsData());
-    //  dispatch(buildFilterData());
+    dispatch(buildFilterData());
   }, [dispatch]);
 
   //Filter Helper
