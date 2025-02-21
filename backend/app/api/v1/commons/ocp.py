@@ -3,10 +3,6 @@ import pandas as pd
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
 from app.api.v1.commons.constants import OCP_FIELD_CONSTANT_DICT
-from app.api.v1.commons.utils import (
-    construct_ES_filter_query,
-    get_dict_from_qs,
-)
 
 
 async def getData(
@@ -31,7 +27,8 @@ async def getData(
             }
         },
     }
-    if sort:
+    if sort is not None:
+        print(sort)
         query["sort"] = utils.build_sort_terms(sort)
 
     if filter:
@@ -106,7 +103,10 @@ async def getFilterData(
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
-    upstreamList = response["upstreamList"]
+    if not response.get("filterData", []) or response.get("total", 0) == 0:
+        return {"total": response.get("total", 0), "filterData": [], "summary": {}}
+
+    upstreamList = response.get("upstreamList", [])
 
     jobType = getJobType(upstreamList)
     isRehearse = getIsRehearse(upstreamList)
@@ -121,7 +121,11 @@ async def getFilterData(
     response["filterData"].append(jobTypeObj)
     response["filterData"].append(isRehearseObj)
 
-    return {"filterData": response["filterData"], "summary": response["summary"]}
+    return {
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+        "total": response.get("total", 0),
+    }
 
 
 def getJobType(upstreamList: list):
@@ -131,4 +135,5 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
+    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})

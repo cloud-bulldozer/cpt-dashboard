@@ -105,9 +105,10 @@ export const deleteAppliedFilters =
   (filterKey, filterValue, currState) => (dispatch, getState) => {
     const appliedFilters = cloneDeep(getState()[currState].appliedFilters);
 
-    const index = appliedFilters[filterKey].indexOf(
-      filterValue?.toString()?.toLowerCase()
-    );
+    const index = appliedFilters[filterKey]
+      ?.toString()
+      ?.toLowerCase()
+      .indexOf(filterValue?.toString()?.toLowerCase());
     if (index >= 0) {
       appliedFilters[filterKey].splice(index, 1);
       if (appliedFilters[filterKey].length === 0) {
@@ -152,6 +153,7 @@ export const getRequestParams = (type) => (dispatch, getState) => {
   if (Object.keys(appliedFilters).length > 0) {
     filter = convertObjectToQS(appliedFilters);
   }
+  console.log(offset);
   const params = {
     pretty: true,
     ...(start_date && { start_date }),
