@@ -159,10 +159,52 @@ async def graph(uuid: str):
         uuids = await getMatchRuns(meta, False)
         index = "ingress-performance"
         data = await getResults(uuid, uuids, index)
+    elif meta["benchmark"] == "virt-density":
+        index = "ripsaw-kube-burner*"
+        metric= "vmiLatencyQuantilesMeasurement"
+        quantileName= "VMReady"
+        uuids = await getMatchRuns(meta,True)
+        # We need to look at the jobSummary to ensure all UUIDs have similar iteration count.
+        job = await jobSummary([uuid])
+        jobs = await jobSummary(uuids)
+        ids = jobFilter(job,jobs)
+
+        oData = await getBurnerResults(uuid,ids,index, metric, quantileName)
+        oMetrics = await processBurner(oData)
+        oMetrics = oMetrics.reset_index()
+
+        cData = await getBurnerResults(uuid,[uuid],index, metric, quantileName)
+        nMetrics = await processBurner(cData)
+        nMetrics = nMetrics.reset_index()
+        x=[]
+        y=[]
+        for index, row in oMetrics.iterrows():
+            test = "vmiLatencyQuantilesMeasurement-p99"
+            value = row['P99']
+            x.append(int(value)/1000)
+            y.append(test)
+        old = {'y' : x,
+            'x' : y,
+            'name' : 'Previous results p99',
+            'type' : 'bar',
+            'orientation' : 'v'}
+        x=[]
+        y=[]
+        for index, row in nMetrics.iterrows():
+            test = "vmiLatencyQuantilesMeasurement-p99"
+            value = row['P99']
+            x.append(int(value)/1000)
+            y.append(test)
+        new = {'y' : x,
+            'x' : y,
+            'name' : 'Current results P99',
+            'type' : 'bar',
+            'orientation' : 'v'}
+        metrics.append(old)
+        metrics.append(new)
     else:
         index = "ripsaw-kube-burner*"
         uuids = await getMatchRuns(meta,True)
-
         # We need to look at the jobSummary to ensure all UUIDs have similar iteration count.
         job = await jobSummary([uuid])
         jobs = await jobSummary(uuids)
@@ -323,7 +365,7 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str ):
     await es.close()
     return runs
 
-async def getBurnerResults(uuid: str, uuids: list, index: str ):
+async def getBurnerResults(uuid: str, uuids: list, index: str, metric='podLatencyQuantilesMeasurement', quantileName="Ready" ):
     if len(uuids) > 1 :
         if len(uuid) > 0 :
             uuids.remove(uuid)
@@ -336,8 +378,8 @@ async def getBurnerResults(uuid: str, uuids: list, index: str ):
             "query_string": {
                 "query": (
                     f'( uuid: \"{ids}\" )'
-                    f' AND metricName: "podLatencyQuantilesMeasurement"'
-                    f' AND quantileName: "Ready"'
+                    f' AND metricName: \"{metric}\"'
+                    f' AND quantileName: \"{quantileName}\"'
                     )
             }
         }
