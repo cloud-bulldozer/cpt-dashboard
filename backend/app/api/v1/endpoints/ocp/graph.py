@@ -280,6 +280,9 @@ async def processNetperf(data: dict) :
     return tput
 
 def jobFilter(pdata: dict, data: dict):
+    # need at least one record to avoid out of bounds error
+    if not pdata or not data:
+        return []
     columns = ['uuid','jobConfig.jobIterations']
     pdf = pd.json_normalize(pdata)
     pick_df = pd.DataFrame(pdf, columns=columns)
@@ -367,7 +370,7 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str ):
 
 async def getBurnerResults(uuid: str, uuids: list, index: str, metric='podLatencyQuantilesMeasurement', quantileName="Ready" ):
     if len(uuids) > 1 :
-        if len(uuid) > 0 :
+        if len(uuid) > 0 and uuid in uuids:
             uuids.remove(uuid)
     if len(uuids) < 1 :
         return []

@@ -1,12 +1,15 @@
-import {configureStore} from "@reduxjs/toolkit";
-import {rootReducer} from "./reducers";
-import {logger} from "redux-logger/src";
+import { configureStore } from "@reduxjs/toolkit";
+import { createLogger } from "redux-logger";
+import rootReducer from "../reducers/index.js";
 
+const middleware = [];
+middleware.push(createLogger());
+const enhancers = [...middleware];
 
-const store = configureStore({
-    reducer:rootReducer,
-    middleware: (getDefaultMiddleware) =>
-        window.location.hostname === "localhost" ? getDefaultMiddleware().concat(logger):  getDefaultMiddleware()
+export default configureStore({
+  reducer: rootReducer,
+  middleware: (getDefaultMiddleware) =>
+    window.location.hostname === "localhost"
+      ? getDefaultMiddleware().concat(enhancers)
+      : getDefaultMiddleware(),
 });
-
-export default store;
