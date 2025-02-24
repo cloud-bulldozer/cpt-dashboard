@@ -400,8 +400,8 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str):
     await es.close()
     return runs
 
-async def getBurnerResults(uuid: str, uuids: list, index: str, metric='podLatencyQuantilesMeasurement', quantileName="Ready" ):
-    if len(uuids) > 1 :
+async def getBurnerResults(uuid: str, uuids: list, index: str ):
+    if len(uuids) > 1:
         if len(uuid) > 0 and uuid in uuids:
             uuids.remove(uuid)
     if len(uuids) < 1:
