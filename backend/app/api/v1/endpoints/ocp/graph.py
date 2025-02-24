@@ -184,53 +184,51 @@ async def graph(uuid: str):
         data = await getResults(uuid, uuids, index)
     elif meta["benchmark"] == "virt-density":
         index = "ripsaw-kube-burner*"
+        metric = "vmiLatencyQuantilesMeasurement"
+        quantileName = "VMReady"
         uuids = await getMatchRuns(meta, True)
-
         # We need to look at the jobSummary to ensure all UUIDs have similar iteration count.
         job = await jobSummary([uuid])
         jobs = await jobSummary(uuids)
-        ids = jobFilter(job, jobs)
+        ids = jobFilter(job,jobs)
 
-        oData = await getBurnerResults(uuid, ids, index)
+        oData = await getBurnerResults(uuid, ids, index, metric, quantileName)
         oMetrics = await processBurner(oData)
         oMetrics = oMetrics.reset_index()
 
-        cData = await getBurnerResults(uuid, [uuid], index)
+        cData = await getBurnerResults(uuid, [uuid], index, metric, quantileName)
         nMetrics = await processBurner(cData)
         nMetrics = nMetrics.reset_index()
-        x = []
-        y = []
+        x=[]
+        y=[]
         for index, row in oMetrics.iterrows():
-            test = "PodLatency-p99"
-            value = row["P99"]
-            x.append(int(value) / 1000)
+            test = "vmiLatencyQuantilesMeasurement-p99"
+            value = row['P99']
+            x.append(int(value)/1000)
             y.append(test)
         old = {
-            "y": x,
-            "x": y,
-            "name": "Previous results p99",
-            "type": "bar",
-            "orientation": "v",
-        }
-        x = []
-        y = []
+            'y' : x,
+            'x' : y,
+            'name' : 'Previous results p99',
+            'type' : 'bar',
+            'orientation' : 'v'}
+        x=[]
+        y=[]
         for index, row in nMetrics.iterrows():
-            test = "PodLatency-p99"
-            value = row["P99"]
-            x.append(int(value) / 1000)
+            test = "vmiLatencyQuantilesMeasurement-p99"
+            value = row['P99']
+            x.append(int(value)/1000)
             y.append(test)
-        new = {
-            "y": x,
-            "x": y,
-            "name": "Current results P99",
-            "type": "bar",
-            "orientation": "v",
-        }
+        new = {'y' : x,
+            'x' : y,
+            'name' : 'Current results P99',
+            'type' : 'bar',
+            'orientation' : 'v'}
         metrics.append(old)
         metrics.append(new)
     else:
         index = "ripsaw-kube-burner*"
-        uuids = await getMatchRuns(meta,True)
+        uuids = await getMatchRuns(meta, True)
 
         # We need to look at the jobSummary to ensure all UUIDs have similar iteration count.
         job = await jobSummary([uuid])
