@@ -15,6 +15,6 @@ jobs:
         - name: verify poetry instalation
           run: poetry --version
           working-directory: ./backend
-        - name: verify poetry lockfile
-          run: poetry check --lock
+        - name: verify poetry configuration
+          run: poetry check
           working-directory: ./backend
