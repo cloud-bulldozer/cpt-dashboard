@@ -1,5 +1,5 @@
 import {
-  fetchOCPJobsData,
+  fetchDataConcurrently,
   setCPTDateFilter,
   setFilterFromURL,
   setSelectedFilter,
@@ -57,7 +57,7 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchOCPJobsData());
+    dispatch(fetchDataConcurrently());
   }, [dispatch]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {
@@ -79,6 +79,7 @@ const Home = () => {
         tableFilters={tableFilters}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
+        filterData={filterData}
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}

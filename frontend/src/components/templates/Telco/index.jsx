@@ -110,6 +110,7 @@ const Telco = () => {
       <TableFilter
         tableFilters={modifidedTableFilters}
         filterOptions={filterOptions}
+        filterData={filterData}
         categoryFilterValue={categoryFilterValue}
         appliedFilters={appliedFilters}
         start_date={start_date}

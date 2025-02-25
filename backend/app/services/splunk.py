@@ -1,7 +1,9 @@
 import orjson
 from app import config
 from splunklib import client, results
-import json
+import asyncio
+
+SEMAPHORE = asyncio.Semaphore(5)
 
 
 class SplunkService:
@@ -33,9 +35,16 @@ class SplunkService:
             print(f"Error connecting to splunk: {e}")
             return None
 
-    async def query(
-        self, query, searchList="", size=None, offset=None, max_results=10000
-    ):
+    def build_search_query(self, searchList=""):
+        search_query = f"search index={self.indice} "
+
+        if searchList:
+            search_query += f"{searchList} "
+        search_query += "| eventstats count AS total_records | fields total_records _raw host source sourcetype _bkt _serial _indextime"
+
+        return search_query
+
+    async def query(self, query, searchList="", size=100, offset=0, max_results=10000):
         """
         Query data from splunk server using splunk lib sdk
 
@@ -43,58 +52,52 @@ class SplunkService:
             query (string): splunk query
             OPTIONAL: searchList (string): additional query parameters for index
         """
-        query["count"] = size
-        query["offset"] = offset
+        query.update({"count": size, "offset": offset})
+        search_query = self.build_search_query(searchList)
 
-        # If additional search parameters are provided, include those in searchindex
-        base_query = f"search index={self.indice}"
-        searchindex = f"{base_query} {searchList}" if searchList else base_query
-
-        search_query = (
-            f"search index={self.indice} {searchList} | stats count AS total_records"
-            if searchList
-            else f"search index={self.indice} | stats count AS total_records"
-        )
         try:
-            # Run the job and retrieve results
-            job = self.service.jobs.create(
-                search_query,
-                exec_mode="normal",
-                earliest_time=query["earliest_time"],
-                latest_time=query["latest_time"],
-            )
-            while not job.is_done():
-                job.refresh()
-            oneshotsearch_results = self.service.jobs.oneshot(searchindex, **query)
+
+            async with SEMAPHORE:
+                try:
+                    oneshot_results = await asyncio.to_thread(
+                        self.service.jobs.oneshot,
+                        search_query,
+                        **query,
+                    )
+
+                    if not oneshot_results:
+                        return {"data": [], "total": 0}
+
+                    # Process results using an async generator
+                    res_array = []
+                    total_records = 0
+                    async for record in self._stream_results(oneshot_results):
+                        try:
+                            raw_data = record.get("_raw", "{}")
+                            total_records = int(record.get("total_records", 0))
+                            res_array.append(
+                                {
+                                    "data": orjson.loads(raw_data),
+                                    "host": record.get("host", ""),
+                                    "source": record.get("source", ""),
+                                    "sourcetype": record.get("sourcetype", ""),
+                                    "bucket": record.get("_bkt", ""),
+                                    "serial": record.get("_serial", ""),
+                                    "timestamp": record.get("_indextime", ""),
+                                }
+                            )
+                        except Exception as e:
+                            print(f"Error processing record: {e}")
+
+                    return {"data": res_array, "total": total_records}
+
+                except Exception as e:
+                    print(f"Error querying Splunk: {e}")
+                    return None
+
         except Exception as e:
             print("Error querying splunk: {}".format(e))
             return None
-
-        # Fetch the results
-        total_records = 0
-        for result in job.results(output_mode="json"):
-            decoded_data = json.loads(result.decode("utf-8"))
-            value = decoded_data.get("results")
-            total_records = value[0]["total_records"]
-        # Get the results and display them using the JSONResultsReader
-        res_array = []
-        async for record in self._stream_results(oneshotsearch_results):
-            try:
-                res_array.append(
-                    {
-                        "data": orjson.loads(record["_raw"]),
-                        "host": record["host"],
-                        "source": record["source"],
-                        "sourcetype": record["sourcetype"],
-                        "bucket": record["_bkt"],
-                        "serial": record["_serial"],
-                        "timestamp": record["_indextime"],
-                    }
-                )
-            except Exception as e:
-                print(f"Error on including Splunk record query in results array: {e}")
-
-        return {"data": res_array, "total": total_records}
 
     async def _stream_results(self, oneshotsearch_results):
         for record in results.JSONResultsReader(oneshotsearch_results):
@@ -109,44 +112,42 @@ class SplunkService:
             OPTIONAL: searchList (string): additional query parameters for index
         """
 
-        try:
-            # If additional search parameters are provided, include those in searchindex
-            search_query = f"search index={self.indice} "
-
-            if searchList:
-                search_query += f"{searchList} "
-
-            search_query += (
-                "| stats count AS total_records, "
-                "values(cpu) AS cpu, "
-                "values(node_name) AS nodeName, "
-                "values(test_type) AS benchmark, "
-                "values(ocp_version) AS ocpVersion, "
-                "values(ocp_build) AS releaseStream"
-            )
-
+        async with SEMAPHORE:
             try:
-                # Run the job and retrieve results
-                job = self.service.jobs.create(
+                # If additional search parameters are provided, include those in searchindex
+                search_query = f"search index={self.indice} "
+
+                if searchList:
+                    search_query += f"{searchList} "
+
+                search_query += (
+                    "| stats count AS total_records, "
+                    "values(cpu) AS cpu, "
+                    "values(node_name) AS nodeName, "
+                    "values(test_type) AS benchmark, "
+                    "values(ocp_version) AS ocpVersion, "
+                    "values(ocp_build) AS releaseStream "
+                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream"
+                )
+                # Run Splunk search asynchronously using `oneshot`
+                results_reader = await asyncio.to_thread(
+                    self.service.jobs.oneshot,
                     search_query,
-                    exec_mode="blocking",
                     earliest_time=query["earliest_time"],
                     latest_time=query["latest_time"],
+                    output_mode="json",
                 )
+
+                # Parse the results
+                decoded_data = orjson.loads(
+                    results_reader.read()
+                )  # Faster JSON parsing
+                value = decoded_data.get("results", [])
+                total_records = int(value[0].get("total_records", 0)) if value else 0
+
+                return {"data": value, "total": total_records}
             except Exception as e:
-                print("Error querying in filters splunk: {}".format(e))
-                return None
-
-            value = []
-            total_records = 0
-            for result in job.results(output_mode="json"):
-                decoded_data = json.loads(result.decode("utf-8"))
-                value = decoded_data.get("results")
-                total_records = value[0]["total_records"]
-
-            return {"data": value, "total": total_records}
-        except Exception as e:
-            print(f"Error on building data for filters: {e}")
+                print(f"Error on building data for filters: {e}")
 
     async def close(self):
         """Closes splunk client connections"""
