@@ -54,6 +54,9 @@ QUAY_FIELD_CONSTANT_DICT = {
     "upstream": "upstreamJob.keyword",
     "clusterType": "clusterType.keyword",
     "ciSystem": "ciSystem.keyword",
+    "imagePushPulls": "imagePushPulls",
+    "concurrency": "concurrency",
+    "hitSize": "hitSize",
 }
 
 RELEASE_STREAM_DICT = {
@@ -101,6 +104,9 @@ FILEDS_DISPLAY_NAMES = {
     "product": "Product",
     "testName": "Test Name",
     "attack": "Test Name",
+    "concurrency": "Concurrency",
+    "imagePushPulls": "Image Push/Pulls",
+    "hitSize": "Hit Size",
 }
 
 FIELDS_FILTER_DICT = {

@@ -181,6 +181,7 @@ export const setQuayDateFilter =
 
 export const applyQuayDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setQuayOffset(INITAL_OFFSET));
     dispatch(setQuayDateFilter(start_date, end_date, navigate));
     dispatch(fetchQuayJobsData());
     dispatch(buildFilterData());

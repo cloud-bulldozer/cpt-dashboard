@@ -78,6 +78,7 @@ const Home = () => {
         tableFilters={tableFilters}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
+        filterData={filterData}
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}
