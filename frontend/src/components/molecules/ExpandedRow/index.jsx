@@ -9,54 +9,45 @@ import MetadataRow from "../MetaDataRow";
 import PlotGraph from "@/components/atoms/PlotGraph";
 import PropTypes from "prop-types";
 import TasksInfo from "@/components/molecules/TasksInfo";
-import { uid } from "@/utils/helper.js";
 import { useSelector } from "react-redux";
 
+const content = [
+  {
+    heading: "Cluster config",
+    category: CONSTANTS.CLUSTER,
+    key: "cluster-config",
+  },
+  { heading: "Node Type", category: CONSTANTS.NODE_TYPE, key: "node-type" },
+  {
+    heading: "Node Count",
+    category: CONSTANTS.NODE_COUNT,
+    key: "node-count",
+  },
+];
+
+const graphTitle = {
+  apiResults: CONSTANTS.API_RESULTS,
+  latencyResults: CONSTANTS.LATENCY_RESULTS,
+  imageResults: CONSTANTS.IMAGE_RESULTS,
+};
+
 const RowContent = (props) => {
-  const getGraphData = (uuid) => {
-    const data = props.graphData?.filter((a) => a.uuid === uuid);
+  const graphData = useMemo(() => {
+    return props.graphData?.filter((a) => a.uuid === props.item.uuid) || [];
+  }, [props.graphData, props.item.uuid]);
 
-    return data;
-  };
-  const hasGraphData = (uuid) => {
-    const hasData = getGraphData(uuid).length > 0;
-
-    return hasData;
-  };
-
-  const content = useMemo(() => {
-    return [
-      {
-        heading: "Cluster config",
-        category: CONSTANTS.CLUSTER,
-        key: "cluster-key",
-      },
-      { heading: "Node Type", category: CONSTANTS.NODE_TYPE, key: "node-type" },
-      {
-        heading: "Node Count",
-        category: CONSTANTS.NODE_COUNT,
-        key: "node-count",
-      },
-    ];
-  }, []);
+  const hasGraphData = graphData.length > 0;
+  const firstGraphEntry = graphData[0]?.data || [];
   const isGraphLoading = useSelector((state) => state.loading.isGraphLoading);
 
-  const graphTitle = useMemo(() => {
-    return {
-      apiResults: CONSTANTS.API_RESULTS,
-      latencyResults: CONSTANTS.LATENCY_RESULTS,
-      imageResults: CONSTANTS.IMAGE_RESULTS,
-    };
-  }, []);
   return (
     <Grid hasGutter>
       <GridItem span={7}>
         <Card>
           <CardBody>
             {content.map((unit) => (
-              <React.Fragment key={props.item.uuid}>
+              <React.Fragment key={unit.key}>
                 <MetadataRow
-                  key={unit.key}
                   heading={unit.heading}
                   metadata={props.item}
                   category={unit.category}
@@ -75,22 +66,20 @@ const RowContent = (props) => {
       <GridItem span={5}>
         <Card>
           <CardBody>
-            {isGraphLoading && !hasGraphData(props.item.uuid) ? (
+            {isGraphLoading && !hasGraphData ? (
               <div className="loader"></div>
-            ) : hasGraphData(props.item.uuid) ? (
-              getGraphData(props.item.uuid)[0]?.data.length === 0 ? (
+            ) : hasGraphData ? (
+              firstGraphEntry.length === 0 ? (
                 <div>No data to plot</div>
               ) : (
-                getGraphData(props.item.uuid)[0]?.data?.map((bit) => {
-                  return (
-                    <>
-                      <Title headingLevel="h4">
-                        {graphTitle[bit[0]] ?? bit[0]}
-                      </Title>
-                      <PlotGraph data={bit[1]} key={uid()} />
-                    </>
-                  );
-                })
+                firstGraphEntry.map((bit) => (
+                  <React.Fragment key={bit[0]}>
+                    <Title headingLevel="h4">
+                      {graphTitle[bit[0]] ?? bit[0]}
+                    </Title>
+                    <PlotGraph data={bit[1]} />
+                  </React.Fragment>
+                ))
               )
             ) : (
               <div>No data to plot</div>
