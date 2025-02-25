@@ -271,10 +271,15 @@ def jobFilter(pdata: dict, data: dict):
         return []
     columns = ["uuid", "jobConfig.jobIterations"]
     pdf = pd.json_normalize(pdata)
-    pick_df = pd.DataFrame(pdf, columns=columns)
+    # for jsons without a jobConfig.jobIteration value, json_normalize()
+    # fills in Not a Number (NaN)
+    pick_df = pd.DataFrame(pdf, columns=columns).dropna(
+        subset=["jobConfig.jobIterations"]
+    )
     iterations = pick_df.iloc[0]["jobConfig.jobIterations"]
     df = pd.json_normalize(data)
-    ndf = pd.DataFrame(df, columns=columns)
+    # same as above
+    ndf = pd.DataFrame(df, columns=columns).dropna(subset=["jobConfig.jobIterations"])
     ids_df = ndf.loc[df["jobConfig.jobIterations"] == iterations]
     return ids_df["uuid"].to_list()
 
