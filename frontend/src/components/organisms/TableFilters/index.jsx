@@ -3,7 +3,6 @@ import "react-calendar/dist/Calendar.css";
 import "./index.less";
 
 import {
-  Banner,
   Chip,
   ChipGroup,
   Toolbar,
@@ -27,7 +26,7 @@ import { formatDate } from "@/utils/helper";
 
 /**
  * A component that provides an all-in-one toolbar for the tables in this project.
- * 
+ *
  * Includes a filter selector, a date selector, a column selector, and navigation components.
  * This component utilizes filterActions to modify the data store.
  *
@@ -65,11 +64,12 @@ const TableFilter = (props) => {
     setColumns,
     selectedFilters,
     updateSelectedFilter,
+    filterData,
   } = props;
 
   const getFilterCategory = (name) => {
-    return tableFilters.filter((item) => item.name === name)?.[0]?.value
-  }
+    return tableFilters.filter((item) => item.name === name)?.[0]?.value;
+  };
 
   const getFilterName = (key) => {
     const filter =
@@ -99,34 +99,33 @@ const TableFilter = (props) => {
   return (
     <>
       <Toolbar id="filter-toolbar">
-        {tableFilters.length > 0 ?
-          (
-            <ToolbarContent className="field-filter">
-              <ToolbarItem style={{ marginInlineEnd: 0 }}>
-                <SelectBox
-                  options={tableFilters}
-                  onChange={onCategoryChange}
-                  selected={categoryFilterValue}
-                  icon={<FilterIcon />}
-                  width={"200px"}
-                />
-              </ToolbarItem>
-              <ToolbarItem>
-                <MultiSelectBox
-                  options={filterOptions}
-                  onChange={updateSelectedFilter}
-                  applyMethod={onOptionsChange}
-                  currCategory={category}
-                  selected={selectedFilters?.find((i) => i.name === category)}
-                  width={"300px"}
-                />
-              </ToolbarItem>
-            </ToolbarContent>
-          ) :
-            <ToolbarContent>
-              <ToolbarItem variant="label">No filters present</ToolbarItem>
-            </ToolbarContent>
-        }
+        {filterData?.length > 0 ? (
+          <ToolbarContent className="field-filter">
+            <ToolbarItem style={{ marginInlineEnd: 0 }}>
+              <SelectBox
+                options={filterData}
+                onChange={onCategoryChange}
+                selected={categoryFilterValue}
+                icon={<FilterIcon />}
+                width={"200px"}
+              />
+            </ToolbarItem>
+            <ToolbarItem>
+              <MultiSelectBox
+                options={filterOptions}
+                onChange={updateSelectedFilter}
+                applyMethod={onOptionsChange}
+                currCategory={category}
+                selected={selectedFilters?.find((i) => i.name === category)}
+                width={"300px"}
+              />
+            </ToolbarItem>
+          </ToolbarContent>
+        ) : (
+          <ToolbarContent>
+            <ToolbarItem variant="label">No filters present</ToolbarItem>
+          </ToolbarContent>
+        )}
 
         <ToolbarContent className="date-filter">
           <ToolbarItem>
@@ -173,6 +172,7 @@ const TableFilter = (props) => {
 
 TableFilter.propTypes = {
   tableFilters: PropTypes.array.isRequired,
+  filterData: PropTypes.array.isRequired,
   categoryFilterValue: PropTypes.string,
   filterOptions: PropTypes.array.isRequired,
   appliedFilters: PropTypes.object,

@@ -172,6 +172,7 @@ export const setOCPDateFilter =
 
 export const applyOCPDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setOCPOffset(INITAL_OFFSET));
     dispatch(setOCPDateFilter(start_date, end_date, navigate));
     dispatch(fetchOCPJobs());
     dispatch(buildFilterData());

@@ -113,6 +113,7 @@ const OCP = () => {
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
         appliedFilters={appliedFilters}
+        filterData={filterData}
         start_date={start_date}
         end_date={end_date}
         type={"ocp"}
