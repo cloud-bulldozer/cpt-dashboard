@@ -1,7 +1,8 @@
+import socket
 import typing
 
 from fastapi import FastAPI, Request
-from fastapi.middleware.cors import CORSMiddleware
+from starlette.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 import orjson
 
@@ -17,8 +18,10 @@ class ORJSONResponse(JSONResponse):
 
 origins = [
     "http://localhost:3000",
-    "localhost:3000"
+    "localhost:3000",
+    f"http://{socket.gethostname()}:3000",
 ]
+
 
 app = FastAPI(default_response_class=ORJSONResponse,
               docs_url="/docs",
@@ -46,6 +49,8 @@ routes_to_reroute = ['/']
 
 @app.middleware('http')
 async def some_middleware(request: Request, call_next):
+    print(f"origin: {origins}, request: {request.headers}")
+    print(f"{request.app.user_middleware}")
     if request.url.path in routes_to_reroute:
         request.scope['path'] = '/docs'
         headers = dict(request.scope['headers'])
