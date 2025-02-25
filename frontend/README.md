@@ -21,21 +21,21 @@ The `utils` directory has all helper/utility scripts.
 
 #### [`src/reducers`](src/reducers)
 
-Contains functions that manage store via actions 
+Contains functions that manage store via actions
 
-## Cloning and Running the Application Locally 
+## Cloning and Running the Application Locally
 
-- Install [Node.js](https://nodejs.org) 
+- Install [Node.js](https://nodejs.org)
 - Clone the [CPT Dashboard code](https://github.com/cloud-bulldozer/cpt-dashboard) to a local file system
 - Install all the npm packages
 
-Type the following command to install all npm packages 
+Type the following command to install all npm packages
 
 ```bash
 $ npm install
 ```
 
-In order to run the application use the following command 
+In order to run the application use the following command
 
 ```bash
 $ npm run dev
@@ -56,12 +56,12 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 
 ## Template
 
-This application is based on v5 of PatternFly which is a production-ready UI solution for admin interfaces. For more information regarding the foundation and template of the application, please visit [PatternFly](https://www.patternfly.org/get-started/develop) 
+This application is based on v5 of PatternFly which is a production-ready UI solution for admin interfaces. For more information regarding the foundation and template of the application, please visit [PatternFly](https://www.patternfly.org/get-started/develop)
 
 ## Resources
 
-- [Vite](https://vitejs.dev/guide/)   
+- [Vite](https://vitejs.dev/guide/)
 
-- [ReactJS](https://reactjs.org/) 
+- [ReactJS](https://reactjs.org/)
 
 - [React-Redux](https://github.com/reduxjs/react-redux)
