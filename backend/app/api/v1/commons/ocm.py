@@ -1,10 +1,17 @@
 from datetime import date, datetime
 import pandas as pd
 from app.services.search import ElasticService
+import app.api.v1.commons.utils as utils
+from app.api.v1.commons.constants import OCM_FIELD_CONSTANT_DICT
 
 
 async def getData(
-    start_datetime: date, end_datetime: date, size: int, offset: int, configpath: str
+    start_datetime: date,
+    end_datetime: date,
+    size: int,
+    offset: int,
+    filter: str,
+    configpath: str,
 ):
     query = {
         "size": size,
@@ -15,7 +22,6 @@ async def getData(
             }
         },
     }
-
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -37,6 +43,28 @@ async def getData(
     jobs.fillna("", inplace=True)
     jobs["jobStatus"] = jobs.apply(convertJobStatus, axis=1)
     return {"data": jobs, "total": response["total"]}
+
+
+async def getFilterData(
+    start_datetime: date, end_datetime: date, filter: str, configpath: str
+):
+    es = ElasticService(configpath=configpath)
+
+    aggregate = utils.buildAggregateQuery(OCM_FIELD_CONSTANT_DICT)
+    refiner = ""
+    if filter:
+        refiner = utils.transform_filter(filter)
+
+    response = await es.filterPost(
+        start_datetime,
+        end_datetime,
+        aggregate,
+        refiner,
+        timestamp_field="metrics.earliest",
+    )
+    await es.close()
+
+    return {"filterData": response["filterData"], "summary": response["summary"]}
 
 
 def fillCiSystem(row):
