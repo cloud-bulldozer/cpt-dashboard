@@ -243,12 +243,14 @@ def jobFilter(pdata: dict, data: dict):
         return []
     columns = ['uuid','jobConfig.jobIterations']
     pdf = pd.json_normalize(pdata)
-    pick_df = pd.DataFrame(pdf, columns=columns)
-    iterations = pick_df.iloc[0]['jobConfig.jobIterations']
+    # for jsons without a jobConfig.jobIteration value, json_normalize() 
+    # fills in Not a Number (NaN)
+    pick_df = pd.DataFrame(pdf, columns=columns).dropna(subset=['jobConfig.jobIterations'])
     df = pd.json_normalize(data)
-    ndf = pd.DataFrame(df, columns=columns)
-    ids_df = ndf.loc[df['jobConfig.jobIterations'] == iterations ]
-    return ids_df['uuid'].to_list()
+    # same as above
+    ndf = pd.DataFrame(df, columns=columns).dropna(subset=['jobConfig.jobIterations'])
+    records_matched = ndf['jobConfig.jobIterations'].isin(pick_df['jobConfig.jobIterations'])
+    return ndf[ records_matched ]['uuid'].unique().tolist()
 
 def burnerFilter(data: dict) :
     #
