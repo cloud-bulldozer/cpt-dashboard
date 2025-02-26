@@ -79,6 +79,7 @@ TELCO_FIELDS_DICT = {
     "endDate": "End Date",
     "jobStatus": "Status",
     "ocpVersion": "Build",
+    "isFormal": "Formal",
 }
 
 FILEDS_DISPLAY_NAMES = {
@@ -107,6 +108,7 @@ FILEDS_DISPLAY_NAMES = {
     "concurrency": "Concurrency",
     "imagePushPulls": "Image Push/Pulls",
     "hitSize": "Hit Size",
+    "isFormal": "Is Formal",
 }
 
 FIELDS_FILTER_DICT = {
