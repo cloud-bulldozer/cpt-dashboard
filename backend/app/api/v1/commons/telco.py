@@ -139,9 +139,12 @@ async def getFilterData(
 
     # can be removed once python scripts to determine success or failure are executed directly
     # in the splunk dashboard
-    filterData.append(
-        {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"}
-    )
+    extra_filters = [
+        {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"},
+        {"key": "ciSystem", "value": ["JENKINS"], "name": "CI System"},
+    ]
+    filterData.append(extra_filters)
+
     return {"data": filterData, "total": response["total"]}
 
 
