@@ -132,3 +132,5 @@ JOB_STATUS_MAP = {
 }
 
 keys_to_keep = ["product", "testName", "jobStatus", "ciSystem", "releaseStream"]
+
+SPLUNK_SEMAPHORE_COUNT = 5
