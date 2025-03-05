@@ -35,7 +35,7 @@ productsFilter = {
 }
 
 
-### **Helper Function for Default Date Handling**
+# **Helper Function for Default Date Handling**
 def get_default_dates(start_date, end_date):
     today = datetime.utcnow().date()
     return (start_date or today - timedelta(days=5), end_date or today)
@@ -73,7 +73,7 @@ async def fetch_data(
         return {"data": pd.DataFrame(), "total": 0} if not is_filter else {}
 
 
-### **Jobs Endpoint**
+# **Jobs Endpoint**
 @router.get(
     "/api/v1/cpt/jobs",
     summary="Returns a job list from all the products.",
@@ -130,7 +130,7 @@ async def jobs(
     return ORJSONResponse(content=response, media_type="application/json")
 
 
-### **Filters Endpoint**
+# **Filters Endpoint**
 @router.get(
     "/api/v1/cpt/filters",
     summary="Returns the data to construct filters.",
@@ -156,7 +156,15 @@ async def filters(
         )
 
     filter_dict = get_dict_from_qs(filter) if filter else {}
-    prod_list = filter_dict.pop("product", list(productsFilter.keys()))
+    filter_product = filter_dict.pop("product", None)
+
+    if filter_product and filter_product not in productsFilter:
+        return Response(
+            content=json.dumps({"error": "product not supported"}),
+            status_code=400,
+        )
+
+    prod_list = [filter_product] if filter_product else list(productsFilter.keys())
 
     results = await asyncio.gather(
         *[
@@ -207,10 +215,8 @@ async def filters(
         "total": sum(int(v) for v in total_dict.values()),
     }
 
-    # if pretty:
-    #     json_str = json.dumps(response, indent=4)
-    #     return Response(content=json_str, media_type="application/json")
+    if pretty:
+        return ORJSONResponse(content=response)
 
-    # jsonstring = json.dumps(response)
-    # return jsonstring
-    return ORJSONResponse(content=response)
+    jsonstring = json.dumps(response)
+    return jsonstring

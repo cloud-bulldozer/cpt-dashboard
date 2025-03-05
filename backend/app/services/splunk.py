@@ -2,8 +2,9 @@ import orjson
 from app import config
 from splunklib import client, results
 import asyncio
+from app.api.v1.commons.constants import SPLUNK_SEMAPHORE_COUNT
 
-SEMAPHORE = asyncio.Semaphore(5)
+SEMAPHORE = asyncio.Semaphore(SPLUNK_SEMAPHORE_COUNT)
 
 
 class SplunkService:
@@ -74,7 +75,6 @@ class SplunkService:
                     async for record in self._stream_results(oneshot_results):
                         try:
                             raw_data = record.get("_raw", "{}")
-                            total_records = int(record.get("total_records", 0))
                             res_array.append(
                                 {
                                     "data": orjson.loads(raw_data),
@@ -89,7 +89,10 @@ class SplunkService:
                         except Exception as e:
                             print(f"Error processing record: {e}")
 
-                    return {"data": res_array, "total": total_records}
+                    return {
+                        "data": res_array,
+                        "total": int(record.get("total_records", 0)),
+                    }
 
                 except Exception as e:
                     print(f"Error querying Splunk: {e}")
