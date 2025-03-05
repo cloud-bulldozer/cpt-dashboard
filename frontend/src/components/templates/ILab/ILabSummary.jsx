@@ -44,7 +44,7 @@ const ILabSummary = (props) => {
             >
               <Thead noWrap>
                 <Tr>
-                  <Th>Run</Th>
+                  {ids.length > 1 && <Th>Run</Th>}
                   <Th>Metric</Th>
                   <Th>Min</Th>
                   <Th>Average</Th>
