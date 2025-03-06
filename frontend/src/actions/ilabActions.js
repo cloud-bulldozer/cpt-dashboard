@@ -66,7 +66,7 @@ export const fetchIlabJobs =
       dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.COMPLETED });
-    };
+  };
 
 /**
  * Apply current filters
@@ -198,7 +198,7 @@ export const applyIlabDateFilter =
 /**
  * Fetch the set of possible InstructLab run filters and store them.
  */
-export const fetchIlabFilters = () => async (dispatch, getState) => {
+export const fetchIlabFilters = () => async (dispatch) => {
   try {
     const response = await API.get(`/api/v1/ilab/runs/filters`);
     dispatch({ type: TYPES.SET_ILAB_RUN_FILTERS, payload: response.data });
@@ -650,8 +650,8 @@ export const toggleSelectedMetric = (metric) => (dispatch, getState) => {
  * Help to manage the set of accordion folds that are open.
  */
 export const getMetaRowdId = () => (dispatch, getState) => {
-  const results = getState().ilab.results;
-  const metaId = results.map((item) => `metadata-toggle-${item.id}`);
+  const tableData = getState().ilab.tableData;
+  const metaId = tableData.map((item) => `metadata-toggle-${item.id}`);
   dispatch(setMetaRowExpanded(metaId));
 };
 
@@ -716,4 +716,39 @@ export const updateFromURL = (searchParams) => (dispatch, getState) => {
       );
     }
   }
+};
+
+export const retrieveGraphAndSummary = (ids) => async (dispatch) => {
+  if (ids.length === 1) {
+    await Promise.all([
+      dispatch(fetchGraphData(ids[0])),
+      dispatch(fetchSummaryData(ids[0])),
+    ]);
+  } else {
+    await Promise.all([
+      dispatch(fetchMultiGraphData(ids)),
+      dispatch(handleSummaryData(ids)),
+    ]);
+  }
+};
+
+export const fetchRowAPIs = (run) => async (dispatch) => {
+  await Promise.all([
+    dispatch(fetchPeriods(run.id)),
+    dispatch(fetchMetricsInfo(run.id)),
+    dispatch(fetchGraphData(run.id)),
+    dispatch(fetchSummaryData(run.id)),
+  ]);
+};
+
+export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
+  const selectedMetricsPerRun = cloneDeep(
+    getState().ilab.selectedMetricsPerRun
+  );
+  selectedMetricsPerRun[id] = metrics;
+
+  dispatch({
+    type: TYPES.SET_SELECTED_METRICS_PER_RUN,
+    payload: selectedMetricsPerRun,
+  });
 };
