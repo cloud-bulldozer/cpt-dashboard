@@ -3,9 +3,9 @@ import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 
-import { showFailureToast } from "@/actions/toastActions";
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
+import { showFailureToast } from "@/actions/toastActions";
 
 /**
  * Fetch and store InstructLab jobs based on configured filters.
@@ -62,7 +62,7 @@ export const fetchILabJobs =
       dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.COMPLETED });
-    };
+  };
 
 /**
  * Isolate the current page of cached jobs.
@@ -79,7 +79,6 @@ export const sliceIlabTableRows =
       payload: results.slice(startIdx, endIdx),
     });
   };
-
 
 /**
  * Store the start & end date filters in redux and as URL
@@ -104,7 +103,7 @@ export const setIlabDateFilter =
 /**
  * Fetch the set of possible InstructLab run filters and store them.
  */
-export const fetchIlabFilters = () => async (dispatch, getState) => {
+export const fetchIlabFilters = () => async (dispatch) => {
   try {
     const response = await API.get(`/api/v1/ilab/runs/filters`);
     dispatch({ type: TYPES.SET_ILAB_RUN_FILTERS, payload: response.data });
@@ -592,6 +591,11 @@ export const tableReCalcValues = () => (dispatch, getState) => {
 export const getMetaRowdId = () => (dispatch, getState) => {
   const tableData = getState().ilab.tableData;
   const metaId = tableData.map((item) => `metadata-toggle-${item.id}`);
+  const metaIdObj = Object.fromEntries(tableData.map((key) => [key.id, []]));
+  dispatch({
+    type: TYPES.SET_SELECTED_METRICS_PER_RUN,
+    payload: metaIdObj,
+  });
   dispatch(setMetaRowExpanded(metaId));
 };
 
@@ -656,4 +660,39 @@ export const updateFromURL = (searchParams) => (dispatch, getState) => {
       );
     }
   }
+};
+
+export const retrieveGraphAndSummary = (ids) => async (dispatch) => {
+  if (ids.length === 1) {
+    await Promise.all([
+      dispatch(fetchGraphData(ids[0])),
+      dispatch(fetchSummaryData(ids[0])),
+    ]);
+  } else {
+    await Promise.all([
+      dispatch(fetchMultiGraphData(ids)),
+      dispatch(handleSummaryData(ids)),
+    ]);
+  }
+};
+
+export const fetchRowAPIs = (run) => async (dispatch) => {
+  await Promise.all([
+    dispatch(fetchPeriods(run.id)),
+    dispatch(fetchMetricsInfo(run.id)),
+    dispatch(fetchGraphData(run.id)),
+    dispatch(fetchSummaryData(run.id)),
+  ]);
+};
+
+export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
+  const selectedMetricsPerRun = cloneDeep(
+    getState().ilab.selectedMetricsPerRun
+  );
+  selectedMetricsPerRun[id] = metrics;
+
+  dispatch({
+    type: TYPES.SET_SELECTED_METRICS_PER_RUN,
+    payload: selectedMetricsPerRun,
+  });
 };
