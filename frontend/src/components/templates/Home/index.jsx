@@ -26,7 +26,6 @@ const Home = () => {
     filterOptions,
     tableFilters,
     categoryFilterValue,
-    filterData,
     appliedFilters,
     start_date,
     end_date,

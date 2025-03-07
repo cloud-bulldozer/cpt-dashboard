@@ -11,6 +11,7 @@ import {
 import API from "@/utils/axiosInstance";
 import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "./toastActions";
 
 export const fetchOCPJobs = () => async (dispatch) => {
@@ -49,6 +50,7 @@ export const fetchOCPJobs = () => async (dispatch) => {
       });
       dispatch(tableReCalcValues());
     }
+    dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
   }
