@@ -287,7 +287,7 @@ class ElasticService:
                     ]
                     values = list(set(short_versions))
                 elif key == "result":
-                    updated_result = list(
+                    values = list(
                         set(
                             [
                                 constants.JOB_STATUS_MAP.get(x.lower(), "other")
@@ -295,7 +295,6 @@ class ElasticService:
                             ]
                         )
                     )
-                    values = updated_result
                     field = "jobStatus"
                 filterData.append(
                     {
