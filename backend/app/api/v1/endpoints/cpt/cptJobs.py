@@ -151,7 +151,7 @@ async def filters(
 
     if start_date > end_date:
         return Response(
-            content=json.dumps({"error": "start_date must be before end_date"}),
+            content=json.dumps({"detail": "start_date must be before end_date"}),
             status_code=422,
         )
 
@@ -160,7 +160,7 @@ async def filters(
 
     if filter_product and filter_product not in productsFilter:
         return Response(
-            content=json.dumps({"error": "product not supported"}),
+            content=json.dumps({"detail": "product not supported"}),
             status_code=400,
         )
 
