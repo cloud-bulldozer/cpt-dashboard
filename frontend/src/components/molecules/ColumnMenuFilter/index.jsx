@@ -6,18 +6,17 @@ import {
   SelectList,
   SelectOption,
 } from "@patternfly/react-core";
-import React, { useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 
 import PropTypes from "prop-types";
 import TableColumnIcon from "@/components/atoms/TableColumnIcon";
-import { uid } from "@/utils/helper";
 import { useSelector } from "react-redux";
 
 /**
  * A component that displays a list of columns available for the project
  * ID type, and allows the user to select or deselect them.
  * Selection changes are communicated through the callback.
- * 
+ *
  * @param {*} props
  *  - type: The project ID type within the CPT Dashboard as used in
  *      the commonActions action file.
@@ -32,32 +31,38 @@ const ColumnMenuFilter = (props) => {
     (state) => state[props.type]
   );
 
-  const onToggleClick = () => {
-    setIsOpen(!isOpen);
-  };
+  const onToggleClick = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
 
   const activeTableColumns = useMemo(
     () => tableColumns.map((col) => col.value),
     [tableColumns]
   );
 
-  const onSelect = (_event, value) => {
-    if (activeTableColumns.includes(value)) {
-      props.setColumns(value, false);
-    } else {
-      props.setColumns(value, true);
-    }
-  };
-  const toggle = (toggleRef) => (
-    <MenuToggle
-      ref={toggleRef}
-      variant="plain"
-      onClick={onToggleClick}
-      isExpanded={isOpen}
-      className="column-icon-menu"
-    >
-      <TableColumnIcon />
-    </MenuToggle>
+  const onSelect = useCallback(
+    (_event, value) => {
+      if (activeTableColumns.includes(value)) {
+        props.setColumns(value, false);
+      } else {
+        props.setColumns(value, true);
+      }
+    },
+    [activeTableColumns, props]
+  );
+  const toggle = useCallback(
+    (toggleRef) => (
+      <MenuToggle
+        ref={toggleRef}
+        variant="plain"
+        onClick={onToggleClick}
+        isExpanded={isOpen}
+        className="column-icon-menu"
+      >
+        <TableColumnIcon />
+      </MenuToggle>
+    ),
+    [isOpen, onToggleClick]
   );
   return (
     <Select
@@ -72,7 +77,7 @@ const ColumnMenuFilter = (props) => {
       <SelectList>
         {tableFilters.map((filter) => (
           <SelectOption
-            key={uid()}
+            key={filter.value}
             hasCheckbox
             value={filter.value}
             isSelected={activeTableColumns.includes(filter.value)}
@@ -84,7 +89,6 @@ const ColumnMenuFilter = (props) => {
     </Select>
   );
 };
-
 
 ColumnMenuFilter.propTypes = {
   type: PropTypes.string,
