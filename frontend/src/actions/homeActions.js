@@ -13,6 +13,7 @@ import {
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchOCPJobsData =
@@ -57,6 +58,7 @@ export const fetchOCPJobsData =
         dispatch(applyFilters());
         dispatch(tableReCalcValues());
       }
+      dispatch(setLastUpdatedTime());
     } catch (error) {
       dispatch(showFailureToast());
     }

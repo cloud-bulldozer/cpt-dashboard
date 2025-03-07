@@ -11,6 +11,9 @@ export const CLEAR_TOAST = "CLEAR_TOAST";
 export const SET_ACTIVE_MENU_ITEM = "SET_ACTIVE_MENU_ITEM";
 export const TOGGLE_SIDE_MENU = "TOGGLE_SIDE_MENU";
 
+/* Header */
+export const SET_LAST_UPDATED_TIME = "SET_LAST_UPDATED_TIME";
+
 /* CPT Jobs */
 export const SET_CPT_JOBS_DATA = "SET_CPT_JOBS_DATA";
 export const SET_CPT_DATE_FILTER = "SET_CPT_DATE_FILTER";
