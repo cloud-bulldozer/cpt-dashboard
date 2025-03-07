@@ -3,17 +3,16 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
-  buildFilterData,
-  calculateMetrics,
   deleteAppliedFilters,
-  getFilteredData,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { cloneDeep } from "lodash";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { showFailureToast } from "@/actions/toastActions";
+
+const getCloneDeep = async () => (await import("lodash/cloneDeep")).default;
 
 export const fetchOCPJobsData =
   (isNewSearch = false) =>
@@ -54,7 +53,6 @@ export const fetchOCPJobsData =
           },
         });
 
-        dispatch(applyFilters());
         dispatch(tableReCalcValues());
       }
     } catch (error) {
@@ -103,16 +101,19 @@ export const setCPTCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
-  const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
-  for (const key in params) {
-    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
-  }
-  dispatch({
-    type: TYPES.SET_SELECTED_FILTERS,
-    payload: selectedFilters,
-  });
-};
+export const setSelectedFilterFromUrl =
+  (params) => async (dispatch, getState) => {
+    const cloneDeep = await getCloneDeep();
+    const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
+    for (const key in params) {
+      selectedFilters.find((i) => i.name === key).value =
+        params[key].split(",");
+    }
+    dispatch({
+      type: TYPES.SET_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
 export const setSelectedFilter =
   (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
     const selectedFilters = dispatch(
@@ -170,25 +171,11 @@ export const removeCPTAppliedFilters =
     dispatch(applyFilters());
   };
 
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().cpt;
-
-  const results = [...getState().cpt.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_FILTERED_DATA,
-    payload: filtered,
-  });
+export const applyFilters = () => (dispatch) => {
+  dispatch(setCPTOffset(INITAL_OFFSET));
+  dispatch(fetchOCPJobsData(true));
+  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("cpt"));
 };
 
 export const setFilterFromURL = (searchParams) => ({
@@ -227,13 +214,20 @@ export const setCPTPageOptions = (page, perPage) => ({
   payload: { page, perPage },
 });
 
-export const getCPTSummary = () => (dispatch, getState) => {
-  const results = [...getState().cpt.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getCPTSummary = (countObj) => (dispatch) => {
+  const other = countObj["other"]
+    ? countObj["other"]
+    : countObj["total"] -
+      ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: countObj["success"] || 0,
+    failureCount: countObj["failure"] || 0,
+    total: countObj["total"],
+  };
   dispatch({
     type: TYPES.SET_CPT_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
 
@@ -243,4 +237,45 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   const startIdx = page !== 0 ? (page - 1) * perPage : 0;
   const endIdx = startIdx + perPage - 1;
   dispatch(sliceCPTTableRows(startIdx, endIdx));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+    const { tableFilters, categoryFilterValue } = getState().ocp;
+
+    const params = dispatch(getRequestParams("cpt"));
+
+    const response = await API.get(API_ROUTES.CPT_FILTERS_API_V1, { params });
+
+    if (response.status !== 200 || !response.data?.filterData?.length) {
+      console.warn("No filter data received from API");
+      dispatch(getCPTSummary({}));
+      dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: [] });
+      return;
+    }
+
+    const { summary, filterData } = response.data;
+
+    dispatch(getCPTSummary(summary));
+    dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: filterData });
+
+    const defaultCategory = categoryFilterValue || tableFilters?.[0]?.name;
+    dispatch(setCPTCatFilters(defaultCategory));
+  } catch (error) {
+    console.error("Error fetching filter data:", error);
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.COMPLETED });
+};
+
+export const fetchDataConcurrently = () => async (dispatch) => {
+  try {
+    await Promise.all([
+      dispatch(buildFilterData()),
+      dispatch(fetchOCPJobsData()),
+    ]);
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
 };
