@@ -11,6 +11,7 @@ import {
 import API from "@/utils/axiosInstance";
 import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchTelcoJobsData = () => async (dispatch) => {
@@ -50,6 +51,7 @@ export const fetchTelcoJobsData = () => async (dispatch) => {
         },
       });
     }
+    dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
   }

@@ -11,6 +11,7 @@ import {
 import API from "@/utils/axiosInstance";
 import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchQuayJobsData = () => async (dispatch) => {
@@ -51,6 +52,7 @@ export const fetchQuayJobsData = () => async (dispatch) => {
 
       dispatch(tableReCalcValues());
     }
+    dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
   }
