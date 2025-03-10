@@ -180,6 +180,7 @@ export const setTelcoDateFilter =
 
 export const applyTelcoDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setTelcoOffset(INITAL_OFFSET));
     dispatch(setTelcoDateFilter(start_date, end_date, navigate));
     dispatch(fetchTelcoJobsData());
   };

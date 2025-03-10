@@ -53,6 +53,10 @@ QUAY_FIELD_CONSTANT_DICT = {
     "build": "ocpVersion.keyword",
     "upstream": "upstreamJob.keyword",
     "clusterType": "clusterType.keyword",
+    "ciSystem": "ciSystem.keyword",
+    "imagePushPulls": "imagePushPulls",
+    "concurrency": "concurrency",
+    "hitSize": "hitSize",
 }
 
 RELEASE_STREAM_DICT = {
@@ -96,6 +100,13 @@ FILEDS_DISPLAY_NAMES = {
     "jobStatus": "Status",
     "startDate": "Start Date",
     "endDate": "End Date",
+    "result": "Status",
+    "product": "Product",
+    "testName": "Test Name",
+    "attack": "Test Name",
+    "concurrency": "Concurrency",
+    "imagePushPulls": "Image Push/Pulls",
+    "hitSize": "Hit Size",
 }
 
 FIELDS_FILTER_DICT = {
@@ -105,3 +116,25 @@ FIELDS_FILTER_DICT = {
     "ocpVersion": "ocp_version",
     "releaseStream": "ocp_build",
 }
+
+HCE_FIELD_CONSTANT_DICT = {
+    "testName": "test.keyword",
+    "product": "group.keyword",
+    "result": "result.keyword",
+}
+
+OCM_FIELD_CONSTANT_DICT = {
+    "jobStatus": "jobStatus.keyword",
+    "testName": "attack.keyword",
+    "ciSystem": "ciSystem.keyword",
+}
+
+JOB_STATUS_MAP = {
+    "pass": "success",
+    "fail": "failure",
+    "success": "success",
+    "failure": "failure",
+    "error": "failure",
+}
+
+keys_to_keep = ["product", "testName", "jobStatus", "ciSystem", "releaseStream"]
