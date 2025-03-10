@@ -30,6 +30,11 @@ async def getData(
 
     if sort:
         query["sort"] = utils.build_sort_terms(sort)
+    if filter:
+        refiner = utils.transform_filter(filter)
+        query["query"]["bool"]["should"] = refiner["query"]
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+        query["query"]["bool"]["must_not"] = refiner["must_query"]
 
     if filter:
         refiner = utils.transform_filter(filter)
@@ -84,4 +89,8 @@ async def getFilterData(
     response = await es.filterPost(start_datetime, end_datetime, aggregate, refiner)
     await es.close()
 
-    return {"filterData": response["filterData"], "summary": response["summary"]}
+    return {
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+        "total": response.get("total", 0),
+    }

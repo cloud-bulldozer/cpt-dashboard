@@ -111,6 +111,7 @@ const Quay = () => {
       />
       <TableFilter
         tableFilters={modifidedTableFilters}
+        filterData={filterData}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
         appliedFilters={appliedFilters}

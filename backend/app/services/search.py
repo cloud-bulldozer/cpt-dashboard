@@ -5,6 +5,7 @@ from app import config
 import bisect
 import re
 import app.api.v1.commons.constants as constants
+import traceback
 
 
 class ElasticService:
@@ -100,6 +101,7 @@ class ElasticService:
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             previous_results = {
                                 "data": response["hits"]["hits"],
@@ -110,6 +112,7 @@ class ElasticService:
                                 index=self.prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             previous_results = {
                                 "data": response["hits"]["hits"],
@@ -141,6 +144,7 @@ class ElasticService:
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             new_results = {
                                 "data": response["hits"]["hits"],
@@ -151,6 +155,7 @@ class ElasticService:
                                 index=self.new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
+                                request_timeout=50,
                             )
                             new_results = {
                                 "data": response["hits"]["hits"],
@@ -179,6 +184,7 @@ class ElasticService:
                             index=self.new_index + "*",
                             body=jsonable_encoder(query),
                             size=size,
+                            request_timeout=50,
                         )
                         return {
                             "data": response["hits"]["hits"],
@@ -195,6 +201,7 @@ class ElasticService:
                         index=self.prev_index + "*",
                         body=jsonable_encoder(query),
                         size=size,
+                        request_timeout=50,
                     )
                     previous_results = {
                         "data": response["hits"]["hits"],
@@ -204,7 +211,10 @@ class ElasticService:
                     self.new_index if indice is None else indice
                 )
                 response = await self.new_es.search(
-                    index=self.new_index + "*", body=jsonable_encoder(query), size=size
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=size,
+                    request_timeout=50,
                 )
                 new_results = {
                     "data": response["hits"]["hits"],
@@ -224,40 +234,6 @@ class ElasticService:
 
                 return {"data": unique_data, "total": totalVal}
 
-    async def scan_indices(
-        self, es_client, indice, query, timestamp_field, start_date, end_date, size
-    ):
-        """Scans results only from es indexes relevant to a query"""
-        indices = await self.get_indices_from_alias(es_client, indice)
-        if not indices:
-            indices = [indice]
-        sorted_index_list = SortedIndexList()
-        for index in indices:
-            sorted_index_list.insert(
-                IndexTimestamp(
-                    index,
-                    await self.get_timestamps(es_client, index, timestamp_field, size),
-                )
-            )
-        filtered_indices = sorted_index_list.get_indices_in_given_range(
-            start_date, end_date
-        )
-        results = []
-        for each_index in filtered_indices:
-            query["query"]["bool"]["filter"]["range"][timestamp_field]["lte"] = str(
-                min(end_date, each_index.timestamps[1])
-            )
-            query["query"]["bool"]["filter"]["range"][timestamp_field]["gte"] = str(
-                max(start_date, each_index.timestamps[0])
-            )
-            response = await es_client.search(
-                index=each_index.index, body=jsonable_encoder(query), size=size
-            )
-            results.extend(response["hits"]["hits"])
-            total += response["hits"]["total"]["value"]
-
-        return {"data": await self.remove_duplicates(results), "total": total}
-
     async def remove_duplicates(self, all_results):
         seen = set()
         filtered_results = []
@@ -270,67 +246,26 @@ class ElasticService:
                 seen.add(tuple(sorted(flat_doc.items())))
         return filtered_results
 
-    async def get_timestamps(self, es_client, index, timestamp_field, size):
-        """Returns start and end timestamps of a index"""
-        query = {
-            "size": 0,
-            "aggs": {
-                "min_timestamp": {"min": {"field": timestamp_field}},
-                "max_timestamp": {"max": {"field": timestamp_field}},
-            },
-        }
-        response = await es_client.search(index=index, body=query)
-        min_timestamp = response["aggregations"]["min_timestamp"]["value_as_string"]
-        max_timestamp = response["aggregations"]["max_timestamp"]["value_as_string"]
-        return [
-            datetime.strptime(
-                datetime.strptime(min_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
-                    "%Y-%m-%d"
-                ),
-                "%Y-%m-%d",
-            ).date(),
-            datetime.strptime(
-                datetime.strptime(max_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ").strftime(
-                    "%Y-%m-%d"
-                ),
-                "%Y-%m-%d",
-            ).date(),
-        ]
-
-    async def get_indices_from_alias(self, es_client, alias):
-        """Get indexes that match an alias"""
-        try:
-            indexes = []
-            response = await es_client.indices.get_alias(alias)
-            index_prefixes = [
-                re.sub(r"-\d+$", "", index) for index in list(response.keys())
-            ]
-            for each_prefix in index_prefixes:
-                response = await es_client.indices.get(each_prefix + "*", format="json")
-                indexes.extend(list(response.keys()))
-            result_set = [alias] if len(indexes) == 0 else indexes
-            return list(set(result_set))
-        except Exception as e:
-            print(f"Error retrieving indices for alias '{alias}': {e}")
-            return []
-
     async def buildFilterData(self, filter, total):
         """Return the data to build the filter"""
         try:
-            summary = {"total": total}
-
+            summary = await self.getSummary(filter, total)
             filterData = []
+            upstreamList = [
+                x.get("key")
+                for x in filter.get("upstream", {}).get("buckets", [])
+                if "key" in x
+            ]
+            clusterTypeList = [
+                x.get("key")
+                for x in filter.get("clusterType", {}).get("buckets", [])
+                if "key" in x
+            ]
 
-            summary.update(
-                {
-                    x["key"].lower(): x["doc_count"]
-                    for x in filter["jobStatus"]["buckets"]
-                }
-            )
+            if "build" in filter and "buckets" in filter["build"]:
+                buildObj = await self.buildFilterValues(filter)
+                filterData.append(buildObj)
 
-            upstreamList = [x["key"] for x in filter["upstream"]["buckets"]]
-            clusterTypeList = [x["key"] for x in filter["clusterType"]["buckets"]]
-            buildList = [x["key"] for x in filter["build"]["buckets"]]
             keys_to_remove = [
                 "min_timestamp",
                 "max_timestamp",
@@ -340,10 +275,8 @@ class ElasticService:
             ]
             refiner = removeKeys(filter, keys_to_remove)
 
-            build = getBuildFilter(buildList)
-            buildObj = {"key": "build", "value": build, "name": "Build"}
-
             for key, value in refiner.items():
+                field = key
                 values = [bucket["key"] for bucket in value["buckets"]]
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
@@ -353,16 +286,24 @@ class ElasticService:
                         str(value)[: constants.OCP_SHORT_VER_LEN] for value in values
                     ]
                     values = list(set(short_versions))
+                elif key == "result":
+                    updated_result = list(
+                        set(
+                            [
+                                constants.JOB_STATUS_MAP.get(x.lower(), "other")
+                                for x in values
+                            ]
+                        )
+                    )
+                    values = updated_result
+                    field = "jobStatus"
                 filterData.append(
                     {
-                        "key": key,
+                        "key": field,
                         "value": values,
                         "name": constants.FILEDS_DISPLAY_NAMES[key],
                     }
                 )
-
-            filterData.append(buildObj)
-
             return {
                 "filterData": filterData,
                 "summary": summary,
@@ -372,7 +313,32 @@ class ElasticService:
             print(f"Error building filter data: {e}")
             return {"filterData": [], "summary": {}, "upstreamList": []}
 
-    async def buildFilterQuery(self, start_datetime, end_datetime, aggregate, refiner):
+    async def getSummary(self, filter, total):
+        summary = {"total": total, "success": 0, "failure": 0, "other": 0}
+
+        for key in ("jobStatus", "result"):
+            buckets = filter.get(key, {}).get("buckets")
+            if buckets:
+                for x in buckets:
+                    field = constants.JOB_STATUS_MAP.get(x["key"].lower(), "other")
+                    summary[field] = summary.get(field, 0) + x.get("doc_count", 0)
+                break
+
+        return summary
+
+    async def buildFilterValues(self, filter):
+        buildList = [
+            x.get("key")
+            for x in filter.get("build", {}).get("buckets", [])
+            if "key" in x
+        ]
+        build = getBuildFilter(buildList)
+        buildObj = {"key": "build", "value": build, "name": "Build"}
+        return buildObj
+
+    async def buildFilterQuery(
+        self, start_datetime, end_datetime, aggregate, refiner, timestamp_field
+    ):
         start_date = (
             start_datetime.strftime("%Y-%m-%d")
             if start_datetime
@@ -385,25 +351,18 @@ class ElasticService:
         )
 
         query = {
-            "aggs": {
-                "min_timestamp": {"min": {"field": start_date}},
-                "max_timestamp": {"max": {"field": end_date}},
-            },
+            "aggs": {},
             "query": {
                 "bool": {
-                    "filter": [
-                        {
-                            "range": {
-                                "timestamp": {
-                                    "format": "yyyy-MM-dd",
-                                    "lte": end_date,
-                                    "gte": start_date,
-                                }
+                    "filter": {
+                        "range": {
+                            timestamp_field: {
+                                "format": "yyyy-MM-dd",
+                                "lte": end_date,
+                                "gte": start_date,
                             }
                         }
-                    ],
-                    "should": [],
-                    "must_not": [],
+                    },
                 }
             },
         }
@@ -415,27 +374,45 @@ class ElasticService:
         return query
 
     async def filterPost(
-        self, start_datetime, end_datetime, aggregate, refiner, indice=None
+        self,
+        start_datetime,
+        end_datetime,
+        aggregate,
+        refiner,
+        timestamp_field="timestamp",
+        indice=None,
     ):
         try:
             query = await self.buildFilterQuery(
-                start_datetime, end_datetime, aggregate, refiner
+                start_datetime, end_datetime, aggregate, refiner, timestamp_field
             )
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
                 )
                 response = await self.prev_es.search(
-                    index=self.prev_index + "*", body=query, size=0
+                    index=self.prev_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                    request_timeout=50,
                 )
-            elif self.new_es:
+            elif self.new_es and self.prev_es:
                 self.new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
                 response = await self.new_es.search(
-                    index=self.new_index + "*", body=jsonable_encoder(query), size=0
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                    request_timeout=50,
                 )
-
+            else:
+                response = await self.new_es.search(
+                    index=self.new_index + "*",
+                    body=jsonable_encoder(query),
+                    size=0,
+                    request_timeout=50,
+                )
             total = response["hits"]["total"]["value"]
             results = response["aggregations"]
             x = await self.buildFilterData(results, total)
@@ -444,9 +421,11 @@ class ElasticService:
                 "filterData": x["filterData"],
                 "summary": x["summary"],
                 "upstreamList": x["upstreamList"],
+                "total": total,
             }
         except Exception as e:
             print(f"Error retrieving filter data: {e}")
+            print(traceback.format_exc())
 
     async def close(self):
         """Closes es client connections"""
