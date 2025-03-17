@@ -61,6 +61,7 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 - Current directory is `{project_root}/frontend`
 - A filled out [cpt-dashboard backend  configuration file](/README.md#backend-configuration) named `ocpperf.toml` in `{project_root}/backend`
 - [poetry](https://python-poetry.org/) for managing the backend's Python virtual environment and dependencies
+- NodeJS 22+
 
 Start CPT-Dashboard backend data service.
 
