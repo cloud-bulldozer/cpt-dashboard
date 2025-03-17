@@ -60,6 +60,7 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 - Three shell terminals
 - Current directory is `{project_root}/frontend`
 - A filled out [cpt-dashboard backend  configuration file](/README.md#backend-configuration) named `ocpperf.toml` in `{project_root}/backend`
+- [poetry](https://python-poetry.org/) for managing the backend's Python virtual environment and dependencies
 
 Start CPT-Dashboard backend data service.
 
