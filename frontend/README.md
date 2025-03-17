@@ -54,6 +54,42 @@ This will generate the `build` folder in the root directory, which contains pack
 
 Then, copy the `build` folder to the proper place on the server for deployment.
 
+## Test
+
+### Requirements
+- Three shell terminals
+- Current directory is `{project_root}/frontend`
+- A filled out `cpt-dashboard` configuration file named `ocpperf.toml` in `{project_root}/backend`
+
+Start CPT-Dashboard backend data service.
+
+```shell
+poetry run scripts/start-reload.sh
+```
+
+Start CPT-Dashboard frontend GUI.
+```shell
+npm run dev
+```
+
+Execute end-to-end tests within Chrome web browser.
+```shell
+npm run e2e:chrome
+```
+
+Alternatively,
+
+[Open Cypress](https://docs.cypress.io/app/core-concepts/open-mode) GUI to view test execution.
+```shell
+npm run cypress:open
+```
+Click `E2E Testing`.
+
+Choose a browser (Chrome is recommended), and click `Start E2E Testing in {your browser}`.
+
+In the newly opened web browser under the directory `cypress/e2e` select a test file. Each individual `.cy.js` file is a `spec` file. I recommend clicking `home.cy.js`.
+
+
 ## Template
 
 This application is based on v5 of PatternFly which is a production-ready UI solution for admin interfaces. For more information regarding the foundation and template of the application, please visit [PatternFly](https://www.patternfly.org/get-started/develop) 
