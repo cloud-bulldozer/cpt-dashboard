@@ -4,9 +4,6 @@ describe('basic user journey', () => {
   });
 
   it("displays each tab in the side menu, then closes the side menu", () => {
-    cy.findByTestId("main_layout_toggle")
-      .should("be.visible");    
-
     const nav_list_tab_name = ["OCP", "Quay", "Telco", "Home"];
     cy.findByTestId("side_menu_options")
       .should("be.visible")
@@ -19,6 +16,7 @@ describe('basic user journey', () => {
     });
 
     cy.findByTestId("main_layout_toggle")
+      .should("be.visible")
       .click();
     cy.findByTestId("side_menu_options")
       .should("not.be.visible");
