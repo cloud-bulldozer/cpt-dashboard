@@ -98,7 +98,10 @@ const TableFilter = (props) => {
   };
   return (
     <>
-      <Toolbar id="filter-toolbar">
+      <Toolbar 
+        id="filter-toolbar"
+        ouiaId="data_table_filter"
+      >
         {tableFilters.length > 0 ?
           (
             <ToolbarContent className="field-filter">

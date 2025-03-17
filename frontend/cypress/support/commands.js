@@ -25,3 +25,7 @@
 // Cypress.Commands.overwrite('visit', (originalFn, url, options) => { ... })
 
 import '@testing-library/cypress/add-commands'
+
+import { configure } from '@testing-library/cypress';
+
+configure({testIdAttribute: 'data-ouia-component-id'});

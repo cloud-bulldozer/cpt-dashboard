@@ -7,7 +7,10 @@ const SideMenu = () => {
   const isSideMenuOpen = useSelector((state) => state.sidemenu.isSideMenuOpen);
 
   return (
-    <PageSidebar isSidebarOpen={isSideMenuOpen} id="vertical-sidebar">
+    <PageSidebar 
+      isSidebarOpen={isSideMenuOpen} 
+      id="vertical-sidebar"      
+    >
       <PageSidebarBody>
         <MenuOptions />
       </PageSidebarBody>
