@@ -17,13 +17,15 @@ import PropTypes from "prop-types";
 
 const MetricsSelect = (props) => {
   const metrics = useSelector((state) => state.ilab.metrics);
+  const metrics_selected = useSelector((state) => state.ilab.metrics_selected);
   const { ids, selectedMetric, setSelectedMetric } = props;
+  const comparisonSwitch = useSelector((state) => state.ilab.comparisonSwitch);
 
   /* Metrics select */
   const [isOpen, setIsOpen] = useState(false);
   const [isDirty, setIsDirty] = useState(false);
   const [currentSelections, setCurrentSelections] = useState(
-    selectedMetric ?? []
+    comparisonSwitch ? selectedMetric || [] : metrics_selected || []
   );
 
   const dispatch = useDispatch();
@@ -46,16 +48,24 @@ const MetricsSelect = (props) => {
     [isOpen, onToggleClick, currentSelections?.length]
   );
 
-  const onSelect = useCallback((_event, metric) => {
+  const onSelect = (_event, metric) => {
     setIsDirty(true);
-    setCurrentSelections((prev) => [...prev, metric]);
-  }, []);
+    setCurrentSelections((prevSelections) =>
+      prevSelections.includes(metric)
+        ? prevSelections.filter((m) => m !== metric)
+        : [...prevSelections, metric]
+    );
+  };
 
   const closeMenu = () => {
     if (ids.length > 0 && isDirty) {
       // If we're closing, fetch data
-      setSelectedMetric && setSelectedMetric(currentSelections);
-      dispatch(toggleSelectedMetric(currentSelections));
+      // setSelectedMetric is for expanded row else it is comparison view
+      if (setSelectedMetric) {
+        setSelectedMetric(currentSelections);
+      } else {
+        dispatch(toggleSelectedMetric(currentSelections));
+      }
       dispatch(retrieveGraphAndSummary(ids));
     }
     setIsDirty(false);
