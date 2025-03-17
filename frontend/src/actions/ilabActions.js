@@ -343,7 +343,7 @@ export const fetchSummaryData =
       const run = getState().ilab.results.find((i) => i.id == uid);
       const template = useTemplate ? getState().ilab.metricTemplate : null;
       const periods = getState().ilab.periods.find((i) => i.uid == uid);
-      const metrics = getState().ilab.metrics_selected;
+      const metrics = dispatch(getSelectedMetrics(uid));
       const avail_metrics = getState().ilab.metrics;
       dispatch({ type: TYPES.SET_ILAB_SUMMARY_LOADING });
       let summaries = [];
@@ -440,7 +440,7 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
     const periods = getState().ilab.periods.find((i) => i.uid == uid);
     const graphData = cloneDeep(getState().ilab.graphData);
     const filterData = graphData.filter((i) => i.uid !== uid);
-    const metrics = getState().ilab.metrics_selected;
+    const metrics = dispatch(getSelectedMetrics(uid));
     const avail_metrics = getState().ilab.metrics;
     dispatch({
       type: TYPES.SET_ILAB_GRAPH_DATA,
@@ -628,23 +628,15 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
 };
 
 /**
- * Add a new metric to the selected list if not present, or remove it if it
+ * Updated the selected metric list
  * was previously present.
  *
  * @param {string} metric
  */
-export const toggleSelectedMetric = (metric) => (dispatch, getState) => {
-  let metrics_selected = getState().ilab.metrics_selected;
-  if (metrics_selected.includes(metric)) {
-    metrics_selected = metrics_selected.filter((m) => m !== metric);
-  } else {
-    metrics_selected = [...metrics_selected, metric];
-  }
-  dispatch({
-    type: TYPES.SET_ILAB_SELECTED_METRICS,
-    payload: metrics_selected,
-  });
-};
+export const toggleSelectedMetric = (metric) => ({
+  type: TYPES.SET_ILAB_SELECTED_METRICS,
+  payload: metric,
+});
 
 /**
  * Help to manage the set of accordion folds that are open.
@@ -751,4 +743,19 @@ export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
     type: TYPES.SET_SELECTED_METRICS_PER_RUN,
     payload: selectedMetricsPerRun,
   });
+};
+/**
+ * Return the selected metrics based on the comparison switch
+ *
+ * @param {string} uid
+ */
+export const getSelectedMetrics = (uid) => (dispatch, getState) => {
+  const comparisonSwitch = getState().ilab.comparisonSwitch;
+  let metrics = [];
+  if (comparisonSwitch) {
+    metrics = getState().ilab.metrics_selected;
+  } else {
+    metrics = getState().ilab.selectedMetricsPerRun[uid];
+  }
+  return metrics;
 };
