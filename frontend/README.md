@@ -59,7 +59,7 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 ### Requirements
 - Three shell terminals
 - Current directory is `{project_root}/frontend`
-- A filled out `cpt-dashboard` configuration file named `ocpperf.toml` in `{project_root}/backend`
+- A filled out [cpt-dashboard backend  configuration file](/README.md#backend-configuration) named `ocpperf.toml` in `{project_root}/backend`
 
 Start CPT-Dashboard backend data service.
 
