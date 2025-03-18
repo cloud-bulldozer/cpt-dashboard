@@ -32,6 +32,7 @@ const Header = () => {
           isSidebarOpen={isSideMenuOpen}
           onSidebarToggle={onSidebarToggle}
           id="nav-toggle"
+          ouiaId="main_layout_toggle"
         >
           <BarsIcon />
         </PageToggleButton>
