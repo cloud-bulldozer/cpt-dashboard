@@ -202,6 +202,7 @@ export const setCPTDateFilter =
 
 export const applyCPTDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setCPTOffset(INITAL_OFFSET));
     dispatch(setCPTDateFilter(start_date, end_date, navigate));
     dispatch(fetchOCPJobsData());
   };
