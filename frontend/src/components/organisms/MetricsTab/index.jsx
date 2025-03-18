@@ -59,6 +59,7 @@ const MetricsTab = (props) => {
           }}
           isExpanded={expanded === "metrics-toggle"}
           id="metrics-toggle"
+          ouiaId="summary_toggle"
         >
           Summary
         </AccordionToggle>

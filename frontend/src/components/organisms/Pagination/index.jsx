@@ -58,6 +58,7 @@ const RenderPagination = (props) => {
       onFirstClick={onNextClick}
       onLastClick={onNextClick}
       isCompact={props.type === "cpt" ? true : false}
+      ouiaId="data_table_pagination"
     />
   );
 };
