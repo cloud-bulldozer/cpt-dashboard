@@ -25,7 +25,7 @@ jobs:
           # Disable running of tests within install job
           runTests: false
           build: npm run --prefix frontend build
-          # project: ./frontend
+          project: ./frontend
 
       - name: Save build folder
         uses: actions/upload-artifact@v4
