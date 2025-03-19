@@ -1,10 +1,10 @@
 name: Cypress tests
 on: 
   push:
-    branches:
-      - main
-    tags:
-      - v*
+    # branches:
+    #   - main
+    # tags:
+    #   - v*
   pull_request:
 jobs:
   install:
