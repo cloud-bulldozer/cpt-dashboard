@@ -560,9 +560,9 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
  *
  * @param {string} metric
  */
-export const toggleSelectedMetric = (metric) => ({
+export const setSelectedMetrics = (metrics) => ({
   type: TYPES.SET_ILAB_SELECTED_METRICS,
-  payload: metric,
+  payload: metrics,
 });
 
 /**
@@ -677,17 +677,18 @@ export const fetchRowAPIs = (run) => async (dispatch) => {
   ]);
 };
 
-export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
-  const selectedMetricsPerRun = cloneDeep(
-    getState().ilab.selectedMetricsPerRun
-  );
-  selectedMetricsPerRun[id] = metrics;
+export const setSelectedMetricsPerRun =
+  (id, metrics) => (dispatch, getState) => {
+    const selectedMetricsPerRun = cloneDeep(
+      getState().ilab.selectedMetricsPerRun
+    );
+    selectedMetricsPerRun[id] = metrics;
 
-  dispatch({
-    type: TYPES.SET_SELECTED_METRICS_PER_RUN,
-    payload: selectedMetricsPerRun,
-  });
-};
+    dispatch({
+      type: TYPES.SET_SELECTED_METRICS_PER_RUN,
+      payload: selectedMetricsPerRun,
+    });
+  };
 /**
  * Return the selected metrics based on the comparison switch
  *

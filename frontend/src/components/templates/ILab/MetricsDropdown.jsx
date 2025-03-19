@@ -8,7 +8,7 @@ import {
 } from "@patternfly/react-core";
 import {
   retrieveGraphAndSummary,
-  toggleSelectedMetric,
+  setSelectedMetrics,
 } from "@/actions/ilabActions";
 import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
@@ -64,7 +64,7 @@ const MetricsSelect = (props) => {
       if (setSelectedMetric) {
         setSelectedMetric(currentSelections);
       } else {
-        dispatch(toggleSelectedMetric(currentSelections));
+        dispatch(setSelectedMetrics(currentSelections));
       }
       dispatch(retrieveGraphAndSummary(ids));
     }
