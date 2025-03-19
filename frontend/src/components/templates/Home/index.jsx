@@ -23,6 +23,7 @@ const Home = () => {
     activeSortDir,
     activeSortIndex,
     results,
+    filterData,
     filterOptions,
     tableFilters,
     categoryFilterValue,
