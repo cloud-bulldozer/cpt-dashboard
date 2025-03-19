@@ -13,6 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: look
+        run: ls .
+
+      - name: ls ./frontend
+
       - name: Cypress install
         uses: cypress-io/github-action@v6
         with:
