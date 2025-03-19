@@ -1,5 +1,7 @@
 name: Cypress tests
-on: push
+on: 
+  - push
+  - pull_request
 jobs:
   install:
     runs-on: ubuntu-24.04
@@ -20,7 +22,7 @@ jobs:
           name: build
           if-no-files-found: error
           path: dist
-          
+
   cypress-run:
     name: Cypress run
     needs: install
