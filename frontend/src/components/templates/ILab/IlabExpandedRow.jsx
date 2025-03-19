@@ -6,7 +6,10 @@ import {
   Stack,
   StackItem,
 } from "@patternfly/react-core";
-import { setMetaRowExpanded, setSelectedMetrics } from "@/actions/ilabActions";
+import {
+  setMetaRowExpanded,
+  setSelectedMetricsPerRun,
+} from "@/actions/ilabActions";
 import { useDispatch, useSelector } from "react-redux";
 
 import ILabGraph from "./ILabGraph";
@@ -23,7 +26,6 @@ const IlabRowContent = (props) => {
   const { metaRowExpanded, selectedMetricsPerRun } = useSelector(
     (state) => state.ilab
   );
-  console.log(selectedMetricsPerRun[item.id]);
   const onToggle = (id) => {
     const index = metaRowExpanded.indexOf(id);
     const newExpanded =
@@ -38,7 +40,7 @@ const IlabRowContent = (props) => {
   };
   const setSelectedMetric = useCallback(
     (metrics) => {
-      dispatch(setSelectedMetrics(item.id, metrics));
+      dispatch(setSelectedMetricsPerRun(item.id, metrics));
     },
     [dispatch, item.id]
   );

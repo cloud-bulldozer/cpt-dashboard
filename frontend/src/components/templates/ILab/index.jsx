@@ -9,7 +9,7 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { Fragment, useCallback, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
   fetchILabJobs,
   fetchIlabFilters,
@@ -26,7 +26,6 @@ import {
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
@@ -108,16 +107,6 @@ const ILab = () => {
     end_date: "End Date",
     status: "Status",
   };
-
-  //Filter Helper
-  const modifiedTableFilters = useMemo(
-    () =>
-      tableFilters.filter(
-        (item) => item.value !== "endDate" && item.value !== "startDate"
-      ),
-    [tableFilters]
-  );
-  const updateSelectedFilter = (category, value, isFromMetrics = false) => {};
 
   //Filter Helper
   const modifiedTableFilters = useMemo(
