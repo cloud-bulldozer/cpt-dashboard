@@ -45,7 +45,7 @@ jobs:
         uses: cypress-io/github-action@v6
         with:
           start: npm run dev
-          group: 'UI-Chrome'
+          browser: chrome
           working-directory: ./frontend
         env:
           # pass GitHub token to detect new build vs re-run build
