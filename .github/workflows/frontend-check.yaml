@@ -19,14 +19,14 @@ jobs:
           # Disable running of tests within install job
           runTests: false
           build: npm run build
-        working-directory: ./frontend
+          project: ./frontend
 
       - name: Save build folder
         uses: actions/upload-artifact@v4
         with:
           name: build
           if-no-files-found: error
-          path: dist
+          path: ./frontend/dist
 
   cypress-run:
     name: Cypress run
@@ -40,7 +40,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: build        
-        working-directory: ./frontend
+          path: ./frontend/dist
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
@@ -48,7 +48,8 @@ jobs:
           start: npm start
           group: 'UI-Chrome'
           record: true
+          project: ./frontend
         env:
           # pass GitHub token to detect new build vs re-run build
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-        working-directory: ./frontend  
+        
