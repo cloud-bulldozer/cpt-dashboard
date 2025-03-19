@@ -1,7 +1,11 @@
 name: Cypress tests
 on: 
-  - push
-  - pull_request
+  push:
+    branches:
+      - main
+    tags:
+      - v*
+  pull_request:
 jobs:
   install:
     runs-on: ubuntu-24.04
