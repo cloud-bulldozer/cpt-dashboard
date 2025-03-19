@@ -13,19 +13,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: look
-        run: ls .
-
-      - name: ls frontend
-        run: ls ./frontend
-
       - name: Cypress install
         uses: cypress-io/github-action@v6
         with:
-          # Disable running of tests within install job
           runTests: false
           build: npm run build
-          # project: ./frontend
           working-directory: ./frontend
 
       - name: Save build folder
@@ -54,8 +46,6 @@ jobs:
         with:
           start: npm run dev
           group: 'UI-Chrome'
-          record: true
-          # project: ./frontend
           working-directory: ./frontend
         env:
           # pass GitHub token to detect new build vs re-run build
