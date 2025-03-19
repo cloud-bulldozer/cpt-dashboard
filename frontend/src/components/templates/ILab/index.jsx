@@ -9,13 +9,11 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import {
-  fetchIlabFilters,
   fetchILabJobs,
-  fetchGraphData,
-  fetchMetricsInfo,
-  fetchPeriods,
-  fetchSummaryData,
+  fetchIlabFilters,
+  fetchRowAPIs,
   setIlabDateFilter,
   toggleComparisonSwitch,
   updateFromURL,
@@ -23,7 +21,6 @@ import {
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
@@ -56,13 +53,8 @@ const ILab = () => {
         ? [...otherExpandedRunNames, run.id]
         : otherExpandedRunNames;
     });
-    if (isExpanding) {
-      await Promise.all([
-        await dispatch(fetchPeriods(run.id)),
-        await dispatch(fetchMetricsInfo(run.id)),
-        await dispatch(fetchGraphData(run.id)),
-        await dispatch(fetchSummaryData(run.id)),
-      ]);
+    if (isExpanding && !isResultExpanded(run.id)) {
+      dispatch(fetchRowAPIs(run));
     }
   };
 
@@ -105,10 +97,10 @@ const ILab = () => {
     status: "Status",
   };
 
-  const onSwitchChange = () => {
+  const onSwitchChange = useCallback(() => {
     dispatch(toggleComparisonSwitch());
     dispatch(updateURL(navigate));
-  };
+  }, [dispatch, navigate]);
   return (
     <>
       <TableFilter
@@ -136,18 +128,17 @@ const ILab = () => {
             </Thead>
             <Tbody>
               {tableData.map((item, rowIndex) => (
-                <>
-                  <Tr key={uid()}>
+                <Fragment key={item.id}>
+                  <Tr key={item.id}>
                     <Td
                       expand={{
                         rowIndex,
                         isExpanded: isResultExpanded(item.id),
                         onToggle: () =>
                           setExpanded(item, !isResultExpanded(item.id)),
-                        expandId: `expandId-${uid()}`,
+                        expandId: `expandId-${item.id}`,
                       }}
                     />
-
                     <Td>{item.primary_metrics[0]}</Td>
                     <Th>{formatDateTime(item.begin_date)}</Th>
                     <Th>{formatDateTime(item.end_date)}</Th>
@@ -155,14 +146,16 @@ const ILab = () => {
                       <StatusCell value={item.status} />
                     </Td>
                   </Tr>
-                  <Tr key={uid()} isExpanded={isResultExpanded(item.id)}>
-                    <Td colSpan={8}>
-                      <ExpandableRowContent>
-                        <IlabRowContent item={item} />
-                      </ExpandableRowContent>
-                    </Td>
-                  </Tr>
-                </>
+                  {isResultExpanded(item.id) && (
+                    <Tr key={`expanded-${item.id}`} isExpanded>
+                      <Td colSpan={8}>
+                        <ExpandableRowContent>
+                          <IlabRowContent item={item} />
+                        </ExpandableRowContent>
+                      </Td>
+                    </Tr>
+                  )}
+                </Fragment>
               ))}
             </Tbody>
           </Table>
