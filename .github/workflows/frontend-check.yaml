@@ -16,7 +16,8 @@ jobs:
       - name: look
         run: ls .
 
-      - name: ls ./frontend
+      - name: ls frontend
+        run: ./frontend
 
       - name: Cypress install
         uses: cypress-io/github-action@v6
