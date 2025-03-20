@@ -26,6 +26,8 @@ const initialState = {
     { name: "CPU", value: "cpu" },
     { name: "Node Name", value: "nodeName" },
     { name: "Status", value: "jobStatus" },
+    { name: "Is Formal", value: "formal" },
+    { name: "CI System", value: "ciSystem" },
   ],
   selectedFilters: [
     { name: "benchmark", value: [] },
@@ -34,6 +36,8 @@ const initialState = {
     { name: "cpu", value: [] },
     { name: "nodeName", value: [] },
     { name: "jobStatus", value: [] },
+    { name: "ciSystem", value: [] },
+    { name: "formal", value: [] },
   ],
   clusterMetaData: [
     { name: "Release Binary", value: "releaseStream" },

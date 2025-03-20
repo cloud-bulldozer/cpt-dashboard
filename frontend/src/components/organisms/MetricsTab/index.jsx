@@ -16,9 +16,18 @@ import MetricCard from "@/components/molecules/MetricCard";
 import PropTypes from "prop-types";
 import { useState } from "react";
 
+const titleMap = {
+  total: "No. of jobs",
+  successCount: "Success",
+  failureCount: "Failure",
+  othersCount: "Others",
+};
+
 const MetricsTab = (props) => {
   const [expanded, setExpanded] = useState("metrics-toggle");
-  const { summary } = props;
+  const { updateSelectedFilter, navigation, type, appliedFilters, summary } =
+    props;
+
   const onToggle = (id) => {
     if (id === expanded) {
       setExpanded("");
@@ -28,27 +37,28 @@ const MetricsTab = (props) => {
   };
   const removeStatusFilter = () => {
     if (
-      Array.isArray(props.appliedFilters["jobStatus"]) &&
-      props.appliedFilters["jobStatus"].length > 0
+      Array.isArray(appliedFilters["jobStatus"]) &&
+      appliedFilters["jobStatus"].length > 0
     ) {
-      props.appliedFilters["jobStatus"].forEach((element) => {
-        props.updateSelectedFilter("jobStatus", element, true);
-        removeAppliedFilters(
-          "jobStatus",
-          element,
-          props.navigation,
-          props.type
-        );
+      appliedFilters["jobStatus"].forEach((element) => {
+        updateSelectedFilter("jobStatus", element, true);
+        removeAppliedFilters("jobStatus", element, navigation, type);
       });
     }
   };
   const applyStatusFilter = (value) => {
-    props.updateSelectedFilter("jobStatus", value, true);
-    setAppliedFilters(props.navigation, props.type);
+    updateSelectedFilter("jobStatus", value, true);
+    setAppliedFilters(navigation, type);
   };
   const applyOtherFilter = () => {
     removeStatusFilter();
-    setOtherSummaryFilter(props.type);
+    setOtherSummaryFilter(type);
+  };
+  const filterFuncMap = {
+    total: removeStatusFilter,
+    successCount: () => applyStatusFilter("success"),
+    failureCount: () => applyStatusFilter("failure"),
+    othersCount: applyOtherFilter,
   };
   return (
     <Accordion togglePosition="start">
@@ -67,33 +77,20 @@ const MetricsTab = (props) => {
           id="metrics-toggle"
           isHidden={expanded !== "metrics-toggle"}
         >
-          <MetricCard
-            title={"No. of Jobs"}
-            clickHandler={removeStatusFilter}
-            footer={summary?.total}
-          />
-          <MetricCard
-            title={"Success"}
-            clickHandler={applyStatusFilter}
-            footer={summary?.successCount}
-          />
-          <MetricCard
-            title={"Failure"}
-            clickHandler={applyStatusFilter}
-            footer={summary?.failureCount}
-          />
-          <MetricCard
-            title={"Others"}
-            footer={summary?.othersCount}
-            clickHandler={applyOtherFilter}
-          />
+          {Object.entries(summary).map(([key, value]) => (
+            <MetricCard
+              key={key}
+              title={titleMap[key]}
+              clickHandler={() => filterFuncMap[key]?.()}
+              footer={value}
+            />
+          ))}
         </AccordionContent>
       </AccordionItem>
     </Accordion>
   );
 };
 MetricsTab.propTypes = {
-  totalItems: PropTypes.number,
   summary: PropTypes.object,
   type: PropTypes.string,
   updateSelectedFilter: PropTypes.func,
