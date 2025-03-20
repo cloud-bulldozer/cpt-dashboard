@@ -141,13 +141,16 @@ async def parseApiResults(data: dict):
 async def parseImageResults(data: dict):
     totals = {"latency": 0.0, "success_count": 0.0, "failure_count": 0.0}
     datapoints = data["aggregations"]["uuid"]["buckets"]
+    # if sample size is zero, then our estimates are zero
+    if datapoints == 0:
+        return totals
     for each in datapoints:
         safe_add(each, totals, "latency", "latency")
         safe_add(each, totals, "success_count", "success_count")
         safe_add(each, totals, "failure_count", "failure_count")
-    totals["latency"] /= max(len(datapoints), 1)
-    totals["success_count"] /= max(len(datapoints), 1)
-    totals["failure_count"] /= max(len(datapoints), 1)
+    totals["latency"] /=len(datapoints)
+    totals["success_count"] /= len(datapoints)
+    totals["failure_count"] /= len(datapoints)
     return totals
 
 
