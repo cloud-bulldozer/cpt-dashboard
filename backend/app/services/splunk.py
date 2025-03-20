@@ -130,7 +130,8 @@ class SplunkService:
                     "values(test_type) AS benchmark, "
                     "values(ocp_version) AS ocpVersion, "
                     "values(ocp_build) AS releaseStream "
-                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream"
+                    "values(formal) AS isFormal "
+                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream, isFormal, total_records"
                 )
                 # Run Splunk search asynchronously using `oneshot`
                 results_reader = await asyncio.to_thread(
@@ -142,9 +143,7 @@ class SplunkService:
                 )
 
                 # Parse the results
-                decoded_data = orjson.loads(
-                    results_reader.read()
-                )  # Faster JSON parsing
+                decoded_data = orjson.loads(results_reader.read())
                 value = decoded_data.get("results", [])
                 total_records = int(value[0].get("total_records", 0)) if value else 0
 
