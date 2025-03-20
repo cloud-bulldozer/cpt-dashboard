@@ -145,9 +145,9 @@ async def parseImageResults(data: dict):
         safe_add(each, totals, "latency", "latency")
         safe_add(each, totals, "success_count", "success_count")
         safe_add(each, totals, "failure_count", "failure_count")
-    totals["latency"] /= len(datapoints)
-    totals["success_count"] /= len(datapoints)
-    totals["failure_count"] /= len(datapoints)
+    totals["latency"] /= max(len(datapoints), 1)
+    totals["success_count"] /= max(len(datapoints), 1)
+    totals["failure_count"] /= max(len(datapoints), 1)
     return totals
 
 
