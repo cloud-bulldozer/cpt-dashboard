@@ -1,8 +1,15 @@
 [project]
 name = "openshift_perfscale_api"
+requires-python = "^3.9"
+dynamic = ["dependencies"]
 version = "0.1.1"
 description = "Python transformer of OpenShift performance and scale test results"
 authors = [{name = "mleader", email = "mleader@redhat.com"}]
+
+[tool.poetry]
+packages = [
+    { include = "app" }
+]
 
 [tool.poetry.dependencies]
 aiohttp = "^3.7.4"
@@ -12,6 +19,7 @@ elasticsearch = "7.13.4"
 fastapi = "^0.104.1"
 httptools = "^0.2.0"
 httpx = "^0.18.1"
+numpy = "1.26.4"
 orjson = "^3.5.3"
 pandas = "1.2.4"
 pydantic = "2.3.0"
