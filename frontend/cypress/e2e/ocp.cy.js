@@ -14,7 +14,7 @@ describe('ocp user journey', () => {
       .should("not.be.visible");
   });
 
-  it.only("expands a table row's details row to cluser config and benchmark results", () => {
+  it.only("expands a table row's details row to display cluser config and benchmark results", () => {
     cy.findByTestId("main_data_table")
       .get("tbody")
       .find(`[data-ouia-component-type="PF5/TableRow"]`, 
@@ -22,21 +22,61 @@ describe('ocp user journey', () => {
       .as("table_row")
       .first();
 
-    // each table row is paired with a subsequent hidden row
-    // that can be expanded to display details
+    // in the list of table row elements, each table row is 
+    // paired with a subsequent hidden row that can be expanded
+    // to display details
     cy.get("@table_row")
       .next()
-      .as("expandable_row")        
+      .as("expandable_rows")        
       .should("not.be.visible");
 
     cy.get("@table_row")
       .find(`[data-ouia-component-type="PF5/Button"]`, 
           {expanded: false})
       .first()
+      .as("tgl_details")
       .click();
 
-    cy.get("@expandable_row")
-      .should("be.visible");        
+    // cy.findByTestId("metadata-table")
+    // cy.find(`[data-ouia-component-id="metadata-table"]`)
+      // .should("be.visible");
+
+    cy.get("@expandable_rows")
+      .first()
+      .should("be.visible");
+      // .find(".loader")
+      // .should("not.exist");      
+
+    cy.get("@expandable_rows")
+      .first()
+      .find(`[data-ouia-component-id="metadata-table"]`)
+      // .findByTestId("metadata-table")
+      .should("be.visible");
+    
+    cy.get("@expandable_rows")
+      .first()
+      .find(".loader")
+      .should("not.exist");
+
+    cy.get("@expandable_rows")
+      .first()  
+      // .find(`[data-ouia-component-type="PF5/Card"]`)
+      .find(`[class="js-plotly-plot"]`)
+      .should("be.visible");
+    
+      // .contains("Cluster config");
+      // .within(($exp_row) => {
+        // cy.wrap($exp_row)
+          // .contains("r2d2c3p0");
+        // $exp_row.contains("Cluster config")
+      // })
+
+
+    // close expandable row
+    cy.get("@tgl_details")
+      .click();
+    cy.get("@expandable_rows")
+      .should("not.be.visible");
 
   });
 });
