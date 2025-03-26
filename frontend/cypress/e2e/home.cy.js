@@ -34,29 +34,4 @@ describe('basic user journey', () => {
       .scrollIntoView()
       .should("be.visible");
   });
-
-  // it.only("scrolls to bottom and paginates", () => {
-  //   cy.findByTestId("side_menu_options")
-  //     .should("be.visible")
-  //     .within(() => {
-  //       cy.findByText("OCP")
-  //         .should("be.visible")
-  //         .click();
-  //     });
-  //   cy.findByTestId("main_layout_toggle")  
-  //     .click();
-  //   cy.findByTestId("side_menu_options")
-  //     .should("not.be.visible");
-
-  //   cy.findByTestId("data_table_pagination")
-  //     .scrollIntoView()
-  //     .should("be.visible")
-  //     // .within(() => {
-  //     //   cy.find(['data-action="next"'])
-  //     //     .click();
-  //     // })
-  //     // .find(['data-action="next"'])
-  //     // .click();
-  // });
-
 });
