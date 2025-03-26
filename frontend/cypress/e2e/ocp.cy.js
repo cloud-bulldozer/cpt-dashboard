@@ -45,11 +45,6 @@ describe('ocp user journey', () => {
       .first()
       .find(`[data-ouia-component-id="metadata-table"]`)
       .should("be.visible");
-    
-    // cy.get("@expandable_rows")
-    //   .first()
-    //   .find(".loader")
-    //   .should("not.exist");
 
     cy.get("@expandable_rows")
       .first()  
@@ -61,6 +56,5 @@ describe('ocp user journey', () => {
       .click();
     cy.get("@expandable_rows")
       .should("not.be.visible");
-
   });
 });
