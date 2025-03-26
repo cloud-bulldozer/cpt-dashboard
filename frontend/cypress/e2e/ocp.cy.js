@@ -37,40 +37,24 @@ describe('ocp user journey', () => {
       .as("tgl_details")
       .click();
 
-    // cy.findByTestId("metadata-table")
-    // cy.find(`[data-ouia-component-id="metadata-table"]`)
-      // .should("be.visible");
-
     cy.get("@expandable_rows")
       .first()
       .should("be.visible");
-      // .find(".loader")
-      // .should("not.exist");      
 
     cy.get("@expandable_rows")
       .first()
       .find(`[data-ouia-component-id="metadata-table"]`)
-      // .findByTestId("metadata-table")
       .should("be.visible");
     
-    cy.get("@expandable_rows")
-      .first()
-      .find(".loader")
-      .should("not.exist");
+    // cy.get("@expandable_rows")
+    //   .first()
+    //   .find(".loader")
+    //   .should("not.exist");
 
     cy.get("@expandable_rows")
       .first()  
-      // .find(`[data-ouia-component-type="PF5/Card"]`)
       .find(`[class="js-plotly-plot"]`)
       .should("be.visible");
-    
-      // .contains("Cluster config");
-      // .within(($exp_row) => {
-        // cy.wrap($exp_row)
-          // .contains("r2d2c3p0");
-        // $exp_row.contains("Cluster config")
-      // })
-
 
     // close expandable row
     cy.get("@tgl_details")
