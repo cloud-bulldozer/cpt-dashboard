@@ -14,7 +14,7 @@ describe('ocp user journey', () => {
       .should("not.be.visible");
   });
 
-  it.only("expands a table row's details row to display cluser config and benchmark results", () => {
+  it.only("expands a table row's details row to display cluster config and benchmark results", () => {
     cy.findByTestId("main_data_table")
       .get("tbody")
       .find(`[data-ouia-component-type="PF5/TableRow"]`, 
@@ -41,11 +41,13 @@ describe('ocp user journey', () => {
       .first()
       .should("be.visible");
 
+    // cluster config input
     cy.get("@expandable_rows")
       .first()
       .find(`[data-ouia-component-id="metadata-table"]`)
       .should("be.visible");
 
+    // benchmark results plot
     cy.get("@expandable_rows")
       .first()  
       .find(`[class="js-plotly-plot"]`)
