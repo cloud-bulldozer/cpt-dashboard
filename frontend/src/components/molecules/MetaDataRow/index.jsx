@@ -54,7 +54,7 @@ const MetadataRow = (props) => {
       <Title headingLevel="h4" className="type_heading">
         {props.heading}
       </Title>
-      <Table className="box" key={uid()} aria-label="metadata-table">
+      <Table className="box" key={uid()} aria-label="metadata-table" ouiaId="metadata-table">
         <Thead>
           <Tr>
             <Th width={20} style={{ textAlign: "left" }}>
