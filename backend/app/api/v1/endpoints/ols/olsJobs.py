@@ -3,21 +3,21 @@ from fastapi import Response
 from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from ...commons.ocp import getData
-from ...commons.example_responses import ocp_200_response, response_422
+from ...commons.example_responses import ols_200_response, response_422
 from fastapi.param_functions import Query
 
 router = APIRouter()
 
 
 
-@router.get('/api/v1/ocp/jobs',
+@router.get('/api/v1/ols/jobs',
             summary="Returns a job list",
             description="Returns a list of jobs in the specified dates. \
             If not dates are provided the API will default the values. \
             `startDate`: will be set to the day of the request minus 5 days.\
             `endDate`: will be set to the day of the request.",
             responses={
-                200: ocp_200_response(),
+                200: ols_200_response(),
                 422: response_422(),
         },)
 async def jobs(start_date: date = Query(None, description="Start date for searching jobs, format: 'YYYY-MM-DD'", examples=["2020-11-10"]),
@@ -34,7 +34,7 @@ async def jobs(start_date: date = Query(None, description="Start date for search
         return Response(content=json.dumps({'error': "invalid date format, start_date must be less than end_date"}), status_code=422)
 
     results = await getData(start_date, end_date, 'ocp.elasticsearch')
-    cleanResults = results[results['benchmark'] != "ols-load-generator"]
+    cleanResults = results[results['benchmark'] == "ols-load-generator"]
 
     if len(cleanResults) >= 1:
         response = {
