@@ -1,0 +1,66 @@
+[ocp.elasticsearch]
+url = ""
+indice = ""
+username = ""
+password = ""
+
+[ocp.elasticsearch.internal]
+url = ''
+prefix = ''
+indice = ''
+username = ''
+password = ''
+
+[hce.elasticsearch]
+url = ""
+indice = ""
+
+[quay.elasticsearch]
+url=''
+indice=''
+username=''
+password=','
+
+[telco.config]
+job_url = ''
+
+[telco.splunk]
+host = ''
+port = 8089
+indice = ''
+username = ''
+password = ''
+
+[airflow]
+url = ""
+username = ""
+password = ""
+
+[ocp-server]
+port = 8000
+
+[ocm.elasticsearch]
+url = ""
+indice = ""
+username = ""
+password = ""
+
+[elasticsearch]
+    url = ""
+    indice = ""
+    username = ""
+    password = ""
+
+[jira]
+    url = ""
+    personal_access_token = ""
+
+[horreum]
+    url = ""
+    username = ""
+    password = ""
+
+[ilab.crucible]
+    url = "http://localhost:9200"
+    username = ""
+    password = ""
