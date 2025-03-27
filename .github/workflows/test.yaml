@@ -1,0 +1,47 @@
+name: Python checks
+
+on:
+    push:
+        branches: ["main"]
+        tags-ignore: ["**"]
+    pull_request:
+
+env:
+    COVERAGE: ${{ github.workspace }}/coverage
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9.20"]
+
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox>=4.19
+      - name: Check for lint
+        # Report errors but don't fail until we achieve stability!
+        continue-on-error: true
+        run: |
+          cd backend
+          tox -e format,isort,lint
+      - name: Run unit tests
+        run: |
+          cd backend
+          tox -e unit
+      - name: Add coverage data to conversation
+        run: cat $COVERAGE/coverage.txt >> $GITHUB_STEP_SUMMARY
+      - name: Publish coverage data
+        uses: actions/upload-artifact@v4
+        with:
+            name: Coverage for ${{ github.event.head_commit.id }}
+            path: ${{ env.COVERAGE }}/html
+            if-no-files-found: warn
+            retention-days: 30
