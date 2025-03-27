@@ -1,6 +1,6 @@
 from urllib.parse import urlparse
 
-from opensearchpy import Opensearch
+from opensearchpy import OpenSearch
 
 from vyper import v
 
@@ -39,7 +39,7 @@ def seed_db(srch_client):
 def search_client(
         host: str = "localhost", port: int = "9200", 
         username: str = "admin", password: str = "admin"):
-    return Opensearch(
+    return OpenSearch(
         hosts = [{"host": host, "port": port}],
         http_compress = True,
         http_auth = (username, password),
