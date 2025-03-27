@@ -23,7 +23,7 @@ const TasksInfo = (props) => {
     [config?.startDate]
   );
   const endDate = useMemo(
-    () => new Date(config?.endDate).valueOf(),
+    () => new Date(config?.endDate).valueOf() + 10 * 60 * 1000,
     [config?.endDate]
   );
 
@@ -52,7 +52,7 @@ const TasksInfo = (props) => {
             ? `(${formatTime(config?.jobDuration)})`
             : "Skipped"}
         </div>
-        {props.type === "ocp" && (
+        {(props.type === "ocp" || props.type === "quay" || props.type === "ols") && (
           <GrafanaLink
             config={config}
             startDate={startDate}
