@@ -1,5 +1,6 @@
 import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
+  fetchNextJobs,
   setPage,
   setPageOptions,
   sliceTableRows,
@@ -8,11 +9,14 @@ import {
 import PropTypes from "prop-types";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const RenderPagination = (props) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const perPageOptions = [
+    { title: "10", value: 10 },
     { title: "25", value: 25 },
     { title: "50", value: 50 },
     { title: "100", value: 100 },
@@ -20,19 +24,26 @@ const RenderPagination = (props) => {
 
   const onSetPage = useCallback(
     (_evt, newPage, _perPage, startIdx, endIdx) => {
-      dispatch(setPage(newPage, props.type));
+      dispatch(setPage(newPage, props.type, navigate));
+
       dispatch(sliceTableRows(startIdx, endIdx, props.type));
     },
-    [dispatch, props.type]
+    [dispatch, props.type, navigate]
   );
   const onPerPageSelect = useCallback(
     (_evt, newPerPage, newPage, startIdx, endIdx) => {
-      dispatch(setPageOptions(newPage, newPerPage, props.type));
+      dispatch(setPageOptions(newPage, newPerPage, props.type, navigate));
+
       dispatch(sliceTableRows(startIdx, endIdx, props.type));
     },
-    [dispatch, props.type]
+    [dispatch, props.type, navigate]
   );
 
+  const checkAndFetch = (_evt, newPage) => {
+    if (props.type === "ilab") {
+      dispatch(fetchNextJobs(newPage));
+    }
+  };
   return (
     <Pagination
       itemCount={props?.items}
@@ -40,9 +51,11 @@ const RenderPagination = (props) => {
       perPage={props.perPage}
       page={props.page}
       variant={PaginationVariant.bottom}
+      onNextClick={checkAndFetch}
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}
+      onPageInput={checkAndFetch}
     />
   );
 };
