@@ -130,7 +130,7 @@ const TableFilter = (props) => {
           </ToolbarContent>
         )}
 
-        <ToolbarContent className="date-filter">
+        <ToolbarContent className="date-filter" ouiaId="date_filter">
           <ToolbarItem>
             <DatePicker
               onChange={(date) =>

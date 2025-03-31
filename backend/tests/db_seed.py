@@ -1,7 +1,7 @@
+import time
+
 from urllib.parse import urlparse
-
-from opensearchpy import OpenSearch
-
+from opensearchpy import OpenSearch, OpenSearchException, Search
 from vyper import v
 
 
@@ -13,6 +13,7 @@ def get_config():
     v.add_config_path(".")
     v.read_in_config()
     return v
+
 
 
 def seed_db(srch_client):
@@ -50,15 +51,81 @@ def search_client(
     )
 
 
+def health_check(client_):
+    indices = client_.indices.get_alias(index="*")
+    print(f"found indices {indices}")
+
+
 def main():
+    ok = False
+    start = time.time()
     cfg = get_config()
     url = urlparse(cfg.get("ocp.elasticsearch.url"))
-    seed_db(search_client(
+
+    while not ok:
+      try:
+          client_ = search_client(
+              host=url.hostname,
+              port=url.port,
+              username=cfg.get("ocp.elasticsearch.username"),
+              password=cfg.get("ocp.elasticsearch.password")
+          )
+          health_check(client_)
+          ok = True
+          print(f"Opensearch ready after {time.time()-start:.3f} seconds")
+      except OpenSearchException as exc:
+          print(f"Opensearch isn't ready: {str(exc)!r}")
+          time.sleep(4)
+    
+    seed_db(client_)
+
+    # index_ready = False
+    # while not index_ready:
+    #     try:
+    #         health_check(client_)
+    #         q = {
+    #           "size": 5,
+    #           "query": {
+    #               "match_all": {}
+    #           }
+    #         }
+    #         s = Search(
+    #             using=client_, index="perf_scale_ci",
+    #         ).update_from_dict(q)
+    #         for h in s:
+    #             print(h)
+    #         print(f'hits total {s.count()}')     
+    #         index_ready = True
+    #     except Exception as exc:
+    #         print(f"Opensearch index isn't ready: {str(exc)!r}")
+    #         time.sleep(4)
+    
+
+def query_ocp_index():
+    cfg = get_config()              
+    url = urlparse(cfg.get("ocp.elasticsearch.url"))
+    client_ = search_client(
         host=url.hostname,
         port=url.port,
         username=cfg.get("ocp.elasticsearch.username"),
-        password=cfg.get("ocp.elasticsearch.password")
-    ))
+          password=cfg.get("ocp.elasticsearch.password")
+    )
+    q = {
+      "size": 5,
+      "query": {
+          "match_all": {}
+      }
+    }
+    # response = client_.search(
+    #     body=q,
+    #     index="perf_scale_ci"
+    # )
+    s = Search(
+        using=client_, index="perf_scale_ci",
+    ).update_from_dict(q)
+    for h in s:
+        print(h)
+    print(f'hits total {s.count()}')      
 
 
 if __name__ == "__main__":

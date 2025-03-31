@@ -12,9 +12,11 @@ if [[ -n "${POD_NAME}" ]] ;then
     NAME="${POD_NAME}-opensearch"
 else
     POD=""
-    PORTS="-p 9201:9200 -p 9601:9600"
+    PORTS="-p 9200:9200 -p 9600:9600"
     NAME="opensearch"
 fi
+
+podman rm -f ${NAME}
 
 podman run -d ${POD} --name "${NAME}" \
     -v "${SETUP}"/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z \
@@ -23,6 +25,7 @@ podman run -d ${POD} --name "${NAME}" \
     -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" \
     -e "DISABLE_SECURITY_PLUGIN=true" \
     docker.io/opensearchproject/opensearch:latest
+# podman cp ./fixtures/search_db_snapshots/snapshot.tar.gz ${NAME}:/var/tmp/snapshot.tar.gz    
 echo "Unpacking snapshot inside container"
 podman exec "${NAME}" bash -c 'cd /var/tmp ; tar xfz snapshot.tar.gz'
 echo "Done"

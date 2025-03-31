@@ -1,4 +1,4 @@
-name: Cypress tests
+name: Cypress end-to-end tests
 on: 
   push:
     branches:
@@ -6,7 +6,23 @@ on:
       - revamp # rm when branch is deleted
   pull_request:
 jobs:
-  install:
+  data-svc:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: install poetry
+        runs: |
+          pipx install poetry==2.1.0
+          cd backend
+          poetry install
+      - name: start data service backend
+        runs: poetry run scripts/start.sh
+
+  start-db:
+    runs-on: 
+
+  install-gui:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
