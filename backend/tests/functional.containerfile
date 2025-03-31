@@ -9,7 +9,6 @@ RUN dnf install -y pip gcc python3-devel gcc-c++
 RUN mkdir -p /backend/tests
 
 # COPY tests/functional/*.py /backend/tests/functional/
-# WORKDIR /backend
 COPY pyproject.toml /backend/pyproject.toml
 COPY poetry.lock /backend/poetry.lock
 

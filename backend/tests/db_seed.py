@@ -15,7 +15,6 @@ def get_config():
     return v
 
 
-
 def seed_db(srch_client):
     repo_name = "my_repository"
     snapshot_name = "my_snapshot"
