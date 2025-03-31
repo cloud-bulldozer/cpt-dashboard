@@ -51,7 +51,7 @@ def search_client(
     )
 
 
-def health_check(client_):
+def get_indices(client_):
     indices = client_.indices.get_alias(index="*")
     print(f"found indices {indices}")
 
@@ -70,7 +70,7 @@ def main():
               username=cfg.get("ocp.elasticsearch.username"),
               password=cfg.get("ocp.elasticsearch.password")
           )
-          health_check(client_)
+          get_indices(client_)
           ok = True
           print(f"Opensearch ready after {time.time()-start:.3f} seconds")
       except OpenSearchException as exc:
@@ -79,27 +79,6 @@ def main():
     
     seed_db(client_)
 
-    # index_ready = False
-    # while not index_ready:
-    #     try:
-    #         health_check(client_)
-    #         q = {
-    #           "size": 5,
-    #           "query": {
-    #               "match_all": {}
-    #           }
-    #         }
-    #         s = Search(
-    #             using=client_, index="perf_scale_ci",
-    #         ).update_from_dict(q)
-    #         for h in s:
-    #             print(h)
-    #         print(f'hits total {s.count()}')     
-    #         index_ready = True
-    #     except Exception as exc:
-    #         print(f"Opensearch index isn't ready: {str(exc)!r}")
-    #         time.sleep(4)
-    
 
 def query_ocp_index():
     cfg = get_config()              
@@ -116,10 +95,6 @@ def query_ocp_index():
           "match_all": {}
       }
     }
-    # response = client_.search(
-    #     body=q,
-    #     index="perf_scale_ci"
-    # )
     s = Search(
         using=client_, index="perf_scale_ci",
     ).update_from_dict(q)
