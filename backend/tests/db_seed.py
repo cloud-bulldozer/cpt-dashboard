@@ -103,19 +103,6 @@ def main():
       except OpenSearchException as exc:
         print(f"Opensearch isn't ready: {str(exc)!r}")
         time.sleep(4)
-    
-    # seed_db(client_)
-
-
-       
-    # response = client_.indices.get_alias(index="*")
-    # print(f'test data index found: {cfg.get("ocp.elasticsearch.indice") in response.keys()}')
-    # print(f'at least 5 hits: {ocp_index_hits() >= 5}')
-
-
-
-
-    
 
 
 if __name__ == "__main__":
