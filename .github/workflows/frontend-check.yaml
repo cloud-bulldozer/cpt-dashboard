@@ -15,8 +15,16 @@ jobs:
         run: |
           alias podman=docker
           ./backend/tests/e2e_backend.sh
-          ./pod-e2e.sh
 
+  e2e-containerized:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: setup application backend containers
+        run: |
+          alias podman=docker
+          ./pod-e2e.sh      
 
   install-gui:
     runs-on: ubuntu-24.04

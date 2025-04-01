@@ -17,10 +17,10 @@ set -e
 
 # ./backend/tests/e2e_backend.sh
 
+# npm run --prefix frontend cypress:run:ci
+
 echo "building frontend test image"
 podman build -f frontend/e2e_frontend.containerfile --tag e2e-frontend ./frontend
-
-# npm run --prefix frontend cypress:run:ci
 
 podman run --rm -it --pod=${POD_NAME} --name=front e2e-frontend
 exit $?
