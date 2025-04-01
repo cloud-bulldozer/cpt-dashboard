@@ -9,13 +9,15 @@ jobs:
   install-podman:
     runs-on: ubuntu-latest
     steps:
-      - name: install podman
-        run: apt-get -y install podman
+      # - name: install podman
+      #   run: apt-get -y install podman
       - name: Checkout
         uses: actions/checkout@v4
       - name: run pod composed e2e gui tests
-        run: ./pod-e2e.sh
-        
+        run: |
+          alias podman=docker
+          ./pod-e2e.sh
+
   # data-svc:
   #   runs-on: ubuntu-24.04
   #   steps:
