@@ -52,6 +52,8 @@ describe('ocp user journey', () => {
           .get(":hidden")
           .type(end_date, {force: true});
       }); 
+    
+    cy.screenshot("main-data-table")
 
     cy.findByTestId("main_data_table")
       .get("tbody")
