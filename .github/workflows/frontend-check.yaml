@@ -6,7 +6,7 @@ on:
       - revamp # rm when branch is deleted
   pull_request:
 jobs:
-  install-podman:
+  cypress-run-ci:
     runs-on: ubuntu-latest
     steps:
       # - name: install podman

@@ -15,8 +15,8 @@ describe('ocp user journey', () => {
   });
 
   it("expands a table row's details row to display cluster config metadata table", () => {
-    const start_date = "2025-03-01"
-    const end_date = "2025-03-30"
+    const start_date = "2024-03-01"
+    const end_date = "2024-03-30"
 
     // find date filter inputs
     cy.findByTestId("data_table_filter")      
