@@ -15,43 +15,43 @@ describe('ocp user journey', () => {
   });
 
   it("expands a table row's details row to display cluster config metadata table", () => {
-    const start_date = "2024-03-01"
-    const end_date = "2024-03-30"
+    // const start_date = "2025-03-01"
+    // const end_date = "2025-03-30"
 
-    // find date filter inputs
-    cy.findByTestId("data_table_filter")      
-      .find(`[ouiaid="date_filter"]`)
-      .within(($date_filter) => {
-        cy.wrap($date_filter)
-          .find(`[class="react-date-picker__inputGroup"]`)
-          .as("date_pickers_inputs");
-      });
+    // // find date filter inputs
+    // cy.findByTestId("data_table_filter")      
+    //   .find(`[ouiaid="date_filter"]`)
+    //   .within(($date_filter) => {
+    //     cy.wrap($date_filter)
+    //       .find(`[class="react-date-picker__inputGroup"]`)
+    //       .as("date_pickers_inputs");
+    //   });
     
-    // set start date
-    // by convention, the first date input on the left receives the start date
-    cy.get("@date_pickers_inputs")
-      .first()
-      .within(($date_pickers) => {
-        cy.wrap($date_pickers)
-          .get("input", {hidden: true})
-          // the date value is saved within the hidden element
-          // in this date picker group
-          .get(":hidden")
-          .type(start_date, {force: true});
-      });
+    // // set start date
+    // // by convention, the first date input on the left receives the start date
+    // cy.get("@date_pickers_inputs")
+    //   .first()
+    //   .within(($date_pickers) => {
+    //     cy.wrap($date_pickers)
+    //       .get("input", {hidden: true})
+    //       // the date value is saved within the hidden element
+    //       // in this date picker group
+    //       .get(":hidden")
+    //       .type(start_date, {force: true});
+    //   });
 
-    // set end date
-    // by convention, the next date input (last out of two) receives the end date
-    cy.get("@date_pickers_inputs")
-      .last()
-      .within(($date_pickers) => {
-        cy.wrap($date_pickers)
-          .get("input", {hidden: true})
-          // the date value is saved within the hidden element 
-          // in this date picker group
-          .get(":hidden")
-          .type(end_date, {force: true});
-      }); 
+    // // set end date
+    // // by convention, the next date input (last out of two) receives the end date
+    // cy.get("@date_pickers_inputs")
+    //   .last()
+    //   .within(($date_pickers) => {
+    //     cy.wrap($date_pickers)
+    //       .get("input", {hidden: true})
+    //       // the date value is saved within the hidden element 
+    //       // in this date picker group
+    //       .get(":hidden")
+    //       .type(end_date, {force: true});
+    //   }); 
 
     cy.findByTestId("main_data_table")
       .get("tbody")

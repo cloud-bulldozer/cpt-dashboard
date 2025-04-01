@@ -63,18 +63,20 @@ def main():
 
     while not ok:
       try:
-          client_ = search_client(
-              host=url.hostname,
-              port=url.port,
-              username=cfg.get("ocp.elasticsearch.username"),
-              password=cfg.get("ocp.elasticsearch.password")
-          )
-          get_indices(client_)
-          ok = True
-          print(f"Opensearch ready after {time.time()-start:.3f} seconds")
+        client_ = search_client(
+            host=url.hostname,
+            port=url.port,
+            username=cfg.get("ocp.elasticsearch.username"),
+            password=cfg.get("ocp.elasticsearch.password")
+        )
+        #   get_indices(client_)
+        response = client_.cluster.health(wait_for_status="yellow")
+        print(f"cluster health: {response['health']}")    
+        ok = True
+        print(f"Opensearch ready after {time.time()-start:.3f} seconds")
       except OpenSearchException as exc:
-          print(f"Opensearch isn't ready: {str(exc)!r}")
-          time.sleep(4)
+        print(f"Opensearch isn't ready: {str(exc)!r}")
+        time.sleep(4)
     
     seed_db(client_)
 
