@@ -34,6 +34,7 @@ def seed_db(srch_client):
     )
     print(f"restore snapshot: {response}")
     assert response["accepted"] is True
+    return True
 
 
 def search_client(
@@ -50,38 +51,7 @@ def search_client(
     )
 
 
-def get_indices(client_):
-    indices = client_.indices.get_alias(index="*")
-    print(f"found indices {indices}")
-
-
-def main():
-    ok = False
-    start = time.time()
-    cfg = get_config()
-    url = urlparse(cfg.get("ocp.elasticsearch.url"))
-
-    while not ok:
-      try:
-        client_ = search_client(
-            host=url.hostname,
-            port=url.port,
-            username=cfg.get("ocp.elasticsearch.username"),
-            password=cfg.get("ocp.elasticsearch.password")
-        )
-        #   get_indices(client_)
-        response = client_.cluster.health(wait_for_status="yellow")
-        print(f"cluster health: {response['status']}")    
-        ok = True
-        print(f"Opensearch ready after {time.time()-start:.3f} seconds")
-      except OpenSearchException as exc:
-        print(f"Opensearch isn't ready: {str(exc)!r}")
-        time.sleep(4)
-    
-    seed_db(client_)
-
-
-def query_ocp_index():
+def ocp_index_hits():
     cfg = get_config()              
     url = urlparse(cfg.get("ocp.elasticsearch.url"))
     client_ = search_client(
@@ -91,7 +61,6 @@ def query_ocp_index():
           password=cfg.get("ocp.elasticsearch.password")
     )
     q = {
-      "size": 5,
       "query": {
           "match_all": {}
       }
@@ -99,9 +68,54 @@ def query_ocp_index():
     s = Search(
         using=client_, index="perf_scale_ci",
     ).update_from_dict(q)
-    for h in s:
-        print(h)
-    print(f'hits total {s.count()}')      
+    return s.count()
+
+
+def main():
+    ok = False
+    start = time.time()
+    cfg = get_config()
+    url = urlparse(cfg.get("ocp.elasticsearch.url"))
+    seeded = False
+
+    while not ok:
+      try:
+        client_ = search_client(
+            host=url.hostname,
+            port=url.port,
+            username=cfg.get("ocp.elasticsearch.username"),
+            password=cfg.get("ocp.elasticsearch.password")
+        )
+        response = client_.cluster.health(wait_for_status="yellow")
+        print(f"cluster health: {response['status']}")
+
+        if not seeded:
+           seed_db(client_)
+           seeded = True
+
+        response = client_.indices.get_alias(index="*")
+        print(f'test data index found: {cfg.get("ocp.elasticsearch.indice") in response.keys()}')
+        print(f'at least 5 hits: {ocp_index_hits() >= 5}')       
+
+        ok = True
+        print(f"Opensearch ready after {time.time()-start:.3f} seconds")
+        
+      except OpenSearchException as exc:
+        print(f"Opensearch isn't ready: {str(exc)!r}")
+        time.sleep(4)
+    
+    # seed_db(client_)
+
+
+       
+    # response = client_.indices.get_alias(index="*")
+    # print(f'test data index found: {cfg.get("ocp.elasticsearch.indice") in response.keys()}')
+    # print(f'at least 5 hits: {ocp_index_hits() >= 5}')
+
+
+
+
+    
 
 
 if __name__ == "__main__":

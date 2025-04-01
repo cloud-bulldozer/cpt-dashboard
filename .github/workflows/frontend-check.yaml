@@ -6,71 +6,56 @@ on:
       - revamp # rm when branch is deleted
   pull_request:
 jobs:
-  cypress-run-ci:
+  e2e-setup:
     runs-on: ubuntu-latest
     steps:
-      # - name: install podman
-      #   run: apt-get -y install podman
       - name: Checkout
         uses: actions/checkout@v4
-      - name: run pod composed e2e gui tests
+      - name: setup application backend containers
         run: |
           alias podman=docker
-          ./pod-e2e.sh
+          ./backend/tests/e2e_backend.sh
 
-  # data-svc:
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
-  #     - name: install poetry
-  #       runs: |
-  #         pipx install poetry==2.1.0
-  #         cd backend
-  #         poetry install
-  #     - name: start data service backend
-  #       runs: poetry run scripts/start.sh
+  install-gui:
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # install-gui:
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+      - name: Cypress install
+        uses: cypress-io/github-action@v6
+        with:
+          runTests: false
+          build: npm run build
+          working-directory: ./frontend
 
-  #     - name: Cypress install
-  #       uses: cypress-io/github-action@v6
-  #       with:
-  #         runTests: false
-  #         build: npm run build
-  #         working-directory: ./frontend
+      - name: Save build folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          if-no-files-found: error
+          path: ./frontend/dist
 
-  #     - name: Save build folder
-  #       uses: actions/upload-artifact@v4
-  #       with:
-  #         name: build
-  #         if-no-files-found: error
-  #         path: ./frontend/dist
+  cypress-run:
+    name: Cypress run
+    needs: install
+    runs-on: ubuntu-24.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-  # cypress-run:
-  #   name: Cypress run
-  #   needs: install
-  #   runs-on: ubuntu-24.04
-  #   steps:
-  #     - name: Checkout
-  #       uses: actions/checkout@v4
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: build        
+          path: ./frontend/dist
 
-  #     - name: Download the build folder
-  #       uses: actions/download-artifact@v4
-  #       with:
-  #         name: build        
-  #         path: ./frontend/dist
-
-  #     - name: Cypress run
-  #       uses: cypress-io/github-action@v6
-  #       with:
-  #         start: npm run dev
-  #         browser: chrome
-  #         working-directory: ./frontend
-  #       env:
-  #         # pass GitHub token to detect new build vs re-run build
-  #         GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          start: npm run cypress:run:ci
+          browser: chrome
+          working-directory: ./frontend
+        env:
+          # pass GitHub token to detect new build vs re-run build
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

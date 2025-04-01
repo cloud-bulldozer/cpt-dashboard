@@ -4,7 +4,6 @@ BRANCH=$(git rev-parse --show-toplevel)
 SETUP=${BRANCH}/backend/tests
 
 
-
 if [[ -n "${POD_NAME}" ]] ;then
     echo "Running in POD ${POD_NAME}"
     POD="--pod ${POD_NAME}"
