@@ -19,12 +19,11 @@ podman rm -f ${NAME}
 
 podman run -d ${POD} --name "${NAME}" \
     -v "${SETUP}"/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z \
-    -v "${SETUP}"/fixtures/search_db_snapshots/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z \
     ${PORTS} \
     -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" \
     -e "DISABLE_SECURITY_PLUGIN=true" \
     docker.io/opensearchproject/opensearch:latest
-# podman cp ./fixtures/search_db_snapshots/snapshot.tar.gz ${NAME}:/var/tmp/snapshot.tar.gz    
+podman cp ${SETUP}/fixtures/search_db_snapshots/snapshot.tar.gz ${NAME}:/var/tmp/snapshot.tar.gz    
 echo "Unpacking snapshot inside container"
 podman exec "${NAME}" bash -c 'cd /var/tmp ; tar xfz snapshot.tar.gz'
 echo "Done"
