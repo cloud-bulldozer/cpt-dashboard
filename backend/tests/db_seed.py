@@ -71,7 +71,7 @@ def main():
         )
         #   get_indices(client_)
         response = client_.cluster.health(wait_for_status="yellow")
-        print(f"cluster health: {response['health']}")    
+        print(f"cluster health: {response['status']}")    
         ok = True
         print(f"Opensearch ready after {time.time()-start:.3f} seconds")
       except OpenSearchException as exc:
