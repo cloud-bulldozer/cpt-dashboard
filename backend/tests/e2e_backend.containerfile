@@ -8,10 +8,8 @@ RUN dnf install -y pip gcc python3-devel gcc-c++
 
 RUN mkdir -p /backend/tests
 
-# COPY tests/functional/*.py /backend/tests/functional/
 COPY pyproject.toml /backend/pyproject.toml
 COPY poetry.lock /backend/poetry.lock
-
 COPY app/ /backend/app/
 COPY tests/ /backend/tests/
 
@@ -29,6 +27,4 @@ ENV SERVER=http://localhost:8000
 
 EXPOSE 8000
 
-# ENTRYPOINT ["pytest", "-s", "tests/functional"]
-# CMD ["pytest", "-s", "tests/functional"]
 CMD ["/bin/bash", "./scripts/start.sh"]
