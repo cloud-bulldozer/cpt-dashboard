@@ -38,7 +38,9 @@ jobs:
 
   cypress-run:
     name: Cypress run
-    needs: install
+    needs: 
+      - install-gui
+      - e2e-setup
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
