@@ -6,51 +6,56 @@ on:
       - revamp # rm when branch is deleted
   pull_request:
 jobs:
-  e2e-setup:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-      - name: setup application backend containers
-        run: |
-          alias podman=docker
-          ./backend/tests/e2e_backend.sh
+  # e2e-setup:
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
+  #     - name: setup application backend containers
+  #       run: |
+  #         alias podman=docker
+  #         ./backend/tests/e2e_backend.sh
 
-  install-gui:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
+  # install-gui:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: Checkout
+  #       uses: actions/checkout@v4
 
-      - name: Cypress install
-        uses: cypress-io/github-action@v6
-        with:
-          runTests: false
-          build: npm run build
-          working-directory: ./frontend
+  #     - name: Cypress install
+  #       uses: cypress-io/github-action@v6
+  #       with:
+  #         runTests: false
+  #         build: npm run build
+  #         working-directory: ./frontend
 
-      - name: Save build folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          if-no-files-found: error
-          path: ./frontend/dist
+  #     - name: Save build folder
+  #       uses: actions/upload-artifact@v4
+  #       with:
+  #         name: build
+  #         if-no-files-found: error
+  #         path: ./frontend/dist
 
   cypress-run:
     name: Cypress run
-    needs: 
-      - install-gui
-      - e2e-setup
+    # needs: 
+    #   - install-gui
+    #   - e2e-setup
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Download the build folder
-        uses: actions/download-artifact@v4
-        with:
-          name: build        
-          path: ./frontend/dist
+      - name: setup application backend containers
+        run: |
+          alias podman=docker
+          ./backend/tests/e2e_backend.sh        
+
+      # - name: Download the build folder
+      #   uses: actions/download-artifact@v4
+      #   with:
+      #     name: build        
+      #     path: ./frontend/dist
 
       - name: Cypress run
         uses: cypress-io/github-action@v6
