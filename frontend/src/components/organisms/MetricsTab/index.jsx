@@ -18,7 +18,7 @@ import { useState } from "react";
 
 const MetricsTab = (props) => {
   const [expanded, setExpanded] = useState("metrics-toggle");
-  const { totalItems, summary } = props;
+  const { summary } = props;
   const onToggle = (id) => {
     if (id === expanded) {
       setExpanded("");
@@ -59,6 +59,7 @@ const MetricsTab = (props) => {
           }}
           isExpanded={expanded === "metrics-toggle"}
           id="metrics-toggle"
+          ouiaId="summary_toggle"
         >
           Summary
         </AccordionToggle>
@@ -69,7 +70,7 @@ const MetricsTab = (props) => {
           <MetricCard
             title={"No. of Jobs"}
             clickHandler={removeStatusFilter}
-            footer={totalItems}
+            footer={summary?.total}
           />
           <MetricCard
             title={"Success"}

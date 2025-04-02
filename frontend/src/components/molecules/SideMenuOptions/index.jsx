@@ -50,8 +50,8 @@ const MenuOptions = () => {
 
   return (
     <>
-      <Nav onSelect={onSelect}>
-        <NavList>
+      <Nav onSelect={onSelect} ouiaId="side_menu_options">
+        <NavList>  
           {sideMenuOptions.map((option) => {
             return (
               <NavItem

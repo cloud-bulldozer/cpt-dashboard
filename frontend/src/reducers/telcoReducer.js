@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  INITAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -57,10 +58,12 @@ const initialState = {
   appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
-  tableData: [],
+  sort: "",
   graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  offset: INITAL_OFFSET,
+  totalJobs: 0,
   summary: {},
 };
 
@@ -73,6 +76,14 @@ const TelcoReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
+    case TYPES.SET_TELCO_PAGE_TOTAL:
+      return {
+        ...state,
+        totalJobs: payload.total,
+        offset: payload.offset,
+      };
+    case TYPES.SET_TELCO_OFFSET:
+      return { ...state, offset: payload };
     case TYPES.SET_TELCO_DATE_FILTER:
       return {
         ...state,
@@ -87,8 +98,6 @@ const TelcoReducer = (state = initialState, action = {}) => {
       return { ...state, page: payload };
     case TYPES.SET_TELCO_PAGE_OPTIONS:
       return { ...state, page: payload.page, perPage: payload.perPage };
-    case TYPES.SET_TELCO_INIT_JOBS:
-      return { ...state, tableData: payload };
     case TYPES.SET_TELCO_FILTERED_DATA:
       return { ...state, filteredResults: payload };
     case TYPES.SET_TELCO_CATEGORY_FILTER:

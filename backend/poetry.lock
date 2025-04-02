@@ -1885,11 +1885,19 @@ files = [
 [[package]]
 name = "wrapt"
 version = "1.17.1"
+<<<<<<< HEAD
+=======
+
+>>>>>>> revamp
 description = "Module for decorators, wrappers and monkey patching."
 optional = false
 python-versions = ">=3.8"
 groups = ["main"]
 files = [
+<<<<<<< HEAD
+=======
+
+>>>>>>> revamp
     {file = "wrapt-1.17.1-cp310-cp310-macosx_10_9_x86_64.whl", hash = "sha256:9176057c60438c2ce2284cdefc2b3ee5eddc8c87cd6e24c558d9f5c64298fa4a"},
     {file = "wrapt-1.17.1-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:e0f0e731e0ca1583befd3af71b9f90d64ded1535da7b80181cb9e907cc10bbae"},
     {file = "wrapt-1.17.1-cp310-cp310-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:144ed42a4ec3aca5d6f1524f99ee49493bbd0d9c66c24da7ec44b4661dca4dcc"},
@@ -2065,3 +2073,7 @@ propcache = ">=0.2.0"
 lock-version = "2.1"
 python-versions = "^3.9"
 content-hash = "6c4ce480ad4e6f2cf11ec7e00e3758302c338f957e4db67026a206198ebb7cd7"
+<<<<<<< HEAD
+=======
+
+>>>>>>> revamp
