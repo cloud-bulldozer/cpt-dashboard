@@ -16,6 +16,7 @@ podman pod create --name=${POD_NAME} --publish 8000:8000
 ./backend/tests/opensearch_ocp.sh
 echo "seeding db"
 podman run --rm -it --pod=${POD_NAME} --entrypoint python3 e2e-backend tests/db_seed.py
+echo "deploying backend"
 podman run -d --pod=${POD_NAME} \
   -v "$(pwd)/backend/tests/ocpperf_test.toml:/backend/ocpperf.toml:z" \
   --name=back backend
