@@ -4,7 +4,7 @@ set -e
 echo "building backend test image"
 podman build -f backend/tests/e2e_backend.containerfile --tag e2e-backend ./backend
 
-export POD_NAME="pod_e2e"
+export POD_NAME=${functl:-functl_${RANDOM}}
 
 echo "cleaning up and recreating pod"
 podman pod rm -f ${POD_NAME}

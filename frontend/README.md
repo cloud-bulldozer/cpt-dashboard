@@ -58,38 +58,36 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 
 ### Requirements
 - Three shell terminals
-- Current directory is `{project_root}/frontend`
-- A filled out [cpt-dashboard backend  configuration file](/README.md#backend-configuration) named `ocpperf.toml` in `{project_root}/backend`
+- Starting directory is the project root
 - [poetry](https://python-poetry.org/) for managing the backend's Python virtual environment and dependencies
 - NodeJS 22+
 
-Start CPT-Dashboard backend data service.
-
+Start CPT-Dashboard backend data service end-to-end test dependency.
 ```shell
-poetry run scripts/start-reload.sh
+./backend/e2e_backend.sh
 ```
+
+Start frontend GUI server and execute end-to-end tests.
+```shell
+npm --prefix frontend run cypress:run:ci
+```
+
+Alternatively, to interact with the test execution
 
 Start CPT-Dashboard frontend GUI.
 ```shell
-npm run dev
+npm --prefix run dev
 ```
-
-Execute end-to-end tests within Chrome web browser.
-```shell
-npm run e2e:chrome
-```
-
-Alternatively,
 
 [Open Cypress](https://docs.cypress.io/app/core-concepts/open-mode) GUI to view test execution.
 ```shell
-npm run cypress:open
+npm --prefix frontend run cypress:open
 ```
 Click `E2E Testing`.
 
 Choose a browser (Chrome is recommended), and click `Start E2E Testing in {your browser}`.
 
-In the newly opened web browser under the directory `cypress/e2e` select a test file. Each individual `.cy.js` file is a `spec` file. I recommend clicking `home.cy.js`.
+In the newly opened web browser under the directory `cypress/e2e` select a test file. Each individual `.cy.js` file is a `spec` file. I recommend clicking `home.cy.js`, or `ocp.cy.js`.
 
 
 ## Template
