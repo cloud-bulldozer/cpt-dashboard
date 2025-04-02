@@ -1,7 +1,7 @@
 import time
 
 from urllib.parse import urlparse
-from opensearchpy import OpenSearch, OpenSearchException, Search
+from elasticsearch import Elasticsearch, ApiError, Search
 from vyper import v
 
 
@@ -40,7 +40,7 @@ def seed_db(srch_client):
 def search_client(
         host: str = "localhost", port: int = "9200", 
         username: str = "admin", password: str = "admin"):
-    return OpenSearch(
+    return Elasticsearch(
         hosts = [{"host": host, "port": port}],
         http_compress = True,
         http_auth = (username, password),
@@ -100,7 +100,7 @@ def main():
         ok = True
         print(f"Opensearch ready after {time.time()-start:.3f} seconds")
         
-      except OpenSearchException as exc:
+      except ApiError as exc:
         print(f"Opensearch isn't ready: {str(exc)!r}")
         time.sleep(4)
 

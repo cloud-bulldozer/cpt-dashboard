@@ -31,11 +31,9 @@ trio = "^0.18.0"
 uvicorn = "^0.14.0"
 uvloop = "^0.15.2"
 vyper-config = "1.0.0"
-opensearch-py = "^2.8.0"
 
 [tool.poetry.group.dev.dependencies]
 watchgod = "^0.7"
-pytest = "^8.3.5"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
