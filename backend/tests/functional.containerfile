@@ -8,7 +8,6 @@ RUN mkdir -p /backend/tests
 
 COPY pyproject.toml /backend
 COPY poetry.lock /backend
-COPY ocpperf_test.toml /backend
 
 WORKDIR /backend
 
