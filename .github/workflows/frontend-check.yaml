@@ -35,10 +35,8 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: setup application backend containers
-        run: |
-          alias podman=docker
-          ./backend/tests/e2e_backend.sh        
+      - name: setup GUI containerized service dependencies
+        run: ./backend/tests/e2e_backend.sh        
 
       - name: Download the build folder
         uses: actions/download-artifact@v4
