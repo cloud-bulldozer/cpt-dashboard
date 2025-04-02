@@ -1,7 +1,8 @@
 import time
 
 from urllib.parse import urlparse
-from elasticsearch import Elasticsearch, ApiError, Search
+from elasticsearch import Elasticsearch
+from elasticsearch.exceptions import TransportError, ConnectionError
 from vyper import v
 
 
@@ -60,15 +61,18 @@ def ocp_index_hits():
         username=cfg.get("ocp.elasticsearch.username"),
           password=cfg.get("ocp.elasticsearch.password")
     )
-    q = {
-      "query": {
-          "match_all": {}
-      }
-    }
-    s = Search(
-        using=client_, index="perf_scale_ci",
-    ).update_from_dict(q)
-    return s.count()
+    response = client_.search(
+       index=cfg.get("ocp.elasticsearch.indice"),
+       body={
+          "query": {
+             "match_all": {}
+          }
+        }
+    )
+    
+    if "hits" in response and "total" in response["hits"]:
+       return response["hits"]["total"]["value"]
+    return -1
 
 
 def main():
@@ -100,9 +104,12 @@ def main():
         ok = True
         print(f"Opensearch ready after {time.time()-start:.3f} seconds")
         
-      except ApiError as exc:
+      except (
+            TransportError,
+            ConnectionError,
+      ) as exc:
         print(f"Opensearch isn't ready: {str(exc)!r}")
-        time.sleep(4)
+        time.sleep(3)
 
 
 if __name__ == "__main__":
