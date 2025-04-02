@@ -1,8 +1,11 @@
 #!/bin/bash
 set -e
 
-echo "building backend test image"
-podman build -f backend/tests/e2e_backend.containerfile --tag e2e-backend ./backend
+echo "building backend image"
+podman build -f backend/backend.containerfile --tag backend ./backend
+
+echo "building backend functional test image"
+podman build -f backend/tests/functional.containerfile --tag e2e-backend ./backend
 
 export POD_NAME="e2e"
 
@@ -11,6 +14,6 @@ podman pod rm -f ${POD_NAME}
 podman pod create --name=${POD_NAME} --publish 8000:8000
 
 ./backend/tests/opensearch_ocp.sh
-podman run -d --pod=${POD_NAME} --name=back e2e-backend
 echo "seeding db"
-podman exec back poetry run python tests/db_seed.py
+podman run --rm -it --pod=${POD_NAME} --entrypoint python3 e2e-backend tests/db_seed.py
+podman run -d --pod=${POD_NAME} --name=back backend
