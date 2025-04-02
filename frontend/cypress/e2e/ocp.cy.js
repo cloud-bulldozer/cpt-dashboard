@@ -53,7 +53,8 @@ describe('ocp user journey', () => {
           .type(end_date, {force: true});
       }); 
     
-    cy.screenshot("main-data-table");
+    // cy.screenshot("main-data-table");
+    cy.screenshot();
 
     cy.findByTestId("main_data_table")
       .get("tbody")
@@ -86,6 +87,8 @@ describe('ocp user journey', () => {
       .first()
       .find(`[data-ouia-component-id="metadata-table"]`)
       .should("be.visible");
+
+    cy.screenshot();      
 
     // close expandable row
     cy.get("@tgl_details")

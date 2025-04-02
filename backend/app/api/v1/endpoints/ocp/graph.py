@@ -266,8 +266,6 @@ async def processNetperf(data: dict):
 
 
 def jobFilter(pdata: dict, data: dict):
-    if not pdata or not data:
-        return []
     columns = ["uuid", "jobConfig.jobIterations"]
     pdf = pd.json_normalize(pdata)
     pick_df = pd.DataFrame(pdf, columns=columns)
