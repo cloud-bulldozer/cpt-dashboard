@@ -52,24 +52,15 @@ def search_client(
     )
 
 
-def ocp_index_hits():
-    cfg = get_config()              
-    url = urlparse(cfg.get("ocp.elasticsearch.url"))
-    client_ = search_client(
-        host=url.hostname,
-        port=url.port,
-        username=cfg.get("ocp.elasticsearch.username"),
-          password=cfg.get("ocp.elasticsearch.password")
-    )
+def ocp_index_hits(client_, ocp_index):
     response = client_.search(
-       index=cfg.get("ocp.elasticsearch.indice"),
+       index=ocp_index,
        body={
           "query": {
              "match_all": {}
           }
         }
     )
-    
     if "hits" in response and "total" in response["hits"]:
        return response["hits"]["total"]["value"]
     return -1
@@ -99,7 +90,7 @@ def main():
 
         response = client_.indices.get_alias(index="*")
         print(f'test data index found: {cfg.get("ocp.elasticsearch.indice") in response.keys()}')
-        print(f'at least 5 hits: {ocp_index_hits() >= 5}')       
+        print(f'ocp index has 273 hits: {ocp_index_hits(client_, cfg.get("ocp.elasticsearch.indice")) == 273}')       
 
         ok = True
         print(f"Opensearch ready after {time.time()-start:.3f} seconds")

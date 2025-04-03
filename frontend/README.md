@@ -59,8 +59,10 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 ### Requirements
 - Three shell terminals
 - Starting directory is the project root
-- [poetry](https://python-poetry.org/) for managing the backend's Python virtual environment and dependencies
+- Podman, Docker
 - NodeJS 22+
+
+#### Execute E2E Tests
 
 Start CPT-Dashboard backend data service end-to-end test dependency.
 ```shell
@@ -72,11 +74,16 @@ Start frontend GUI server and execute end-to-end tests.
 npm --prefix frontend run cypress:run:ci
 ```
 
-Alternatively, to interact with the test execution
+#### Interactive E2E Test Execution
+
+Start CPT-Dashboard backend data service end-to-end test dependency.
+```shell
+./backend/e2e_backend.sh
+```
 
 Start CPT-Dashboard frontend GUI.
 ```shell
-npm --prefix run dev
+npm --prefix frontend run dev
 ```
 
 [Open Cypress](https://docs.cypress.io/app/core-concepts/open-mode) GUI to view test execution.
