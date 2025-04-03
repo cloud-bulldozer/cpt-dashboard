@@ -5,7 +5,7 @@ echo "building backend image"
 podman build -f backend/backend.containerfile --tag backend ./backend
 
 echo "building backend functional test image"
-podman build -f backend/tests/functional.containerfile --tag e2e-backend ./backend
+podman build -f backend/tests/functional.containerfile --tag functional ./backend
 
 export POD_NAME="e2e"
 
@@ -15,7 +15,7 @@ podman pod create --name=${POD_NAME} --publish 8000:8000
 
 ./backend/tests/opensearch_ocp.sh
 echo "seeding db"
-podman run --rm --pod=${POD_NAME} --entrypoint python3 e2e-backend tests/db_seed.py
+podman run --rm --pod=${POD_NAME} --entrypoint python3 functional tests/db_seed.py
 echo "deploying backend"
 podman run -d --pod=${POD_NAME} \
   -v "$(pwd)/backend/tests/ocpperf_test.toml:/backend/ocpperf.toml:z" \
