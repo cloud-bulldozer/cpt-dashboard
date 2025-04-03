@@ -24,37 +24,12 @@ import PropTypes from "prop-types";
 import SelectBox from "@/components/molecules/SelectBox";
 import { formatDate } from "@/utils/helper";
 
-/**
- * A component that provides an all-in-one toolbar for the tables in this project.
- *
- * Includes a filter selector, a date selector, a column selector, and navigation components.
- * This component utilizes filterActions to modify the data store.
- *
- * @param {*} props:
- *   - tableFilters: A array of name-value pairs mapping the name of the filter category
- *      to the ID of the filter category.
- *   - categoryFilterValue: The ID of the currently selected category. See filterActions.setCatFilters
- *      for relevant code that can influence this input.
- *   - filterOptions: The array of options for the selected category. Used in the multi-select box.
- *      See filterActions.setCatFilters for relevant code that can influence this input.
- *   - appliedFilters: A map/object key-value pairs of the filters that are active.
- *   - start_date: The filter start date
- *   - end_date: The filter end date
- *   - navigation: The react navigate function.
- *   - type: A string that corresponds with the ID used in the commonActions action file.
- *   - showColumnMenu: When true, a toolbar item will display the selectable columns. Requires setColumns.
- *   - setColumns: A callback to set the column with inputs `value`, and `isAdding`. Allows setting
- *      which columns are shown. See ColumnMenuFilter for more information.
- *   - selectedFilters: An array of objects with fields `name` and `value`. `name` is the ID of
- *      the category, and `value` is an array of selected filters within the category.
- *   - updateSelectedFilter: A callback function with inputs `key`, `value`, and `selected` that takes a
- *      key and value for a filter, followed by whether the filter is selected. Used for a multi-select box.
- */
 const TableFilter = (props) => {
   const {
     tableFilters,
     categoryFilterValue,
     filterOptions,
+    filterData,
     appliedFilters,
     start_date,
     end_date,
@@ -64,12 +39,11 @@ const TableFilter = (props) => {
     setColumns,
     selectedFilters,
     updateSelectedFilter,
-    filterData,
   } = props;
 
-  const getFilterCategory = (name) => {
-    return tableFilters.filter((item) => item.name === name)?.[0]?.value;
-  };
+  const category =
+    filterData?.length > 0 &&
+    filterData.filter((item) => item.name === categoryFilterValue)[0].key;
 
   const getFilterName = (key) => {
     const filter =
@@ -78,8 +52,6 @@ const TableFilter = (props) => {
     return filter.name;
   };
 
-  const category = getFilterCategory(categoryFilterValue);
-
   const onCategoryChange = (_event, value) => {
     setCatFilters(value, type);
   };
@@ -87,8 +59,8 @@ const TableFilter = (props) => {
     setAppliedFilters(navigation, type);
   };
   const deleteItem = (key, value) => {
-    updateSelectedFilter(key, value, false);
     removeAppliedFilters(key, value, navigation, type);
+    updateSelectedFilter(key, value, false);
   };
   const startDateChangeHandler = (date, key) => {
     setDateFilter(date, key, navigation, type);
@@ -96,17 +68,15 @@ const TableFilter = (props) => {
   const endDateChangeHandler = (date, key) => {
     setDateFilter(key, date, navigation, type);
   };
+
   return (
     <>
-      <Toolbar 
-        id="filter-toolbar"
-        ouiaId="data_table_filter"
-      >
-        {filterData?.length > 0 ? (
+      <Toolbar id="filter-toolbar">
+        {tableFilters?.length > 0 && filterOptions?.length > 0 && (
           <ToolbarContent className="field-filter">
             <ToolbarItem style={{ marginInlineEnd: 0 }}>
               <SelectBox
-                options={filterData}
+                options={tableFilters}
                 onChange={onCategoryChange}
                 selected={categoryFilterValue}
                 icon={<FilterIcon />}
@@ -123,10 +93,6 @@ const TableFilter = (props) => {
                 width={"300px"}
               />
             </ToolbarItem>
-          </ToolbarContent>
-        ) : (
-          <ToolbarContent>
-            <ToolbarItem variant="label">No filters present</ToolbarItem>
           </ToolbarContent>
         )}
 
@@ -174,10 +140,10 @@ const TableFilter = (props) => {
 };
 
 TableFilter.propTypes = {
-  tableFilters: PropTypes.array.isRequired,
-  filterData: PropTypes.array.isRequired,
+  tableFilters: PropTypes.array,
   categoryFilterValue: PropTypes.string,
-  filterOptions: PropTypes.array.isRequired,
+  filterOptions: PropTypes.array,
+  filterData: PropTypes.array,
   appliedFilters: PropTypes.object,
   start_date: PropTypes.string,
   end_date: PropTypes.string,
@@ -185,7 +151,7 @@ TableFilter.propTypes = {
   showColumnMenu: PropTypes.bool,
   setColumns: PropTypes.func,
   selectedFilters: PropTypes.array,
-  updateSelectedFilter: PropTypes.func.isRequired,
+  updateSelectedFilter: PropTypes.func,
   navigation: PropTypes.func,
 };
 export default TableFilter;

@@ -17,12 +17,11 @@ import { toggleSideMenu } from "@/actions/sideMenuActions";
 
 const Header = () => {
   const isSideMenuOpen = useSelector((state) => state.sidemenu.isSideMenuOpen);
-  const updatedTime = useSelector((state) => state.header.updatedTime);
+
   const dispatch = useDispatch();
   const onSidebarToggle = () => {
     dispatch(toggleSideMenu(!isSideMenuOpen));
   };
-
   return (
     <Masthead>
       <MastheadToggle>
@@ -32,7 +31,6 @@ const Header = () => {
           isSidebarOpen={isSideMenuOpen}
           onSidebarToggle={onSidebarToggle}
           id="nav-toggle"
-          ouiaId="main_layout_toggle"
         >
           <BarsIcon />
         </PageToggleButton>
@@ -45,7 +43,7 @@ const Header = () => {
       <MastheadContent>
         CPT Dashboard
         <div className="last-updated-box">
-          {updatedTime && <div>Last Updated: {updatedTime}</div>}
+          <div>Last Updated: 21/02/2024 13:26:30</div>
         </div>
       </MastheadContent>
     </Masthead>

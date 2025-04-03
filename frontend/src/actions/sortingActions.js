@@ -1,18 +1,9 @@
-import * as TYPES from "@/actions/types.js";
-
-import { fetchOCPJobs, setOCPSortDir, setOCPSortIndex } from "./ocpActions";
-import {
-  fetchQuayJobsData,
-  setQuaySortDir,
-  setQuaySortIndex,
-} from "./quayActions";
-import {
-  fetchTelcoJobsData,
-  setTelcoSortDir,
-  setTelcoSortIndex,
-} from "./telcoActions";
 import { setCPTSortDir, setCPTSortIndex } from "./homeActions";
+import { setOCPSortDir, setOCPSortIndex } from "./ocpActions";
+import { setQuaySortDir, setQuaySortIndex } from "./quayActions";
+import { setTelcoSortDir, setTelcoSortIndex } from "./telcoActions";
 
+import { sortTable } from "./commonActions";
 import store from "@/store/store";
 
 const { dispatch } = store;
@@ -38,56 +29,6 @@ export const setActiveSortIndex = (index, currType) => {
     dispatch(setTelcoSortIndex(index));
   }
 };
-export const handleOnSort = (colName, currType) => {
-  dispatch(sortTable(colName, currType));
-};
-
-const offsetActions = {
-  cpt: TYPES.SET_CPT_OFFSET,
-  ocp: TYPES.SET_OCP_OFFSET,
-  quay: TYPES.SET_QUAY_OFFSET,
-  telco: TYPES.SET_TELCO_OFFSET,
-};
-const fetchJobsMap = {
-  ocp: fetchOCPJobs,
-  quay: fetchQuayJobsData,
-  telco: fetchTelcoJobsData,
-};
-const sortObjActions = {
-  ocp: TYPES.SET_OCP_SORT_OBJ,
-  quay: TYPES.SET_QUAY_SORT_OBJ,
-};
-export const sortTable = (colName, currState) => (dispatch, getState) => {
-  const { activeSortDir, activeSortIndex } = getState()[currState];
-  const countObj = [
-    "masterNodesCount",
-    "workerNodesCount",
-    "infraNodesCount",
-    "totalNodesCount",
-    "startDate",
-    "endDate",
-  ];
-  try {
-    if (
-      typeof activeSortDir !== "undefined" &&
-      typeof activeSortIndex !== "undefined"
-    ) {
-      dispatch({ type: offsetActions[currState], payload: 0 });
-      let fieldName = countObj.includes(colName)
-        ? colName
-        : `${colName}.keyword`;
-      if (colName === "build") {
-        fieldName = "ocpVersion.keyword";
-      }
-
-      const sortParam = `${fieldName}:${activeSortDir}`;
-      dispatch({ type: sortObjActions[currState], payload: sortParam });
-      console.log(sortParam);
-      const isFromSorting = true;
-
-      dispatch(fetchJobsMap[currState](isFromSorting));
-    }
-  } catch (error) {
-    console.log(error);
-  }
+export const handleOnSort = (currType) => {
+  dispatch(sortTable(currType));
 };

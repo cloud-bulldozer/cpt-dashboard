@@ -1,5 +1,4 @@
 import {
-  buildFilterData,
   fetchGraphData,
   fetchQuayJobsData,
   setFilterFromURL,
@@ -22,12 +21,13 @@ const Quay = () => {
   const [searchParams] = useSearchParams();
 
   const {
-    results,
+    tableData,
     tableColumns,
     activeSortIndex,
     activeSortDir,
     page,
     perPage,
+    filteredResults,
     tableFilters,
     filterOptions,
     categoryFilterValue,
@@ -38,8 +38,11 @@ const Quay = () => {
     selectedFilters,
     graphData,
     summary,
-    totalJobs,
   } = useSelector((state) => state.quay);
+
+  useEffect(() => {
+    dispatch(fetchQuayJobsData());
+  }, [dispatch]);
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -59,11 +62,6 @@ const Quay = () => {
       dispatch(setQuayDateFilter(startDate, endDate, navigate));
     }
   }, []);
-
-  useEffect(() => {
-    dispatch(buildFilterData());
-    dispatch(fetchQuayJobsData());
-  }, [dispatch]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(
@@ -98,11 +96,10 @@ const Quay = () => {
   const setColumns = (value, isAdding) => {
     dispatch(setTableColumns(value, isAdding));
   };
-
   return (
     <>
       <MetricsTab
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -111,9 +108,9 @@ const Quay = () => {
       />
       <TableFilter
         tableFilters={modifidedTableFilters}
-        filterData={filterData}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
+        filterData={filterData}
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}
@@ -125,19 +122,18 @@ const Quay = () => {
         navigation={navigate}
       />
       <TableLayout
-        tableData={results}
+        tableData={tableData}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         type={"quay"}
         addExpansion={true}
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
-        shouldSort={true}
       />
     </>
   );

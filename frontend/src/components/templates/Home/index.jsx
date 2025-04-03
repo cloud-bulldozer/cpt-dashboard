@@ -1,5 +1,5 @@
 import {
-  fetchDataConcurrently,
+  fetchOCPJobsData,
   setCPTDateFilter,
   setFilterFromURL,
   setSelectedFilter,
@@ -19,14 +19,15 @@ const Home = () => {
   const navigate = useNavigate();
 
   const {
+    filteredResults,
     tableColumns,
     activeSortDir,
     activeSortIndex,
-    results,
-    filterData,
+    tableData,
     filterOptions,
     tableFilters,
     categoryFilterValue,
+    filterData,
     appliedFilters,
     start_date,
     end_date,
@@ -34,7 +35,6 @@ const Home = () => {
     perPage,
     summary,
     selectedFilters,
-    totalJobs,
   } = useSelector((state) => state.cpt);
 
   useEffect(() => {
@@ -57,7 +57,7 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchDataConcurrently());
+    dispatch(fetchOCPJobsData());
   }, [dispatch]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {
@@ -67,7 +67,7 @@ const Home = () => {
   return (
     <>
       <MetricsTab
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -91,16 +91,15 @@ const Home = () => {
       />
 
       <TableLayout
-        tableData={results}
+        tableData={tableData}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         addExpansion={false}
         type={"cpt"}
-        shouldSort={false}
       />
     </>
   );
