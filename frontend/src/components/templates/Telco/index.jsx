@@ -1,5 +1,4 @@
 import {
-  buildFilterData,
   fetchGraphData,
   fetchTelcoJobsData,
   setFilterFromURL,
@@ -21,12 +20,13 @@ const Telco = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    results,
+    tableData,
     tableColumns,
     activeSortIndex,
     activeSortDir,
     page,
     perPage,
+    filteredResults,
     tableFilters,
     filterOptions,
     categoryFilterValue,
@@ -37,8 +37,11 @@ const Telco = () => {
     selectedFilters,
     summary,
     graphData,
-    totalJobs,
   } = useSelector((state) => state.telco);
+
+  useEffect(() => {
+    dispatch(fetchTelcoJobsData());
+  }, [dispatch]);
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -58,11 +61,6 @@ const Telco = () => {
       dispatch(setTelcoDateFilter(startDate, endDate, navigate));
     }
   }, []);
-
-  useEffect(() => {
-    dispatch(fetchTelcoJobsData());
-    dispatch(buildFilterData());
-  }, [dispatch]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(
@@ -100,7 +98,7 @@ const Telco = () => {
   return (
     <>
       <MetricsTab
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -110,8 +108,8 @@ const Telco = () => {
       <TableFilter
         tableFilters={modifidedTableFilters}
         filterOptions={filterOptions}
-        filterData={filterData}
         categoryFilterValue={categoryFilterValue}
+        filterData={filterData}
         appliedFilters={appliedFilters}
         start_date={start_date}
         end_date={end_date}
@@ -123,19 +121,18 @@ const Telco = () => {
         navigation={navigate}
       />
       <TableLayout
-        tableData={results}
+        tableData={tableData}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={totalJobs}
+        totalItems={filteredResults.length}
         type={"telco"}
         addExpansion={true}
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
-        shouldSort={false}
       />
     </>
   );

@@ -15,8 +15,7 @@ async def trio_run_with_asyncio(trio_fn, *args):
         done_fut.set_result(trio_main_outcome)
 
     trio.lowlevel.start_guest_run(
-        trio_fn,
-        *args,
+        trio_fn, *args,
         run_sync_soon_threadsafe=run_sync_soon_threadsafe,
         done_callback=done_callback,
         host_uses_signal_set_wakeup_fd=True

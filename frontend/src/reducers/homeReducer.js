@@ -2,7 +2,6 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
-  INITAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -10,7 +9,6 @@ const initialState = {
   results: [],
   start_date: "",
   end_date: "",
-  tableData: [],
   tableColumns: [
     { name: "Product", value: "product" },
     { name: "CI System", value: "ciSystem" },
@@ -32,7 +30,7 @@ const initialState = {
   filterData: [],
   activeSortDir: null,
   activeSortIndex: null,
-  sort: "",
+  tableData: [],
   categoryFilterValue: "",
   filterOptions: [],
   appliedFilters: {},
@@ -46,8 +44,6 @@ const initialState = {
   filteredResults: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
-  offset: INITAL_OFFSET,
-  totalJobs: 0,
   summary: {},
 };
 
@@ -59,14 +55,6 @@ const HomeReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
-    case TYPES.SET_CPT_PAGE_TOTAL:
-      return {
-        ...state,
-        totalJobs: payload.total,
-        offset: payload.offset,
-      };
-    case TYPES.SET_CPT_OFFSET:
-      return { ...state, offset: payload };
     case TYPES.SET_CPT_DATE_FILTER:
       return {
         ...state,
@@ -77,6 +65,8 @@ const HomeReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_CPT_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_CPT_INIT_JOBS:
+      return { ...state, tableData: payload };
     case TYPES.SET_CPT_FILTER_DATA:
       return { ...state, filterData: payload };
     case TYPES.SET_CATEGORY_FILTER:

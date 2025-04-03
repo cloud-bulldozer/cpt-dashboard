@@ -37,7 +37,7 @@ const SelectBox = (props) => {
       <Select
         className="select-box"
         isOpen={isOpen}
-        selected={props.selected}
+        selected={props.onChange}
         onSelect={onSelect}
         onOpenChange={(isOpen) => setIsOpen(isOpen)}
         toggle={toggle}
@@ -45,7 +45,7 @@ const SelectBox = (props) => {
       >
         <SelectList>
           {props.options.map((option) => (
-            <SelectOption value={option.name} key={option.key}>
+            <SelectOption value={option.name} key={option.value}>
               {option.name}
             </SelectOption>
           ))}
@@ -58,7 +58,7 @@ const SelectBox = (props) => {
 SelectBox.propTypes = {
   options: PropTypes.array,
   onChange: PropTypes.func,
-  selected: PropTypes.string,
+  selected: PropTypes.any,
   width: PropTypes.string,
   icon: PropTypes.any,
 };

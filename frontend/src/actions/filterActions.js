@@ -1,29 +1,29 @@
 import {
-  applyCPTDateFilter,
   removeCPTAppliedFilters,
   setCPTAppliedFilters,
   setCPTCatFilters,
+  setCPTDateFilter,
   setCPTOtherSummaryFilter,
 } from "./homeActions";
 import {
-  applyOCPDateFilter,
   removeOCPAppliedFilters,
   setOCPAppliedFilters,
   setOCPCatFilters,
+  setOCPDateFilter,
   setOCPOtherSummaryFilter,
 } from "./ocpActions";
 import {
-  applyQuayDateFilter,
   removeQuayAppliedFilters,
   setQuayAppliedFilters,
   setQuayCatFilters,
+  setQuayDateFilter,
   setQuayOtherSummaryFilter,
 } from "./quayActions";
 import {
-  applyTelcoDateFilter,
   removeTelcoAppliedFilters,
   setTelcoAppliedFilters,
   setTelcoCatFilters,
+  setTelcoDateFilter,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
 
@@ -69,13 +69,13 @@ export const removeAppliedFilters = (key, value, navigation, currType) => {
 
 export const setDateFilter = (date, key, navigation, currType) => {
   if (currType === "cpt") {
-    dispatch(applyCPTDateFilter(date, key, navigation));
+    dispatch(setCPTDateFilter(date, key, navigation));
   } else if (currType === "ocp") {
-    dispatch(applyOCPDateFilter(date, key, navigation));
+    dispatch(setOCPDateFilter(date, key, navigation));
   } else if (currType === "quay") {
-    dispatch(applyQuayDateFilter(date, key, navigation));
+    dispatch(setQuayDateFilter(date, key, navigation));
   } else if (currType === "telco") {
-    dispatch(applyTelcoDateFilter(date, key, navigation));
+    dispatch(setTelcoDateFilter(date, key, navigation));
   }
 };
 

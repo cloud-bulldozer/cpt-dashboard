@@ -1,4 +1,3 @@
-import HeaderReducer from "./headerReducer";
 import HomeReducer from "./homeReducer";
 import LoadingReducer from "./loadingReducer";
 import OCPReducer from "./ocpReducer";
@@ -16,5 +15,4 @@ export default combineReducers({
   ocp: OCPReducer,
   quay: QuayReducer,
   telco: TelcoReducer,
-  header: HeaderReducer,
 });
