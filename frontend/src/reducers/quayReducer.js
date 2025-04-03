@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  INITAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -10,10 +11,10 @@ const initialState = {
   start_date: "",
   end_date: "",
   tableColumns: [
+    { name: "CI System", value: "ciSystem" },
     { name: "Benchmark", value: "benchmark" },
     { name: "Release Stream", value: "releaseStream" },
     { name: "Platform", value: "platform" },
-    { name: "Worker Count", value: "workerNodesCount" },
     { name: "Start Date", value: "startDate" },
     { name: "End Date", value: "endDate" },
     { name: "Status", value: "jobStatus" },
@@ -24,13 +25,21 @@ const initialState = {
     { name: "Platform", value: "platform" },
     { name: "Worker Count", value: "workerNodesCount" },
     { name: "Status", value: "jobStatus" },
+    { name: "Concurrency", value: "concurrency" },
+    { name: "Hit Size", value: "hitSize" },
+    { name: "Image Push/Pulls", value: "imagePushPulls" },
+    { name: "Build", value: "build" },
   ],
   selectedFilters: [
     { name: "benchmark", value: [] },
     { name: "releaseStream", value: [] },
     { name: "platform", value: [] },
     { name: "workerNodesCount", value: [] },
-    { name: "jobStatus", value: [] },
+    { name: "concurrency", value: [] },
+    { name: "hitSize", value: [] },
+    { name: "imagePushPulls", value: [] },
+    { name: "build", value: [] },
+    { name: "ciSystem", value: [] },
   ],
   clusterMetaData: [
     { name: "Release Binary", value: "releaseStream" },
@@ -60,10 +69,12 @@ const initialState = {
   appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
-  tableData: [],
+  sort: "",
   graphData: [],
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  offset: INITAL_OFFSET,
+  totalJobs: 0,
   summary: {},
 };
 
@@ -76,6 +87,14 @@ const QuayReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
+    case TYPES.SET_QUAY_PAGE_TOTAL:
+      return {
+        ...state,
+        totalJobs: payload.total,
+        offset: payload.offset,
+      };
+    case TYPES.SET_QUAY_OFFSET:
+      return { ...state, offset: payload };
     case TYPES.SET_QUAY_DATE_FILTER:
       return {
         ...state,
@@ -86,12 +105,12 @@ const QuayReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_QUAY_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_QUAY_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_QUAY_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_QUAY_PAGE_OPTIONS:
       return { ...state, page: payload.page, perPage: payload.perPage };
-    case TYPES.SET_QUAY_INIT_JOBS:
-      return { ...state, tableData: payload };
     case TYPES.SET_QUAY_FILTERED_DATA:
       return { ...state, filteredResults: payload };
     case TYPES.SET_QUAY_FILTER_OPTIONS:

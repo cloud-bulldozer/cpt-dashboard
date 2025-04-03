@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  INITAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -26,7 +27,7 @@ const initialState = {
     { name: "Build", value: "build" },
     { name: "Worker Count", value: "workerNodesCount" },
     { name: "Network Type", value: "networkType" },
-    { name: "Versions", value: "shortVersion" },
+    { name: "Versions", value: "ocpVersion" },
     { name: "Job Type", value: "jobType" },
     { name: "Rehearse", value: "isRehearse" },
     { name: "Has IPSEC", value: "ipsec" },
@@ -41,9 +42,11 @@ const initialState = {
   ],
   activeSortDir: null,
   activeSortIndex: null,
+  sort: "",
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
-  tableData: [],
+  offset: INITAL_OFFSET,
+  totalJobs: 0,
   filterData: [],
   categoryFilterValue: "",
   filterOptions: [],
@@ -87,7 +90,7 @@ const initialState = {
     { name: "build", value: [] },
     { name: "workerNodesCount", value: [] },
     { name: "networkType", value: [] },
-    { name: "shortVersion", value: [] },
+    { name: "ocpVersion", value: [] },
     { name: "jobType", value: [] },
     { name: "isRehearse", value: [] },
     { name: "ipsec", value: [] },
@@ -111,6 +114,14 @@ const OCPReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
+    case TYPES.SET_OCP_PAGE_TOTAL:
+      return {
+        ...state,
+        totalJobs: payload.total,
+        offset: payload.offset,
+      };
+    case TYPES.SET_OCP_OFFSET:
+      return { ...state, offset: payload };
     case TYPES.SET_OCP_DATE_FILTER:
       return {
         ...state,
@@ -121,12 +132,12 @@ const OCPReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_OCP_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_OCP_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_OCP_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_OCP_PAGE_OPTIONS:
       return { ...state, page: payload.page, perPage: payload.perPage };
-    case TYPES.SET_OCP_INIT_JOBS:
-      return { ...state, tableData: payload };
     case TYPES.SET_OCP_SUMMARY:
       return { ...state, summary: payload };
     case TYPES.SET_OCP_FILTER_DATA:
