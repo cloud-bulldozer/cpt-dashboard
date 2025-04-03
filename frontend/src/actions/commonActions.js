@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types.js";
 
 import { setCPTCatFilters, sliceCPTTableRows } from "./homeActions";
 import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
+import { setOLSCatFilters, sliceOLSTableRows } from "./olsActions";
 import { setQuayCatFilters, sliceQuayTableRows } from "./quayActions";
 import { setTelcoCatFilters, sliceTelcoTableRows } from "./telcoActions";
 
@@ -56,6 +57,14 @@ const sortedTableRows = (currState, sortedResults) => (dispatch) => {
       payload: sortedResults,
     });
     dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
+    return;
+  }
+  if (currState === "ols") {
+    dispatch({
+      type: TYPES.SET_OLS_FILTERED_DATA,
+      payload: sortedResults,
+    });
+    dispatch(sliceOLSTableRows(0, DEFAULT_PER_PAGE));
     return;
   }
   if (currState === "quay") {
@@ -133,6 +142,12 @@ const setFilterData = (filterData, currState, activeFilter) => (dispatch) => {
       payload: filterData,
     });
     dispatch(setCPTCatFilters(activeFilter));
+  } else if (currState === "ols") {
+    dispatch({
+      type: TYPES.SET_OLS_FILTER_DATA,
+      payload: filterData,
+    });
+    dispatch(setOLSCatFilters(activeFilter));
   } else if (currState === "quay") {
     dispatch({
       type: TYPES.SET_QUAY_FILTER_DATA,

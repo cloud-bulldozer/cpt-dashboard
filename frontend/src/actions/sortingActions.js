@@ -1,5 +1,6 @@
 import { setCPTSortDir, setCPTSortIndex } from "./homeActions";
 import { setOCPSortDir, setOCPSortIndex } from "./ocpActions";
+import { setOLSSortDir, setOLSSortIndex } from "./olsActions";
 import { setQuaySortDir, setQuaySortIndex } from "./quayActions";
 import { setTelcoSortDir, setTelcoSortIndex } from "./telcoActions";
 
@@ -16,6 +17,8 @@ export const setActiveSortDir = (dir, currType) => {
     dispatch(setQuaySortDir(dir));
   } else if (currType === "telco") {
     dispatch(setTelcoSortDir(dir));
+  } else if (currType === "ols") {
+    dispatch(setOLSSortDir(dir));
   }
 };
 export const setActiveSortIndex = (index, currType) => {
@@ -27,6 +30,8 @@ export const setActiveSortIndex = (index, currType) => {
     dispatch(setQuaySortIndex(index));
   } else if (currType === "telco") {
     dispatch(setTelcoSortIndex(index));
+  } else if (currType === "ols") {
+    dispatch(setOLSSortIndex(index));
   }
 };
 export const handleOnSort = (currType) => {
