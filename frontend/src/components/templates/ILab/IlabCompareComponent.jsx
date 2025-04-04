@@ -5,8 +5,8 @@ import {
   Menu,
   MenuContent,
   MenuItem,
+  MenuItemAction,
   MenuList,
-  Popover,
   Stack,
   StackItem,
   Title,
@@ -16,9 +16,11 @@ import {
   fetchPeriods,
   handleMultiGraph,
   handleSummaryData,
+  setModalOpen,
 } from "@/actions/ilabActions.js";
 import { useDispatch, useSelector } from "react-redux";
 
+import ILabSummary from "./ILabSummary";
 import { InfoCircleIcon } from "@patternfly/react-icons";
 import MetricTitle from "./MetricTitle";
 import MetricsSelect from "./MetricsDropdown";
@@ -28,10 +30,6 @@ import RenderPagination from "@/components/organisms/Pagination";
 import { cloneDeep } from "lodash";
 import { uid } from "@/utils/helper";
 import { useState } from "react";
-import ILabSummary from "./ILabSummary";
-import ILabMetadata from "./ILabMetadata";
-import MetricsSelect from "./MetricsDropdown";
-import MetricTitle from "./MetricTitle";
 
 const IlabCompareComponent = () => {
   // const { data } = props;
@@ -74,7 +72,11 @@ const IlabCompareComponent = () => {
         >
           Compare
         </Button>
-        <Menu onSelect={onSelect} selected={selectedItems}>
+        <Menu
+          onSelect={onSelect}
+          selected={selectedItems}
+          onActionClick={(_event, itemId) => dispatch(setModalOpen(itemId))}
+        >
           <MenuContent>
             <MenuList>
               {results.map((item) => {
@@ -85,25 +87,11 @@ const IlabCompareComponent = () => {
                     itemId={item.id}
                     isSelected={selectedItems.includes(item.id)}
                     actions={
-                      <Popover
-                        triggerAction="hover"
-                        aria-label="Metadata popover"
-                        headerContent={<b>Metadata</b>}
-                        appendTo={() => document.body}
-                        hasNoPadding
-                        position="auto"
-                        className="mini-metadata"
-                        bodyContent={
-                          <div className="mini-metadata">
-                            <ILabMetadata item={item} />
-                          </div>
-                        }
-                      >
-                        <Button
-                          variant="plain"
-                          icon={<InfoCircleIcon aria-hidden />}
-                        ></Button>
-                      </Popover>
+                      <MenuItemAction
+                        icon={<InfoCircleIcon aria-hidden />}
+                        actionId="info"
+                        aria-label="Info"
+                      />
                     }
                   >
                     {`${new Date(item.begin_date).toLocaleDateString()} ${
