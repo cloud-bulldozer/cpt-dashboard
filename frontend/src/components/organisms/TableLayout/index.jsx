@@ -40,7 +40,7 @@ const TableLayout = (props) => {
 
   return (
     <>
-      <Table isStriped>
+      <Table isStriped ouiaId="main_data_table">
         <Thead>
           <Tr>
             {addExpansion && <Th />}
