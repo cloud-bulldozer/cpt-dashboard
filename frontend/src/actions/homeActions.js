@@ -1,64 +1,68 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
-  buildFilterData,
-  calculateMetrics,
   deleteAppliedFilters,
-  getFilteredData,
+  getRequestParams,
   getSelectedFilter,
-  sortTable,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { cloneDeep } from "lodash";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
-export const fetchOCPJobsData = () => async (dispatch, getState) => {
-  try {
-    dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().cpt;
-    const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
-    if (response.status === 200) {
-      const startDate = response.data.startDate,
-        endDate = response.data.endDate;
-      //on initial load startDate and endDate are empty, so from response append to url
-      appendDateFilter(startDate, endDate);
-      dispatch({
-        type: TYPES.SET_CPT_DATE_FILTER,
-        payload: {
-          start_date: startDate,
-          end_date: endDate,
-        },
-      });
+const getCloneDeep = async () => (await import("lodash/cloneDeep")).default;
+
+export const fetchOCPJobsData =
+  (isNewSearch = false) =>
+  async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.LOADING });
+
+      const params = dispatch(getRequestParams("cpt"));
+      const results = getState().cpt.results;
+      params["totalJobs"] = getState().cpt.totalJobs;
+      const response = await API.get(API_ROUTES.CPT_JOBS_API_V1, { params });
+      if (response.status === 200) {
+        const startDate = response.data.startDate,
+          endDate = response.data.endDate;
+        //on initial load startDate and endDate are empty, so from response append to url
+        appendDateFilter(startDate, endDate);
+        dispatch({
+          type: TYPES.SET_CPT_DATE_FILTER,
+          payload: {
+            start_date: startDate,
+            end_date: endDate,
+          },
+        });
+      }
+
+      if (response?.data?.results?.length > 0) {
+        dispatch({
+          type: TYPES.SET_CPT_JOBS_DATA,
+          payload: isNewSearch
+            ? response.data.results
+            : [...results, ...response.data.results],
+        });
+        dispatch({
+          type: TYPES.SET_CPT_PAGE_TOTAL,
+          payload: {
+            total: response.data.total,
+            offset: response.data.offset,
+          },
+        });
+
+        dispatch(tableReCalcValues());
+      }
+      dispatch(setLastUpdatedTime());
+    } catch (error) {
+      dispatch(showFailureToast());
     }
 
-    if (response?.data?.results?.length > 0) {
-      dispatch({
-        type: TYPES.SET_CPT_JOBS_DATA,
-        payload: response.data.results,
-      });
-
-      dispatch(applyFilters());
-      dispatch(sortTable("cpt"));
-      dispatch(tableReCalcValues());
-    }
-  } catch (error) {
-    dispatch(showFailureToast());
-  }
-  dispatch({ type: TYPES.COMPLETED });
-};
+    dispatch({ type: TYPES.COMPLETED });
+  };
 
 export const setCPTSortIndex = (index) => ({
   type: TYPES.SET_CPT_SORT_INDEX,
@@ -68,6 +72,11 @@ export const setCPTSortIndex = (index) => ({
 export const setCPTSortDir = (direction) => ({
   type: TYPES.SET_CPT_SORT_DIR,
   payload: direction,
+});
+
+export const setCPTOffset = (offset) => ({
+  type: TYPES.SET_CPT_OFFSET,
+  payload: offset,
 });
 
 export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
@@ -94,16 +103,19 @@ export const setCPTCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
-  const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
-  for (const key in params) {
-    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
-  }
-  dispatch({
-    type: TYPES.SET_SELECTED_FILTERS,
-    payload: selectedFilters,
-  });
-};
+export const setSelectedFilterFromUrl =
+  (params) => async (dispatch, getState) => {
+    const cloneDeep = await getCloneDeep();
+    const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
+    for (const key in params) {
+      selectedFilters.find((i) => i.name === key).value =
+        params[key].split(",");
+    }
+    dispatch({
+      type: TYPES.SET_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
 export const setSelectedFilter =
   (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
     const selectedFilters = dispatch(
@@ -161,25 +173,11 @@ export const removeCPTAppliedFilters =
     dispatch(applyFilters());
   };
 
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().cpt;
-
-  const results = [...getState().cpt.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_FILTERED_DATA,
-    payload: filtered,
-  });
+export const applyFilters = () => (dispatch) => {
+  dispatch(setCPTOffset(INITAL_OFFSET));
+  dispatch(fetchOCPJobsData(true));
+  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("cpt"));
 };
 
 export const setFilterFromURL = (searchParams) => ({
@@ -200,7 +198,12 @@ export const setCPTDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  };
 
+export const applyCPTDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setCPTOffset(INITAL_OFFSET));
+    dispatch(setCPTDateFilter(start_date, end_date, navigate));
     dispatch(fetchOCPJobsData());
   };
 
@@ -214,18 +217,68 @@ export const setCPTPageOptions = (page, perPage) => ({
   payload: { page, perPage },
 });
 
-export const getCPTSummary = () => (dispatch, getState) => {
-  const results = [...getState().cpt.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getCPTSummary = (countObj) => (dispatch) => {
+  const other = countObj["other"]
+    ? countObj["other"]
+    : countObj["total"] -
+      ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: countObj["success"] || 0,
+    failureCount: countObj["failure"] || 0,
+    total: countObj["total"],
+  };
   dispatch({
     type: TYPES.SET_CPT_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
 
-export const tableReCalcValues = () => (dispatch) => {
-  dispatch(getCPTSummary());
-  dispatch(setCPTPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().cpt;
+  dispatch(setCPTPageOptions(page, perPage));
+  const startIdx = page !== 0 ? (page - 1) * perPage : 0;
+  const endIdx = startIdx + perPage - 1;
+  dispatch(sliceCPTTableRows(startIdx, endIdx));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+    const { tableFilters, categoryFilterValue } = getState().ocp;
+
+    const params = dispatch(getRequestParams("cpt"));
+
+    const response = await API.get(API_ROUTES.CPT_FILTERS_API_V1, { params });
+
+    if (response.status !== 200 || !response.data?.filterData?.length) {
+      console.warn("No filter data received from API");
+      dispatch(getCPTSummary({}));
+      dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: [] });
+      return;
+    }
+
+    const { summary, filterData } = response.data;
+
+    dispatch(getCPTSummary(summary));
+    dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: filterData });
+
+    const defaultCategory = categoryFilterValue || tableFilters?.[0]?.name;
+    dispatch(setCPTCatFilters(defaultCategory));
+  } catch (error) {
+    console.error("Error fetching filter data:", error);
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.COMPLETED });
+};
+
+export const fetchDataConcurrently = () => async (dispatch) => {
+  try {
+    await Promise.all([
+      dispatch(buildFilterData()),
+      dispatch(fetchOCPJobsData()),
+    ]);
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
 };
