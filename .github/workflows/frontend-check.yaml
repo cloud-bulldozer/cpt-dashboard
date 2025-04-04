@@ -53,7 +53,7 @@ jobs:
           # pass GitHub token to detect new build vs re-run build
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
 
-      - name: Save screenshot
+      - name: Save Cypress test screenshots
         uses: actions/upload-artifact@v4
         with:
           name: e2e-images
