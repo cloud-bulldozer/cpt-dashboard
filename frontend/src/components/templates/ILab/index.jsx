@@ -25,6 +25,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
+import ModalComponent from "@/components/molecules/Modal";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
@@ -103,6 +104,7 @@ const ILab = () => {
   }, [dispatch, navigate]);
   return (
     <>
+      <ModalComponent />
       <TableFilter
         start_date={start_date}
         end_date={end_date}
