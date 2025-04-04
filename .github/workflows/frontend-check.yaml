@@ -1,4 +1,4 @@
-name: Cypress tests
+name: Cypress end-to-end tests
 on: 
   push:
     branches:
@@ -6,7 +6,7 @@ on:
       - revamp # rm when branch is deleted
   pull_request:
 jobs:
-  install:
+  install-gui:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
@@ -28,11 +28,15 @@ jobs:
 
   cypress-run:
     name: Cypress run
-    needs: install
+    needs: 
+      - install-gui
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: setup GUI containerized service dependencies
+        run: ./backend/tests/e2e_backend.sh        
 
       - name: Download the build folder
         uses: actions/download-artifact@v4
@@ -49,3 +53,10 @@ jobs:
         env:
           # pass GitHub token to detect new build vs re-run build
           GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Save screenshot
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-images
+          if-no-files-found: error
+          path: ./frontend/cypress/screenshots/ocp.cy.js
