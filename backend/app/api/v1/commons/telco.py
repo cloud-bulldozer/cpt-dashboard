@@ -110,7 +110,12 @@ async def getFilterData(
     if len(response["data"]) > 0:
         for item in response["data"]:
             for field, value in item.items():
-                if field == "total_records":
+                if (
+                    field == "total_records"
+                    or field == "total"
+                    or field == "pass_count"
+                    or field == "fail_count"
+                ):
                     continue
 
                 # Determine the appropriate value transformation
@@ -137,15 +142,23 @@ async def getFilterData(
                 # Append the dictionary to filterData
                 filterData.append(currDict)
 
-    # can be removed once python scripts to determine success or failure are executed directly
-    # in the splunk dashboard
+    status_values = [
+        status
+        for status in ["success", "failure"]
+        if response["summary"].get(status, 0) != 0
+    ]
+
     extra_filters = [
-        {"key": "jobStatus", "value": ["success", "failure"], "name": "Status"},
+        {"key": "jobStatus", "value": status_values, "name": "Status"},
         {"key": "ciSystem", "value": ["JENKINS"], "name": "CI System"},
     ]
-    filterData.append(extra_filters)
+    filterData.extend(extra_filters)
 
-    return {"data": filterData, "total": response["total"]}
+    return {
+        "data": filterData,
+        "summary": response["summary"],
+        "total": response["total"],
+    }
 
 
 def constructFilterQuery(filter):

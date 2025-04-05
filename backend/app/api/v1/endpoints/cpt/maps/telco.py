@@ -69,6 +69,7 @@ async def telcoFilter(start_datetime: date, end_datetime: date, filter: str):
         return {
             "total": response.get("total", 0),
             "filterData": filtered_data,
+            "summary": response.get("summary", {}),
         }
     except Exception as e:
         print(f"Error fetching filter for product telco: {e}")
