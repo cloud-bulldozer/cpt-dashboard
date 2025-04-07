@@ -72,10 +72,10 @@ The `get_runs` API is the primary entry point, returning an object that
 supports filtering, sorting, and pagination of the Crucible run data decorated
 with useful iteration, tag, and parameter data.
 
-The metrics data APIs (data, breakouts, summary, and graph) now allow
+The metrics data APIs (data, breakouts, summary, and graph) allow
 filtering by the metric "name" data. This allows "drilling down" through
 the non-periodic "tool data". For example, IO data is per-disk, CPU
-information is broken down by core and package. You can now aggregate
+information is broken down by core and package. You can aggregate
 all global data (e.g., total system CPU), or filter by breakout names to
 select by CPU, mode (usr, sys, irq), etc.
 
@@ -114,20 +114,20 @@ the `type` breakout name:
 
 This capability can be used to build an interactive exploratory UI to
 allow displaying breakout details. The `get_metrics` API will show all
-recorded metrics, along with information the names and values used in
+recorded metrics, along with the (breakout) names and values used in
 those. Metrics that show "names" with more than one value will need to be
 filtered to produce meaningful summaries or graphs.
 
-You can instead aggregate metrics across breakouts using the `?aggregate`
-query parameter, like `GET /api/v1/ilab/runs/<id>/graph/mpstat::Busy-CPU?aggregate`
+You can aggregate metrics across breakouts using the `?aggregate` query
+parameter, like `GET /api/v1/ilab/runs/<id>/graph/mpstat::Busy-CPU?aggregate`
 which will aggregate all CPU busy data for the system.
 
 Normally you'll want to display data based on sample periods, for example the
 primary period of an iteration, using `?period=<period-id>`. This will
 implicitly constrain the metric data based on the period ID associated with
 the `metric_desc` document *and* the begin/end time period of the selected
-periods. Normally, a benchmark will will separate iterations because each is
-run with a different parameter value, and the default graph labeling will
+period(s). Normally, a benchmark will define separate iterations when each
+is run with different parameter value(s), and the default graph labeling will
 look for a set of distinct parameters not used by other iterations: for
 example, `mpstat::Busy-CPU (batch-size=16)`.
 
