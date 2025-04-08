@@ -137,6 +137,8 @@ JOB_STATUS_MAP = {
     "success": "success",
     "failure": "failure",
     "error": "failure",
+    "passed": "success",
+    "failed": "failure",
 }
 
 keys_to_keep = ["product", "testName", "jobStatus", "ciSystem", "releaseStream"]

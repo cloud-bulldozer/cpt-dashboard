@@ -47,7 +47,6 @@ async def getData(
         for each_response in response["data"]:
             end_timestamp = int(each_response["timestamp"])
             test_data = each_response["data"]
-            threshold = await telcoGraphs.process_json(test_data, True)
             hash_digest, encrypted_data = hasher.hash_encrypt_json(each_response)
             execution_time_seconds = test_type_execution_times.get(
                 test_data["test_type"], 0
@@ -77,7 +76,9 @@ async def getData(
                     "buildUrl": jenkins_url
                     + "/"
                     + str(test_data["cluster_artifacts"]["ref"]["jenkins_build"]),
-                    "jobStatus": "failure" if (threshold != 0) else "success",
+                    "jobStatus": constants.JOB_STATUS_MAP.get(
+                        test_data["status"], "failure"
+                    ),
                     "jobDuration": execution_time_seconds,
                 }
             )
