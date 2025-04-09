@@ -15,7 +15,7 @@ class ORJSONResponse(JSONResponse):
         return orjson.dumps(content)
 
 
-origins = ["http://localhost:3000", "localhost:3000", "http://localhost:8080", "localhost:8080"]
+origins = ["http://localhost:3000", "localhost:3000"]
 
 app = FastAPI(
     default_response_class=ORJSONResponse,

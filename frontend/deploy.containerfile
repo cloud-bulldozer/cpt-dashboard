@@ -1,4 +1,4 @@
-FROM node:18-buster-slim AS builder
+FROM node:18-bookworm-slim AS builder
 
 WORKDIR /usr/src/cpt-dashboard
 COPY public/ public/
@@ -11,11 +11,12 @@ RUN npm clean-install
 RUN npm run build
 
 FROM nginxinc/nginx-unprivileged:1.27-alpine
-COPY --chown=nginx:nginx --from=builder /usr/src/cpt-dashboard/dist /usr/share/nginx/html
+COPY --chown=nginx:nginx --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/nginx/html/
+COPY --chown=nginx:nginx nginx.conf /etc/nginx/nginx.conf
 RUN touch /tmp/nginx.pid
-# RUN chown -R nginx:nginx /tmp/nginx.pid /usr/share/nginx/html /var/cache/nginx /var/log/nginx /etc/nginx/conf.d
+
 USER nginx
-EXPOSE 8080
+EXPOSE 3000
 
 ENTRYPOINT ["nginx"]
 CMD ["-g", "daemon off;"]
