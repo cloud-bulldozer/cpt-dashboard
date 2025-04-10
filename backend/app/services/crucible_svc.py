@@ -1420,6 +1420,11 @@ class CrucibleService:
             run["begin"] = b
             run["end"] = e
 
+            # Always normalize the Crucible RUN ID field to "id" regardless
+            # of the CDM version, for client consistency.
+            if ridn != "id":
+                run["id"] = rid
+                del run[ridn]
             run["tags"] = tags.get(rid, {})
             run["iterations"] = []
             run["primary_metrics"] = set()
