@@ -11,23 +11,21 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4
       - name: build backend image
-        runs: podman build -f backend/backend.containerfile --tag backend ./backend
-        
+        run: podman build -f backend/backend.containerfile --tag backend ./backend
   build-functional-backend:
     runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4        
       - name: build functional backend image
-        runs: podman build -f backend/tests/functiona.containerfile --tag functional ./backend
-
+        run: podman build -f backend/tests/functiona.containerfile --tag functional ./backend
   build-frontend:
     runs-on: ubuntu-24.04
     steps:
       - name: checkout
         uses: actions/checkout@v4
       - name: build frontend
-        runs: podman build -t frontend -f frontend/frontend.containerfile ./frontend
+        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend
 
   e2e-tests:
     runs-on: ubuntu-24.04
@@ -46,7 +44,9 @@ jobs:
         run: podman run --pod=${POD_NAME} --name=cypress-e2e -v $(pwd)/frontend:/frontend:z -w /frontend cypress/included
 
       - name: copy e2e screenshots from container
-        run: mkdir frontend/cypress/screenshots && podman cp cypress-e2e:/frontend/cypress/screenshots $(pwd)/frontend/cypress/screenshots
+        run: |
+          mkdir frontend/cypress/screenshots
+          podman cp cypress-e2e:/frontend/cypress/screenshots $(pwd)/frontend/cypress/screenshots
       - name: Save Cypress test screenshots
         uses: actions/upload-artifact@v4
         with:
