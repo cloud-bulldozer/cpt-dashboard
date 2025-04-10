@@ -3,7 +3,7 @@ on:
   push:
     branches:
       - main
-      - optmz-gui
+      - web-server
   pull_request:
 jobs:
   e2e-tests:
