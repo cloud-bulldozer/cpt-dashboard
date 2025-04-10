@@ -24,7 +24,7 @@ jobs:
       - name: run cypress e2e
         run: podman run --pod=${POD_NAME} --name=cypress-e2e e2e-frontend
       - name: copy e2e screenshots from container
-        run: podman cp cypress-e2e:/frontend/cypress/screenshots $(pwd)/frontend/cypress/screenshots
+        run: podman cp cypress-e2e:/usr/src/cpt-dashboard/cypress/screenshots $(pwd)/frontend/cypress/screenshots
       - name: save cypress test screenshots
         uses: actions/upload-artifact@v4
         with:

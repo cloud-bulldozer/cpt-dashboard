@@ -10,5 +10,6 @@ RUN npm install
 
 COPY . .
 
+ENTRYPOINT ["npm"]
 
-CMD ["npm", "run", "cypress:run:ci"]
+CMD ["run", "cypress:run:ci"]
