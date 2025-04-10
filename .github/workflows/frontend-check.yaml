@@ -45,12 +45,15 @@ jobs:
       #   run: ./backend/tests/e2e_backend.sh
       # - name: run frontend
       #   run: podman run --pod=${POD_NAME} -d --name=front frontend
-      - name: ls
-        run: ls 
+      - name: npm install
+        run: npm --prefix frontend install
       - name: ls frontend
         run: ls frontend
       - name: run cypress e2e
-        run: podman run --pod=${POD_NAME} --name=cypress-e2e -v $(pwd)/frontend:/frontend:z -w /frontend --entrypoint "" cypress/included "cypress" run --e2e --headless
+        run: podman run --pod=${POD_NAME} --name=cypress-e2e \
+          -v "$(pwd)/frontend:/frontend:z" \
+          -w /frontend \
+          cypress/included 
 
       # - name: copy e2e screenshots from container
       #   run: |
