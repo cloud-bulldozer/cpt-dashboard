@@ -3,59 +3,31 @@ on:
   push:
     branches:
       - main
+      - optmz-gui
   pull_request:
 jobs:
-  install-gui:
-    runs-on: ubuntu-latest
+  e2e-tests:
+    runs-on: ubuntu-24.04
+    env:
+      POD_NAME: e2e
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Cypress install
-        uses: cypress-io/github-action@v6
-        with:
-          runTests: false
-          build: npm run build
-          working-directory: ./frontend
-
-      - name: Save build folder
-        uses: actions/upload-artifact@v4
-        with:
-          name: build
-          if-no-files-found: error
-          path: ./frontend/dist
-
-  cypress-run:
-    name: Cypress run
-    needs:
-      - install-gui
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: setup GUI containerized service dependencies
+      - name: checkout
+        uses: actions/checkout@v4   
+      - name: build frontend 
+        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend        
+      - name: run backend
         run: ./backend/tests/e2e_backend.sh
-
-      - name: Download the build folder
-        uses: actions/download-artifact@v4
-        with:
-          name: build
-          path: ./frontend/dist
-
-      - name: Cypress run
-        uses: cypress-io/github-action@v6
-        with:
-          start: npm run dev
-          browser: chrome
-          working-directory: ./frontend
-        env:
-          # pass GitHub token to detect new build vs re-run build
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
-
-      - name: Save Cypress test screenshots
+      - name: run frontend
+        run: podman run --pod=${POD_NAME} -d --name=front frontend
+      - name: build cypress end-to-end tests
+        run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
+      - name: run cypress e2e
+        run: podman run --pod=${POD_NAME} --name=cypress-e2e e2e-frontend
+      - name: copy e2e screenshots from container
+        run: podman cp cypress-e2e:/usr/src/cpt-dashboard/cypress/screenshots $(pwd)/frontend/cypress/screenshots
+      - name: save cypress test screenshots
         uses: actions/upload-artifact@v4
         with:
           name: e2e-images
           if-no-files-found: error
-          path: ./frontend/cypress/screenshots/ocp.cy.js
+          path: ./frontend/cypress/screenshots/ocp.cy.js        
