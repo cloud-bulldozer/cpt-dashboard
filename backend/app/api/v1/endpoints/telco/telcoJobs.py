@@ -120,7 +120,7 @@ async def filters(
 
     results = await getFilterData(start_date, end_date, filter, "telco.splunk")
 
-    response = {"filterData": results["data"], "summary": {"total": results["total"]}}
+    response = {"filterData": results["data"], "summary": results["summary"]}
 
     if pretty:
         json_str = json.dumps(response, indent=4)

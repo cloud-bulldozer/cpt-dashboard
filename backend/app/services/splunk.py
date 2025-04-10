@@ -129,10 +129,13 @@ class SplunkService:
                     "values(node_name) AS nodeName, "
                     "values(test_type) AS benchmark, "
                     "values(ocp_version) AS ocpVersion, "
-                    "values(ocp_build) AS releaseStream "
-                    "values(formal) AS isFormal "
-                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream, isFormal, total_records"
+                    "values(ocp_build) AS releaseStream, "
+                    "values(formal) AS isFormal, "
+                    'count(eval(status="passed")) AS pass_count,'
+                    'count(eval(like(status,"fail%"))) AS fail_count'
+                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream, isFormal, total_records, pass_count, fail_count, jobStatus"
                 )
+
                 # Run Splunk search asynchronously using `oneshot`
                 results_reader = await asyncio.to_thread(
                     self.service.jobs.oneshot,
@@ -146,8 +149,18 @@ class SplunkService:
                 decoded_data = orjson.loads(results_reader.read())
                 value = decoded_data.get("results", [])
                 total_records = int(value[0].get("total_records", 0)) if value else 0
+                pass_count = int(value[0].get("pass_count", 0)) if value else 0
+                fail_count = int(value[0].get("fail_count", 0)) if value else 0
 
-                return {"data": value, "total": total_records}
+                return {
+                    "data": value,
+                    "total": total_records,
+                    "summary": {
+                        "total": total_records,
+                        "success": pass_count,
+                        "failure": fail_count,
+                    },
+                }
             except Exception as e:
                 print(f"Error on building data for filters: {e}")
 
