@@ -1,11 +1,11 @@
 #!/bin/bash
 set -e
 
-# echo "building backend image"
-# podman build -f backend/backend.containerfile --tag backend ./backend
+echo "building backend image"
+podman build -f backend/backend.containerfile --tag backend ./backend
 
-# echo "building backend functional test image"
-# podman build -f backend/tests/functional.containerfile --tag functional ./backend
+echo "building backend functional test image"
+podman build -f backend/tests/functional.containerfile --tag functional ./backend
 
 export POD_NAME="e2e"
 
