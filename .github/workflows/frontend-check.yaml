@@ -6,39 +6,41 @@ on:
       - optmz-gui
   pull_request:
 jobs:
-  build-backend:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: build backend image
-        run: podman build -f backend/backend.containerfile --tag backend ./backend
+  # build-backend:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v4
+  #     - name: build backend image
+  #       run: podman build -f backend/backend.containerfile --tag backend ./backend
 
-  build-functional-backend:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4        
-      - name: build functional backend image
-        run: podman build -f backend/tests/functional.containerfile --tag functional ./backend
+  # build-functional-backend:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v4        
+  #     - name: build functional backend image
+  #       run: podman build -f backend/tests/functional.containerfile --tag functional ./backend
 
-  build-frontend:
-    runs-on: ubuntu-24.04
-    steps:
-      - name: checkout
-        uses: actions/checkout@v4
-      - name: build frontend
-        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend
+  # build-frontend:
+  #   runs-on: ubuntu-24.04
+  #   steps:
+  #     - name: checkout
+  #       uses: actions/checkout@v4
+  #     - name: build frontend
+  #       run: podman build -t frontend -f frontend/frontend.containerfile ./frontend
 
   e2e-tests:
     runs-on: ubuntu-24.04
-    needs:
-      - build-backend
-      - build-functional-backend
-      - build-frontend
     steps:
       - name: checkout
         uses: actions/checkout@v4    
+      - name: build backend image
+        run: podman build -f backend/backend.containerfile --tag backend ./backend        
+      - name: build functional backend image
+        run: podman build -f backend/tests/functional.containerfile --tag functional ./backend        
+      - name: build frontend
+        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend        
       - name: run backend
         run: ./backend/tests/e2e_backend.sh
       - name: run frontend
