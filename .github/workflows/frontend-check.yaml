@@ -20,7 +20,7 @@ jobs:
       - name: checkout
         uses: actions/checkout@v4        
       - name: build functional backend image
-        run: podman build -f backend/tests/functiona.containerfile --tag functional ./backend
+        run: podman build -f backend/tests/functional.containerfile --tag functional ./backend
 
   build-frontend:
     runs-on: ubuntu-24.04
