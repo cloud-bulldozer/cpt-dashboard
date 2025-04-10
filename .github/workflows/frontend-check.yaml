@@ -50,7 +50,7 @@ jobs:
       - name: ls frontend
         run: ls frontend
       - name: run cypress e2e
-        run: podman run --pod=${POD_NAME} --name=cypress-e2e -v $(pwd)/frontend:/frontend:z -w /frontend cypress/included
+        run: podman run --pod=${POD_NAME} --name=cypress-e2e -v $(pwd)/frontend:/frontend:z -w /frontend --entrypoint "" cypress/included
 
       # - name: copy e2e screenshots from container
       #   run: |
