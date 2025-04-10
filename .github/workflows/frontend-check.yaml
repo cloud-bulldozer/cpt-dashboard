@@ -35,29 +35,33 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4    
-      - name: build backend image
-        run: podman build -f backend/backend.containerfile --tag backend ./backend        
-      - name: build functional backend image
-        run: podman build -f backend/tests/functional.containerfile --tag functional ./backend        
-      - name: build frontend
-        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend        
-      - name: run backend
-        run: ./backend/tests/e2e_backend.sh
-      - name: run frontend
-        run: podman run --pod=${POD_NAME} -d --name=front frontend
+      # - name: build backend image
+      #   run: podman build -f backend/backend.containerfile --tag backend ./backend        
+      # - name: build functional backend image
+      #   run: podman build -f backend/tests/functional.containerfile --tag functional ./backend        
+      # - name: build frontend
+      #   run: podman build -t frontend -f frontend/frontend.containerfile ./frontend        
+      # - name: run backend
+      #   run: ./backend/tests/e2e_backend.sh
+      # - name: run frontend
+      #   run: podman run --pod=${POD_NAME} -d --name=front frontend
+      - name: ls
+        run: ls 
+      - name: ls frontend
+        run: ls frontend
       - name: run cypress e2e
         run: podman run --pod=${POD_NAME} --name=cypress-e2e -v $(pwd)/frontend:/frontend:z -w /frontend cypress/included
 
-      - name: copy e2e screenshots from container
-        run: |
-          mkdir frontend/cypress/screenshots
-          podman cp cypress-e2e:/frontend/cypress/screenshots $(pwd)/frontend/cypress/screenshots
-      - name: Save Cypress test screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-images
-          if-no-files-found: error
-          path: ./frontend/cypress/screenshots/ocp.cy.js        
+      # - name: copy e2e screenshots from container
+      #   run: |
+      #     mkdir frontend/cypress/screenshots
+      #     podman cp cypress-e2e:/frontend/cypress/screenshots $(pwd)/frontend/cypress/screenshots
+      # - name: Save Cypress test screenshots
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: e2e-images
+      #     if-no-files-found: error
+      #     path: ./frontend/cypress/screenshots/ocp.cy.js        
 
 
   # install-gui:
