@@ -1,34 +1,26 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  buildFilterData,
-  calculateMetrics,
   deleteAppliedFilters,
-  getFilteredData,
+  getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
+import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
-export const fetchTelcoJobsData = () => async (dispatch, getState) => {
+export const fetchTelcoJobsData = () => async (dispatch) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().telco;
-    const response = await API.get(API_ROUTES.TELCO_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
+
+    const params = dispatch(getRequestParams("telco"));
+
+    const response = await API.get(API_ROUTES.TELCO_JOBS_API_V1, { params });
     if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
@@ -51,10 +43,15 @@ export const fetchTelcoJobsData = () => async (dispatch, getState) => {
         type: TYPES.SET_TELCO_FILTERED_DATA,
         payload: response.data.results,
       });
-
-      dispatch(applyFilters());
-      dispatch(tableReCalcValues());
+      dispatch({
+        type: TYPES.SET_TELCO_PAGE_TOTAL,
+        payload: {
+          total: Number(response.data.total),
+          offset: response.data.offset,
+        },
+      });
     }
+    dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
   }
@@ -73,20 +70,15 @@ export const setTelcoSortIndex = (index) => ({
   type: TYPES.SET_TELCO_SORT_INDEX,
   payload: index,
 });
-
+export const setTelcoOffset = (offset) => ({
+  type: TYPES.SET_TELCO_OFFSET,
+  payload: offset,
+});
 export const setTelcoSortDir = (direction) => ({
   type: TYPES.SET_TELCO_SORT_DIR,
   payload: direction,
 });
-export const sliceTelcoTableRows =
-  (startIdx, endIdx) => (dispatch, getState) => {
-    const results = [...getState().telco.filteredResults];
 
-    dispatch({
-      type: TYPES.SET_TELCO_INIT_JOBS,
-      payload: results.slice(startIdx, endIdx),
-    });
-  };
 export const setTelcoCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().telco.filterData];
   const options = filterData.filter((item) => item.name === category)[0].value;
@@ -116,25 +108,12 @@ export const removeTelcoAppliedFilters =
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
     dispatch(applyFilters());
   };
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().telco;
+export const applyFilters = () => (dispatch) => {
+  dispatch(setTelcoOffset(INITAL_OFFSET));
 
-  const results = [...getState().telco.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_TELCO_FILTERED_DATA,
-    payload: filtered,
-  });
+  dispatch(fetchTelcoJobsData());
+  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("telco"));
 };
 export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
   const { selectedFilters, start_date, end_date } = getState().telco;
@@ -199,17 +178,28 @@ export const setTelcoDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+  };
 
+export const applyTelcoDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setTelcoOffset(INITAL_OFFSET));
+    dispatch(setTelcoDateFilter(start_date, end_date, navigate));
     dispatch(fetchTelcoJobsData());
   };
 
-export const getTelcoSummary = () => (dispatch, getState) => {
-  const results = [...getState().telco.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getTelcoSummary = (countObj) => (dispatch) => {
+  const other =
+    countObj["total"] -
+    ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: Number(countObj["success"]) || 0,
+    failureCount: Number(countObj["failure"]) || 0,
+    total: Number(countObj["total"]),
+  };
   dispatch({
     type: TYPES.SET_TELCO_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
 
@@ -284,8 +274,29 @@ export const fetchGraphData =
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
-export const tableReCalcValues = () => (dispatch) => {
-  dispatch(getTelcoSummary());
-  dispatch(setTelcoPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().telco;
+  dispatch(setTelcoPageOptions(page, perPage));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
+  try {
+    const { tableFilters, categoryFilterValue } = getState().telco;
+
+    const params = dispatch(getRequestParams("telco"));
+
+    const response = await API.get("/api/v1/telco/filters", { params });
+
+    if (response.status === 200 && response?.data?.filterData?.length > 0) {
+      dispatch(getTelcoSummary(response.data.summary));
+      dispatch({
+        type: TYPES.SET_TELCO_FILTER_DATA,
+        payload: response.data.filterData,
+      });
+      const activeFilter = categoryFilterValue || tableFilters[0].name;
+      dispatch(setTelcoCatFilters(activeFilter));
+    }
+  } catch (error) {
+    dispatch(showFailureToast());
+  }
 };

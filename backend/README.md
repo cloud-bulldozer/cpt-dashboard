@@ -37,3 +37,9 @@ Start backend application with hot reload.
 ```shell
 ./scripts/start-reload.sh
 ```
+
+## Using A Debugger
+
+The file `app/entrypoint.py` starts the backend using uvicorn on port 8000.
+
+To use a debugger, run the entrypoint file from the debugger with the appropriate poetry backend.

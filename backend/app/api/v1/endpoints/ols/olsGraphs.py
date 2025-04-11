@@ -164,4 +164,8 @@ async def getMatchRuns(metadata: dict):
     es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query=query)
     await es.close()
-    return [item['_source']['uuid'] for item in response]
+    runs = [item["_source"] for item in response["data"]]
+    uuids = []
+    for run in runs:
+        uuids.append(run["uuid"])
+    return uuids

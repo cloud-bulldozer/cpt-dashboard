@@ -1,0 +1,61 @@
+name: Cypress end-to-end tests
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+jobs:
+  install-gui:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Cypress install
+        uses: cypress-io/github-action@v6
+        with:
+          runTests: false
+          build: npm run build
+          working-directory: ./frontend
+
+      - name: Save build folder
+        uses: actions/upload-artifact@v4
+        with:
+          name: build
+          if-no-files-found: error
+          path: ./frontend/dist
+
+  cypress-run:
+    name: Cypress run
+    needs:
+      - install-gui
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: setup GUI containerized service dependencies
+        run: ./backend/tests/e2e_backend.sh
+
+      - name: Download the build folder
+        uses: actions/download-artifact@v4
+        with:
+          name: build
+          path: ./frontend/dist
+
+      - name: Cypress run
+        uses: cypress-io/github-action@v6
+        with:
+          start: npm run dev
+          browser: chrome
+          working-directory: ./frontend
+        env:
+          # pass GitHub token to detect new build vs re-run build
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+
+      - name: Save Cypress test screenshots
+        uses: actions/upload-artifact@v4
+        with:
+          name: e2e-images
+          if-no-files-found: error
+          path: ./frontend/cypress/screenshots/ocp.cy.js
