@@ -10,6 +10,8 @@ from app.api.v1.endpoints.quay import quayJobs
 from app.api.v1.endpoints.quay import quayGraphs
 from app.api.v1.endpoints.telco import telcoJobs
 from app.api.v1.endpoints.telco import telcoGraphs
+from app.api.v1.endpoints.ols import olsJobs
+from app.api.v1.endpoints.ols import olsGraphs
 from app.api.v1.endpoints.ocm import ocmJobs
 
 
@@ -30,6 +32,10 @@ router.include_router(quayGraphs.router, tags=["quay"])
 # Telco endpoints
 router.include_router(telcoJobs.router, tags=["telco"])
 router.include_router(telcoGraphs.router, tags=["telco"])
+
+# OLS endpoints
+router.include_router(olsJobs.router, tags=['ols'])
+router.include_router(olsGraphs.router, tags=['ols'])
 
 # Jira endpoints
 router.include_router(jira.router, tags=["jira"])
