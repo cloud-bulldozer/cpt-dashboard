@@ -57,7 +57,6 @@ class ElasticService:
         """Runs a query and returns the results"""
         if size == 0:
             """Handles aggregation queries logic"""
-            previous_results = None
             if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
@@ -239,7 +238,7 @@ class ElasticService:
         seen = set()
         filtered_results = []
         for each_result in all_results:
-            flat_doc = flatten_dict(each_result['_source'])
+            flat_doc = flatten_dict(each_result)
             if tuple(sorted(flat_doc.items())) in seen:
                 continue
             else:

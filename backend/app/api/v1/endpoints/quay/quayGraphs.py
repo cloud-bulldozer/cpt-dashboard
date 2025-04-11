@@ -11,22 +11,19 @@ router = APIRouter()
 
 @router.get("/api/v1/quay/graph/{uuid}")
 async def graph(uuid: str):
+    api_index = "quay-vegeta-results"
+    image_push_pull_index = "quay-push-pull"
+    meta = await getMetadata(uuid, "quay.elasticsearch")
+    uuids = await getMatchRuns(meta)
+    prevApiData = await getQuayMetrics(uuids, api_index)
+    prevImagesData = await getImageMetrics(uuids, image_push_pull_index)
     apiResults = []
     imageResults = []
     latencyResults = []
-    currentApiData = None
-    currentImagesData = None
-    api_index = "quay-vegeta-results"
-    image_push_pull_index = "quay-push-pull"
-    meta = await getMetadata(uuid, 'quay.elasticsearch')    
-    uuids = await getMatchRuns(meta)
-    if uuid in uuids and len(uuids) > 1:
-        uuids.remove(uuid)
+    if len(uuids) > 1:
         currentApiData = await getQuayMetrics([uuid], api_index)
         currentImagesData = await getImageMetrics([uuid], image_push_pull_index)
-    prevApiData = await getQuayMetrics(uuids, api_index)
-    prevImagesData = await getImageMetrics(uuids, image_push_pull_index)
-    if currentApiData is None:
+    else:
         currentApiData = prevApiData
         currentImagesData = prevImagesData
     prevApiResults = await parseApiResults(prevApiData)
@@ -215,6 +212,7 @@ async def getQuayMetrics(uuids: list, index: str):
 
 
 async def getMatchRuns(meta: dict):
+    version = meta["ocpVersion"][:4]
     query = {
         "query": {
             "bool": {

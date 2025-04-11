@@ -42,10 +42,16 @@ async def jobs(
     sort: str = Query(None, description="To sort fields on specified direction"),
     filter: str = Query(None, description="Query to filter the jobs"),
 ):
-
-    return await ocpJobs(start_date, end_date, 
-                         pretty, size, offset, sort, 
-                         filter="benchmark='ols-load-generator'")
+    filter_clause = "benchmark='ols-load-generator'"
+    filter = (
+        filter_clause
+        if not filter
+        else filter
+        if filter_clause in filter
+        else f"{filter}&{filter_clause}"
+    )
+    return await ocpJobs(start_date, end_date, pretty, 
+                         size, offset, sort, filter)
 
 
 @router.get(
