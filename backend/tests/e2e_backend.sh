@@ -11,7 +11,7 @@ export POD_NAME="e2e"
 
 echo "cleaning up and recreating pod"
 podman pod rm -f ${POD_NAME}
-podman pod create --name=${POD_NAME} --publish 8000:8000
+podman pod create --name=${POD_NAME} --publish 127.0.0.1:8000:8000 --publish 127.0.0.1:3000:3000
 
 ./backend/tests/opensearch_ocp.sh
 echo "seeding db"
