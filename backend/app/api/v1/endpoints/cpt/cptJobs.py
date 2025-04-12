@@ -103,6 +103,14 @@ async def jobs(
         )
 
     offset, size = normalize_pagination(offset, size)
+    filter_dict = get_dict_from_qs(filter) if filter else {}
+    filter_product = filter_dict.pop("product", None)
+    individual_prod = ["ocp", "telco", "quay"]
+    if filter_product:
+        matched = [p for p in filter_product if p in individual_prod]
+        unmatched = [p for p in filter_product if p not in individual_prod]
+        filter_product = matched + ["hce", "ocm"] if unmatched else matched
+        filter_dict["product"] = unmatched
 
     filter_product, filter_dict = update_filter_product(filter)
     prod_list = filter_product if filter_product else list(products.keys())
@@ -169,6 +177,8 @@ async def filters(
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
 
+    updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
+    print(updated_filter_qs)
     results = await asyncio.gather(
         *[
             fetch_data_limited(
