@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
 const Quay = () => {
   const dispatch = useDispatch();
@@ -41,6 +42,8 @@ const Quay = () => {
     totalJobs,
   } = useSelector((state) => state.quay);
 
+  const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
+
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -61,9 +64,14 @@ const Quay = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(buildFilterData());
-    dispatch(fetchQuayJobsData());
-  }, [dispatch]);
+    if (!fromSideMenu && results.length === 0) {
+      dispatch(buildFilterData());
+      dispatch(fetchQuayJobsData());
+    }
+    if (fromSideMenu) {
+      dispatch(setFromSideMenuFlag(false));
+    }
+  }, [dispatch, fromSideMenu, results]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

@@ -11,12 +11,14 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 import { useEffect } from "react";
 
 const Home = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
 
   const {
     tableColumns,
@@ -57,8 +59,13 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchDataConcurrently());
-  }, [dispatch]);
+    if (!fromSideMenu && results.length === 0) {
+      dispatch(fetchDataConcurrently());
+    }
+    if (fromSideMenu) {
+      dispatch(setFromSideMenuFlag(false));
+    }
+  }, [dispatch, fromSideMenu, results, results.length]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));

@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, date
 from fastapi import APIRouter, Query, Response
 from fastapi.responses import ORJSONResponse
 import pandas as pd
+from urllib.parse import urlencode
 
 from .maps.ocp import ocpMapper, ocpFilter
 from .maps.quay import quayMapper, quayFilter
@@ -102,21 +103,38 @@ async def jobs(
         )
 
     offset, size = normalize_pagination(offset, size)
+    filter_dict = get_dict_from_qs(filter) if filter else {}
+    filter_product = filter_dict.pop("product", None)
+    individual_prod = ["ocp", "telco", "quay"]
+    if filter_product:
+        matched = [p for p in filter_product if p in individual_prod]
+        unmatched = [p for p in filter_product if p not in individual_prod]
+        filter_product = matched + ["hce", "ocm"] if unmatched else matched
+        filter_dict["product"] = unmatched
 
+    prod_list = filter_product if filter_product else list(products.keys())
+    print("jobs")
+    print(prod_list)
+
+    updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
+    print(updated_filter_qs)
     results = await asyncio.gather(
         *[
-            fetch_data_limited(product, start_date, end_date, size, offset, filter)
-            for product in products
+            fetch_data_limited(
+                product, start_date, end_date, size, offset, filter=updated_filter_qs
+            )
+            for product in prod_list
         ],
         return_exceptions=True,
     )
 
     results = [res for res in results if isinstance(res, dict)]
 
-    results_df = pd.concat(
-        [res["data"] for res in results if not res["data"].empty], ignore_index=True
-    )
-
+    non_empty_df = [res["data"] for res in results if not res["data"].empty]
+    if non_empty_df:
+        results_df = pd.concat(non_empty_df, ignore_index=True)
+    else:
+        results_df = pd.DataFrame()
     total_jobs_count = sum(int(res["total"]) for res in results)
 
     response = {
@@ -156,20 +174,31 @@ async def filters(
         )
 
     filter_dict = get_dict_from_qs(filter) if filter else {}
+    print("filter_dict")
+
     filter_product = filter_dict.pop("product", None)
+    print("filter_product")
 
-    if filter_product and filter_product not in productsFilter:
-        return Response(
-            content=json.dumps({"detail": "product not supported"}),
-            status_code=400,
-        )
+    # if filter_product and filter_product not in productsFilter:
+    #     return Response(
+    #         content=json.dumps({"detail": "product not supported"}),
+    #         status_code=400,
+    #     )
+    # prod_list = await get_prod_list(filter_dict)
+    individual_prod = ["ocp", "telco", "quay"]
+    if filter_product:
+        matched = [p for p in filter_product if p in individual_prod]
+        unmatched = [p for p in filter_product if p not in individual_prod]
+        filter_product = matched + ["hce", "ocm"] if unmatched else matched
+        filter_dict["product"] = unmatched
+    prod_list = filter_product if filter_product else list(productsFilter.keys())
 
-    prod_list = [filter_product] if filter_product else list(productsFilter.keys())
-
+    updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
+    print(updated_filter_qs)
     results = await asyncio.gather(
         *[
             fetch_data_limited(
-                product, start_date, end_date, filter=filter, is_filter=True
+                product, start_date, end_date, filter=updated_filter_qs, is_filter=True
             )
             for product in prod_list
         ]

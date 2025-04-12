@@ -192,10 +192,10 @@ export const getTelcoSummary = (countObj) => (dispatch) => {
     countObj["total"] -
     ((countObj["success"] || 0) + (countObj["failure"] || 0));
   const summary = {
-    othersCount: other,
+    othersCount: other || 0,
     successCount: Number(countObj["success"]) || 0,
     failureCount: Number(countObj["failure"]) || 0,
-    total: Number(countObj["total"]),
+    total: Number(countObj["total"]) || 0,
   };
   dispatch({
     type: TYPES.SET_TELCO_SUMMARY,

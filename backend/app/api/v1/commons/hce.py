@@ -13,13 +13,26 @@ async def getData(
     filter: str,
     configpath: str,
 ):
+    should = []
+    must_not = []
     query = {
         "size": size,
         "from": offset,
-        "query": {"bool": {"filter": {"range": {"date": {"format": "yyyy-MM-dd"}}}}},
+        "query": {
+            "bool": {
+                "filter": {"range": {"date": {"format": "yyyy-MM-dd"}}},
+                "should": should,
+                "must_not": must_not,
+            }
+        },
     }
-    aggregate = utils.buildAggregateQuery(HCE_FIELD_CONSTANT_DICT)
-    query["aggs"] = aggregate
+
+    if filter:
+        refiner = utils.transform_filter(filter)
+        should.extend(refiner["query"])
+        must_not.extend(refiner["must_query"])
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+
     es = ElasticService(configpath=configpath)
 
     response = await es.post(

@@ -223,10 +223,10 @@ export const getCPTSummary = (countObj) => (dispatch) => {
     : countObj["total"] -
       ((countObj["success"] || 0) + (countObj["failure"] || 0));
   const summary = {
-    othersCount: other,
+    othersCount: other || 0,
     successCount: countObj["success"] || 0,
     failureCount: countObj["failure"] || 0,
-    total: countObj["total"],
+    total: countObj["total"] || 0,
   };
   dispatch({
     type: TYPES.SET_CPT_SUMMARY,
@@ -255,6 +255,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
       console.warn("No filter data received from API");
       dispatch(getCPTSummary({}));
       dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: [] });
+      dispatch({ type: TYPES.COMPLETED });
       return;
     }
 

@@ -10,6 +10,7 @@ export const CLEAR_TOAST = "CLEAR_TOAST";
 /* Sidemenu */
 export const SET_ACTIVE_MENU_ITEM = "SET_ACTIVE_MENU_ITEM";
 export const TOGGLE_SIDE_MENU = "TOGGLE_SIDE_MENU";
+export const SET_FROM_SIDE_MENU_FLAG = "TOGGLE_FROM_SIDE_MENU_FLAG";
 
 /* Header */
 export const SET_LAST_UPDATED_TIME = "SET_LAST_UPDATED_TIME";
