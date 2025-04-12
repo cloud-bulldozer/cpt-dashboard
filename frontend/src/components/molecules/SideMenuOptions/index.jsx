@@ -24,7 +24,7 @@ const sideMenuOptions = [
     displayName: "Telco",
   },
   {
-    id: CONSTANTS.QUAY_OLS,
+    id: CONSTANTS.OLS_NAV,
     key: "ols",
     displayName: "OLS",
   },
@@ -55,8 +55,8 @@ const MenuOptions = () => {
 
   return (
     <>
-      <Nav onSelect={onSelect}>
-        <NavList>
+      <Nav onSelect={onSelect} ouiaId="side_menu_options">
+        <NavList>  
           {sideMenuOptions.map((option) => {
             return (
               <NavItem

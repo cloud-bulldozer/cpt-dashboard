@@ -1,0 +1,5 @@
+[ocp.elasticsearch]
+indice = "perf_scale_ci"
+url = "http://localhost:9200"
+username = "admin"
+password = "admin"

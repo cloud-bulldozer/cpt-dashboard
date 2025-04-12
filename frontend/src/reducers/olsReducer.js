@@ -2,6 +2,7 @@ import * as TYPES from "@/actions/types";
 
 import {
   DEFAULT_PER_PAGE,
+  INITAL_OFFSET,
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 
@@ -59,18 +60,20 @@ const initialState = {
     { name: "Infra", value: "infraNodesCount" },
     { name: "Total", value: "totalNodesCount" },
   ],
-  filterData: [],
-  filteredResults: [],
-  filterOptions: [],
-  categoryFilterValue: "Benchmark",
-  appliedFilters: {},
   activeSortDir: null,
   activeSortIndex: null,
-  tableData: [],
-  graphData: [],
+  sort: "",
   page: START_PAGE,
   perPage: DEFAULT_PER_PAGE,
+  offset: INITAL_OFFSET,
+  totalJobs: 0,
+  filterData: [],
+  categoryFilterValue: "Benchmark",
+  filterOptions: [],
+  appliedFilters: {},
+  filteredResults: [],
   summary: {},
+  graphData: [],
 };
 
 const OLSReducer = (state = initialState, action = {}) => {
@@ -82,6 +85,14 @@ const OLSReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
+    case TYPES.SET_OLS_PAGE_TOTAL:
+      return {
+        ...state,
+        totalJobs: payload.total,
+        offset: payload.offset,
+      };
+    case TYPES.SET_OLS_OFFSET:
+      return { ...state, offset: payload };
     case TYPES.SET_OLS_DATE_FILTER:
       return {
         ...state,
@@ -92,30 +103,30 @@ const OLSReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_OLS_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_OLS_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_OLS_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_OLS_PAGE_OPTIONS:
       return { ...state, page: payload.page, perPage: payload.perPage };
-    case TYPES.SET_OLS_INIT_JOBS:
-      return { ...state, tableData: payload };
-    case TYPES.SET_OLS_FILTERED_DATA:
-      return { ...state, filteredResults: payload };
-    case TYPES.SET_OLS_FILTER_OPTIONS:
-      return { ...state, filterOptions: payload };
-    case TYPES.SET_OLS_CATEGORY_FILTER:
-      return { ...state, categoryFilterValue: payload };
-    case TYPES.SET_OLS_FILTER_DATA:
-      return { ...state, filterData: payload };
-    case TYPES.SET_OLS_APPLIED_FILTERS:
-      return { ...state, appliedFilters: payload };
-    case TYPES.SET_OLS_SELECTED_FILTERS:
-      return { ...state, selectedFilters: payload };
     case TYPES.SET_OLS_SUMMARY:
       return { ...state, summary: payload };
-    case TYPES.SET_OLS_COLUMNS:
-      return { ...state, tableColumns: payload };
+    case TYPES.SET_OLS_FILTER_DATA:
+      return { ...state, filterData: payload };
+    case TYPES.SET_OLS_CATEGORY_FILTER:
+      return { ...state, categoryFilterValue: payload };
+    case TYPES.SET_OLS_FILTER_OPTIONS:
+      return { ...state, filterOptions: payload };
+    case TYPES.SET_OLS_FILTERED_DATA:
+      return { ...state, filteredResults: payload };
+    case TYPES.SET_OLS_APPLIED_FILTERS:
+      return { ...state, appliedFilters: payload };
     case TYPES.SET_OLS_GRAPH_DATA:
       return { ...state, graphData: [...state.graphData, payload] };
+    case TYPES.SET_OLS_COLUMNS:
+      return { ...state, tableColumns: payload };
+    case TYPES.SET_SELECTED_OLS_FILTERS:
+      return { ...state, selectedFilters: payload };
     default:
       return state;
   }

@@ -1,88 +1,11 @@
 import * as TYPES from "@/actions/types.js";
 
-import { setCPTCatFilters, sliceCPTTableRows } from "./homeActions";
-import { setOCPCatFilters, sliceOCPTableRows } from "./ocpActions";
-import { setOLSCatFilters, sliceOLSTableRows } from "./olsActions";
-import { setQuayCatFilters, sliceQuayTableRows } from "./quayActions";
-import { setTelcoCatFilters, sliceTelcoTableRows } from "./telcoActions";
-
-import { DEFAULT_PER_PAGE } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
-
-const getSortableRowValues = (result, tableColumns) => {
-  const tableKeys = tableColumns.map((item) => item.value);
-  return tableKeys.map((key) => result[key]);
-};
-
-export const sortTable = (currState) => (dispatch, getState) => {
-  const results = [...getState()[currState].filteredResults];
-  const { activeSortDir, activeSortIndex, tableColumns } =
-    getState()[currState];
-  try {
-    if (activeSortIndex !== null && typeof activeSortIndex !== "undefined") {
-      const sortedResults = results.sort((a, b) => {
-        const aValue = getSortableRowValues(a, tableColumns)[activeSortIndex];
-        const bValue = getSortableRowValues(b, tableColumns)[activeSortIndex];
-        if (typeof aValue === "number") {
-          if (activeSortDir === "asc") {
-            return aValue - bValue;
-          }
-          return bValue - aValue;
-        } else {
-          if (activeSortDir === "asc") {
-            return aValue.localeCompare(bValue);
-          }
-          return bValue.localeCompare(aValue);
-        }
-      });
-      dispatch(sortedTableRows(currState, sortedResults));
-    }
-  } catch (error) {
-    console.log(error);
-  }
-};
-
-const sortedTableRows = (currState, sortedResults) => (dispatch) => {
-  if (currState === "cpt") {
-    dispatch({
-      type: TYPES.SET_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceCPTTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "ocp") {
-    dispatch({
-      type: TYPES.SET_OCP_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceOCPTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "ols") {
-    dispatch({
-      type: TYPES.SET_OLS_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceOLSTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "quay") {
-    dispatch({
-      type: TYPES.SET_QUAY_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceQuayTableRows(0, DEFAULT_PER_PAGE));
-    return;
-  }
-  if (currState === "telco") {
-    dispatch({
-      type: TYPES.SET_TELCO_FILTERED_DATA,
-      payload: sortedResults,
-    });
-    dispatch(sliceTelcoTableRows(0, DEFAULT_PER_PAGE));
-  }
-};
+import { setCPTCatFilters } from "./homeActions";
+import { setOCPCatFilters } from "./ocpActions";
+import { setQuayCatFilters } from "./quayActions";
+import { setTelcoCatFilters } from "./telcoActions";
+import { setOLSCatFilters } from "./olsActions";
 
 const findItemCount = (data, key, value) => {
   return data.reduce(function (n, item) {
@@ -189,9 +112,10 @@ export const deleteAppliedFilters =
   (filterKey, filterValue, currState) => (dispatch, getState) => {
     const appliedFilters = cloneDeep(getState()[currState].appliedFilters);
 
-    const index = appliedFilters[filterKey].indexOf(
-      filterValue?.toString()?.toLowerCase()
-    );
+    const index = appliedFilters[filterKey]
+      ?.toString()
+      ?.toLowerCase()
+      .indexOf(filterValue?.toString()?.toLowerCase());
     if (index >= 0) {
       appliedFilters[filterKey].splice(index, 1);
       if (appliedFilters[filterKey].length === 0) {
@@ -207,10 +131,8 @@ export const getSelectedFilter =
     const selectedFilters = cloneDeep(getState()[currState].selectedFilters);
 
     const obj = selectedFilters.find((i) => i.name === selectedCategory);
-    selectedOption = selectedOption?.toString()?.toLowerCase();
 
-    const objValue = obj.value.map((i) => i?.toString()?.toLowerCase());
-
+    const objValue = obj.value;
     if (objValue.includes(selectedOption)) {
       const arr = objValue.filter((selection) => selection !== selectedOption);
       obj.value = arr;
@@ -222,3 +144,32 @@ export const getSelectedFilter =
 
     return selectedFilters;
   };
+
+const convertObjectToQS = (filter) => {
+  const queryString = Object.entries(filter)
+    .map(([key, values]) => `${key}='${values.join("','")}'`)
+    .join("&");
+
+  return queryString;
+};
+export const getRequestParams = (type) => (dispatch, getState) => {
+  const { start_date, end_date, perPage, offset, sort, appliedFilters } =
+    getState()[type];
+
+  let filter = "";
+  if (Object.keys(appliedFilters).length > 0) {
+    filter = convertObjectToQS(appliedFilters);
+  }
+  console.log(offset);
+  const params = {
+    pretty: true,
+    ...(start_date && { start_date }),
+    ...(end_date && { end_date }),
+    size: perPage,
+    offset: offset,
+    ...(sort && { sort }),
+    ...(filter && { filter }),
+  };
+
+  return params;
+};

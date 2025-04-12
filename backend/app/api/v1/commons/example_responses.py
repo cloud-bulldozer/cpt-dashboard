@@ -1,22 +1,26 @@
 def response_200(example):
     return {
-                "content": {
-                    "application/json": {
-                        "example": example,
-                    }
-                },
+        "content": {
+            "application/json": {
+                "example": example,
             }
+        },
+    }
+
 
 def response_422():
     return {
-                "content": {
-                    "application/json": {
-                        "example": {"error": "invalid date format, start_date must be less than end_date"},
-                    }
+        "content": {
+            "application/json": {
+                "example": {
+                    "error": "invalid date format, start_date must be less than end_date"
                 },
             }
+        },
+    }
 
-ocp_response_example ={
+
+ocp_response_example = {
     "startDate": "2023-09-20",
     "endDate": "2023-09-20",
     "results": [
@@ -47,7 +51,7 @@ ocp_response_example ={
             "startDate": "2023-09-20T02:14:07Z",
             "endDate": "2023-09-20T03:41:48Z",
             "timestamp": "2023-09-20T02:14:07Z",
-            "shortVersion": "4.14"
+            "shortVersion": "4.14",
         },
         {
             "ciSystem": "PROW",
@@ -76,12 +80,12 @@ ocp_response_example ={
             "startDate": "2023-09-20T07:19:00Z",
             "endDate": "2023-09-20T07:28:42Z",
             "timestamp": "2023-09-20T07:19:00Z",
-            "shortVersion": "4.13"
+            "shortVersion": "4.13",
         },
-    ]
+    ],
 }
 
-quay_response_example ={
+quay_response_example = {
     "startDate": "2023-09-20",
     "endDate": "2023-09-20",
     "results": [
@@ -114,12 +118,12 @@ quay_response_example ={
             "startDate": "2023-09-20T02:14:07Z",
             "endDate": "2023-09-20T03:41:48Z",
             "timestamp": "2023-09-20T02:14:07Z",
-            "shortVersion": "4.14"
+            "shortVersion": "4.14",
         },
-    ]
+    ],
 }
 
-telco_response_example ={
+telco_response_example = {
     "startDate": "2023-09-20",
     "endDate": "2023-09-20",
     "results": [
@@ -138,9 +142,9 @@ telco_response_example ={
             "endDate": "2024-05-16 20:41:48+00:00",
             "buildUrl": "https://ci-jenkins-xxx.com/job/your-tests/532",
             "jobStatus": "success",
-            "jobDuration": 3720
+            "jobDuration": 3720,
         },
-    ]
+    ],
 }
 
 ols_response_example = {
@@ -197,45 +201,83 @@ ols_response_example = {
 def ocp_200_response():
     return response_200(ocp_response_example)
 
+
 def quay_200_response():
     return response_200(quay_response_example)
+
 
 def telco_200_response():
     return response_200(telco_response_example)
 
+
 def ols_200_response():
     return response_200(ols_response_example)
 
-cpt_response_example ={
-  "startDate": "2023-11-18",
-  "endDate": "2023-11-23",
-  "results": [
+
+def ocp_filter_200_response():
+    return response_200(ocp_filter_example)
+
+
+def quay_filter_200_response():
+    return response_200(quay_filter_example)
+
+
+cpt_response_example = {
+    "startDate": "2023-11-18",
+    "endDate": "2023-11-23",
+    "results": [
         {
-        "ciSystem": "PROW",
-        "uuid": "f6d084d5-b154-4108-b4f7-165094ccc838",
-        "releaseStream": "Nightly",
-        "jobStatus": "success",
-        "buildUrl": "https://ci..org/view/1726571333392797696",
-        "startDate": "2023-11-20T13:16:34Z",
-        "endDate": "2023-11-20T13:28:48Z",
-        "product": "ocp",
-        "version": "4.13",
-        "testName": "cluster-density-v2"
+            "ciSystem": "PROW",
+            "uuid": "f6d084d5-b154-4108-b4f7-165094ccc838",
+            "releaseStream": "Nightly",
+            "jobStatus": "success",
+            "buildUrl": "https://ci..org/view/1726571333392797696",
+            "startDate": "2023-11-20T13:16:34Z",
+            "endDate": "2023-11-20T13:28:48Z",
+            "product": "ocp",
+            "version": "4.13",
+            "testName": "cluster-density-v2",
         },
         {
-        "ciSystem": "JENKINS",
-        "uuid": "5b729011-3b4d-4ec4-953d-6881ac9da505",
-        "releaseStream": "Stable",
-        "jobStatus": "success",
-        "buildUrl": "https://ci..org/view/1726571333392797696",
-        "startDate": "2023-11-20T13:16:30Z",
-        "endDate": "2023-11-20T13:30:40Z",
-        "product": "ocp",
-        "version": "4.14",
-        "testName": "node-density-heavy"
+            "ciSystem": "JENKINS",
+            "uuid": "5b729011-3b4d-4ec4-953d-6881ac9da505",
+            "releaseStream": "Stable",
+            "jobStatus": "success",
+            "buildUrl": "https://ci..org/view/1726571333392797696",
+            "startDate": "2023-11-20T13:16:30Z",
+            "endDate": "2023-11-20T13:30:40Z",
+            "product": "ocp",
+            "version": "4.14",
+            "testName": "node-density-heavy",
         },
-    ]
+    ],
 }
+
+ocp_filter_example = {
+    "filterData": [
+        {"key": "jobStatus", "value": ["success", "failure"]},
+        {"key": "workerNodesCount", "value": [24, 6, 9, 3, 120, 249, 252, 25, 4, 240]},
+        {"key": "jobType", "value": ["pull-request", "periodic"]},
+        {"key": "isRehearse", "value": ["True", "False"]},
+        {"key": "networkType", "value": ["OVNKubernetes", "OpenShiftSDN"]},
+    ],
+    "summary": {"total": 259, "success": 254, "failure": 5},
+}
+
+quay_filter_example = {
+    "filterData": [
+        {"key": "jobStatus", "value": ["success", "failure"]},
+        {"key": "workerNodesCount", "value": [24]},
+        {"key": "platform", "value": ["AWS"]},
+        {"key": "benchmark", "value": ["quay-load-test"]},
+        {
+            "key": "build",
+            "value": ["2024-10-12-102620"],
+        },
+    ],
+    "summary": {"total": 3, "success": 3},
+}
+
 
 def cpt_200_response():
     return response_200(cpt_response_example)

@@ -1,36 +1,36 @@
 import {
+  applyCPTDateFilter,
   removeCPTAppliedFilters,
   setCPTAppliedFilters,
   setCPTCatFilters,
-  setCPTDateFilter,
   setCPTOtherSummaryFilter,
 } from "./homeActions";
 import {
+  applyOCPDateFilter,
   removeOCPAppliedFilters,
   setOCPAppliedFilters,
   setOCPCatFilters,
-  setOCPDateFilter,
   setOCPOtherSummaryFilter,
 } from "./ocpActions";
 import {
   removeOLSAppliedFilters,
   setOLSAppliedFilters,
   setOLSCatFilters,
-  setOLSDateFilter,
+  applyOLSDateFilter,
   setOLSOtherSummaryFilter,
 } from "./olsActions";
 import {
+  applyQuayDateFilter,
   removeQuayAppliedFilters,
   setQuayAppliedFilters,
   setQuayCatFilters,
-  setQuayDateFilter,
   setQuayOtherSummaryFilter,
 } from "./quayActions";
 import {
+  applyTelcoDateFilter,
   removeTelcoAppliedFilters,
   setTelcoAppliedFilters,
   setTelcoCatFilters,
-  setTelcoDateFilter,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
 
@@ -82,15 +82,15 @@ export const removeAppliedFilters = (key, value, navigation, currType) => {
 
 export const setDateFilter = (date, key, navigation, currType) => {
   if (currType === "cpt") {
-    dispatch(setCPTDateFilter(date, key, navigation));
+    dispatch(applyCPTDateFilter(date, key, navigation));
   } else if (currType === "ocp") {
-    dispatch(setOCPDateFilter(date, key, navigation));
+    dispatch(applyOCPDateFilter(date, key, navigation));
   } else if (currType === "quay") {
-    dispatch(setQuayDateFilter(date, key, navigation));
+    dispatch(applyQuayDateFilter(date, key, navigation));
   } else if (currType === "telco") {
-    dispatch(setTelcoDateFilter(date, key, navigation));
+    dispatch(applyTelcoDateFilter(date, key, navigation));
   } else if (currType === "ols") {
-    dispatch(setOLSDateFilter(date, key, navigation));
+      dispatch(applyOLSDateFilter(date, key, navigation));
   }
 };
 

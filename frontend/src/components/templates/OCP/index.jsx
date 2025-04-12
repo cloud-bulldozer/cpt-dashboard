@@ -1,4 +1,5 @@
 import {
+  buildFilterData,
   fetchGraphData,
   fetchOCPJobs,
   setFilterFromURL,
@@ -20,11 +21,10 @@ const OCP = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const {
-    filteredResults,
+    results,
     tableColumns,
     activeSortDir,
     activeSortIndex,
-    tableData,
     page,
     perPage,
     summary,
@@ -37,6 +37,7 @@ const OCP = () => {
     end_date,
     graphData,
     selectedFilters,
+    totalJobs,
   } = useSelector((state) => state.ocp);
 
   useEffect(() => {
@@ -60,6 +61,7 @@ const OCP = () => {
 
   useEffect(() => {
     dispatch(fetchOCPJobs());
+    dispatch(buildFilterData());
   }, [dispatch]);
 
   //Filter Helper
@@ -98,7 +100,7 @@ const OCP = () => {
   return (
     <>
       <MetricsTab
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         summary={summary}
         updateSelectedFilter={updateSelectedFilter}
         navigation={navigate}
@@ -110,8 +112,8 @@ const OCP = () => {
         tableFilters={modifidedTableFilters}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
-        filterData={filterData}
         appliedFilters={appliedFilters}
+        filterData={filterData}
         start_date={start_date}
         end_date={end_date}
         type={"ocp"}
@@ -123,18 +125,19 @@ const OCP = () => {
       />
 
       <TableLayout
-        tableData={tableData}
+        tableData={results}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}
         page={page}
         perPage={perPage}
-        totalItems={filteredResults.length}
+        totalItems={totalJobs}
         addExpansion={true}
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
         type={"ocp"}
+        shouldSort={true}
       />
     </>
   );

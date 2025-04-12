@@ -10,14 +10,14 @@ router = APIRouter()
 async def graph(uuid: str):
     latencyResults = []
     apiResults = []
-    currentApiData = None
-    api_index = "ols-load-test-results*"
+    api_index = "ols-load-test-results"
     metric_names = [
         "get_readiness", "get_liveness", "post_authorized",
         "get_metrics", "get_feedback_status", "post_feedback",
         "post_query", "post_streaming_query", "post_query_with_cache",
         "post_streaming_query_with_cache"
     ]
+    currentApiData = None
     metadata = await getMetadata(uuid, 'ocp.elasticsearch')
     uuids = await getMatchRuns(metadata)
     if uuid in uuids and len(uuids) > 1:
@@ -164,4 +164,8 @@ async def getMatchRuns(metadata: dict):
     es = ElasticService(configpath="ocp.elasticsearch")
     response = await es.post(query=query)
     await es.close()
-    return [item['_source']['uuid'] for item in response]
+    runs = [item["_source"] for item in response["data"]]
+    uuids = []
+    for run in runs:
+        uuids.append(run["uuid"])
+    return uuids

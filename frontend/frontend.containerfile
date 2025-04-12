@@ -1,13 +1,22 @@
-FROM node:18
-# Create app directory
+FROM node:18-bookworm-slim AS builder
+
 WORKDIR /usr/src/cpt-dashboard
-# Install app dependencies
-# A wildcard is used to ensure both package.json AND package-lock.json are copied
-# where available (npm@5+)
-COPY package*.json ./
-RUN npm install
-#To bundle your app’s source code inside the Docker image, use the COPY instruction:
-COPY . .
-#Your app binds to port 3000 so you’ll use the EXPOSE instruction to have it mapped by the docker daemon:
+COPY public/ public/
+COPY src/ src/
+COPY index.html index.html
+COPY vite.config.js vite.config.js
+COPY jsconfig.json jsconfig.json
+ADD package*.json ./
+RUN npm clean-install
+RUN npm run build
+
+FROM nginxinc/nginx-unprivileged:1.27-alpine
+COPY --chown=nginx:nginx --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/nginx/html/
+COPY --chown=nginx:nginx nginx.conf /etc/nginx/nginx.conf
+RUN touch /tmp/nginx.pid
+
+USER nginx
 EXPOSE 3000
-CMD ["npm", "run", "dev"]
+
+ENTRYPOINT ["nginx"]
+CMD ["-g", "daemon off;"]

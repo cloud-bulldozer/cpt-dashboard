@@ -1,34 +1,27 @@
 import * as API_ROUTES from "@/utils/apiConstants";
-import * as TYPES from "@/actions/types.js";
+import * as TYPES from "./types.js";
 
-import {
-  DEFAULT_PER_PAGE,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
-  buildFilterData,
-  calculateMetrics,
   deleteAppliedFilters,
-  getFilteredData,
+  getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
+import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
-import { showFailureToast } from "@/actions/toastActions";
+import { setLastUpdatedTime } from "./headerActions";
+import { showFailureToast } from "./toastActions";
 
-export const fetchOLSJobsData = () => async (dispatch, getState) => {
+export const fetchOLSJobsData = () => async (dispatch) => {
   try {
     dispatch({ type: TYPES.LOADING });
-    const { start_date, end_date } = getState().ols;
-    const response = await API.get(API_ROUTES.OLS_JOBS_API_V1, {
-      params: {
-        pretty: true,
-        ...(start_date && { start_date }),
-        ...(end_date && { end_date }),
-      },
-    });
+
+    const params = dispatch(getRequestParams("ols"));
+
+    const response = await API.get(API_ROUTES.OLS_JOBS_API_V1, { params });
+
     if (response.status === 200) {
       const startDate = response.data.startDate,
         endDate = response.data.endDate;
@@ -47,13 +40,17 @@ export const fetchOLSJobsData = () => async (dispatch, getState) => {
         type: TYPES.SET_OLS_JOBS_DATA,
         payload: response.data.results,
       });
+
       dispatch({
-        type: TYPES.SET_OLS_FILTERED_DATA,
-        payload: response.data.results,
+        type: TYPES.SET_OLS_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
       });
-      dispatch(applyFilters());
       dispatch(tableReCalcValues());
     }
+    dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
   }
@@ -69,6 +66,12 @@ export const setOLSPageOptions = (page, perPage) => ({
   type: TYPES.SET_OLS_PAGE_OPTIONS,
   payload: { page, perPage },
 });
+
+export const setOLSOffset = (offset) => ({
+  type: TYPES.SET_OLS_OFFSET,
+  payload: offset,
+});
+
 export const setOLSSortIndex = (index) => ({
   type: TYPES.SET_OLS_SORT_INDEX,
   payload: index,
@@ -78,15 +81,6 @@ export const setOLSSortDir = (direction) => ({
   type: TYPES.SET_OLS_SORT_DIR,
   payload: direction,
 });
-export const sliceOLSTableRows =
-  (startIdx, endIdx) => (dispatch, getState) => {
-    const results = [...getState().ols.filteredResults];
-
-    dispatch({
-      type: TYPES.SET_OLS_INIT_JOBS,
-      payload: results.slice(startIdx, endIdx),
-    });
-  };
 
 export const setOLSCatFilters = (category) => (dispatch, getState) => {
   const filterData = [...getState().ols.filterData];
@@ -102,45 +96,36 @@ export const setOLSCatFilters = (category) => (dispatch, getState) => {
     payload: list,
   });
 };
-export const removeOLSAppliedFilters =
-  (filterKey, filterValue, navigate) => (dispatch, getState) => {
-    const { start_date, end_date } = getState().ols;
 
-    const appliedFilters = dispatch(
-      deleteAppliedFilters(filterKey, filterValue, "ols")
-    );
-
-    dispatch({
-      type: TYPES.SET_OLS_APPLIED_FILTERS,
-      payload: appliedFilters,
-    });
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
-  };
-
-export const applyFilters = () => (dispatch, getState) => {
-  const { appliedFilters } = getState().ols;
-
-  const results = [...getState().ols.results];
-
-  const isFilterApplied =
-    Object.keys(appliedFilters).length > 0 &&
-    Object.values(appliedFilters).flat().length > 0;
-
-  const filtered = isFilterApplied
-    ? getFilteredData(appliedFilters, results)
-    : results;
-
-  dispatch({
-    type: TYPES.SET_OLS_FILTERED_DATA,
-    payload: filtered,
-  });
+export const applyFilters = () => (dispatch) => {
+  dispatch(setOLSOffset(INITAL_OFFSET));
+  dispatch(fetchOLSJobsData());
+  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
-  dispatch(buildFilterData("ols"));
 };
-export const setOLSAppliedFilters = (navigate) => (dispatch, getState) => {
-  const { selectedFilters, start_date, end_date } = getState().ols;
 
+export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+  const selectedFilters = cloneDeep(getState().ols.selectedFilters);
+  for (const key in params) {
+    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
+  }
+  dispatch({
+    type: TYPES.SET_SELECTED_OLS_FILTERS,
+    payload: selectedFilters,
+  });
+};
+export const setSelectedFilter =
+  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
+    const selectedFilters = dispatch(
+      getSelectedFilter(selectedCategory, selectedOption, "ols", isFromMetrics)
+    );
+    dispatch({
+      type: TYPES.SET_SELECTED_OLS_FILTERS,
+      payload: selectedFilters,
+    });
+  };
+export const setOLSAppliedFilters = (navigate) => (dispatch, getState) => {
+  const { start_date, end_date, selectedFilters } = getState().ols;
   const appliedFilterArr = selectedFilters.filter((i) => i.value.length > 0);
 
   const appliedFilters = {};
@@ -156,32 +141,20 @@ export const setOLSAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
-  const selectedFilters = cloneDeep(getState().ols.selectedFilters);
-  for (const key in params) {
-    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
-  }
-  dispatch({
-    type: TYPES.SET_OLS_SELECTED_FILTERS,
-    payload: selectedFilters,
-  });
-};
-
-export const setFilterFromURL = (searchParams) => ({
-  type: TYPES.SET_OLS_APPLIED_FILTERS,
-  payload: searchParams,
-});
-
-export const setSelectedFilter =
-  (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
-    const selectedFilters = dispatch(
-      getSelectedFilter(selectedCategory, selectedOption, "ols", isFromMetrics)
+export const removeOLSAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "ols")
     );
+    const { start_date, end_date } = getState().ols;
     dispatch({
-      type: TYPES.SET_OLS_SELECTED_FILTERS,
-      payload: selectedFilters,
+      type: TYPES.SET_OLS_APPLIED_FILTERS,
+      payload: appliedFilters,
     });
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
   };
+
 export const setOLSDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().ols.appliedFilters;
@@ -195,9 +168,19 @@ export const setOLSDateFilter =
     });
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-
-    dispatch(fetchOLSJobsData());
   };
+
+export const applyOLSDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setOLSOffset(INITAL_OFFSET));
+    dispatch(setOLSDateFilter(start_date, end_date, navigate));
+    dispatch(fetchOLSJobsData());
+    dispatch(buildFilterData());
+  };
+export const setFilterFromURL = (searchParams) => ({
+  type: TYPES.SET_OLS_APPLIED_FILTERS,
+  payload: searchParams,
+});
 
 export const setOLSOtherSummaryFilter = () => (dispatch, getState) => {
   const filteredResults = [...getState().ols.filteredResults];
@@ -212,15 +195,46 @@ export const setOLSOtherSummaryFilter = () => (dispatch, getState) => {
   dispatch(tableReCalcValues());
 };
 
-export const getOLSSummary = () => (dispatch, getState) => {
-  const results = [...getState().ols.filteredResults];
-
-  const countObj = calculateMetrics(results);
+export const getOLSSummary = (countObj) => (dispatch) => {
+  const other =
+    countObj["total"] -
+    ((countObj["success"] || 0) + (countObj["failure"] || 0));
+  const summary = {
+    othersCount: other,
+    successCount: countObj["success"] || 0,
+    failureCount: countObj["failure"] || 0,
+    total: countObj["total"],
+  };
   dispatch({
     type: TYPES.SET_OLS_SUMMARY,
-    payload: countObj,
+    payload: summary,
   });
 };
+
+export const fetchGraphData =
+  (uuid, nodeName) => async (dispatch, getState) => {
+    try {
+      dispatch({ type: TYPES.GRAPH_LOADING });
+
+      const graphData = getState().ols.graphData;
+      const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
+      if (!hasData) {
+        const response = await API.get(
+          `${API_ROUTES.OLS_GRAPH_API_V1}/${uuid}`
+        );
+
+        if (response.status === 200) {
+          dispatch({
+            type: TYPES.SET_OLS_GRAPH_DATA,
+            payload: { uuid, data: [[nodeName, response.data]] },
+          });
+        }
+      }
+    } catch (error) {
+      dispatch(showFailureToast());
+    }
+    dispatch({ type: TYPES.GRAPH_COMPLETED });
+  };
 
 export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
   let tableColumns = [...getState().ols.tableColumns];
@@ -238,35 +252,29 @@ export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
     payload: tableColumns,
   });
 };
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().ols;
 
-export const fetchOLSGraphData = (uuid) => async (dispatch, getState) => {
+  dispatch(setOLSPageOptions(page, perPage));
+};
+
+export const buildFilterData = () => async (dispatch, getState) => {
   try {
-    dispatch({ type: TYPES.GRAPH_LOADING });
+    const { tableFilters, categoryFilterValue } = getState().ols;
 
-    const graphData = getState().ocp.graphData;
-    const hasData = graphData.filter((a) => a.uuid === uuid).length > 0;
-    if (!hasData) {
-      const response = await API.get(`${API_ROUTES.OLS_GRAPH_API_V1}/${uuid}`);
+    const params = dispatch(getRequestParams("ols"));
 
-      if (response.status === 200) {
-        const result = Object.keys(response.data).map((key) => [
-          key,
-          response.data[key],
-        ]);
-        dispatch({
-          type: TYPES.SET_OLS_GRAPH_DATA,
-          payload: { uuid, data: result },
-        });
-      }
+    const response = await API.get(API_ROUTES.OLS_FILTERS_API_V1, { params });
+    if (response.status === 200 && response?.data?.filterData?.length > 0) {
+      dispatch(getOLSSummary(response.data.summary));
+      dispatch({
+        type: TYPES.SET_OLS_FILTER_DATA,
+        payload: response.data.filterData,
+      });
+      const activeFilter = categoryFilterValue || tableFilters[0].name;
+      dispatch(setOLSCatFilters(activeFilter));
     }
   } catch (error) {
     dispatch(showFailureToast());
   }
-  dispatch({ type: TYPES.GRAPH_COMPLETED });
-};
-
-export const tableReCalcValues = () => (dispatch) => {
-  dispatch(getOLSSummary());
-  dispatch(setOLSPageOptions(START_PAGE, DEFAULT_PER_PAGE));
-  dispatch(sliceOLSTableRows(0, DEFAULT_PER_PAGE));
 };
