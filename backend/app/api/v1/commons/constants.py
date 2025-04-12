@@ -44,6 +44,16 @@ OCP_FIELD_CONSTANT_DICT = {
     "clusterType": "clusterType.keyword",
 }
 
+OLS_FIELD_CONSTANT_DICT = {
+    "benchmark": "benchmark.keyword",
+    "releaseStream": "releaseStream.keyword",
+    "platform": "platform.keyword",
+    "workerNodesCount": "workerNodesCount",
+    "olsTestWorkers": "olsTestWorkers",
+    "olsTestDuration": "olsTestDuration.keyword",
+    "jobStatus": "jobStatus.keyword",
+}
+
 QUAY_FIELD_CONSTANT_DICT = {
     "benchmark": "benchmark.keyword",
     "platform": "platform.keyword",
@@ -107,6 +117,8 @@ FILEDS_DISPLAY_NAMES = {
     "attack": "Test Name",
     "concurrency": "Concurrency",
     "imagePushPulls": "Image Push/Pulls",
+    "olsTestWorkers": "Parallel Users",
+    "olsTestDuration": "Load Duration",
     "hitSize": "Hit Size",
     "isFormal": "Is Formal",
 }

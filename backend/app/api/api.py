@@ -37,10 +37,6 @@ router.include_router(telcoGraphs.router, tags=["telco"])
 router.include_router(olsJobs.router, tags=['ols'])
 router.include_router(olsGraphs.router, tags=['ols'])
 
-# OLS endpoints
-router.include_router(olsJobs.router, tags=['ols'])
-router.include_router(olsGraphs.router, tags=['ols'])
-
 # Jira endpoints
 router.include_router(jira.router, tags=["jira"])
 

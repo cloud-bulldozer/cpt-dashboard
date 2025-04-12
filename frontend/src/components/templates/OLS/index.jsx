@@ -7,7 +7,7 @@ import {
   setSelectedFilter,
   setSelectedFilterFromUrl,
   setTableColumns,
-} from "@/actions/olsActions";
+} from "@/actions/olsActions.js";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
@@ -72,7 +72,7 @@ const OLS = () => {
       ),
     [tableFilters]
   );
-  const updateSelectedFilter = (category, value, isFromMetrics = false) => {
+  const updateSelectedFilter = (category, value, isFromMetrics) => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
 
@@ -86,7 +86,7 @@ const OLS = () => {
         : otherExpandedRunNames;
     });
     if (isExpanding) {
-      dispatch(fetchGraphData(run.uuid, run.benchmark));
+      dispatch(fetchGraphData(run.uuid));
     }
   };
 

@@ -14,7 +14,7 @@ const initialState = {
     { name: "Benchmark", value: "benchmark" },
     { name: "Release Stream", value: "releaseStream" },
     { name: "Platform", value: "platform" },
-    { name: "Worker Nodes", value: "workerNodesCount" },
+    { name: "Worker Count", value: "workerNodesCount" },
     { name: "Parallel Users", value: "olsTestWorkers" },
     { name: "Load Duration", value: "olsTestDuration" },
     { name: "Start Date", value: "startDate" },
@@ -25,7 +25,7 @@ const initialState = {
     { name: "Benchmark", value: "benchmark" },
     { name: "Release Stream", value: "releaseStream" },
     { name: "Platform", value: "platform" },
-    { name: "Worker Nodes", value: "workerNodesCount" },
+    { name: "Worker Count", value: "workerNodesCount" },
     { name: "Parallel Users", value: "olsTestWorkers" },
     { name: "Load Duration", value: "olsTestDuration" },
     { name: "Status", value: "jobStatus" },
@@ -68,7 +68,7 @@ const initialState = {
   offset: INITAL_OFFSET,
   totalJobs: 0,
   filterData: [],
-  categoryFilterValue: "Benchmark",
+  categoryFilterValue: "",
   filterOptions: [],
   appliedFilters: {},
   filteredResults: [],
@@ -125,7 +125,7 @@ const OLSReducer = (state = initialState, action = {}) => {
       return { ...state, graphData: [...state.graphData, payload] };
     case TYPES.SET_OLS_COLUMNS:
       return { ...state, tableColumns: payload };
-    case TYPES.SET_SELECTED_OLS_FILTERS:
+    case TYPES.SET_OLS_SELECTED_FILTERS:
       return { ...state, selectedFilters: payload };
     default:
       return state;

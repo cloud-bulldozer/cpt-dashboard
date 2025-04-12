@@ -1,7 +1,9 @@
-from datetime import date
+import json
+from fastapi import Response
+from datetime import datetime, timedelta, date
 from fastapi import APIRouter
 from ...endpoints.ocp.ocpJobs import jobs as ocpJobs
-from ...endpoints.ocp.ocpJobs import filters as ocpFilters
+from ...commons.ols import getFilterData
 from ...commons.example_responses import (
     ols_200_response,
     response_422,
@@ -80,5 +82,34 @@ async def filters(
     pretty: bool = Query(False, description="Output content in pretty format."),
     filter: str = Query(None, description="Query to filter the jobs"),
 ):
+    if start_date is None:
+        start_date = datetime.utcnow().date()
+        start_date = start_date - timedelta(days=5)
 
-    return await ocpFilters(start_date, end_date, pretty, filter)
+    if end_date is None:
+        end_date = datetime.utcnow().date()
+
+    if start_date > end_date:
+        return Response(
+            content=json.dumps(
+                {"error": "invalid date format, start_date must be less than end_date"}
+            ),
+            status_code=422,
+        )
+    filter_clause = "benchmark='ols-load-generator'"
+    filter = (
+        filter_clause
+        if not filter
+        else filter
+        if filter_clause in filter
+        else f"{filter}&{filter_clause}"
+    )
+    results = await getFilterData(start_date, end_date, filter, "ocp.elasticsearch")
+
+    if len(results["filterData"]) > 0:
+        json_str = json.dumps(results, indent=4)
+        return Response(content=json_str, media_type="application/json")
+    else:
+        response = {"filterData": [], "summary": {}}
+        json_str = json.dumps(response, indent=4)
+        return Response(content=json_str, media_type="application/json")
