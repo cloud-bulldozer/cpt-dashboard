@@ -36,11 +36,10 @@ const MetricsTab = (props) => {
     }
   };
   const removeStatusFilter = () => {
-    if (
-      Array.isArray(appliedFilters["jobStatus"]) &&
-      appliedFilters["jobStatus"].length > 0
-    ) {
-      appliedFilters["jobStatus"].forEach((element) => {
+    const statusFilters = appliedFilters["jobStatus"];
+
+    if (Array.isArray(statusFilters) && statusFilters.length > 0) {
+      statusFilters.forEach((element) => {
         updateSelectedFilter("jobStatus", element, true);
         removeAppliedFilters("jobStatus", element, navigation, type);
       });
@@ -51,6 +50,7 @@ const MetricsTab = (props) => {
     setAppliedFilters(navigation, type);
   };
   const applyOtherFilter = () => {
+    console.log("I'm here");
     removeStatusFilter();
     setOtherSummaryFilter(type);
   };

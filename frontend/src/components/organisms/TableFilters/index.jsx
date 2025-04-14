@@ -86,8 +86,8 @@ const TableFilter = (props) => {
   const onOptionsChange = () => {
     setAppliedFilters(navigation, type);
   };
-  const deleteItem = (key, value) => {
-    updateSelectedFilter(key, value, false);
+  const deleteItem = async (key, value) => {
+    await updateSelectedFilter(key, value, false);
     removeAppliedFilters(key, value, navigation, type);
   };
   const startDateChangeHandler = (date, key) => {
@@ -98,10 +98,7 @@ const TableFilter = (props) => {
   };
   return (
     <>
-      <Toolbar 
-        id="filter-toolbar"
-        ouiaId="data_table_filter"
-      >
+      <Toolbar id="filter-toolbar" ouiaId="data_table_filter">
         {filterData?.length > 0 ? (
           <ToolbarContent className="field-filter">
             <ToolbarItem style={{ marginInlineEnd: 0 }}>

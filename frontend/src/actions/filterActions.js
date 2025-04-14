@@ -13,10 +13,10 @@ import {
   setOCPOtherSummaryFilter,
 } from "./ocpActions";
 import {
+  applyOLSDateFilter,
   removeOLSAppliedFilters,
   setOLSAppliedFilters,
   setOLSCatFilters,
-  applyOLSDateFilter,
   setOLSOtherSummaryFilter,
 } from "./olsActions";
 import {
@@ -39,71 +39,56 @@ import store from "@/store/store";
 const { dispatch } = store;
 
 export const setCatFilters = (category, currType) => {
-  if (currType === "cpt") {
-    dispatch(setCPTCatFilters(category));
-  } else if (currType === "ocp") {
-    dispatch(setOCPCatFilters(category));
-  } else if (currType === "quay") {
-    dispatch(setQuayCatFilters(category));
-  } else if (currType === "telco") {
-    dispatch(setTelcoCatFilters(category));
-  } else if (currType === "ols") {
-    dispatch(setOLSCatFilters(category));
-  }
+  const actions = {
+    cpt: setCPTCatFilters,
+    ocp: setOCPCatFilters,
+    quay: setQuayCatFilters,
+    telco: setTelcoCatFilters,
+    ols: setOLSCatFilters,
+  };
+  dispatch(actions[currType](category));
 };
 
 export const setAppliedFilters = (navigation, currType) => {
-  if (currType === "cpt") {
-    dispatch(setCPTAppliedFilters(navigation));
-  } else if (currType === "ocp") {
-    dispatch(setOCPAppliedFilters(navigation));
-  } else if (currType === "quay") {
-    dispatch(setQuayAppliedFilters(navigation));
-  } else if (currType === "telco") {
-    dispatch(setTelcoAppliedFilters(navigation));
-  } else if (currType === "ols") {
-    dispatch(setOLSAppliedFilters(navigation));
-  }
+  const actions = {
+    cpt: setCPTAppliedFilters,
+    ocp: setOCPAppliedFilters,
+    quay: setQuayAppliedFilters,
+    telco: setTelcoAppliedFilters,
+    ols: setOLSAppliedFilters,
+  };
+  dispatch(actions[currType](navigation));
 };
 
 export const removeAppliedFilters = (key, value, navigation, currType) => {
-  if (currType === "cpt") {
-    dispatch(removeCPTAppliedFilters(key, value, navigation));
-  } else if (currType === "ocp") {
-    dispatch(removeOCPAppliedFilters(key, value, navigation));
-  } else if (currType === "quay") {
-    dispatch(removeQuayAppliedFilters(key, value, navigation));
-  } else if (currType === "telco") {
-    dispatch(removeTelcoAppliedFilters(key, value, navigation));
-  } else if (currType === "ols") {
-    dispatch(removeOLSAppliedFilters(key, value, navigation));
-  }
+  const actions = {
+    cpt: removeCPTAppliedFilters,
+    ocp: removeOCPAppliedFilters,
+    quay: removeQuayAppliedFilters,
+    telco: removeTelcoAppliedFilters,
+    ols: removeOLSAppliedFilters,
+  };
+  dispatch(actions[currType](key, value, navigation));
 };
 
 export const setDateFilter = (date, key, navigation, currType) => {
-  if (currType === "cpt") {
-    dispatch(applyCPTDateFilter(date, key, navigation));
-  } else if (currType === "ocp") {
-    dispatch(applyOCPDateFilter(date, key, navigation));
-  } else if (currType === "quay") {
-    dispatch(applyQuayDateFilter(date, key, navigation));
-  } else if (currType === "telco") {
-    dispatch(applyTelcoDateFilter(date, key, navigation));
-  } else if (currType === "ols") {
-      dispatch(applyOLSDateFilter(date, key, navigation));
-  }
+  const actions = {
+    cpt: applyCPTDateFilter,
+    ocp: applyOCPDateFilter,
+    quay: applyQuayDateFilter,
+    telco: applyTelcoDateFilter,
+    ols: applyOLSDateFilter,
+  };
+  dispatch(actions[currType](date, key, navigation));
 };
 
 export const setOtherSummaryFilter = (currType) => {
-  if (currType === "cpt") {
-    dispatch(setCPTOtherSummaryFilter());
-  } else if (currType === "ocp") {
-    dispatch(setOCPOtherSummaryFilter());
-  } else if (currType === "quay") {
-    dispatch(setQuayOtherSummaryFilter());
-  } else if (currType === "telco") {
-    dispatch(setTelcoOtherSummaryFilter());
-  } else if (currType === "ols") {
-    dispatch(setOLSOtherSummaryFilter());
-  }
+  const actions = {
+    cpt: setCPTOtherSummaryFilter,
+    ocp: setOCPOtherSummaryFilter,
+    quay: setQuayOtherSummaryFilter,
+    telco: setTelcoOtherSummaryFilter,
+    ols: setOLSOtherSummaryFilter,
+  };
+  dispatch(actions[currType]());
 };
