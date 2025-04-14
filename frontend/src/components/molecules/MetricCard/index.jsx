@@ -9,7 +9,6 @@ const MetricCard = (props) => {
     <Card
       ouiaId={props.title}
       className="card-class"
-      onClick={() => props.clickHandler(props.title?.toUpperCase())}
     >
       <CardTitle className="title">{props.title}</CardTitle>
       <CardFooter>{props.footer}</CardFooter>
