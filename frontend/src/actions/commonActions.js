@@ -5,6 +5,7 @@ import { setCPTCatFilters } from "./homeActions";
 import { setOCPCatFilters } from "./ocpActions";
 import { setQuayCatFilters } from "./quayActions";
 import { setTelcoCatFilters } from "./telcoActions";
+import { setOLSCatFilters } from "./olsActions";
 
 const findItemCount = (data, key, value) => {
   return data.reduce(function (n, item) {
@@ -64,6 +65,12 @@ const setFilterData = (filterData, currState, activeFilter) => (dispatch) => {
       payload: filterData,
     });
     dispatch(setCPTCatFilters(activeFilter));
+  } else if (currState === "ols") {
+    dispatch({
+      type: TYPES.SET_OLS_FILTER_DATA,
+      payload: filterData,
+    });
+    dispatch(setOLSCatFilters(activeFilter));
   } else if (currState === "quay") {
     dispatch({
       type: TYPES.SET_QUAY_FILTER_DATA,

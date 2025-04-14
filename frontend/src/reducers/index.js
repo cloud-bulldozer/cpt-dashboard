@@ -2,6 +2,7 @@ import HeaderReducer from "./headerReducer";
 import HomeReducer from "./homeReducer";
 import LoadingReducer from "./loadingReducer";
 import OCPReducer from "./ocpReducer";
+import OLSReducer from "./olsReducer";
 import QuayReducer from "./quayReducer";
 import SideMenuReducer from "./sideMenuReducer";
 import TelcoReducer from "./telcoReducer";
@@ -14,6 +15,7 @@ export default combineReducers({
   sidemenu: SideMenuReducer,
   cpt: HomeReducer,
   ocp: OCPReducer,
+  ols: OLSReducer,
   quay: QuayReducer,
   telco: TelcoReducer,
   header: HeaderReducer,

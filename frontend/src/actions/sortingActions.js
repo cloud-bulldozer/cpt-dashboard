@@ -1,6 +1,7 @@
 import * as TYPES from "@/actions/types.js";
 
 import { fetchOCPJobs, setOCPSortDir, setOCPSortIndex } from "./ocpActions";
+import { fetchOLSJobsData, setOLSSortDir, setOLSSortIndex } from "./olsActions";
 import {
   fetchQuayJobsData,
   setQuaySortDir,
@@ -25,6 +26,8 @@ export const setActiveSortDir = (dir, currType) => {
     dispatch(setQuaySortDir(dir));
   } else if (currType === "telco") {
     dispatch(setTelcoSortDir(dir));
+  } else if (currType === "ols") {
+    dispatch(setOLSSortDir(dir));
   }
 };
 export const setActiveSortIndex = (index, currType) => {
@@ -36,6 +39,8 @@ export const setActiveSortIndex = (index, currType) => {
     dispatch(setQuaySortIndex(index));
   } else if (currType === "telco") {
     dispatch(setTelcoSortIndex(index));
+  } else if (currType === "ols") {
+    dispatch(setOLSSortIndex(index));
   }
 };
 export const handleOnSort = (colName, currType) => {
@@ -47,15 +52,18 @@ const offsetActions = {
   ocp: TYPES.SET_OCP_OFFSET,
   quay: TYPES.SET_QUAY_OFFSET,
   telco: TYPES.SET_TELCO_OFFSET,
+  ols: TYPES.SET_OLS_OFFSET,
 };
 const fetchJobsMap = {
   ocp: fetchOCPJobs,
   quay: fetchQuayJobsData,
   telco: fetchTelcoJobsData,
+  ols: fetchOLSJobsData,
 };
 const sortObjActions = {
   ocp: TYPES.SET_OCP_SORT_OBJ,
   quay: TYPES.SET_QUAY_SORT_OBJ,
+  ols: TYPES.SET_OLS_SORT_OBJ,
 };
 export const sortTable = (colName, currState) => (dispatch, getState) => {
   const { activeSortDir, activeSortIndex } = getState()[currState];

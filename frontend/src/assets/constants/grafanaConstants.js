@@ -14,6 +14,7 @@ export const DASHBOARD_NET_PERF =
 export const DASHBOARD_QUAY =
   "7nkJIoXVk/quay-dashboard-v2?orgId=1&var-api_endpoints_datasource=Quay%20QE%20-%20quay-vegeta&" +
   "var-quay_push_pull_datasource=Quay%20QE%20-%20quay-push-pull";
+export const DASHBOARD_OLS = "edrn4yn2nu134d/ols-load-test-results?orgId=1&var-Datasource=AWS%20OCP%20QE%20OLS%20Load%20Test%20Results";
 
 export const PROW_DATASOURCE_NETPERF = "&var-datasource=QE+K8s+netperf";
 export const PROW_DATASOURCE_INGRESS = "&var-datasource=QE+Ingress-perf";
@@ -23,6 +24,7 @@ export const PROW_DATASOURCE = "&var-Datasource=QE+kube-burner";
 export const DEFAULT_DATASOURCE =
   "&var-Datasource=AWS+Pro+-+ripsaw-kube-burner";
 export const QUAY_LOAD_TEST = "quay-load-test";
+export const OLS_LOAD_GENERATOR = "ols-load-generator";
 
 export const ciSystemMap = {
   prow: {
