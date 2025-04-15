@@ -113,11 +113,9 @@ async def jobs(
         filter_dict["product"] = unmatched
 
     prod_list = filter_product if filter_product else list(products.keys())
-    print("jobs")
-    print(prod_list)
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
-    print(updated_filter_qs)
+
     results = await asyncio.gather(
         *[
             fetch_data_limited(
@@ -174,17 +172,9 @@ async def filters(
         )
 
     filter_dict = get_dict_from_qs(filter) if filter else {}
-    print("filter_dict")
 
     filter_product = filter_dict.pop("product", None)
-    print("filter_product")
 
-    # if filter_product and filter_product not in productsFilter:
-    #     return Response(
-    #         content=json.dumps({"detail": "product not supported"}),
-    #         status_code=400,
-    #     )
-    # prod_list = await get_prod_list(filter_dict)
     individual_prod = ["ocp", "telco", "quay"]
     if filter_product:
         matched = [p for p in filter_product if p in individual_prod]
@@ -194,7 +184,7 @@ async def filters(
     prod_list = filter_product if filter_product else list(productsFilter.keys())
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
-    print(updated_filter_qs)
+
     results = await asyncio.gather(
         *[
             fetch_data_limited(

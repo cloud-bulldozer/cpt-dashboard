@@ -246,6 +246,16 @@ class ElasticService:
                 seen.add(tuple(sorted(flat_doc.items())))
         return filtered_results
 
+    def get_unique_values(self, all_values):
+        seen = set()
+        values = []
+        for val in all_values:
+            lower_value = str(val).lower()
+            if lower_value not in seen:
+                seen.add(lower_value)
+                values.append(val)
+        return values
+
     async def buildFilterData(self, filter, total):
         """Return the data to build the filter"""
         try:
@@ -277,7 +287,10 @@ class ElasticService:
 
             for key, value in refiner.items():
                 field = key
-                values = [bucket["key"] for bucket in value["buckets"]]
+                all_values = [bucket["key"] for bucket in value["buckets"]]
+                # to deduplicate values based on case-insensitive match
+                values = self.get_unique_values(all_values)
+                print(values)
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions
