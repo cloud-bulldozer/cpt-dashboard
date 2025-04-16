@@ -290,7 +290,7 @@ class ElasticService:
                 all_values = [bucket["key"] for bucket in value["buckets"]]
                 # to deduplicate values based on case-insensitive match
                 values = self.get_unique_values(all_values)
-                print(values)
+
                 if key == "platform":
                     platformOptions = buildPlatformFilter(upstreamList, clusterTypeList)
                     values = values + platformOptions

@@ -50,7 +50,6 @@ const MetricsTab = (props) => {
     setAppliedFilters(navigation, type);
   };
   const applyOtherFilter = () => {
-    console.log("I'm here");
     removeStatusFilter();
     setOtherSummaryFilter(type);
   };

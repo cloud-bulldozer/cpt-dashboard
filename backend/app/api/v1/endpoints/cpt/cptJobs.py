@@ -14,7 +14,7 @@ from .maps.hce import hceMapper, hceFilter
 from .maps.telco import telcoMapper, telcoFilter
 from .maps.ocm import ocmMapper, ocmFilter
 from app.api.v1.commons.example_responses import cpt_200_response, response_422
-from app.api.v1.commons.utils import normalize_pagination, get_dict_from_qs
+from app.api.v1.commons.utils import normalize_pagination, update_filter_product
 from app.api.v1.commons.constants import FILEDS_DISPLAY_NAMES
 
 router = APIRouter()
@@ -103,15 +103,8 @@ async def jobs(
         )
 
     offset, size = normalize_pagination(offset, size)
-    filter_dict = get_dict_from_qs(filter) if filter else {}
-    filter_product = filter_dict.pop("product", None)
-    individual_prod = ["ocp", "telco", "quay"]
-    if filter_product:
-        matched = [p for p in filter_product if p in individual_prod]
-        unmatched = [p for p in filter_product if p not in individual_prod]
-        filter_product = matched + ["hce", "ocm"] if unmatched else matched
-        filter_dict["product"] = unmatched
 
+    filter_product, filter_dict = update_filter_product(filter)
     prod_list = filter_product if filter_product else list(products.keys())
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
@@ -171,16 +164,7 @@ async def filters(
             status_code=422,
         )
 
-    filter_dict = get_dict_from_qs(filter) if filter else {}
-
-    filter_product = filter_dict.pop("product", None)
-
-    individual_prod = ["ocp", "telco", "quay"]
-    if filter_product:
-        matched = [p for p in filter_product if p in individual_prod]
-        unmatched = [p for p in filter_product if p not in individual_prod]
-        filter_product = matched + ["hce", "ocm"] if unmatched else matched
-        filter_dict["product"] = unmatched
+    filter_product, filter_dict = update_filter_product(filter)
     prod_list = filter_product if filter_product else list(productsFilter.keys())
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""

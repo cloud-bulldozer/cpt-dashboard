@@ -93,9 +93,9 @@ export const getRequestParams = (type) => (dispatch, getState) => {
 };
 
 export const calculateSummary = (countObj) => {
-  const total = Number(countObj["total"]) || 0;
-  const success = Number(countObj["success"]) || 0;
-  const failure = Number(countObj["failure"]) || 0;
+  const total = Number(countObj?.["total"]) || 0;
+  const success = Number(countObj?.["success"]) || 0;
+  const failure = Number(countObj?.["failure"]) || 0;
   const others = total - (success + failure);
 
   const summary = {
