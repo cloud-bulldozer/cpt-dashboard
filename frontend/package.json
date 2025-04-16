@@ -12,9 +12,9 @@
     "cypress:open": "cypress open",
     "e2e:chrome": "cypress run --browser chrome",
     "e2e:firefox": "cypress run --browser firefox",
-    "cypress:run:cp": "cypress run --component",
+    "cypress:cp": "cypress run --component",
     "cypress:run:e2e": "cypress run --e2e --headless",
-    "cypress:run:ci": "cypress:run:cp && start-server-and-test start http://localhost:3000 cypress:run:e2e"
+    "cypress:run:ci": "start-server-and-test start http://localhost:3000 cypress:run:e2e"
   },
   "dependencies": {
     "@patternfly/react-core": "^5.2.3",
