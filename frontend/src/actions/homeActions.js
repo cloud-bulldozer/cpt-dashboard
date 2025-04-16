@@ -5,6 +5,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
   calculateSummary,
   deleteAppliedFilters,
+  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -147,17 +148,15 @@ export const setCPTAppliedFilters = (navigate) => (dispatch, getState) => {
 };
 
 export const setCPTOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().cpt.filteredResults];
-  const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
-  );
-  dispatch({
-    type: TYPES.SET_FILTERED_DATA,
-    payload: data,
-  });
-  dispatch(tableReCalcValues());
+  const filterData = [...getState().cpt.filterData];
+  const summary = getState().cpt.summary;
+  if (summary?.othersCount !== 0) {
+    const filteredStatus = filterOtherStatus(filterData);
+    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setCPTAppliedFilters());
+  }
 };
+
 export const removeCPTAppliedFilters =
   (filterKey, filterValue, navigate) => (dispatch, getState) => {
     const { start_date, end_date } = getState().cpt;

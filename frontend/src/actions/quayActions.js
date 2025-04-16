@@ -5,6 +5,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
+  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -189,16 +190,13 @@ export const applyQuayDateFilter =
   };
 
 export const setQuayOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().quay.filteredResults];
-  const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
-  );
-  dispatch({
-    type: TYPES.SET_QUAY_FILTERED_DATA,
-    payload: data,
-  });
-  dispatch(tableReCalcValues());
+  const filterData = [...getState().quay.filterData];
+  const summary = getState().quay.summary;
+  if (summary?.othersCount !== 0) {
+    const filteredStatus = filterOtherStatus(filterData);
+    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setQuayAppliedFilters());
+  }
 };
 
 export const getQuaySummary = (countObj) => (dispatch) => {

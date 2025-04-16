@@ -5,6 +5,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
+  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -184,16 +185,13 @@ export const setFilterFromURL = (searchParams) => ({
 });
 
 export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().ocp.filteredResults];
-  const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
-  );
-  dispatch({
-    type: TYPES.SET_OCP_FILTERED_DATA,
-    payload: data,
-  });
-  dispatch(tableReCalcValues());
+  const filterData = [...getState().ocp.filterData];
+  const summary = getState().ocp.summary;
+  if (summary?.othersCount !== 0) {
+    const filteredStatus = filterOtherStatus(filterData);
+    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setOCPAppliedFilters());
+  }
 };
 
 export const getOCPSummary = (countObj) => (dispatch) => {

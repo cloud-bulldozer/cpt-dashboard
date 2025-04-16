@@ -3,7 +3,9 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
+  calculateSummary,
   deleteAppliedFilters,
+  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -188,28 +190,17 @@ export const applyOLSDateFilter =
   };
 
 export const setOLSOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().ols.filteredResults];
-  const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
-  );
-  dispatch({
-    type: TYPES.SET_OLS_FILTERED_DATA,
-    payload: data,
-  });
-  dispatch(tableReCalcValues());
+  const filterData = [...getState().ols.filterData];
+  const summary = getState().ols.summary;
+  if (summary?.othersCount !== 0) {
+    const filteredStatus = filterOtherStatus(filterData);
+    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setOLSAppliedFilters());
+  }
 };
 
 export const getOLSSummary = (countObj) => (dispatch) => {
-  const other =
-    countObj["total"] -
-    ((countObj["success"] || 0) + (countObj["failure"] || 0));
-  const summary = {
-    othersCount: other,
-    successCount: countObj["success"] || 0,
-    failureCount: countObj["failure"] || 0,
-    total: countObj["total"],
-  };
+  const summary = calculateSummary(countObj);
   dispatch({
     type: TYPES.SET_OLS_SUMMARY,
     payload: summary,
