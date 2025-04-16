@@ -154,7 +154,6 @@ async def getFilterData(
         {"key": "ciSystem", "value": ["JENKINS"], "name": "CI System"},
     ]
     filterData.extend(extra_filters)
-
     return {
         "data": filterData,
         "summary": response["summary"],

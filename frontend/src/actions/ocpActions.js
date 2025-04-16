@@ -3,6 +3,7 @@ import * as TYPES from "./types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
+  calculateSummary,
   deleteAppliedFilters,
   getRequestParams,
   getSelectedFilter,
@@ -196,15 +197,7 @@ export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
 };
 
 export const getOCPSummary = (countObj) => (dispatch) => {
-  const other =
-    countObj["total"] -
-    ((countObj["success"] || 0) + (countObj["failure"] || 0));
-  const summary = {
-    othersCount: other,
-    successCount: countObj["success"] || 0,
-    failureCount: countObj["failure"] || 0,
-    total: countObj["total"],
-  };
+  const summary = calculateSummary(countObj);
   dispatch({
     type: TYPES.SET_OCP_SUMMARY,
     payload: summary,

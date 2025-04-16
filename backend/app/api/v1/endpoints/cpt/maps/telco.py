@@ -39,16 +39,24 @@ async def telcoMapper(
 
 async def telcoFilter(start_datetime: date, end_datetime: date, filter: str):
     try:
+        query_params = get_dict_from_qs(filter)
+        # CI System must be Jenkins for all jobs in Telco
+        if "ciSystem" in query_params and not any(
+            item.lower() == "jenkins" for item in query_params.get("ciSystem", [])
+        ):
+            return {"total": 0, "filterData": [], "summary": {}}
+
         updated_filter = await get_updated_telco_filter(filter)
+
         response = await getFilterData(
             start_datetime, end_datetime, updated_filter, "telco.splunk"
         )
 
         if isinstance(response, pd.DataFrame) or not response:
-            return {"total": 0, "filterData": []}
+            return {"total": 0, "filterData": [], "summary": {}}
 
         if not response.get("data") or response.get("total", 0) == 0:
-            return {"total": response.get("total", 0), "filterData": []}
+            return {"total": response.get("total", 0), "filterData": [], "summary": {}}
 
         for item in response["data"]:
             if item.get("key") == "benchmark":
@@ -81,15 +89,11 @@ async def get_updated_telco_filter(filter):
 
     query_params = get_dict_from_qs(filter)
 
-    # CI System must be Jenkins for all jobs in Telco
-    if not any(item.lower() == "jenkins" for item in query_params.get("ciSystem", [])):
-        return {"total": 0, "filterData": [], "summary": {}}
-
     # Rename testName to benchmark
     if "testName" in query_params:
         query_params["benchmark"] = query_params.pop("testName")
-
     # Remove ciSystem from the query params
     query_params.pop("ciSystem", None)
-
+    # Remove product from the query params as all products will be telco
+    query_params.pop("product", None)
     return urlencode(query_params, doseq=True) if query_params else ""

@@ -3,6 +3,7 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
+  calculateSummary,
   deleteAppliedFilters,
   getRequestParams,
   getSelectedFilter,
@@ -201,15 +202,7 @@ export const setQuayOtherSummaryFilter = () => (dispatch, getState) => {
 };
 
 export const getQuaySummary = (countObj) => (dispatch) => {
-  const other =
-    countObj["total"] -
-    ((countObj["success"] || 0) + (countObj["failure"] || 0));
-  const summary = {
-    othersCount: other,
-    successCount: countObj["success"] || 0,
-    failureCount: countObj["failure"] || 0,
-    total: countObj["total"],
-  };
+  const summary = calculateSummary(countObj);
   dispatch({
     type: TYPES.SET_QUAY_SUMMARY,
     payload: summary,

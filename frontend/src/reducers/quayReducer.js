@@ -29,6 +29,7 @@ const initialState = {
     { name: "Hit Size", value: "hitSize" },
     { name: "Image Push/Pulls", value: "imagePushPulls" },
     { name: "Build", value: "build" },
+    { name: "CI System", value: "ciSystem" },
   ],
   selectedFilters: [
     { name: "benchmark", value: [] },
@@ -40,6 +41,7 @@ const initialState = {
     { name: "imagePushPulls", value: [] },
     { name: "build", value: [] },
     { name: "ciSystem", value: [] },
+    { name: "jobStatus", value: [] },
   ],
   clusterMetaData: [
     { name: "Release Binary", value: "releaseStream" },

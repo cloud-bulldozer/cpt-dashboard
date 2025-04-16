@@ -18,30 +18,24 @@ import store from "@/store/store";
 
 const { dispatch } = store;
 export const setActiveSortDir = (dir, currType) => {
-  if (currType === "cpt") {
-    dispatch(setCPTSortDir(dir));
-  } else if (currType === "ocp") {
-    dispatch(setOCPSortDir(dir));
-  } else if (currType === "quay") {
-    dispatch(setQuaySortDir(dir));
-  } else if (currType === "telco") {
-    dispatch(setTelcoSortDir(dir));
-  } else if (currType === "ols") {
-    dispatch(setOLSSortDir(dir));
-  }
+  const actions = {
+    cpt: setCPTSortDir,
+    ocp: setOCPSortDir,
+    quay: setQuaySortDir,
+    telco: setTelcoSortDir,
+    ols: setOLSSortDir,
+  };
+  dispatch(actions[currType](dir));
 };
 export const setActiveSortIndex = (index, currType) => {
-  if (currType === "cpt") {
-    dispatch(setCPTSortIndex(index));
-  } else if (currType === "ocp") {
-    dispatch(setOCPSortIndex(index));
-  } else if (currType === "quay") {
-    dispatch(setQuaySortIndex(index));
-  } else if (currType === "telco") {
-    dispatch(setTelcoSortIndex(index));
-  } else if (currType === "ols") {
-    dispatch(setOLSSortIndex(index));
-  }
+  const actions = {
+    cpt: setCPTSortIndex,
+    ocp: setOCPSortIndex,
+    quay: setQuaySortIndex,
+    telco: setTelcoSortIndex,
+    ols: setOLSSortIndex,
+  };
+  dispatch(actions[currType](index));
 };
 export const handleOnSort = (colName, currType) => {
   dispatch(sortTable(colName, currType));
@@ -90,7 +84,6 @@ export const sortTable = (colName, currState) => (dispatch, getState) => {
 
       const sortParam = `${fieldName}:${activeSortDir}`;
       dispatch({ type: sortObjActions[currState], payload: sortParam });
-      console.log(sortParam);
       const isFromSorting = true;
 
       dispatch(fetchJobsMap[currState](isFromSorting));

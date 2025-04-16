@@ -89,5 +89,6 @@ async def get_updated_filter(filter):
     # Rename testName to benchmark
     if "testName" in query_params:
         query_params["benchmark"] = query_params.pop("testName")
-
+    # Remove product from the query params as all products will be ocp
+    query_params.pop("product", None)
     return urlencode(query_params, doseq=True) if query_params else ""

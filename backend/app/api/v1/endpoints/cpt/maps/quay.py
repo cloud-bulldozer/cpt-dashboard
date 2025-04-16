@@ -83,5 +83,6 @@ async def get_updated_filter(filter):
     # Map Test Name to Benchmark
     if "testName" in query_params:
         query_params["benchmark"] = query_params.pop("testName")
-
+    # Remove product from the query params as all products will be quay
+    query_params.pop("product", None)
     return urlencode(query_params, doseq=True) if query_params else ""

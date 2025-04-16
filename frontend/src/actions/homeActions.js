@@ -3,6 +3,7 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
+  calculateSummary,
   deleteAppliedFilters,
   getRequestParams,
   getSelectedFilter,
@@ -218,16 +219,7 @@ export const setCPTPageOptions = (page, perPage) => ({
 });
 
 export const getCPTSummary = (countObj) => (dispatch) => {
-  const other = countObj["other"]
-    ? countObj["other"]
-    : countObj["total"] -
-      ((countObj["success"] || 0) + (countObj["failure"] || 0));
-  const summary = {
-    othersCount: other,
-    successCount: countObj["success"] || 0,
-    failureCount: countObj["failure"] || 0,
-    total: countObj["total"],
-  };
+  const summary = calculateSummary(countObj);
   dispatch({
     type: TYPES.SET_CPT_SUMMARY,
     payload: summary,
@@ -255,6 +247,7 @@ export const buildFilterData = () => async (dispatch, getState) => {
       console.warn("No filter data received from API");
       dispatch(getCPTSummary({}));
       dispatch({ type: TYPES.SET_CPT_FILTER_DATA, payload: [] });
+      dispatch({ type: TYPES.COMPLETED });
       return;
     }
 

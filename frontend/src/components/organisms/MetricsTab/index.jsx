@@ -36,11 +36,10 @@ const MetricsTab = (props) => {
     }
   };
   const removeStatusFilter = () => {
-    if (
-      Array.isArray(appliedFilters["jobStatus"]) &&
-      appliedFilters["jobStatus"].length > 0
-    ) {
-      appliedFilters["jobStatus"].forEach((element) => {
+    const statusFilters = appliedFilters["jobStatus"];
+
+    if (Array.isArray(statusFilters) && statusFilters.length > 0) {
+      statusFilters.forEach((element) => {
         updateSelectedFilter("jobStatus", element, true);
         removeAppliedFilters("jobStatus", element, navigation, type);
       });
@@ -62,31 +61,34 @@ const MetricsTab = (props) => {
   };
   return (
     <Accordion togglePosition="start">
-      <AccordionItem>
-        <AccordionToggle
-          onClick={() => {
-            onToggle("metrics-toggle");
-          }}
-          isExpanded={expanded === "metrics-toggle"}
-          id="metrics-toggle"
-          ouiaId="summary_toggle"
-        >
-          Summary
-        </AccordionToggle>
-        <AccordionContent
-          id="metrics-toggle"
-          isHidden={expanded !== "metrics-toggle"}
-        >
-          {Object.entries(summary).map(([key, value]) => (
-            <MetricCard
-              key={key}
-              title={titleMap[key]}
-              clickHandler={() => filterFuncMap[key]?.()}
-              footer={value}
-            />
-          ))}
-        </AccordionContent>
-      </AccordionItem>
+      {summary && Object.keys(summary).length > 0 && (
+        <AccordionItem>
+          <AccordionToggle
+            onClick={() => {
+              onToggle("metrics-toggle");
+            }}
+            isExpanded={expanded === "metrics-toggle"}
+            id="metrics-toggle"
+            ouiaId="summary_toggle"
+          >
+            Summary
+          </AccordionToggle>
+          <AccordionContent
+            id="metrics-toggle"
+            className="metrics-toggle-content"
+            isHidden={expanded !== "metrics-toggle"}
+          >
+            {Object.entries(summary).map(([key, value]) => (
+              <MetricCard
+                key={key}
+                title={titleMap[key]}
+                clickHandler={() => filterFuncMap[key]?.()}
+                footer={value}
+              />
+            ))}
+          </AccordionContent>
+        </AccordionItem>
+      )}
     </Accordion>
   );
 };

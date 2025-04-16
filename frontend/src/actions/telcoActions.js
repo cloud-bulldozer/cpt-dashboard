@@ -3,6 +3,7 @@ import * as TYPES from "@/actions/types.js";
 
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
+  calculateSummary,
   deleteAppliedFilters,
   getRequestParams,
   getSelectedFilter,
@@ -188,15 +189,7 @@ export const applyTelcoDateFilter =
   };
 
 export const getTelcoSummary = (countObj) => (dispatch) => {
-  const other =
-    countObj["total"] -
-    ((countObj["success"] || 0) + (countObj["failure"] || 0));
-  const summary = {
-    othersCount: other,
-    successCount: Number(countObj["success"]) || 0,
-    failureCount: Number(countObj["failure"]) || 0,
-    total: Number(countObj["total"]),
-  };
+  const summary = calculateSummary(countObj);
   dispatch({
     type: TYPES.SET_TELCO_SUMMARY,
     payload: summary,

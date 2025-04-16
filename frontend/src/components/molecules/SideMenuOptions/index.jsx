@@ -1,10 +1,14 @@
 import * as CONSTANTS from "@/assets/constants/SidemenuConstants";
 
 import { Nav, NavItem, NavList } from "@patternfly/react-core";
+import {
+  maintainQueryString,
+  setActiveItem,
+  setFromSideMenuFlag,
+} from "@/actions/sideMenuActions";
 import { useDispatch, useSelector } from "react-redux";
 import { useLocation, useNavigate } from "react-router-dom";
 
-import { setActiveItem } from "@/actions/sideMenuActions";
 import { useEffect } from "react";
 
 const sideMenuOptions = [
@@ -12,26 +16,31 @@ const sideMenuOptions = [
     id: CONSTANTS.HOME_NAV,
     key: "home",
     displayName: "Home",
+    type: "cpt",
   },
   {
     id: CONSTANTS.OCP_NAV,
     key: "ocp",
     displayName: "OCP",
+    type: "ocp",
   },
   {
     id: CONSTANTS.TELCO_NAV,
     key: "telco",
     displayName: "Telco",
+    type: "telco",
   },
   {
     id: CONSTANTS.OLS_NAV,
     key: "ols",
     displayName: "OLS",
+    type: "ols",
   },
   {
     id: CONSTANTS.QUAY_NAV,
     key: "quay",
     displayName: "Quay",
+    type: "quay",
   },
 ];
 
@@ -45,6 +54,10 @@ const MenuOptions = () => {
     dispatch(setActiveItem(item.itemId));
   };
 
+  const onSideMenuNavigation = (toPage, type) => {
+    dispatch(setFromSideMenuFlag(true));
+    dispatch(maintainQueryString(toPage, type, navigate));
+  };
   useEffect(() => {
     if (pathname !== "/") {
       const currPath = pathname.replace(/^.*[/]([^/]+)[/]*$/, "$1");
@@ -56,14 +69,14 @@ const MenuOptions = () => {
   return (
     <>
       <Nav onSelect={onSelect} ouiaId="side_menu_options">
-        <NavList>  
+        <NavList>
           {sideMenuOptions.map((option) => {
             return (
               <NavItem
                 key={option.key}
                 itemId={option.id}
                 isActive={activeMenuItem === option.id}
-                onClick={() => navigate(option.key)}
+                onClick={() => onSideMenuNavigation(option.key, option.type)}
               >
                 {option.displayName}
               </NavItem>
