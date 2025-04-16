@@ -129,6 +129,7 @@ FIELDS_FILTER_DICT = {
     "benchmark": "test_type",
     "ocpVersion": "ocp_version",
     "releaseStream": "ocp_build",
+    "jobStatus": "status",
 }
 
 HCE_FIELD_CONSTANT_DICT = {

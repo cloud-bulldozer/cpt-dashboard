@@ -160,9 +160,12 @@ def get_dict_from_qs(qs):
 
 def construct_query(filter_dict):
     query_parts = []
+    mapped_status = {"success": "passed", "failed": "failed", "failure": "failure"}
     if isinstance(filter_dict, dict):
         for key, values in filter_dict.items():
             k = constants.FIELDS_FILTER_DICT[key]
+            if k == "status":
+                values = [mapped_status[val] for val in values]
             if len(values) > 1:
                 or_clause = " OR ".join([f'{k}="{value}"' for value in values])
                 query_parts.append(or_clause)

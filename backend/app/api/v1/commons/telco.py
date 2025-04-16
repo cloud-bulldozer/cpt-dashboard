@@ -77,7 +77,7 @@ async def getData(
                     + "/"
                     + str(test_data["cluster_artifacts"]["ref"]["jenkins_build"]),
                     "jobStatus": constants.JOB_STATUS_MAP.get(
-                        test_data["status"], "failure"
+                        test_data["status"], "other"
                     ),
                     "jobDuration": execution_time_seconds,
                 }
