@@ -14,9 +14,13 @@ export const OCP_FILTERS_API_V1 = "/api/v1/ocp/filters";
 export const CPT_JOBS_API_V1 = "/api/v1/cpt/jobs";
 export const CPT_FILTERS_API_V1 = "/api/v1/cpt/filters";
 
-export const QUAY_JOBS_API_V1 = "/api/v1/quay/jobs";
-export const QUAY_GRAPH_API_V1 = "/api/v1/quay/graph";
-export const QUAY_FILTERS_API_V1 = "/api/v1/quay/filters";
+export const OLS_JOBS_API_V1 = "/api/v1/ols/jobs";
+export const OLS_GRAPH_API_V1 = "/api/v1/ols/graph";
+export const OLS_FILTERS_API_V1 = "/api/v1/ols/filters";
 
 export const TELCO_JOBS_API_V1 = "/api/v1/telco/jobs";
 export const TELCO_GRAPH_API_V1 = "/api/v1/telco/graph";
+
+export const QUAY_JOBS_API_V1 = "/api/v1/quay/jobs";
+export const QUAY_GRAPH_API_V1 = "/api/v1/quay/graph";
+export const QUAY_FILTERS_API_V1 = "/api/v1/quay/filters";

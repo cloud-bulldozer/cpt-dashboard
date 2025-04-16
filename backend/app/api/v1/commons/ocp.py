@@ -28,7 +28,6 @@ async def getData(
         },
     }
     if sort is not None:
-        print(sort)
         query["sort"] = utils.build_sort_terms(sort)
 
     if filter:
@@ -135,5 +134,4 @@ def getJobType(upstreamList: list):
 
 
 def getIsRehearse(upstreamList: list):
-    print(upstreamList)
     return list({"True" if "rehearse" in item else "False" for item in upstreamList})

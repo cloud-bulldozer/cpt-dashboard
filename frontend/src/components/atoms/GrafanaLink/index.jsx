@@ -29,9 +29,14 @@ const GrafanaLink = (props) => {
     const datePart = `&from=${startDate}&to=${endDate}`;
     const uuidPart = `&var-uuid=${config.uuid}`;
 
-    if (config.benchmark === CONSTANTS.QUAY_LOAD_TEST)
+    if (config.benchmark === CONSTANTS.QUAY_LOAD_TEST) {
       return `${CONSTANTS.GRAFANA_BASE_URL}${CONSTANTS.DASHBOARD_QUAY}${datePart}${uuidPart}`;
-    return `${CONSTANTS.GRAFANA_BASE_URL}${dashboardURL}${datasource}${datePart}&var-platform=${config.platform}"&var-workload=${config.benchmark}${uuidPart}`;
+    } else if (config.benchmark === CONSTANTS.OLS_LOAD_GENERATOR) {
+      const olsTestWorkers = `&var-workers=All`
+      const olsTestDuration = `&var-duration=All`
+      return `${CONSTANTS.GRAFANA_BASE_URL}${CONSTANTS.DASHBOARD_OLS}${datePart}${uuidPart}${olsTestWorkers}${olsTestDuration}`;
+    }
+    return `${CONSTANTS.GRAFANA_BASE_URL}${dashboardURL}${datasource}${datePart}&var-platform=${config.platform}&var-workload=${config.benchmark}${uuidPart}`;
   }, [
     config.benchmark,
     config.ciSystem,

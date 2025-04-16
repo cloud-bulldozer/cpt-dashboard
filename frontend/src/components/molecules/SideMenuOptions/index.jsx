@@ -19,14 +19,19 @@ const sideMenuOptions = [
     displayName: "OCP",
   },
   {
-    id: CONSTANTS.QUAY_NAV,
-    key: "quay",
-    displayName: "Quay",
-  },
-  {
     id: CONSTANTS.TELCO_NAV,
     key: "telco",
     displayName: "Telco",
+  },
+  {
+    id: CONSTANTS.OLS_NAV,
+    key: "ols",
+    displayName: "OLS",
+  },
+  {
+    id: CONSTANTS.QUAY_NAV,
+    key: "quay",
+    displayName: "Quay",
   },
 ];
 
