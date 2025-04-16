@@ -137,7 +137,9 @@ const TableFilter = (props) => {
               value={start_date}
             />
           </ToolbarItem>
-          <ToolbarItem className="to-text">to</ToolbarItem>
+          <ToolbarItem variant="label" className="to-text">
+            to
+          </ToolbarItem>
           <ToolbarItem>
             <DatePicker
               onChange={(date) =>

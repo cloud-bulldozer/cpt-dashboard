@@ -42,7 +42,7 @@ const RowContent = (props) => {
 
   return (
     <Grid hasGutter>
-      <GridItem span={7}>
+      <GridItem span={6}>
         <Card>
           <CardBody>
             {content.map((unit) => (
@@ -63,7 +63,7 @@ const RowContent = (props) => {
           </CardBody>
         </Card>
       </GridItem>
-      <GridItem span={5}>
+      <GridItem span={6}>
         <Card>
           <CardBody>
             {isGraphLoading && !hasGraphData ? (
