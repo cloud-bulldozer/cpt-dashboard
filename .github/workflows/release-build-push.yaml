@@ -12,6 +12,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.11"
 
     - name: Build Frontend Image
       id: build-front
@@ -32,6 +35,9 @@ jobs:
         registry: quay.io/cloud-bulldozer
         username: ${{ secrets.QUAY_USER }}
         password: ${{ secrets.QUAY_TOKEN }}
+
+    - name: Generate version file
+      run: scripts/version.py
 
     - name: Build Backend Image
       id: build-back

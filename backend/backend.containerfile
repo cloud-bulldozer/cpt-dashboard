@@ -10,6 +10,7 @@ COPY app/ /backend/app
 COPY scripts/ /backend/scripts
 COPY pyproject.toml /backend
 COPY poetry.lock /backend
+COPY version.json /backend
 
 WORKDIR /backend
 
