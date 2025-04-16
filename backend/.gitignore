@@ -1,6 +1,7 @@
 **/.idea
 **/*.cfg
 ocpperf.toml
+version.json
 **/*.csv
 **/*.json
 
