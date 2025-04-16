@@ -39,7 +39,6 @@ async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
     response = await getFilterData(
         start_datetime, end_datetime, updated_filter, f"ocm.elasticsearch"
     )
-
     if isinstance(response, pd.DataFrame) or not response:
         return {"total": 0, "filterData": [], "summary": {}}
 

@@ -71,7 +71,7 @@ class SplunkService:
 
                     # Process results using an async generator
                     res_array = []
-                    total_records = 0
+
                     async for record in self._stream_results(oneshot_results):
                         try:
                             raw_data = record.get("_raw", "{}")

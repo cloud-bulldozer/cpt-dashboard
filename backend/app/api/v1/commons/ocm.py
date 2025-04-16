@@ -13,15 +13,25 @@ async def getData(
     filter: str,
     configpath: str,
 ):
+    should = []
+    must_not = []
     query = {
         "size": size,
         "from": offset,
         "query": {
             "bool": {
-                "filter": {"range": {"metrics.earliest": {"format": "yyyy-MM-dd"}}}
+                "filter": {"range": {"metrics.earliest": {"format": "yyyy-MM-dd"}}},
+                "should": should,
+                "must_not": must_not,
             }
         },
     }
+    if filter:
+        refiner = utils.transform_filter(filter)
+        should.extend(refiner["query"])
+        must_not.extend(refiner["must_query"])
+        query["query"]["bool"]["minimum_should_match"] = refiner["min_match"]
+
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
@@ -64,7 +74,10 @@ async def getFilterData(
     )
     await es.close()
 
-    return {"filterData": response["filterData"], "summary": response["summary"]}
+    return {
+        "filterData": response.get("filterData", []),
+        "summary": response.get("summary", {}),
+    }
 
 
 def fillCiSystem(row):

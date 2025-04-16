@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
 const Telco = () => {
   const dispatch = useDispatch();
@@ -40,6 +41,8 @@ const Telco = () => {
     totalJobs,
   } = useSelector((state) => state.telco);
 
+  const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
+
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -60,9 +63,14 @@ const Telco = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchTelcoJobsData());
-    dispatch(buildFilterData());
-  }, [dispatch]);
+    if (!fromSideMenu && results.length === 0) {
+      dispatch(fetchTelcoJobsData());
+      dispatch(buildFilterData());
+    }
+    if (fromSideMenu) {
+      dispatch(setFromSideMenuFlag(false));
+    }
+  }, [dispatch, fromSideMenu, results.length]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

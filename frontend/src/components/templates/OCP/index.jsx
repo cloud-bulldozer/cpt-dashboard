@@ -15,6 +15,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
 const OCP = () => {
   const dispatch = useDispatch();
@@ -40,6 +41,8 @@ const OCP = () => {
     totalJobs,
   } = useSelector((state) => state.ocp);
 
+  const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
+
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -60,9 +63,14 @@ const OCP = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchOCPJobs());
-    dispatch(buildFilterData());
-  }, [dispatch]);
+    if (!fromSideMenu && results.length === 0) {
+      dispatch(fetchOCPJobs());
+      dispatch(buildFilterData());
+    }
+    if (fromSideMenu) {
+      dispatch(setFromSideMenuFlag(false));
+    }
+  }, [dispatch, fromSideMenu, results.length]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

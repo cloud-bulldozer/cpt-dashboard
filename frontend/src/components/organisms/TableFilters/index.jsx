@@ -86,8 +86,8 @@ const TableFilter = (props) => {
   const onOptionsChange = () => {
     setAppliedFilters(navigation, type);
   };
-  const deleteItem = (key, value) => {
-    updateSelectedFilter(key, value, false);
+  const deleteItem = async (key, value) => {
+    await updateSelectedFilter(key, value, false);
     removeAppliedFilters(key, value, navigation, type);
   };
   const startDateChangeHandler = (date, key) => {

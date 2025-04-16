@@ -32,13 +32,22 @@ export const formatDateTime = (dateTimeStamp) => {
  * Build the url with query params*
  * @function
  * @param {Object} queryObj - Query
+ * @param {string} toPage - new page to be navigated
  * @return {string} - update the url with the query string
  */
 
-export const appendQueryString = (queryObj, navigate) => {
-  const queryString = new URLSearchParams(queryObj).toString();
+export const appendQueryString = (queryObj, navigate, toPage) => {
+  const validQueryObj = Object.fromEntries(
+    Object.entries(queryObj).filter(
+      // eslint-disable-next-line no-unused-vars
+      ([_, value]) => value !== null && value !== undefined && value !== ""
+    )
+  );
+
+  const queryString = new URLSearchParams(validQueryObj).toString();
+
   navigate({
-    pathname: window.location.pathname,
+    pathname: toPage ? toPage : window.location.pathname,
     search: `?${queryString}`,
   });
 };
