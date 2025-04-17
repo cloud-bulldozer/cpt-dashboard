@@ -56,13 +56,32 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 
 ## Test
 
-### Requirements
+### Component Tests
+
+#### Requirements
+- Starting directory is the project root
+- NodeJS 22+
+
+Install JavaScript dependencies.
+
+```shell
+npm --prefix frontend install
+```
+
+Execute Cypress tests of React Components.
+
+```shell
+npm --prefix frontend run cypress:cp
+```
+
+
+### E2E Tests
+
+#### Requirements
 - Three shell terminals
 - Starting directory is the project root
 - Podman, Docker
 - NodeJS 22+
-
-#### Execute E2E Tests
 
 Start CPT-Dashboard backend data service end-to-end test dependency.
 ```shell
