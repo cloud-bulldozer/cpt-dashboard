@@ -20,6 +20,8 @@ jobs:
         run: podman run --pod=${POD_NAME} -d --name=front frontend
       - name: build cypress end-to-end tests
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
+      - name: run cypress component tests
+        run: podman run --rm -d e2e-frontend run cypress:cp
       - name: run cypress e2e
         run: podman run --pod=${POD_NAME} --name=cypress-e2e e2e-frontend
       - name: copy e2e screenshots from container
