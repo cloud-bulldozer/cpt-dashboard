@@ -5,6 +5,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
+  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -197,18 +198,14 @@ export const getTelcoSummary = (countObj) => (dispatch) => {
 };
 
 export const setTelcoOtherSummaryFilter = () => (dispatch, getState) => {
-  const filteredResults = [...getState().telco.filteredResults];
-  const keyWordArr = ["success", "failure"];
-  const data = filteredResults.filter(
-    (item) => !keyWordArr.includes(item.jobStatus?.toLowerCase())
-  );
-  dispatch({
-    type: TYPES.SET_TELCO_FILTERED_DATA,
-    payload: data,
-  });
-  dispatch(tableReCalcValues());
+  const filterData = [...getState().telco.filterData];
+  const summary = getState().telco.summary;
+  if (summary?.othersCount !== 0) {
+    const filteredStatus = filterOtherStatus(filterData);
+    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setTelcoAppliedFilters());
+  }
 };
-
 export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
   let tableColumns = [...getState().telco.tableColumns];
   const tableFilters = getState().telco.tableFilters;

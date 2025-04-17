@@ -129,6 +129,7 @@ FIELDS_FILTER_DICT = {
     "benchmark": "test_type",
     "ocpVersion": "ocp_version",
     "releaseStream": "ocp_build",
+    "jobStatus": "status",
 }
 
 HCE_FIELD_CONSTANT_DICT = {
@@ -163,3 +164,4 @@ STANDOUT_PRODUCTS = ["ocp", "telco", "quay"]
 # These products aren't listed by their exact names like "hce" and "ocm",
 # but instead represent grouped categories such as "Developer", "Insights", etc.
 GENERAL_PRODUCTS = ["hce", "ocm"]
+TELCO_STATUS_MAP = {"success": "passed", "failed": "failed", "failure": "failure"}

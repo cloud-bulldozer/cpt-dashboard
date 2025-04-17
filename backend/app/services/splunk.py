@@ -91,7 +91,7 @@ class SplunkService:
 
                     return {
                         "data": res_array,
-                        "total": int(record.get("total_records", 0)),
+                        "total": int(record.get("total_records", 0)) if record else 0,
                     }
 
                 except Exception as e:
