@@ -169,8 +169,6 @@ async def filters(
 
     updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
 
-    updated_filter_qs = urlencode(filter_dict, doseq=True) if filter else ""
-    print(updated_filter_qs)
     results = await asyncio.gather(
         *[
             fetch_data_limited(

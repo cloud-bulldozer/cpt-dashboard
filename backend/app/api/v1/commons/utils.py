@@ -166,7 +166,7 @@ def construct_query(filter_dict):
             k = constants.FIELDS_FILTER_DICT[key]
             # as status values are mapped differenlty for telco
             if k == "status":
-                values = [constants.TELCO_STATUS_MAP[val] for val in values]
+                values = [constants.TELCO_STATUS_MAP.get(val, val) for val in values]
             if len(values) > 1:
                 or_clause = " OR ".join([f'{k}="{value}"' for value in values])
                 query_parts.append(or_clause)
