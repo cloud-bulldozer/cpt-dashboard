@@ -71,9 +71,10 @@ class SplunkService:
 
                     # Process results using an async generator
                     res_array = []
-
+                    rec = None
                     async for record in self._stream_results(oneshot_results):
                         try:
+                            rec = record
                             raw_data = record.get("_raw", "{}")
                             res_array.append(
                                 {
@@ -91,7 +92,7 @@ class SplunkService:
 
                     return {
                         "data": res_array,
-                        "total": int(record.get("total_records", 0)) if record else 0,
+                        "total": int(rec.get("total_records", 0)) if rec else 0,
                     }
 
                 except Exception as e:

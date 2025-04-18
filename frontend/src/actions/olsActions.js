@@ -35,15 +35,18 @@ export const fetchOLSJobsData = () => async (dispatch) => {
         },
       });
     }
-    if (response?.data?.results?.length > 0) {
-      dispatch({
-        type: TYPES.SET_OLS_JOBS_DATA,
-        payload: response.data.results,
-      });
-      dispatch({
-        type: TYPES.SET_OLS_FILTERED_DATA,
-        payload: response.data.results,
-      });
+    const hasResults = response.data?.results?.length > 0;
+    dispatch({
+      type: TYPES.SET_OLS_JOBS_DATA,
+      payload: hasResults ? response.data.results : [],
+    });
+    dispatch({
+      type: TYPES.SET_OLS_FILTERED_DATA,
+      payload: hasResults ? response.data.results : [],
+    });
+
+    if (hasResults) {
+      dispatch(tableReCalcValues());
       dispatch({
         type: TYPES.SET_OLS_PAGE_TOTAL,
         payload: {
@@ -51,9 +54,8 @@ export const fetchOLSJobsData = () => async (dispatch) => {
           offset: response.data.offset,
         },
       });
-
-      dispatch(tableReCalcValues());
     }
+
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
