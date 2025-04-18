@@ -7,6 +7,8 @@ export const getUrl = () => {
 
 export const BASE_URL = getUrl();
 
+export const AGG_VERSION_API = "/api/version";
+
 export const OCP_JOBS_API_V1 = "/api/v1/ocp/jobs";
 export const OCP_GRAPH_API_V1 = "/api/v1/ocp/graph";
 export const OCP_FILTERS_API_V1 = "/api/v1/ocp/filters";
