@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "start": "vite --host",
-    "test": "vitest",
+    "test": "TZ=EST LC_ALL=en_US.UTF8 vitest",
+    "test:unit": "vitest",
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint . --ext js,jsx --report-unused-disable-directives --max-warnings 0",
