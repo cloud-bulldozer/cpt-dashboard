@@ -9,11 +9,14 @@ import {
   MastheadToggle,
   PageToggleButton,
 } from "@patternfly/react-core";
+import { useEffect } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import { BarsIcon } from "@patternfly/react-icons";
 import logo from "@/assets//logo.png";
 import { toggleSideMenu } from "@/actions/sideMenuActions";
+import VersionWidget from "@/components/atoms/VersionWidget";
+import { fetchAggregatorVersion } from "@/actions/headerActions";
 
 const Header = () => {
   const isSideMenuOpen = useSelector((state) => state.sidemenu.isSideMenuOpen);
@@ -22,6 +25,10 @@ const Header = () => {
   const onSidebarToggle = () => {
     dispatch(toggleSideMenu(!isSideMenuOpen));
   };
+
+  useEffect(() => {
+    dispatch(fetchAggregatorVersion());
+  }, [dispatch]);
 
   return (
     <Masthead>
@@ -43,9 +50,10 @@ const Header = () => {
         </MastheadBrand>
       </MastheadMain>
       <MastheadContent>
-        CPT Dashboard
-        <div className="last-updated-box">
-          {updatedTime && <div>Last Updated: {updatedTime}</div>}
+        <div className="meta-items">
+          <div className="name">CPT Dashboard</div>
+          <div>{updatedTime && <div>Last Updated: {updatedTime}</div>}</div>
+          <VersionWidget />
         </div>
       </MastheadContent>
     </Masthead>
