@@ -70,7 +70,7 @@ const OCP = () => {
     if (fromSideMenu) {
       dispatch(setFromSideMenuFlag(false));
     }
-  }, [dispatch, fromSideMenu, results.length]);
+  }, [dispatch, fromSideMenu, results]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

@@ -65,7 +65,7 @@ const Home = () => {
     if (fromSideMenu) {
       dispatch(setFromSideMenuFlag(false));
     }
-  }, [dispatch, fromSideMenu, results, results.length]);
+  }, [dispatch, fromSideMenu, results]);
   // Filter Helper
   const updateSelectedFilter = (category, value, isFromMetrics) => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));

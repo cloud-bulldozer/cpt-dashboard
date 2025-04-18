@@ -35,25 +35,25 @@ export const fetchQuayJobsData = () => async (dispatch) => {
         },
       });
     }
-    if (response?.data?.results?.length > 0) {
-      dispatch({
-        type: TYPES.SET_QUAY_JOBS_DATA,
-        payload: response.data.results,
-      });
-      dispatch({
-        type: TYPES.SET_QUAY_FILTERED_DATA,
-        payload: response.data.results,
-      });
-      dispatch({
-        type: TYPES.SET_QUAY_PAGE_TOTAL,
-        payload: {
-          total: response.data.total,
-          offset: response.data.offset,
-        },
-      });
 
-      dispatch(tableReCalcValues());
-    }
+    dispatch({
+      type: TYPES.SET_QUAY_JOBS_DATA,
+      payload: response.data.results,
+    });
+    dispatch({
+      type: TYPES.SET_QUAY_FILTERED_DATA,
+      payload: response.data.results,
+    });
+    dispatch({
+      type: TYPES.SET_QUAY_PAGE_TOTAL,
+      payload: {
+        total: response.data.total,
+        offset: response.data.offset,
+      },
+    });
+
+    dispatch(tableReCalcValues());
+
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
