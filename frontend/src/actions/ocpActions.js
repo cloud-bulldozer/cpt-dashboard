@@ -44,22 +44,16 @@ export const fetchOCPJobs = () => async (dispatch) => {
       payload: hasResults ? response.data.results : [],
     });
 
-    dispatch({
-      type: TYPES.SET_OCP_PAGE_TOTAL,
-      payload: hasResults
-        ? {
-            total: response.data.total,
-            offset: response.data.offset,
-          }
-        : {
-            total: [],
-            offset: [],
-          },
-    });
     if (hasResults) {
       dispatch(tableReCalcValues());
+      dispatch({
+        type: TYPES.SET_OCP_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
+      });
     }
-
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());

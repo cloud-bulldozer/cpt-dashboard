@@ -44,21 +44,16 @@ export const fetchOLSJobsData = () => async (dispatch) => {
       type: TYPES.SET_OLS_FILTERED_DATA,
       payload: hasResults ? response.data.results : [],
     });
-    dispatch({
-      type: TYPES.SET_OLS_PAGE_TOTAL,
-      payload: hasResults
-        ? {
-            total: response.data.total,
-            offset: response.data.offset,
-          }
-        : {
-            total: [],
-            offset: [],
-          },
-    });
 
     if (hasResults) {
       dispatch(tableReCalcValues());
+      dispatch({
+        type: TYPES.SET_OLS_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
+      });
     }
 
     dispatch(setLastUpdatedTime());

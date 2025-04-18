@@ -51,21 +51,15 @@ export const fetchOCPJobsData =
           : [],
       });
 
-      dispatch({
-        type: TYPES.SET_CPT_PAGE_TOTAL,
-        payload: hasResults
-          ? {
-              total: response.data.total,
-              offset: response.data.offset,
-            }
-          : {
-              total: [],
-              offset: [],
-            },
-      });
-
       if (hasResults) {
         dispatch(tableReCalcValues());
+        dispatch({
+          type: TYPES.SET_CPT_PAGE_TOTAL,
+          payload: {
+            total: response.data.total,
+            offset: response.data.offset,
+          },
+        });
       }
 
       dispatch(setLastUpdatedTime());

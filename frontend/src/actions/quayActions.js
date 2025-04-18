@@ -44,21 +44,16 @@ export const fetchQuayJobsData = () => async (dispatch) => {
       type: TYPES.SET_QUAY_FILTERED_DATA,
       payload: hasResults ? response.data.results : [],
     });
-    dispatch({
-      type: TYPES.SET_QUAY_PAGE_TOTAL,
-      payload: hasResults
-        ? {
-            total: response.data.total,
-            offset: response.data.offset,
-          }
-        : {
-            total: [],
-            offset: [],
-          },
-    });
 
     if (hasResults) {
       dispatch(tableReCalcValues());
+      dispatch({
+        type: TYPES.SET_QUAY_PAGE_TOTAL,
+        payload: {
+          total: response.data.total,
+          offset: response.data.offset,
+        },
+      });
     }
 
     dispatch(setLastUpdatedTime());
