@@ -34,8 +34,8 @@ def main():
     backend = top / "backend"
     version = (backend / "VERSION").read_text().strip()
     sha = getone(["git", "rev-parse", "--short", "HEAD"])
-    branch = getone(["git", "branch", "--show-current"], if_none="HEAD")
-    display = f"v{version}-{sha} ({branch})"
+    branch = getone(["git", "branch", "--show-current"], if_none="CI")
+    display = f"v{version}-{sha}"
     print(f"VERSION: {display}")
     log = do(["git", "log", "-n10", "--format=%h###%aN###%aE###%aI###%s"])
     fields = ("sha", "author", "email", "date", "title")
