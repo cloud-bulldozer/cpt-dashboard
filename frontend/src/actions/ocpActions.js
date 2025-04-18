@@ -37,20 +37,28 @@ export const fetchOCPJobs = () => async (dispatch) => {
         },
       });
     }
+    const hasResults = response.data?.results?.length > 0;
 
     dispatch({
       type: TYPES.SET_OCP_JOBS_DATA,
-      payload: response.data.results,
+      payload: hasResults ? response.data.results : [],
     });
 
     dispatch({
       type: TYPES.SET_OCP_PAGE_TOTAL,
-      payload: {
-        total: response.data.total,
-        offset: response.data.offset,
-      },
+      payload: hasResults
+        ? {
+            total: response.data.total,
+            offset: response.data.offset,
+          }
+        : {
+            total: [],
+            offset: [],
+          },
     });
-    dispatch(tableReCalcValues());
+    if (hasResults) {
+      dispatch(tableReCalcValues());
+    }
 
     dispatch(setLastUpdatedTime());
   } catch (error) {

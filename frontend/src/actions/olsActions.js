@@ -35,25 +35,32 @@ export const fetchOLSJobsData = () => async (dispatch) => {
         },
       });
     }
-    if (response?.data?.results?.length > 0) {
-      dispatch({
-        type: TYPES.SET_OLS_JOBS_DATA,
-        payload: response.data.results,
-      });
-      dispatch({
-        type: TYPES.SET_OLS_FILTERED_DATA,
-        payload: response.data.results,
-      });
-      dispatch({
-        type: TYPES.SET_OLS_PAGE_TOTAL,
-        payload: {
-          total: response.data.total,
-          offset: response.data.offset,
-        },
-      });
+    const hasResults = response.data?.results?.length > 0;
+    dispatch({
+      type: TYPES.SET_OLS_JOBS_DATA,
+      payload: hasResults ? response.data.results : [],
+    });
+    dispatch({
+      type: TYPES.SET_OLS_FILTERED_DATA,
+      payload: hasResults ? response.data.results : [],
+    });
+    dispatch({
+      type: TYPES.SET_OLS_PAGE_TOTAL,
+      payload: hasResults
+        ? {
+            total: response.data.total,
+            offset: response.data.offset,
+          }
+        : {
+            total: [],
+            offset: [],
+          },
+    });
 
+    if (hasResults) {
       dispatch(tableReCalcValues());
     }
+
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());

@@ -36,23 +36,30 @@ export const fetchTelcoJobsData = () => async (dispatch) => {
         },
       });
     }
-
+    const hasResults = response.data?.results?.length > 0;
     dispatch({
       type: TYPES.SET_TELCO_JOBS_DATA,
-      payload: response.data.results,
+      payload: hasResults ? response.data.results : [],
     });
     dispatch({
       type: TYPES.SET_TELCO_FILTERED_DATA,
-      payload: response.data.results,
+      payload: hasResults ? response.data.results : [],
     });
     dispatch({
       type: TYPES.SET_TELCO_PAGE_TOTAL,
-      payload: {
-        total: Number(response.data.total),
-        offset: response.data.offset,
-      },
+      payload: hasResults
+        ? {
+            total: Number(response.data.total),
+            offset: response.data.offset,
+          }
+        : {
+            total: [],
+            offset: [],
+          },
     });
-
+    if (hasResults) {
+      dispatch(tableReCalcValues());
+    }
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());

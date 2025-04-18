@@ -40,22 +40,33 @@ export const fetchOCPJobsData =
           },
         });
       }
+      const hasResults = response.data?.results?.length > 0;
 
       dispatch({
         type: TYPES.SET_CPT_JOBS_DATA,
-        payload: isNewSearch
-          ? response.data.results
-          : [...results, ...response.data.results],
-      });
-      dispatch({
-        type: TYPES.SET_CPT_PAGE_TOTAL,
-        payload: {
-          total: response.data.total,
-          offset: response.data.offset,
-        },
+        payload: hasResults
+          ? isNewSearch
+            ? response.data.results
+            : [...results, ...response.data.results]
+          : [],
       });
 
-      dispatch(tableReCalcValues());
+      dispatch({
+        type: TYPES.SET_CPT_PAGE_TOTAL,
+        payload: hasResults
+          ? {
+              total: response.data.total,
+              offset: response.data.offset,
+            }
+          : {
+              total: [],
+              offset: [],
+            },
+      });
+
+      if (hasResults) {
+        dispatch(tableReCalcValues());
+      }
 
       dispatch(setLastUpdatedTime());
     } catch (error) {
