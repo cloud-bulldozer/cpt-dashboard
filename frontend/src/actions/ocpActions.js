@@ -37,14 +37,12 @@ export const fetchOCPJobs = () => async (dispatch) => {
         },
       });
     }
-    const hasResults = response.data?.results?.length > 0;
+    if (response?.data?.results?.length > 0) {
+      dispatch({
+        type: TYPES.SET_OCP_JOBS_DATA,
+        payload: response.data.results,
+      });
 
-    dispatch({
-      type: TYPES.SET_OCP_JOBS_DATA,
-      payload: hasResults ? response.data.results : [],
-    });
-
-    if (hasResults) {
       dispatch(tableReCalcValues());
       dispatch({
         type: TYPES.SET_OCP_PAGE_TOTAL,
@@ -54,6 +52,7 @@ export const fetchOCPJobs = () => async (dispatch) => {
         },
       });
     }
+
     dispatch(setLastUpdatedTime());
   } catch (error) {
     dispatch(showFailureToast());
