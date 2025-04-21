@@ -56,6 +56,23 @@ Then, copy the `build` folder to the proper place on the server for deployment.
 
 ## Test
 
+### Unit Tests
+
+#### Requirements
+- Starting directory is the project root
+- NodeJS 22+
+
+Install JavaScript dependencies.
+
+```shell
+npm --prefix frontend install
+```
+
+```shell
+npm --prefix frontend test
+```
+
+
 ### Component Tests
 
 #### Requirements
