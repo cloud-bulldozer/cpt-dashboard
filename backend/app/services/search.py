@@ -161,11 +161,10 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
-
-                    unique_data = await self.remove_duplicates(
-                        (previous_results["data"] if "data" in previous_results else [])
-                        + (new_results["data"] if "data" in new_results else [])
+                    combined_data = (previous_results.get("data") or []) + (
+                        new_results.get("data") or []
                     )
+                    unique_data = await self.remove_duplicates(combined_data)
 
                     totalVal = previous_results.get("total", 0) + new_results.get(
                         "total", 0
@@ -219,10 +218,10 @@ class ElasticService:
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
                 }
-                unique_data = await self.remove_duplicates(
-                    (previous_results["data"] if "data" in previous_results else [])
-                    + (new_results["data"] if "data" in new_results else [])
+                combined_data = (previous_results.get("data") or []) + (
+                    new_results.get("data") or []
                 )
+                unique_data = await self.remove_duplicates(combined_data)
 
                 prev_total = previous_results.get("total", 0)
                 new_total = new_results.get("total", 0)
