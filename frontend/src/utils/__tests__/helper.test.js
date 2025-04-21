@@ -3,7 +3,7 @@ import { describe, it, expect } from "vitest";
 import { formatDate } from "../helper";
 
 describe("formatDate", () => {
-  it("month and day strings each have length 2", () => {
+  it("month and day strings each are length 2", () => {
     expect(formatDate("1000-10-10")).toBe("1000-10-10");
   });
   it("month string is length 1", () => {
