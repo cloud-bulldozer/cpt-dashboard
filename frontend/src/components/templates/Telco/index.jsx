@@ -8,7 +8,7 @@ import {
   setTableColumns,
   setTelcoDateFilter,
 } from "@/actions/telcoActions.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -21,6 +21,7 @@ const Telco = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const hasFetchedRef = useRef(false);
   const {
     results,
     tableColumns,
@@ -63,14 +64,15 @@ const Telco = () => {
   }, []);
 
   useEffect(() => {
-    if (!fromSideMenu && results.length === 0) {
+    if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
       dispatch(fetchTelcoJobsData());
       dispatch(buildFilterData());
+      hasFetchedRef.current = true;
     }
     if (fromSideMenu) {
       dispatch(setFromSideMenuFlag(false));
     }
-  }, [dispatch, fromSideMenu, results.length]);
+  }, [dispatch, fromSideMenu, results]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(

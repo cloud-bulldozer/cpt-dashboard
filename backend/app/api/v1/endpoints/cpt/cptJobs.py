@@ -132,7 +132,7 @@ async def jobs(
         "startDate": str(start_date),
         "endDate": str(end_date),
         "results": results_df.to_dict("records"),
-        "total": total_jobs_count if totalJobs == 0 else totalJobs,
+        "total": total_jobs_count if offset == 0 else totalJobs,
         "offset": offset + size,
     }
 

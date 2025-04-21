@@ -24,6 +24,12 @@ import traceback
 async def hceMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+    query_params = get_dict_from_qs(filter)
+
+    isCriteriaMet = await mandatory_filter_checks(query_params)
+    if not isCriteriaMet:
+        return {"data": pd.DataFrame(), "total": 0}
+
     updated_filter = await get_updated_filter(filter)
 
     response = await getData(
@@ -63,6 +69,11 @@ def dropColumns(df):
 
 async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
     try:
+        query_params = get_dict_from_qs(filter)
+
+        isCriteriaMet = await mandatory_filter_checks(query_params)
+        if not isCriteriaMet:
+            return {"total": 0, "filterData": [], "summary": {}}
         updated_filter = await get_updated_filter(filter)
 
         response = await getFilterData(
@@ -96,11 +107,7 @@ async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
         print(f"Error retrieving filter data: {e}")
 
 
-async def get_updated_filter(filter):
-    if not filter:
-        return ""
-
-    query_params = get_dict_from_qs(filter)
+async def mandatory_filter_checks(query_params):
     # Validation checks
     mandatory_fields = {
         "releaseStream": "nightly",
@@ -111,7 +118,16 @@ async def get_updated_filter(filter):
         if key in query_params and not any(
             item.lower() == required_value for item in query_params[key]
         ):
-            return {"total": 0, "filterData": [], "summary": {}}
+            return False
+
+    return True
+
+
+async def get_updated_filter(filter):
+    if not filter:
+        return ""
+
+    query_params = get_dict_from_qs(filter)
 
     # Map jobStatus to result
     if "jobStatus" in query_params:

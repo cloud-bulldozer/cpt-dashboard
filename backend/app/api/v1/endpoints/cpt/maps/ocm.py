@@ -12,6 +12,13 @@ from app.api.v1.commons.utils import get_dict_from_qs
 async def ocmMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
+    query_params = get_dict_from_qs(filter)
+
+    isCriteriaMet = await mandatory_filter_checks(query_params)
+
+    if not isCriteriaMet:
+        return {"data": pd.DataFrame(), "total": 0}
+
     updated_filter = await get_updated_filter(filter)
 
     response = await getData(
@@ -34,6 +41,13 @@ async def ocmMapper(
 
 
 async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
+    query_params = get_dict_from_qs(filter)
+
+    isCriteriaMet = await mandatory_filter_checks(query_params)
+
+    if not isCriteriaMet:
+        return {"total": 0, "filterData": [], "summary": {}}
+
     updated_filter = await get_updated_filter(filter)
 
     response = await getFilterData(
@@ -61,6 +75,17 @@ async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
         "filterData": filtered_data,
         "summary": response.get("summary", {}),
     }
+
+
+async def mandatory_filter_checks(query_params):
+    # Validation checks
+    # ReleaseStream is Nightly for all jobs in OCM
+    if "releaseStream" in query_params and not any(
+        item.lower() == "nightly" for item in query_params.get("releaseStream", [])
+    ):
+        return False
+
+    return True
 
 
 async def get_updated_filter(filter):

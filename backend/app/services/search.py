@@ -125,7 +125,7 @@ class ElasticService:
                     today = datetime.today().date()
                     seven_days_ago = today - timedelta(days=7)
                     if end_date and end_date < seven_days_ago:
-                        new_results = []
+                        new_results = {}
                     else:
                         new_start_date = (
                             max(start_date, seven_days_ago)
@@ -161,15 +161,13 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
-                    unique_data = await self.remove_duplicates(
-                        previous_results["data"]
-                        if ("data" in previous_results)
-                        else [] + new_results["data"] if ("data" in new_results) else []
+                    combined_data = (previous_results.get("data") or []) + (
+                        new_results.get("data") or []
                     )
-                    totalVal = (
-                        previous_results["total"]
-                        if ("total" in previous_results)
-                        else 0 + new_results["total"] if ("total" in new_results) else 0
+                    unique_data = await self.remove_duplicates(combined_data)
+
+                    totalVal = previous_results.get("total", 0) + new_results.get(
+                        "total", 0
                     )
                     return {"data": unique_data, "total": totalVal}
                 else:
@@ -220,17 +218,13 @@ class ElasticService:
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
                 }
-
-                unique_data = await self.remove_duplicates(
-                    previous_results["data"]
-                    if ("data" in previous_results)
-                    else [] + new_results["data"] if ("data" in new_results) else []
+                combined_data = (previous_results.get("data") or []) + (
+                    new_results.get("data") or []
                 )
-                totalVal = (
-                    previous_results["total"]
-                    if ("total" in previous_results)
-                    else 0 + new_results["total"] if ("total" in new_results) else 0
-                )
+                unique_data = await self.remove_duplicates(combined_data)
+                prev_total = previous_results.get("total", 0)
+                new_total = new_results.get("total", 0)
+                totalVal = prev_total + new_total
 
                 return {"data": unique_data, "total": totalVal}
 
@@ -385,6 +379,42 @@ class ElasticService:
             query["query"]["bool"]["must_not"] = refiner["must_query"]
         return query
 
+    def merge_aggregations(self, agg1: dict, agg2: dict) -> dict:
+        merged = {}
+
+        for key in set(agg1.keys()).union(agg2.keys()):
+            if key in agg1 and key in agg2:
+                # Both have this aggregation
+                if "buckets" in agg1[key] and "buckets" in agg2[key]:
+                    # Merge buckets by key
+                    bucket_map = {}
+
+                    for bucket in agg1[key]["buckets"]:
+                        bucket_map[bucket["key"]] = bucket["doc_count"]
+
+                    for bucket in agg2[key]["buckets"]:
+                        if bucket["key"] in bucket_map:
+                            bucket_map[bucket["key"]] += bucket["doc_count"]
+                        else:
+                            bucket_map[bucket["key"]] = bucket["doc_count"]
+
+                    # Convert back to bucket format
+                    merged[key] = {
+                        "buckets": [
+                            {"key": k, "doc_count": v} for k, v in bucket_map.items()
+                        ]
+                    }
+                else:
+                    # If it's a single value
+                    merged[key] = {
+                        "value": agg1[key].get("value", 0) + agg2[key].get("value", 0)
+                    }
+            else:
+                # Only one of them has this key
+                merged[key] = agg1.get(key, agg2.get(key))
+
+        return merged
+
     async def filterPost(
         self,
         start_datetime,
@@ -402,22 +432,78 @@ class ElasticService:
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
                 )
-                response = await self.prev_es.search(
-                    index=self.prev_index + "*",
-                    body=jsonable_encoder(query),
-                    size=0,
-                    request_timeout=50,
-                )
-            elif self.new_es and self.prev_es:
+                today = datetime.today().date()
+                seven_days_ago = today - timedelta(days=7)
+                if start_datetime and start_datetime > seven_days_ago:
+                    previous_results = {}
+                else:
+                    new_end_date = (
+                        min(end_datetime, seven_days_ago)
+                        if end_datetime
+                        else seven_days_ago
+                    )
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "lte"
+                    ] = str(new_end_date)
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "gte"
+                    ] = str(start_datetime)
+
+                    response = await self.prev_es.search(
+                        index=self.prev_index + "*",
+                        body=jsonable_encoder(query),
+                        size=0,
+                        request_timeout=50,
+                    )
+                    previous_results = {
+                        "data": response["aggregations"],
+                        "total": response["hits"]["total"]["value"],
+                    }
+            if self.prev_es and self.new_es:
                 self.new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
-                response = await self.new_es.search(
-                    index=self.new_index + "*",
-                    body=jsonable_encoder(query),
-                    size=0,
-                    request_timeout=50,
+                today = datetime.today().date()
+                seven_days_ago = today - timedelta(days=7)
+                if end_datetime and end_datetime < seven_days_ago:
+                    new_results = {}
+                else:
+                    new_start_date = (
+                        max(start_datetime, seven_days_ago)
+                        if start_datetime
+                        else seven_days_ago
+                    )
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "gte"
+                    ] = str(new_start_date)
+
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "lte"
+                    ] = str(end_datetime)
+                    response = await self.new_es.search(
+                        index=self.new_index + "*",
+                        body=jsonable_encoder(query),
+                        size=0,
+                        request_timeout=50,
+                    )
+                    new_results = {
+                        "total": response["hits"]["total"]["value"],
+                        "data": response["aggregations"],
+                    }
+                prev_total = previous_results.get("total", 0)
+                new_total = new_results.get("total", 0)
+                total = prev_total + new_total
+                results = self.merge_aggregations(
+                    previous_results.get("data", {}), new_results.get("data", {})
                 )
+                x = await self.buildFilterData(results, total)
+
+                return {
+                    "filterData": x["filterData"],
+                    "summary": x["summary"],
+                    "upstreamList": x["upstreamList"],
+                    "total": total,
+                }
             else:
                 response = await self.new_es.search(
                     index=self.new_index + "*",
@@ -425,16 +511,17 @@ class ElasticService:
                     size=0,
                     request_timeout=50,
                 )
-            total = response["hits"]["total"]["value"]
-            results = response["aggregations"]
-            x = await self.buildFilterData(results, total)
+                total = response["hits"]["total"]["value"]
+                results = response["aggregations"]
+                x = await self.buildFilterData(results, total)
 
-            return {
-                "filterData": x["filterData"],
-                "summary": x["summary"],
-                "upstreamList": x["upstreamList"],
-                "total": total,
-            }
+                return {
+                    "filterData": x["filterData"],
+                    "summary": x["summary"],
+                    "upstreamList": x["upstreamList"],
+                    "total": total,
+                }
+
         except Exception as e:
             print(f"Error retrieving filter data: {e}")
             print(traceback.format_exc())
