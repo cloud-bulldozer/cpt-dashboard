@@ -1,6 +1,10 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
   calculateSummary,
@@ -11,7 +15,6 @@ import {
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
 
@@ -179,6 +182,7 @@ export const removeCPTAppliedFilters =
 
 export const applyFilters = () => (dispatch) => {
   dispatch(setCPTOffset(INITAL_OFFSET));
+  dispatch(setCPTPage(START_PAGE));
   dispatch(fetchOCPJobsData(true));
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
@@ -207,8 +211,10 @@ export const setCPTDateFilter =
 export const applyCPTDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setCPTOffset(INITAL_OFFSET));
+    dispatch(setCPTPage(START_PAGE));
     dispatch(setCPTDateFilter(start_date, end_date, navigate));
     dispatch(fetchOCPJobsData());
+    dispatch(buildFilterData());
   };
 
 export const setCPTPage = (pageNo) => ({

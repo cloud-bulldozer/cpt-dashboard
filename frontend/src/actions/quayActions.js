@@ -1,6 +1,10 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
@@ -11,7 +15,6 @@ import {
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
@@ -120,6 +123,7 @@ export const removeQuayAppliedFilters =
 
 export const applyFilters = () => (dispatch) => {
   dispatch(setQuayOffset(INITAL_OFFSET));
+  dispatch(setQuayPage(START_PAGE));
   dispatch(fetchQuayJobsData());
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
@@ -186,6 +190,7 @@ export const setQuayDateFilter =
 export const applyQuayDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setQuayOffset(INITAL_OFFSET));
+    dispatch(setQuayPage(START_PAGE));
     dispatch(setQuayDateFilter(start_date, end_date, navigate));
     dispatch(fetchQuayJobsData());
     dispatch(buildFilterData());

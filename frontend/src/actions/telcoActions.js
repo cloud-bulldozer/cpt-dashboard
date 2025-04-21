@@ -1,6 +1,10 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
@@ -11,7 +15,6 @@ import {
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
@@ -114,7 +117,7 @@ export const removeTelcoAppliedFilters =
   };
 export const applyFilters = () => (dispatch) => {
   dispatch(setTelcoOffset(INITAL_OFFSET));
-
+  dispatch(setTelcoPage(START_PAGE));
   dispatch(fetchTelcoJobsData());
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
@@ -187,8 +190,10 @@ export const setTelcoDateFilter =
 export const applyTelcoDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setTelcoOffset(INITAL_OFFSET));
+    dispatch(setTelcoPage(START_PAGE));
     dispatch(setTelcoDateFilter(start_date, end_date, navigate));
     dispatch(fetchTelcoJobsData());
+    dispatch(buildFilterData());
   };
 
 export const getTelcoSummary = (countObj) => (dispatch) => {

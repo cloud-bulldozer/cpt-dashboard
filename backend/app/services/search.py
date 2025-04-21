@@ -190,7 +190,7 @@ class ElasticService:
                         }
             else:
                 """Handles queries that do not have a timestamp field"""
-                previous_results = []
+                previous_results = {}
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
@@ -222,6 +222,7 @@ class ElasticService:
                     new_results.get("data") or []
                 )
                 unique_data = await self.remove_duplicates(combined_data)
+
                 prev_total = previous_results.get("total", 0)
                 new_total = new_results.get("total", 0)
                 totalVal = prev_total + new_total
