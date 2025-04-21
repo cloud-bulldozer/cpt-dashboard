@@ -6,18 +6,19 @@ import {
   setSelectedFilterFromUrl,
 } from "@/actions/homeActions.js";
 import { useDispatch, useSelector } from "react-redux";
+import { useEffect, useRef } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
-import { useEffect } from "react";
 
 const Home = () => {
   const dispatch = useDispatch();
   const [searchParams] = useSearchParams();
   const navigate = useNavigate();
+  const hasFetchedRef = useRef(false);
   const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
 
   const {
@@ -59,8 +60,9 @@ const Home = () => {
   }, []);
 
   useEffect(() => {
-    if (!fromSideMenu && results.length === 0) {
+    if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
       dispatch(fetchDataConcurrently());
+      hasFetchedRef.current = true;
     }
     if (fromSideMenu) {
       dispatch(setFromSideMenuFlag(false));

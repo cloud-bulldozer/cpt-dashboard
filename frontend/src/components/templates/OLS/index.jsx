@@ -8,18 +8,20 @@ import {
   setSelectedFilterFromUrl,
   setTableColumns,
 } from "@/actions/olsActions.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
+import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
 const OLS = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const hasFetchedRef = useRef(false);
   const {
     results,
     tableColumns,
@@ -39,6 +41,7 @@ const OLS = () => {
     selectedFilters,
     totalJobs,
   } = useSelector((state) => state.ols);
+  const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
 
   useEffect(() => {
     if (searchParams.size > 0) {
@@ -60,9 +63,15 @@ const OLS = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchOLSJobsData());
-    dispatch(buildFilterData());
-  }, [dispatch]);
+    if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
+      dispatch(fetchOLSJobsData());
+      dispatch(buildFilterData());
+      hasFetchedRef.current = true;
+    }
+    if (fromSideMenu) {
+      dispatch(setFromSideMenuFlag(false));
+    }
+  }, [dispatch, fromSideMenu, results]);
 
   //Filter Helper
   const modifidedTableFilters = useMemo(
