@@ -45,39 +45,6 @@ class ElasticService:
             es = AsyncElasticsearch(url, verify_certs=False)
         return es, indice, index_prefix
 
-    async def get_combined_date_ranges(self, start_datetime, end_datetime):
-        today = datetime.today().date()
-        seven_days_ago = today - timedelta(days=7)
-
-        # Determine ranges for new and previous indices
-        use_prev = not (start_datetime and start_datetime > seven_days_ago)
-        use_new = not (end_datetime and end_datetime < seven_days_ago)
-
-        prev_range = None
-        new_range = None
-
-        if use_prev:
-            prev_range = {
-                "gte": str(start_datetime),
-                "lte": str(
-                    min(end_datetime, seven_days_ago)
-                    if end_datetime
-                    else seven_days_ago
-                ),
-            }
-
-        if use_new:
-            new_range = {
-                "gte": str(
-                    max(start_datetime, seven_days_ago)
-                    if start_datetime
-                    else seven_days_ago
-                ),
-                "lte": str(end_datetime),
-            }
-
-        return prev_range, new_range
-
     async def post(
         self,
         query,
@@ -108,54 +75,96 @@ class ElasticService:
             """Handles queries that require data from ES docs"""
             if timestamp_field:
                 """Handles queries that have a timestamp field. Queries from both new and archive instances"""
-                previous_results = {}
-                new_results = {}
-
-                # Get filtered date ranges for previous and new indices
-                prev_range, new_range = await self.get_combined_date_ranges(
-                    start_date, end_date
-                )
-
-                if self.prev_es and prev_range:
+                if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
                     )
-                    query["query"]["bool"]["filter"]["range"][timestamp_field] = {
-                        "gte": str(prev_range["gte"]),
-                        "lte": str(prev_range["lte"]),
-                    }
-                    response = await self.prev_es.search(
-                        index=self.prev_index + "*",
-                        body=jsonable_encoder(query),
-                        size=size,
-                        request_timeout=50,
-                    )
-                    previous_results = {
-                        "data": response["hits"]["hits"],
-                        "total": response["hits"]["total"]["value"],
-                    }
-                if self.new_es and new_range:
+                    today = datetime.today().date()
+                    seven_days_ago = today - timedelta(days=7)
+                    if start_date and start_date > seven_days_ago:
+                        previous_results = {}
+                    else:
+                        new_end_date = (
+                            min(end_date, seven_days_ago)
+                            if end_date
+                            else seven_days_ago
+                        )
+                        query["query"]["bool"]["filter"]["range"][timestamp_field][
+                            "lte"
+                        ] = str(new_end_date)
+                        if start_date:
+                            query["query"]["bool"]["filter"]["range"][timestamp_field][
+                                "gte"
+                            ] = str(start_date)
+                        if start_date is None:
+                            response = await self.prev_es.search(
+                                index=self.prev_index + "*",
+                                body=jsonable_encoder(query),
+                                size=size,
+                                request_timeout=50,
+                            )
+                            previous_results = {
+                                "data": response["hits"]["hits"],
+                                "total": response["hits"]["total"]["value"],
+                            }
+                        else:
+                            response = await self.prev_es.search(
+                                index=self.prev_index + "*",
+                                body=jsonable_encoder(query),
+                                size=size,
+                                request_timeout=50,
+                            )
+                            previous_results = {
+                                "data": response["hits"]["hits"],
+                                "total": response["hits"]["total"]["value"],
+                            }
+                if self.prev_es and self.new_es:
                     self.new_index = self.new_index_prefix + (
                         self.new_index if indice is None else indice
                     )
-                    query["query"]["bool"]["filter"]["range"][timestamp_field] = {
-                        "gte": str(new_range["gte"]),
-                        "lte": str(new_range["lte"]),
-                    }
-                    response = await self.new_es.search(
-                        index=self.new_index + "*",
-                        body=jsonable_encoder(query),
-                        size=size,
-                        request_timeout=50,
+                    today = datetime.today().date()
+                    seven_days_ago = today - timedelta(days=7)
+                    if end_date and end_date < seven_days_ago:
+                        new_results = {}
+                    else:
+                        new_start_date = (
+                            max(start_date, seven_days_ago)
+                            if start_date
+                            else seven_days_ago
+                        )
+                        query["query"]["bool"]["filter"]["range"][timestamp_field][
+                            "gte"
+                        ] = str(new_start_date)
+                        if end_date:
+                            query["query"]["bool"]["filter"]["range"][timestamp_field][
+                                "lte"
+                            ] = str(end_date)
+                        if end_date is None:
+                            response = await self.new_es.search(
+                                index=self.new_index + "*",
+                                body=jsonable_encoder(query),
+                                size=size,
+                                request_timeout=50,
+                            )
+                            new_results = {
+                                "data": response["hits"]["hits"],
+                                "total": response["hits"]["total"]["value"],
+                            }
+                        else:
+                            response = await self.new_es.search(
+                                index=self.new_index + "*",
+                                body=jsonable_encoder(query),
+                                size=size,
+                                request_timeout=50,
+                            )
+                            new_results = {
+                                "data": response["hits"]["hits"],
+                                "total": response["hits"]["total"]["value"],
+                            }
+                    combined_data = (previous_results.get("data") or []) + (
+                        new_results.get("data") or []
                     )
-                    new_results = {
-                        "data": response["hits"]["hits"],
-                        "total": response["hits"]["total"]["value"],
-                    }
-                    all_data = previous_results.get("data", []) + new_results.get(
-                        "data", []
-                    )
-                    unique_data = await self.remove_duplicates(all_data)
+                    unique_data = await self.remove_duplicates(combined_data)
 
                     totalVal = previous_results.get("total", 0) + new_results.get(
                         "total", 0
@@ -181,7 +190,7 @@ class ElasticService:
                         }
             else:
                 """Handles queries that do not have a timestamp field"""
-                previous_results = {}
+                previous_results = []
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
@@ -209,13 +218,13 @@ class ElasticService:
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
                 }
-                all_data = previous_results.get("data", []) + new_results.get(
-                    "data", []
+                combined_data = (previous_results.get("data") or []) + (
+                    new_results.get("data") or []
                 )
-                unique_data = await self.remove_duplicates(all_data)
-                totalVal = previous_results.get("total", 0) + new_results.get(
-                    "total", 0
-                )
+                unique_data = await self.remove_duplicates(combined_data)
+                prev_total = previous_results.get("total", 0)
+                new_total = new_results.get("total", 0)
+                totalVal = prev_total + new_total
 
                 return {"data": unique_data, "total": totalVal}
 
@@ -419,54 +428,71 @@ class ElasticService:
             query = await self.buildFilterQuery(
                 start_datetime, end_datetime, aggregate, refiner, timestamp_field
             )
-            previous_results = {}
-            new_results = {}
-
-            # Get filtered date ranges for previous and new indices
-            prev_range, new_range = await self.get_combined_date_ranges(
-                start_datetime, end_datetime
-            )
-            if self.prev_es and prev_range:
+            if self.prev_es:
                 self.prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
                 )
-                query["query"]["bool"]["filter"]["range"][timestamp_field]["gte"] = str(
-                    prev_range["gte"]
-                )
-                query["query"]["bool"]["filter"]["range"][timestamp_field]["lte"] = str(
-                    prev_range["lte"]
-                )
-                response = await self.prev_es.search(
-                    index=self.prev_index + "*",
-                    body=jsonable_encoder(query),
-                    size=0,
-                    request_timeout=50,
-                )
-                previous_results = {
-                    "data": response["aggregations"],
-                    "total": response["hits"]["total"]["value"],
-                }
-            if self.new_es and new_range:
+                today = datetime.today().date()
+                seven_days_ago = today - timedelta(days=7)
+                if start_datetime and start_datetime > seven_days_ago:
+                    previous_results = {}
+                else:
+                    new_end_date = (
+                        min(end_datetime, seven_days_ago)
+                        if end_datetime
+                        else seven_days_ago
+                    )
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "lte"
+                    ] = str(new_end_date)
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "gte"
+                    ] = str(start_datetime)
+
+                    response = await self.prev_es.search(
+                        index=self.prev_index + "*",
+                        body=jsonable_encoder(query),
+                        size=0,
+                        request_timeout=50,
+                    )
+                    previous_results = {
+                        "data": response["aggregations"],
+                        "total": response["hits"]["total"]["value"],
+                    }
+            if self.prev_es and self.new_es:
                 self.new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
-                query["query"]["bool"]["filter"]["range"][timestamp_field]["gte"] = str(
-                    new_range["gte"]
-                )
-                query["query"]["bool"]["filter"]["range"][timestamp_field]["lte"] = str(
-                    new_range["lte"]
-                )
-                response = await self.new_es.search(
-                    index=self.new_index + "*",
-                    body=jsonable_encoder(query),
-                    size=0,
-                    request_timeout=50,
-                )
-                new_results = {
-                    "total": response["hits"]["total"]["value"],
-                    "data": response["aggregations"],
-                }
-                total = previous_results.get("total", 0) + new_results.get("total", 0)
+                today = datetime.today().date()
+                seven_days_ago = today - timedelta(days=7)
+                if end_datetime and end_datetime < seven_days_ago:
+                    new_results = {}
+                else:
+                    new_start_date = (
+                        max(start_datetime, seven_days_ago)
+                        if start_datetime
+                        else seven_days_ago
+                    )
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "gte"
+                    ] = str(new_start_date)
+
+                    query["query"]["bool"]["filter"]["range"][timestamp_field][
+                        "lte"
+                    ] = str(end_datetime)
+                    response = await self.new_es.search(
+                        index=self.new_index + "*",
+                        body=jsonable_encoder(query),
+                        size=0,
+                        request_timeout=50,
+                    )
+                    new_results = {
+                        "total": response["hits"]["total"]["value"],
+                        "data": response["aggregations"],
+                    }
+                prev_total = previous_results.get("total", 0)
+                new_total = new_results.get("total", 0)
+                total = prev_total + new_total
                 results = self.merge_aggregations(
                     previous_results.get("data", {}), new_results.get("data", {})
                 )
