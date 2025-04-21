@@ -8,7 +8,7 @@ import {
   setSelectedFilterFromUrl,
   setTableColumns,
 } from "@/actions/quayActions.js";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -21,7 +21,7 @@ const Quay = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-
+  const hasFetchedRef = useRef(false);
   const {
     results,
     tableColumns,
@@ -64,9 +64,10 @@ const Quay = () => {
   }, []);
 
   useEffect(() => {
-    if (!fromSideMenu && results.length === 0) {
+    if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
       dispatch(buildFilterData());
       dispatch(fetchQuayJobsData());
+      hasFetchedRef.current = true;
     }
     if (fromSideMenu) {
       dispatch(setFromSideMenuFlag(false));
