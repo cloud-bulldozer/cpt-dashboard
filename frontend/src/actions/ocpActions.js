@@ -1,6 +1,10 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
@@ -11,7 +15,6 @@ import {
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "./toastActions";
@@ -102,6 +105,7 @@ export const setOCPCatFilters = (category) => (dispatch, getState) => {
 
 export const applyFilters = () => (dispatch) => {
   dispatch(setOCPOffset(INITAL_OFFSET));
+  dispatch(setOCPPage(START_PAGE));
   dispatch(fetchOCPJobs());
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
@@ -176,6 +180,7 @@ export const setOCPDateFilter =
 export const applyOCPDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setOCPOffset(INITAL_OFFSET));
+    dispatch(setOCPPage(START_PAGE));
     dispatch(setOCPDateFilter(start_date, end_date, navigate));
     dispatch(fetchOCPJobs());
     dispatch(buildFilterData());

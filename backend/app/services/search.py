@@ -161,10 +161,11 @@ class ElasticService:
                                 "data": response["hits"]["hits"],
                                 "total": response["hits"]["total"]["value"],
                             }
-                    combined_data = (previous_results.get("data") or []) + (
-                        new_results.get("data") or []
+
+                    unique_data = await self.remove_duplicates(
+                        (previous_results["data"] if "data" in previous_results else [])
+                        + (new_results["data"] if "data" in new_results else [])
                     )
-                    unique_data = await self.remove_duplicates(combined_data)
 
                     totalVal = previous_results.get("total", 0) + new_results.get(
                         "total", 0
@@ -190,7 +191,7 @@ class ElasticService:
                         }
             else:
                 """Handles queries that do not have a timestamp field"""
-                previous_results = []
+                previous_results = {}
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
@@ -218,10 +219,11 @@ class ElasticService:
                     "data": response["hits"]["hits"],
                     "total": response["hits"]["total"]["value"],
                 }
-                combined_data = (previous_results.get("data") or []) + (
-                    new_results.get("data") or []
+                unique_data = await self.remove_duplicates(
+                    (previous_results["data"] if "data" in previous_results else [])
+                    + (new_results["data"] if "data" in new_results else [])
                 )
-                unique_data = await self.remove_duplicates(combined_data)
+
                 prev_total = previous_results.get("total", 0)
                 new_total = new_results.get("total", 0)
                 totalVal = prev_total + new_total

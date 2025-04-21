@@ -1,6 +1,10 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
@@ -11,7 +15,6 @@ import {
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
-import { INITAL_OFFSET } from "@/assets/constants/paginationConstants";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
@@ -120,6 +123,7 @@ export const removeOLSAppliedFilters =
 
 export const applyFilters = () => (dispatch) => {
   dispatch(setOLSOffset(INITAL_OFFSET));
+  dispatch(setOLSPage(START_PAGE));
   dispatch(fetchOLSJobsData());
   dispatch(buildFilterData());
   dispatch(tableReCalcValues());
@@ -186,6 +190,7 @@ export const setOLSDateFilter =
 export const applyOLSDateFilter =
   (start_date, end_date, navigate) => (dispatch) => {
     dispatch(setOLSOffset(INITAL_OFFSET));
+    dispatch(setOLSPage(START_PAGE));
     dispatch(setOLSDateFilter(start_date, end_date, navigate));
     dispatch(fetchOLSJobsData());
     dispatch(buildFilterData());
