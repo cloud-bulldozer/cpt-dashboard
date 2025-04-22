@@ -5,6 +5,15 @@ on:
       - main
   pull_request:
 jobs:
+  unit-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v4   
+      - name: build tests image
+        run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
+      - name: run unit tests
+        run: podman run --rm -it e2e-frontend test:unit
   e2e-tests:
     runs-on: ubuntu-latest
     env:
@@ -20,8 +29,6 @@ jobs:
         run: podman run --pod=${POD_NAME} -d --name=front frontend
       - name: build cypress end-to-end tests
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
-      - name: run unit tests
-        run: podman run --rm -d e2e-frontend test
       - name: run cypress component tests
         run: podman run --rm -d e2e-frontend run cypress:cp
       - name: run cypress e2e
