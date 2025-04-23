@@ -11,6 +11,9 @@ jobs:
 
     steps:
     - uses: actions/checkout@v2
+      with:
+        # Fetch enough commit info to feed version generator
+        fetch-depth: 10
     - uses: actions/setup-python@v4
       with:
         python-version: "3.11"

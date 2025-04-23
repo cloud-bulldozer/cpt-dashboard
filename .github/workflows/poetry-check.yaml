@@ -1,9 +1,9 @@
-name: Check poetry lockfile
+name: Check poetry
 on: [ pull_request ]
 
 jobs:
   build:
-    name: Check poetry lockfile
+    name: Check poetry configuration
     runs-on: ubuntu-latest
 
     steps:
