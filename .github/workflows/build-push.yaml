@@ -36,7 +36,7 @@ jobs:
         password: ${{ secrets.QUAY_TOKEN }}
 
     - name: Generate version file
-      run: scripts/version.py
+      run: ./backend/scripts/version.py
 
     - name: Build Backend Image
       id: build-back
