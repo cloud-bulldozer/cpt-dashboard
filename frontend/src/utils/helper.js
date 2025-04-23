@@ -52,17 +52,16 @@ export const appendQueryString = (queryObj, navigate, toPage) => {
   });
 };
 
-export const formatDate = (date) => {
-  let d = new Date(date),
-    month = "" + (d.getMonth() + 1),
-    day = "" + d.getDate(),
-    year = d.getFullYear();
 
-  if (month.length < 2) month = "0" + month;
-  if (day.length < 2) day = "0" + day;
-
-  return [year, month, day].join("-");
+export const formatDate = (input) => {
+  const d = new Date(input);
+  if (isNaN(d)) throw new Error(`Invalid date: ${input}`);
+  const year  = d.getUTCFullYear();
+  const month = String(d.getUTCMonth() + 1).padStart(2, "0");
+  const day   = String(d.getUTCDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 };
+
 
 export const appendDateFilter = (startDate, endDate) => {
   const searchParams = new URLSearchParams(window.location.search);

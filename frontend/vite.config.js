@@ -19,4 +19,11 @@ export default defineConfig({
       cachedChecks: false,
     },
   },
+  test: {
+    includeSource: ["src/**/*.{js}"],
+  },
+  defined: {
+    // allows bundler eliminate dead code
+    "import.meta.vistest": "defined"
+  }
 });
