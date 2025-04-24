@@ -13,7 +13,7 @@ packages = [
 
 [tool.poetry.dependencies]
 aiohttp = "^3.7.4"
-atlassian-python-api = "^3.41.9"
+atlassian-python-api = "^3.41.9.20"
 cryptography = "^3.4.8"
 elasticsearch = "7.13.4"
 fastapi = "^0.104.1"
@@ -25,16 +25,82 @@ pandas = "1.2.4"
 pydantic = "2.3.0"
 python = "^3.9"
 python-keycloak = "^3.12.0"
+pytest = "^8.3.5"
+pytest-asyncio = "^0.24"
+pytest-cov = "^6.0"
 semver = "2.13.0"
 splunk-sdk = "2.0.1"
+tox = "^4.23.2"
 trio = "^0.18.0"
-uvicorn = "^0.14.0"
+uvicorn = "^0.32.0"
 uvloop = "^0.15.2"
 vyper-config = "1.0.0"
-pytest = "^8.3.5"
 
 [tool.poetry.group.dev.dependencies]
 watchgod = "^0.7"
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+
+[tool.isort]
+profile = "black"                 # black-compatible (e.g., trailing comma)
+known_first_party = ["app"]       # separate our headers into a section
+multi_line_output = 3             # "hanging" indent with dedented paren
+force_sort_within_sections = true # don't separate import vs from
+order_by_type = false             # sort alphabetic regardless of case
+
+[tool.tox]
+requires = ["tox>=4.19"]
+env_list = ["unit", "format", "lint", "isort"]
+
+[tool.tox.env_run_base]
+description = "Run test under {base_python}"
+base_python = ["python3.9"]
+deps = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-cov",
+    "coverage",
+]
+set_env.COVERAGE = { replace = "env", name = "COVERAGE", default = "/var/tmp/{env:USER}" }
+allowlist_externals = ["bash", "echo", "coverage"]
+commands = [
+    ["echo", "{env:COVERAGE}"],
+    ["pip", "list"],
+    ["pytest", "-s", "--cov-branch", "--cov=app", "tests"],
+    ["coverage", "html", "--directory={env:COVERAGE}/html"],
+    ["bash", "-c", "coverage report --format=markdown >{env:COVERAGE}/coverage.txt"],
+]
+
+[tool.tox.env.format]
+description = "check code format"
+skip_install = true
+deps = ["black"]
+commands = [["black", "--check", { replace = "posargs", default = ["app", "tests"], extend = true} ]]
+
+[tool.tox.env.isort]
+description = "check order of imports"
+skip_install = true
+deps = ["isort"]
+commands = [["isort", "--check", { replace = "posargs", default = ["app", "tests"], extend = true} ]]
+
+[tool.tox.env.lint]
+description = "check code"
+skip_install = true
+deps = ["flake8"]
+commands = [["flake8", { replace = "posargs", default = ["app", "tests"], extend = true} ]]
+
+[tool.coverage.run]
+branch = true
+cover_pylib = true
+data_file = "${COVERAGE}/coverage.db"
+parallel = true
+relative_files = true
+
+[tool.coverage.report]
+include_namespace_packages = true
+skip_empty = true
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]

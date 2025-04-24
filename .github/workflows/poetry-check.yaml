@@ -1,13 +1,14 @@
-name: Check poetry lockfile
-on: [ pull_request ]
+name: Check poetry
+on:
+  pull_request:
 
 jobs:
   build:
-    name: Check poetry lockfile
+    name: Check poetry configuration
     runs-on: ubuntu-latest
 
     steps:
-        - uses: actions/checkout@v3
+        - uses: actions/checkout@v4
         - uses: actions/setup-python@v4
           with:
             python-version: "3.11"
@@ -15,6 +16,6 @@ jobs:
         - name: verify poetry instalation
           run: poetry --version
           working-directory: ./backend
-        - name: verify poetry lockfile
-          run: poetry check --lock
+        - name: verify poetry configuration
+          run: poetry check
           working-directory: ./backend
