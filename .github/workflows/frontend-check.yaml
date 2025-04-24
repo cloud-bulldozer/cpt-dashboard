@@ -14,6 +14,16 @@ jobs:
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
       - name: run unit tests
         run: podman run --rm -it e2e-frontend run test:unit
+
+  component-tests:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout project
+        uses: actions/checkout@v4   
+      - name: build tests image
+        run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
+      - name: run unit tests
+        run: podman run --rm -it e2e-frontend run cypress:cp        
         
   e2e-tests:
     runs-on: ubuntu-latest
