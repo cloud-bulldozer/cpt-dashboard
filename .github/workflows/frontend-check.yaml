@@ -22,7 +22,7 @@ jobs:
         uses: actions/checkout@v4   
       - name: build tests image
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
-      - name: run unit tests
+      - name: run component tests
         run: podman run --rm -it e2e-frontend run cypress:cp        
         
   e2e-tests:
@@ -40,8 +40,6 @@ jobs:
         run: podman run --pod=${POD_NAME} -d --name=front frontend
       - name: build cypress end-to-end tests
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
-      - name: run cypress component tests
-        run: podman run --rm -d e2e-frontend run cypress:cp
       - name: run cypress e2e
         run: podman run --pod=${POD_NAME} --name=cypress-e2e e2e-frontend
       - name: copy e2e screenshots from container
