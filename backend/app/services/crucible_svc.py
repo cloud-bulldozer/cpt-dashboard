@@ -10,47 +10,49 @@ breakout subsets or collection periods as either raw data points, statistical
 aggregate, or Plotly graph format for UI display.
 """
 
-import time
+import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
+import logging
+import time
 from typing import Any, Iterator, Optional, Tuple, Union
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
+from app import config
+from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, status
 from pydantic import BaseModel
 
-from app import config
 
+class Metric(BaseModel):
+    """Describe a single metric to be graphed or summarized
 
-class Graph(BaseModel):
-    """Describe a single graph
-
-    This represents a JSON object provided by a caller through the get_graph
-    API to describe a specific metric graph.
+    This represents a JSON object provided by a caller through the
+    get_multigraph or get_multisummary APIs to describe a specific
+    metric.
 
     The default title (if the field is omitted) is the metric label with a
     suffix denoting breakout values selected, any unique parameter values
     in a selected iteration, and (if multiple runs are selected in any Graph
     list) an indication of the run index. For example,
-    "mpstat::Busy-CPU [core=2,type=usr] (batch-size=16)".
+    "mpstat::Busy-CPU [core=2,type=usr] (batch-size=16) {run 1}".
 
     Fields:
+        run: run ID
         metric: the metric label, "ilab::train-samples-sec"
         aggregate: True to aggregate unspecified breakouts
         color: CSS color string ("green" or "#008000")
         names: Lock in breakouts
         periods: Select metrics for specific test period(s)
-        run: Override the default run ID from GraphList
         title: Provide a title for the graph. The default is a generated title
     """
 
+    run: str
     metric: str
     aggregate: bool = False
     color: Optional[str] = None
     names: Optional[list[str]] = None
     periods: Optional[list[str]] = None
-    run: Optional[str] = None
     title: Optional[str] = None
 
 
@@ -63,15 +65,28 @@ class GraphList(BaseModel):
     omitted if all Graph objects specify a run ID. (This is most useful to
     select a set of graphs all for a single run ID.)
 
+    Normally the X axis will be the actual sample timestamp values; if you
+    specify relative=True, the X axis will be the duration from the first
+    timestamp of the metric series. This allows graphs of similar runs started
+    at different times to be overlaid. Plotly (along with other plotting
+    packages like PatternFly's Victory) doesn't support a "delta time" axis
+    unit, so also specifying absolute_relative will report relative times as
+    small absolute times (e.g., "1970-01-01 00:00:01" for 1 second) and a
+    "tick format" of "%H:%M:%S", which will look nice on the graph as long as
+    the total duration doesn't reach 24 hours. Without absolute_relative, the
+    duration is reported as numeric (floating point) seconds.
+
     Fields:
-        run: Specify the (default) run ID
         name: Specify a name for the set of graphs
+        relative: True for relative timescale
+        absolute_relative: True to report relative timestamps as absolute
         graphs: a list of Graph objects
     """
 
-    run: Optional[str] = None
     name: str
-    graphs: list[Graph]
+    relative: bool = False
+    absolute_relative: bool = False
+    graphs: list[Metric]
 
 
 @dataclass
@@ -86,7 +101,7 @@ class Point:
     value: float
 
 
-colors = [
+COLOR_NAMES = [
     "black",
     "aqua",
     "blue",
@@ -272,7 +287,25 @@ class CrucibleService:
         "source",
     )
 
-    def __init__(self, configpath: str = "crucible"):
+    # Set up a Logger at class level rather than at each instance creation
+    formatter = logging.Formatter(
+        "%(asctime)s %(process)d:%(thread)d %(levelname)s %(module)s:%(lineno)d %(message)s"
+    )
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = logging.getLogger("CrucibleService")
+    logger.addHandler(handler)
+
+    # Set up a Logger at class level rather than at each instance creation
+    formatter = logging.Formatter(
+        "%(asctime)s %(process)d:%(thread)d %(levelname)s %(module)s:%(lineno)d %(message)s"
+    )
+    handler = logging.StreamHandler()
+    handler.setFormatter(formatter)
+    logger = logging.getLogger("CrucibleService")
+    logger.addHandler(handler)
+
+    def __init__(self, configpath: str = "crucible", version: int = 8):
         """Initialize a Crucible CDM (OpenSearch) connection.
 
         Generally the `configpath` should be scoped, like `ilab.crucible` so
@@ -290,11 +323,61 @@ class CrucibleService:
         self.password = self.cfg.get(configpath + ".password")
         self.auth = (self.user, self.password) if self.user or self.password else None
         self.url = self.cfg.get(configpath + ".url")
+        self.set_cdm_version(version)
         self.elastic = AsyncElasticsearch(self.url, basic_auth=self.auth)
+        self.logger.info("Initializing CDM V7 service to %s", self.url)
+
+    def set_cdm_version(self, version):
+        """Set up for a specific version of the CDM.
+
+        We currently support v7 and v8. To dynamically select the latest CDM
+        version active on an Opensearch instance, call detect_cdm() on a
+        CrucibleService instance.
+        """
+        if version < 7 or version > 8:
+            raise HTTPException(
+                status_code=400,
+                detail=f"The Crucible service supports CDM versions 7 and 8: {version} was specified",
+            )
+        self.logger.info(f"Selecting CDM version {version}")
+        self.cdm_version = version
+        self.id_names = {
+            "run": "id" if version == 7 else "run-uuid",
+            "iteration": "id" if version == 7 else "iteration-uuid",
+            "period": "id" if version == 7 else "period-uuid",
+            "sample": "id" if version == 7 else "sample-uuid",
+            "metric_desc": "id" if version == 7 else "metric_desc-uuid",
+        }
+
+    async def detect_cdm(self):
+        indices = await self.elastic.indices.get("cdmv*")
+        versions = set()
+        vpat = re.compile(r"cdmv(?P<version>\d+)dev-")
+        for i in indices.keys():
+            match = vpat.match(i)
+            if match:
+                try:
+                    versions.add(int(match.group("version")))
+                except Exception as e:
+                    self.logger.debug(f"Skipping index {i}: {str(e)!r}")
+        latest = max(versions)
+        self.set_cdm_version(latest)
+
+    def _get_index(self, root: str) -> str:
+        return f"cdmv{self.cdm_version:d}dev-{root}"
+
+    def _get_id_field(self, root: str) -> str:
+        return self.id_names[root]
 
     @staticmethod
-    def _get_index(root: str) -> str:
-        return "cdmv7dev-" + root
+    def _get(source: dict[str, Any], fields: list[str], default: Optional[Any] = None):
+        """Safely traverse nested dictionaries with a default value"""
+        r = source
+        last_missing = False
+        for f in fields:
+            last_missing = f not in r
+            r = r.get(f, {})
+        return default if last_missing else r
 
     @staticmethod
     def _split_list(alist: Optional[list[str]] = None) -> list[str]:
@@ -342,26 +425,24 @@ class CrucibleService:
                 return value
             elif isinstance(value, datetime):
                 return int(value.timestamp() * 1000.0)
-            elif isinstance(value, str):
+            else:
+                # If it's a stringified int, convert & return; otherwise try
+                # to decode as a date string.
                 try:
                     return int(value)
                 except ValueError:
                     pass
-                try:
-                    d = datetime.fromisoformat(value)
-                    return int(d.timestamp() * 1000.0)
-                except ValueError:
-                    pass
+                d = datetime.fromisoformat(value)
+                return int(d.timestamp() * 1000.0)
         except Exception as e:
-            print(f"normalizing {type(value).__name__} {value} failed with {str(e)}")
             raise HTTPException(
                 status.HTTP_400_BAD_REQUEST,
-                f"Date representation {value} is not a date string or timestamp",
+                f"Date representation {value} is not valid: {str(e)!r}",
             )
 
-    @staticmethod
+    @classmethod
     def _hits(
-        payload: dict[str, Any], fields: Optional[list[str]] = None
+        cls, payload: dict[str, Any], fields: Optional[list[str]] = None
     ) -> Iterator[dict[str, Any]]:
         """Helper to iterate through OpenSearch query matches
 
@@ -377,20 +458,19 @@ class CrucibleService:
         Returns:
             Yields each object from the "greatest hits" list
         """
-        if "hits" not in payload:
+        if "hits" not in payload or not isinstance(payload["hits"], dict):
             raise HTTPException(
                 status_code=500, detail=f"Attempt to iterate hits for {payload}"
             )
-        hits = payload.get("hits", {}).get("hits", [])
+        hits = cls._get(payload, ["hits", "hits"], [])
         for h in hits:
             source = h["_source"]
-            if fields:
-                for f in fields:
-                    source = source[f]
-            yield source
+            yield source if not fields else cls._get(source, fields)
 
-    @staticmethod
-    def _aggs(payload: dict[str, Any], aggregation: str) -> Iterator[dict[str, Any]]:
+    @classmethod
+    def _aggs(
+        cls, payload: dict[str, Any], aggregation: str
+    ) -> Iterator[dict[str, Any]]:
         """Helper to access OpenSearch aggregations
 
         Iteratively yields the name and value of each aggregation returned
@@ -403,18 +483,20 @@ class CrucibleService:
         Returns:
             Yields each aggregation from an aggregation bucket list
         """
-        if "aggregations" not in payload:
+        if "aggregations" not in payload or not isinstance(
+            payload["aggregations"], dict
+        ):
             raise HTTPException(
                 status_code=500,
                 detail=f"Attempt to iterate missing aggregations for {payload}",
             )
         aggs = payload["aggregations"]
-        if aggregation not in aggs:
+        if aggregation not in aggs or not isinstance(aggs[aggregation], dict):
             raise HTTPException(
                 status_code=500,
-                detail=f"Attempt to iterate missing aggregation {aggregation} for {payload}",
+                detail=f"Attempt to iterate missing aggregation {aggregation!r} for {payload}",
             )
-        for agg in aggs[aggregation]["buckets"]:
+        for agg in cls._get(aggs, [aggregation, "buckets"], []):
             yield agg
 
     @staticmethod
@@ -423,7 +505,9 @@ class CrucibleService:
         try:
             ts = int(timestamp)
         except Exception as e:
-            print(f"ERROR: invalid {timestamp!r}: {str(e)!r}")
+            CrucibleService.logger.warning(
+                "invalid timestamp %r: %r", timestamp, str(e)
+            )
             ts = 0
         return str(datetime.fromtimestamp(ts / 1000.00, timezone.utc))
 
@@ -449,8 +533,26 @@ class CrucibleService:
             "value": float(data["value"]),
         }
 
-    @classmethod
-    def _format_period(cls, period: dict[str, Any]) -> dict[str, Any]:
+    def _format_iteration(self, iteration: dict[str, Any]) -> dict[str, Any]:
+        """Helper to format an "iteration" object
+
+        Args:
+            iteration: an "iteration" object
+
+        Returns:
+            A neatly formatted "iteration" object
+        """
+        iidn = self._get_id_field("iteration")
+        return {
+            "id": iteration[iidn],
+            "num": iteration["num"],
+            "path": iteration["path"],
+            "primary_metric": iteration["primary-metric"],
+            "primary_period": iteration["primary-period"],
+            "status": iteration["status"],
+        }
+
+    def _format_period(self, period: dict[str, Any]) -> dict[str, Any]:
         """Helper to format a "period" object
 
         Crucible stores the date values as stringified integers, so this
@@ -462,11 +564,29 @@ class CrucibleService:
         Returns:
             A neatly formatted "period" object
         """
+        pidn = self._get_id_field("period")
         return {
-            "begin": cls._format_timestamp(timestamp=period["begin"]),
-            "end": cls._format_timestamp(period["end"]),
-            "id": period["id"],
+            "begin": self._format_timestamp(timestamp=period["begin"]),
+            "end": self._format_timestamp(period["end"]),
+            "id": period[pidn],
             "name": period["name"],
+        }
+
+    def _format_sample(self, sample: dict[str, Any]) -> dict[str, Any]:
+        """Helper to format a "sample" object
+
+        Args:
+            sample: a "sample" object
+
+        Returns:
+            A neatly formatted "sample" object
+        """
+        sidn = self._get_id_field("sample")
+        return {
+            "num": sample["num"],
+            "path": sample["path"],
+            "id": sample[sidn],
+            "status": sample["status"],
         }
 
     @classmethod
@@ -581,14 +701,13 @@ class CrucibleService:
                 n, v = e.split("=", maxsplit=1)
             except ValueError:
                 raise HTTPException(
-                    status.HTTP_400_BAD_REQUEST, f"Filter item {e} must be '<k>=<v>'"
+                    status.HTTP_400_BAD_REQUEST, f"Filter item {e!r} must be '<k>=<v>'"
                 )
             filters.append({"term": {f"metric_desc.names.{n}": v}})
         return filters
 
-    @classmethod
     def _build_period_filters(
-        cls, periodlist: Optional[list[str]] = None
+        self, periodlist: Optional[list[str]] = None
     ) -> list[dict[str, Any]]:
         """Build period filters
 
@@ -607,14 +726,15 @@ class CrucibleService:
             A filter term that requires a period.id match only for metric_desc
             documents with a period.
         """
-        pl: list[str] = cls._split_list(periodlist)
+        pl: list[str] = self._split_list(periodlist)
+        pidn = self._get_id_field("period")
         if pl:
             return [
                 {
                     "dis_max": {
                         "queries": [
                             {"bool": {"must_not": {"exists": {"field": "period"}}}},
-                            {"terms": {"period.id": pl}},
+                            {"terms": {f"period.{pidn}": pl}},
                         ]
                     }
                 }
@@ -622,9 +742,8 @@ class CrucibleService:
         else:
             return []
 
-    @classmethod
     def _build_metric_filters(
-        cls,
+        self,
         run: str,
         metric: str,
         names: Optional[list[str]] = None,
@@ -645,18 +764,19 @@ class CrucibleService:
             A list of OpenSearch filter expressions
         """
         msource, mtype = metric.split("::")
+        ridn = self._get_id_field("run")
         return (
             [
-                {"term": {"run.id": run}},
+                {"term": {f"run.{ridn}": run}},
                 {"term": {"metric_desc.source": msource}},
                 {"term": {"metric_desc.type": mtype}},
             ]
-            + cls._build_name_filters(names)
-            + cls._build_period_filters(periods)
+            + self._build_name_filters(names)
+            + self._build_period_filters(periods)
         )
 
     @classmethod
-    def _build_sort_terms(cls, sorters: Optional[list[str]]) -> list[dict[str, str]]:
+    def _build_sort_terms(cls, sorters: Optional[list[str]]) -> list[dict[str, Any]]:
         """Build sort term list
 
         Sorters may reference any native `run` index field and must specify
@@ -676,16 +796,16 @@ class CrucibleService:
                 if dir not in cls.DIRECTIONS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
-                        f"Sort direction {dir!r} must be one of {','.join(DIRECTIONS)}",
+                        f"Sort direction {dir!r} must be one of {','.join(cls.DIRECTIONS)}",
                     )
                 if key not in cls.FIELDS:
                     raise HTTPException(
                         status.HTTP_400_BAD_REQUEST,
-                        f"Sort key {key!r} must be one of {','.join(FIELDS)}",
+                        f"Sort key {key!r} must be one of {','.join(cls.FIELDS)}",
                     )
-                sort_terms.append({f"run.{key}": dir})
+                sort_terms.append({f"run.{key}": {"order": dir}})
         else:
-            sort_terms = [{"run.begin": "asc"}]
+            sort_terms = [{"run.begin": {"order": "asc"}}]
         return sort_terms
 
     async def _search(
@@ -704,9 +824,11 @@ class CrucibleService:
         idx = self._get_index(index)
         start = time.time()
         value = await self.elastic.search(index=idx, body=query, **kwargs)
-        print(
-            f"QUERY on {idx} took {time.time() - start} seconds, "
-            f"hits: {value.get('hits', {}).get('total')}"
+        self.logger.info(
+            "QUERY on %s took %.3f seconds, hits: %d",
+            idx,
+            time.time() - start,
+            value.get("hits", {}).get("total"),
         )
         return value
 
@@ -777,6 +899,11 @@ class CrucibleService:
         422 HTTP error (UNPROCESSABLE CONTENT) with a response body showing
         the unsatisfied breakouts (name and available values).
 
+        TODO: Instead of either single metric or aggregation across multiple
+        metrics, we should support "breakouts", which would individually
+        process (graph, summarize, or list) data for each "loose" breakout
+        name. E.g., Busy-CPU might list per-core, or per-processor mode.
+
         Args:
             run: run ID
             metric: combined metric name (e.g., sar-net::packets-sec)
@@ -794,14 +921,10 @@ class CrucibleService:
             ignore_unavailable=True,
         )
         if len(metrics["hits"]["hits"]) < 1:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST,
-                (
-                    f"No matches for {metric}"
-                    f"{('+' + ','.join(namelist) if namelist else '')}"
-                ),
-            )
-        ids = [h["metric_desc"]["id"] for h in self._hits(metrics)]
+            self.logger.info(f"No metric descs: filters={filters}")
+            return []
+        mdidn = self._get_id_field("metric_desc")
+        ids = [h["metric_desc"][mdidn] for h in self._hits(metrics)]
         if len(ids) < 2 or aggregate:
             return ids
 
@@ -814,16 +937,17 @@ class CrucibleService:
             "message": f"More than one metric ({len(ids)}) means "
             "you should add breakout filters or aggregate."
         }
+        pidn = self._get_id_field("period")
         for m in self._hits(metrics):
             if "period" in m:
-                periods.add(m["period"]["id"])
+                periods.add(m["period"][pidn])
             for n, v in m["metric_desc"]["names"].items():
                 names[n].add(v)
 
         # We want to help filter a consistent summary, so only show those
         # breakout names with more than one value.
         response["names"] = {n: sorted(v) for n, v in names.items() if v and len(v) > 1}
-        response["periods"] = list(periods)
+        response["periods"] = sorted(periods)
         raise HTTPException(
             status_code=status.HTTP_422_UNPROCESSABLE_ENTITY, detail=response
         )
@@ -844,37 +968,30 @@ class CrucibleService:
             Constructs a range filter for the earliest begin timestamp and the
             latest end timestamp among the specified periods.
         """
+
         if periods:
             ps = self._split_list(periods)
+            pidn = self._get_id_field("period")
             matches = await self.search(
-                "period", filters=[{"terms": {"period.id": ps}}]
+                "period", filters=[{"terms": {f"period.{pidn}": ps}}]
             )
-            start = None
-            end = None
-            for h in self._hits(matches):
-                p = h["period"]
-                st = p["begin"]
-                et = p["end"]
-
-                # If any period is missing a timestamp, use the run's timestamp
-                # instead to avoid blowing up on a CDM error.
-                if st is None:
-                    st = h["run"]["begin"]
-                if et is None:
-                    et = h["run"]["end"]
-                if st and (not start or st < start):
-                    start = st
-                if et and (not end or et > end):
-                    end = et
-            if start is None or end is None:
-                name = (
-                    f"{h['run']['benchmark']}:{h['run']['begin']}-"
-                    f"{h['iteration']['num']}-{h['sample']['num']}-"
-                    f"{p['name']}"
+            try:
+                start = min([int(h) for h in self._hits(matches, ["period", "begin"])])
+                end = max([int(h) for h in self._hits(matches, ["period", "end"])])
+            except Exception as e:
+                plist = ",".join(ps)
+                self.logger.warning(
+                    (
+                        "Can't compute a time filter because one of the periods "
+                        f"in {plist!r} is missing a timestamp: {str(e)!r}"
+                    )
                 )
                 raise HTTPException(
                     status.HTTP_422_UNPROCESSABLE_ENTITY,
-                    f"Unable to compute {name!r} time range {start!r} -> {end!r}",
+                    (
+                        "Cannot process metric time filter: at least one of "
+                        f"the periods in {plist!r} is broken and lacks a time range."
+                    ),
                 )
             return [
                 {"range": {"metric_data.begin": {"gte": str(start)}}},
@@ -888,7 +1005,7 @@ class CrucibleService:
     ) -> set[str]:
         """Return a set of run IDs matching a filter
 
-        Documents in the specified index must have "run.id" fields. Returns
+        Documents in the specified index must have ID fields. This returns
         a set of unique run IDs matched by the filter in the specified index.
 
         Args:
@@ -898,11 +1015,110 @@ class CrucibleService:
         Returns:
             a set of unique run ID values
         """
+        ridn = self._get_id_field("run")
         filtered = await self.search(
-            index, source="run.id", filters=filters, ignore_unavailable=True
+            index, source=f"run.{ridn}", filters=filters, ignore_unavailable=True
         )
-        print(f"HITS: {filtered['hits']['hits']}")
+        self.logger.debug("HITS: %s", filtered["hits"]["hits"])
         return set([x for x in self._hits(filtered, ["run", "id"])])
+
+    async def _make_title(
+        self,
+        run_id: str,
+        run_id_list: list[str],
+        metric_item: Metric,
+        params_by_run: dict[str, Any],
+        periods_by_run: dict[str, Any],
+    ) -> str:
+        """Compute a default title for a graph
+
+        Use the period, breakout name selections, run list, and iteration
+        parameters to construct a meaningful name for a metric.
+
+        For example, "ilab::sdg-samples-sec (batch-size=4) {run 1}", or
+        "mpstat::Busy-CPU [cpu=4]"
+
+        Args:
+            run_id: the Crucible run ID
+            run_id_list: ordered list of run IDs in our list of metrics
+            metric_item: the current MetricItem object
+            periods: list of aggregation periods, if any
+            params_by_run: initially empty dict used to cache parameters
+            periods_by_run: initially empty dict used to cache periods
+
+        Returns:
+            A string title
+        """
+        names = metric_item.names
+        ridn = self._get_id_field("run")
+        iidn: str = self._get_id_field("iteration")
+        pidn = self._get_id_field("period")
+        metric = metric_item.metric
+        if metric_item.periods and len(metric_item.periods) == 1:
+            period = metric_item.periods[0]
+        else:
+            period = None
+        if run_id not in params_by_run:
+            # Gather iteration parameters outside the loop for help in
+            # generating useful labels.
+            all_params = await self.search(
+                "param", filters=[{"term": {f"run.{ridn}": run_id}}]
+            )
+            collector = defaultdict(defaultdict)
+            for h in self._hits(all_params):
+                collector[h["iteration"][iidn]][h["param"]["arg"]] = h["param"]["val"]
+            params_by_run[run_id] = collector
+        else:
+            collector = params_by_run[run_id]
+
+        if run_id not in periods_by_run:
+            periods = await self.search(
+                "period", filters=[{"term": {f"run.{ridn}": run_id}}]
+            )
+            iteration_periods = defaultdict(list[dict[str, Any]])
+            for p in self._hits(periods):
+                iteration_periods[p["iteration"][iidn]].append(p["period"])
+            periods_by_run[run_id] = iteration_periods
+        else:
+            iteration_periods = periods_by_run[run_id]
+
+        # We can easily end up with multiple graphs across distinct
+        # periods or iterations, so we want to be able to provide some
+        # labeling to the graphs. We do this by looking for unique
+        # iteration parameters values, since the iteration number and
+        # period name aren't useful by themselves.
+        name_suffix = ""
+        if metric_item.periods:
+            iteration = None
+            for i, plist in iteration_periods.items():
+                if set(metric_item.periods) <= set([p[pidn] for p in plist]):
+                    iteration = i
+                if period:
+                    for p in plist:
+                        if p[pidn] == period:
+                            name_suffix += f" {p['name']}"
+
+            # If the period(s) we're graphing resolve to a single
+            # iteration in a run with multiple iterations, then we can
+            # try to find a unique title suffix based on distinct param
+            # values for that iteration.
+            if iteration and len(collector) > 1:
+                unique = collector[iteration].copy()
+                for i, params in collector.items():
+                    if i != iteration:
+                        for p in list(unique.keys()):
+                            if p in params and unique[p] == params[p]:
+                                del unique[p]
+                if unique:
+                    name_suffix += (
+                        " (" + ",".join([f"{p}={v}" for p, v in unique.items()]) + ")"
+                    )
+
+        if len(run_id_list) > 1:
+            name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
+
+        options = (" [" + ",".join(names) + "]") if names else ""
+        return metric + options + name_suffix
 
     async def get_run_filters(self) -> dict[str, dict[str, list[str]]]:
         """Return possible tag and filter terms
@@ -1072,16 +1288,19 @@ class CrucibleService:
         if run_filters:
             filters.extend(run_filters)
         if start or end:
+            self.logger.info(f"Filtering runs from {start} to {end}")
             s = None
             e = None
             if start:
                 s = self._normalize_date(start)
                 results["startDate"] = datetime.fromtimestamp(
                     s / 1000.0, tz=timezone.utc
-                )
+                ).isoformat()
             if end:
                 e = self._normalize_date(end)
-                results["endDate"] = datetime.fromtimestamp(e / 1000.0, tz=timezone.utc)
+                results["endDate"] = datetime.fromtimestamp(
+                    e / 1000.0, tz=timezone.utc
+                ).isoformat()
 
             if s and e and s > e:
                 raise HTTPException(
@@ -1126,27 +1345,53 @@ class CrucibleService:
         rawtags = await self.search("tag", ignore_unavailable=True)
         rawparams = await self.search("param", ignore_unavailable=True)
 
+        # NOTE: CDM considers run timestamps "informational" and uses period
+        # timestamps if necessary to replace them. We could delay this call
+        # until (if) we find a "broken" run, and potentially even make separate
+        # queries based on run ID.
+        rawperiods = await self.search(index="period", ignore_unavailable=True)
+
         iterations = defaultdict(list)
+        periods: dict[str, tuple[int, int]] = {}
         tags = defaultdict(defaultdict)
         params = defaultdict(defaultdict)
         run_params = defaultdict(list)
+        ridn = self._get_id_field("run")
+        iidn = self._get_id_field("iteration")
 
         for i in self._hits(rawiterations):
-            iterations[i["run"]["id"]].append(i["iteration"])
+            iterations[i["run"][ridn]].append(i["iteration"])
 
         # Organize tags by run ID
         for t in self._hits(rawtags):
-            tags[t["run"]["id"]][t["tag"]["name"]] = t["tag"]["val"]
+            tags[t["run"][ridn]][t["tag"]["name"]] = t["tag"]["val"]
+
+        # Organize period timestamps by run ID
+        for p in self._hits(rawperiods):
+            period = p["period"]
+            rid = p["run"][ridn]
+            range = periods.get(rid)
+            try:
+                b = int(period["begin"])
+                e = int(period["end"])
+            except Exception as e:
+                self.logger.warning(f"bad timestamp in period {period}: {str(e)!r}")
+                continue
+            if range:
+                range = (min(range[0], b), max(range[1], e))
+            else:
+                range = (b, e)
+            periods[rid] = range
 
         # Organize params by iteration ID
         for p in self._hits(rawparams):
-            run_params[p["run"]["id"]].append(p)
-            params[p["iteration"]["id"]][p["param"]["arg"]] = p["param"]["val"]
+            run_params[p["run"][ridn]].append(p)
+            params[p["iteration"][iidn]][p["param"]["arg"]] = p["param"]["val"]
 
         runs = {}
         for h in self._hits(hits):
             run = h["run"]
-            rid = run["id"]
+            rid = run[ridn]
 
             # Filter the runs by our tag and param queries
             if param_filters and rid not in paramids:
@@ -1155,15 +1400,35 @@ class CrucibleService:
             if tag_filters and rid not in tagids:
                 continue
 
-            # Collect unique runs: the status is "fail" if any iteration for
-            # that run ID failed.
-            runs[rid] = run
+            # Convert string timestamps (milliseconds from epoch) to int.
+            # If the run document has no begin or end, look for the periods
+            b = None
+            e = None
+            if run.get("begin") and run.get("end"):
+                try:
+                    b = int(run["begin"])
+                    e = int(run["end"])
+                except Exception as exc:
+                    self.logger.warning(f"bad timestamps in run {run}: {str(exc)!r}")
+            if (b is None or e is None) and rid in periods:
+                b, e = periods[rid]
+            if b is None or e is None:
+                self.logger.warning(
+                    f"can't find begin/end timestamps for run {rid}: ignoring"
+                )
+                continue
+            run["begin"] = b
+            run["end"] = e
+
             run["tags"] = tags.get(rid, {})
             run["iterations"] = []
             run["primary_metrics"] = set()
             common = CommonParams()
+
+            # Collect unique iterations: the status is "fail" if any iteration
+            # for that run ID failed.
             for i in iterations.get(rid, []):
-                iparams = params.get(i["id"], {})
+                iparams = params.get(i[iidn], {})
                 if "status" not in run:
                     run["status"] = i["status"]
                 else:
@@ -1180,14 +1445,17 @@ class CrucibleService:
                         "params": iparams,
                     }
                 )
+            run["iterations"].sort(key=lambda i: i["iteration"])
             run["params"] = common.render()
             try:
                 run["begin_date"] = self._format_timestamp(run["begin"])
                 run["end_date"] = self._format_timestamp(run["end"])
             except KeyError as e:
-                print(f"Missing 'run' key {str(e)} in {run}")
+                self.logger.warning("Missing 'run' key %r in %s", str(e), run)
                 run["begin_date"] = self._format_timestamp("0")
                 run["end_date"] = self._format_timestamp("0")
+
+            runs[rid] = run
 
         count = len(runs)
         total = hits["hits"]["total"]["value"]
@@ -1211,9 +1479,10 @@ class CrucibleService:
         Returns:
             JSON dict with "tag" keys showing each value
         """
+        ridn = self._get_id_field("run")
         tags = await self.search(
             index="tag",
-            filters=[{"term": {"run.id": run}}],
+            filters=[{"term": {f"run.{ridn}": run}}],
             **kwargs,
             ignore_unavailable=True,
         )
@@ -1242,7 +1511,11 @@ class CrucibleService:
                 status.HTTP_400_BAD_REQUEST,
                 "A params query requires either a run or iteration ID",
             )
-        match = {"run.id" if run else "iteration.id": run if run else iteration}
+        ridn = self._get_id_field("run")
+        iidn = self._get_id_field("iteration")
+        match = {
+            f"run.{ridn}" if run else f"iteration.{iidn}": run if run else iteration
+        }
         params = await self.search(
             index="param",
             filters=[{"term": match}],
@@ -1251,11 +1524,14 @@ class CrucibleService:
         )
         response = defaultdict(defaultdict)
         for param in self._hits(params):
-            iter = param["iteration"]["id"]
+            iter = param["iteration"][iidn]
             arg = param["param"]["arg"]
             val = param["param"]["val"]
-            if response.get(iter) and response.get(iter).get(arg):
-                print(f"Duplicate param {arg} for iteration {iter}")
+            old = self._get(response, [iter, arg])
+            if old:
+                self.logger.warning(
+                    "Duplicate param %s for iteration %s (%r, %r)", arg, iter, old, val
+                )
             response[iter][arg] = val
 
         # Filter out all parameter values that don't exist in all or which have
@@ -1277,14 +1553,20 @@ class CrucibleService:
         Returns:
             A list of iteration documents
         """
-        iterations = await self.search(
+        ridn = self._get_id_field("run")
+        iidn = self._get_id_field("iteration")
+        hits = await self.search(
             index="iteration",
-            filters=[{"term": {"run.id": run}}],
+            filters=[{"term": {f"run.{ridn}": run}}],
             sort=[{"iteration.num": "asc"}],
             **kwargs,
             ignore_unavailable=True,
         )
-        return [i["iteration"] for i in self._hits(iterations)]
+
+        iterations = []
+        for i in self._hits(hits, ["iteration"]):
+            iterations.append(self._format_iteration(i))
+        return iterations
 
     async def get_samples(
         self, run: Optional[str] = None, iteration: Optional[str] = None, **kwargs
@@ -1304,7 +1586,11 @@ class CrucibleService:
                 status.HTTP_400_BAD_REQUEST,
                 "A sample query requires either a run or iteration ID",
             )
-        match = {"run.id" if run else "iteration.id": run if run else iteration}
+        ridn = self._get_id_field("run")
+        iidn = self._get_id_field("iteration")
+        match = {
+            f"run.{ridn}" if run else f"iteration.{iidn}": run if run else iteration
+        }
         hits = await self.search(
             index="sample",
             filters=[{"term": match}],
@@ -1313,11 +1599,10 @@ class CrucibleService:
         )
         samples = []
         for s in self._hits(hits):
-            print(f"SAMPLE's ITERATION {s['iteration']}")
-            sample = s["sample"]
+            sample = self._format_sample(s["sample"])
             sample["iteration"] = s["iteration"]["num"]
             sample["primary_metric"] = s["iteration"]["primary-metric"]
-            sample["status"] = s["iteration"]["status"]
+            sample["primary_period"] = s["iteration"]["primary-period"]
             samples.append(sample)
         return samples
 
@@ -1349,12 +1634,15 @@ class CrucibleService:
                 "A period query requires a run, iteration, or sample ID",
             )
         match = None
+        ridn = self._get_id_field("run")
+        iidn = self._get_id_field("iteration")
+        sidn = self._get_id_field("sample")
         if sample:
-            match = {"sample.id": sample}
+            match = {f"sample.{sidn}": sample}
         elif iteration:
-            match = {"iteration.id": iteration}
+            match = {f"iteration.{iidn}": iteration}
         else:
-            match = {"run.id": run}
+            match = {f"run.{ridn}": run}
         periods = await self.search(
             index="period",
             filters=[{"term": match}],
@@ -1367,64 +1655,12 @@ class CrucibleService:
             period = self._format_period(period=h["period"])
             period["iteration"] = h["iteration"]["num"]
             period["sample"] = h["sample"]["num"]
-            period["primary_metric"] = h["iteration"]["primary-metric"]
+            is_primary = h["iteration"]["primary-period"] == h["period"]["name"]
+            period["is_primary"] = is_primary
+            if is_primary:
+                period["primary_metric"] = h["iteration"]["primary-metric"]
             period["status"] = h["iteration"]["status"]
             body.append(period)
-        return body
-
-    async def get_timeline(self, run: str, **kwargs) -> dict[str, Any]:
-        """Report the relative timeline of a run
-
-        With nested object lists, show runs to iterations to samples to
-        periods.
-
-        Args:
-            run: run ID
-            kwargs: additional OpenSearch parameters
-        """
-        itr = await self.search(
-            index="iteration",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        sam = await self.search(
-            index="sample",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        per = await self.search(
-            index="period",
-            filters=[{"term": {"run.id": run}}],
-            **kwargs,
-            ignore_unavailable=True,
-        )
-        samples = defaultdict(list)
-        periods = defaultdict(list)
-
-        for s in self._hits(sam):
-            samples[s["iteration"]["id"]].append(s)
-        for p in self._hits(per):
-            periods[p["sample"]["id"]].append(p)
-
-        iterations = []
-        robj = {"id": run, "iterations": iterations}
-        body = {"run": robj}
-        for i in self._hits(itr):
-            if "begin" not in robj:
-                robj["begin"] = self._format_timestamp(i["run"]["begin"])
-                robj["end"] = self._format_timestamp(i["run"]["end"])
-            iteration = i["iteration"]
-            iterations.append(iteration)
-            iteration["samples"] = []
-            for s in samples.get(iteration["id"], []):
-                sample = s["sample"]
-                sample["periods"] = []
-                for pr in periods.get(sample["id"], []):
-                    period = self._format_period(pr["period"])
-                    sample["periods"].append(period)
-                iteration["samples"].append(sample)
         return body
 
     async def get_metrics_list(self, run: str, **kwargs) -> dict[str, Any]:
@@ -1453,25 +1689,29 @@ class CrucibleService:
         Returns:
             List of metrics available for the run
         """
+        ridn = self._get_id_field("run")
         hits = await self.search(
             index="metric_desc",
-            filters=[{"term": {"run.id": run}}],
+            filters=[{"term": {f"run.{ridn}": run}}],
             ignore_unavailable=True,
             **kwargs,
         )
         met = {}
+        pidn = self._get_id_field("period")
         for h in self._hits(hits):
             desc = h["metric_desc"]
             name = desc["source"] + "::" + desc["type"]
             if name in met:
                 record = met[name]
             else:
-                record = {"periods": [], "breakouts": defaultdict(set)}
+                record = {"periods": [], "breakouts": defaultdict(list)}
                 met[name] = record
             if "period" in h:
-                record["periods"].append(h["period"]["id"])
+                record["periods"].append(h["period"][pidn])
             for n, v in desc["names"].items():
-                record["breakouts"][n].add(v)
+                # mimic a set, since the set type doesn't serialize
+                if v not in record["breakouts"][n]:
+                    record["breakouts"][n].append(v)
         return met
 
     async def get_metric_breakouts(
@@ -1527,9 +1767,10 @@ class CrucibleService:
                 f"Metric name {metric_name} not found for run {run}",
             )
         classes = set()
-        response = {"label": metric, "class": classes}
-        breakouts = defaultdict(set)
+        response = {"label": metric}
+        breakouts = defaultdict(list)
         pl = set()
+        pidn = self._get_id_field("period")
         for m in self._hits(metrics):
             desc = m["metric_desc"]
             response["type"] = desc["type"]
@@ -1537,16 +1778,17 @@ class CrucibleService:
             if desc.get("class"):
                 classes.add(desc["class"])
             if "period" in m:
-                pl.add(m["period"]["id"])
+                pl.add(m["period"][pidn])
             for n, v in desc["names"].items():
-                breakouts[n].add(v)
+                if v not in breakouts[n]:
+                    breakouts[n].append(v)
         # We want to help filter a consistent summary, so only show those
         # names with more than one value.
         if len(pl) > 1:
-            response["periods"] = pl
+            response["periods"] = sorted(pl)
+        response["class"] = sorted(classes)
         response["breakouts"] = {n: v for n, v in breakouts.items() if len(v) > 1}
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return response
 
     async def get_metrics_data(
@@ -1603,20 +1845,24 @@ class CrucibleService:
         # If we're searching by periods, filter metric data by the period
         # timestamp range rather than just relying on the metric desc IDs as
         # we also want to filter non-periodic tool data.
-        filters = [{"terms": {"metric_desc.id": ids}}]
+        mdidn = self._get_id_field("metric_desc")
+        filters = [{"terms": {f"metric_desc.{mdidn}": ids}}]
         filters.extend(await self._build_timestamp_range_filters(periods))
 
         response = []
+
+        # NOTE -- _get_metric_ids already failed if we found multiple IDs but
+        # aggregation wasn't specified.
         if len(ids) > 1:
             # Find the minimum sample interval of the selected metrics
             aggdur = await self.search(
                 "metric_data",
                 size=0,
                 filters=filters,
-                aggregations={"duration": {"stats": {"field": "metric_data.duration"}}},
+                aggregations={"duration": {"min": {"field": "metric_data.duration"}}},
             )
-            if aggdur["aggregations"]["duration"]["count"] > 0:
-                interval = int(aggdur["aggregations"]["duration"]["min"])
+            if aggdur["aggregations"]["duration"].get("value", 0) > 0:
+                interval = int(aggdur["aggregations"]["duration"]["value"])
                 data = await self.search(
                     index="metric_data",
                     size=0,
@@ -1645,138 +1891,77 @@ class CrucibleService:
             for h in self._hits(data, ["metric_data"]):
                 response.append(self._format_data(h))
         response.sort(key=lambda a: a["end"])
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return response
 
     async def get_metrics_summary(
-        self,
-        run: str,
-        metric: str,
-        names: Optional[list[str]] = None,
-        periods: Optional[list[str]] = None,
-    ) -> dict[str, Any]:
+        self, summaries: list[Metric]
+    ) -> list[dict[str, Any]]:
         """Return a statistical summary of metric data
 
         Provides a statistical summary of selected data samples.
 
         Args:
-            run: run ID
-            metric: metric label (e.g., "mpstat::Busy-CPU")
-            names: list of name filters ("cpu=3")
-            periods: list of period IDs
+            summaries: list of Summary objects to define desired metrics
 
         Returns:
             A statistical summary of the selected metric data
-
-            {
-                "count": 71,
-                "min": 0.0,
-                "max": 0.3296,
-                "avg": 0.02360704225352113,
-                "sum": 1.676self.BIGQUERY00000001
-            }
         """
         start = time.time()
-        ids = await self._get_metric_ids(run, metric, names, periodlist=periods)
-        filters = [{"terms": {"metric_desc.id": ids}}]
-        filters.extend(await self._build_timestamp_range_filters(periods))
-        data = await self.search(
-            "metric_data",
-            size=0,
-            filters=filters,
-            aggregations={"score": {"stats": {"field": "metric_data.value"}}},
-        )
+        results = []
+        params_by_run = {}
+        periods_by_run = {}
+        run_id_list = []
+        mdidn = self._get_id_field("metric_desc")
+        for s in summaries:
+            if not s.run:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST,
+                    "each summary request must have a run ID",
+                )
+            if s.run not in run_id_list:
+                run_id_list.append(s.run)
+        for summary in summaries:
+            ids = await self._get_metric_ids(
+                summary.run,
+                summary.metric,
+                summary.names,
+                periodlist=summary.periods,
+                aggregate=summary.aggregate,
+            )
+            filters = [{"terms": {f"metric_desc.{mdidn}": ids}}]
+            filters.extend(await self._build_timestamp_range_filters(summary.periods))
+            data = await self.search(
+                "metric_data",
+                size=0,
+                filters=filters,
+                aggregations={
+                    "score": {"extended_stats": {"field": "metric_data.value"}}
+                },
+            )
+
+            # The caller can provide a title for each graph; but, if not, we
+            # journey down dark overgrown pathways to fabricate a default with
+            # reasonable context, including unique iteration parameters,
+            # breakdown selections, and which run provided the data.
+            if summary.title:
+                title = summary.title
+            else:
+                title = await self._make_title(
+                    summary.run, run_id_list, summary, params_by_run, periods_by_run
+                )
+
+            score = data["aggregations"]["score"]
+            score["aggregate"] = summary.aggregate
+            score["metric"] = summary.metric
+            score["names"] = summary.names
+            score["periods"] = summary.periods
+            score["run"] = summary.run
+            score["title"] = title
+            results.append(score)
         duration = time.time() - start
-        print(f"Processing took {duration} seconds")
-        return data["aggregations"]["score"]
-
-    async def _graph_title(
-        self,
-        run_id: str,
-        run_id_list: list[str],
-        graph: Graph,
-        params_by_run: dict[str, Any],
-        periods_by_run: dict[str, Any],
-    ) -> str:
-        """Compute a default title for a graph
-
-        Use the period, breakout name selections, run list, and iteration
-        parameters to construct a meaningful name for a graph.
-
-        For example, "ilab::sdg-samples-sec (batch-size=4) {run 1}", or
-        "mpstat::Busy-CPU [cpu=4]"
-
-        Args:
-            run_id: the Crucible run ID
-            run_id_list: ordered list of run IDs in our list of graphs
-            graph: the current Graph object
-            params_by_run: initially empty dict used to cache parameters
-            periods_by_run: initially empty dict used to cache periods
-
-        Returns:
-            A string title
-        """
-        names = graph.names
-        metric = graph.metric
-        if run_id not in params_by_run:
-            # Gather iteration parameters outside the loop for help in
-            # generating useful labels.
-            all_params = await self.search(
-                "param", filters=[{"term": {"run.id": run_id}}]
-            )
-            collector = defaultdict(defaultdict)
-            for h in self._hits(all_params):
-                collector[h["iteration"]["id"]][h["param"]["arg"]] = h["param"]["val"]
-            params_by_run[run_id] = collector
-        else:
-            collector = params_by_run[run_id]
-
-        if run_id not in periods_by_run:
-            periods = await self.search(
-                "period", filters=[{"term": {"run.id": run_id}}]
-            )
-            iteration_periods = defaultdict(set)
-            for p in self._hits(periods):
-                iteration_periods[p["iteration"]["id"]].add(p["period"]["id"])
-            periods_by_run[run_id] = iteration_periods
-        else:
-            iteration_periods = periods_by_run[run_id]
-
-        # We can easily end up with multiple graphs across distinct
-        # periods or iterations, so we want to be able to provide some
-        # labeling to the graphs. We do this by looking for unique
-        # iteration parameters values, since the iteration number and
-        # period name aren't useful by themselves.
-        name_suffix = ""
-        if graph.periods:
-            iteration = None
-            for i, pset in iteration_periods.items():
-                if set(graph.periods) <= pset:
-                    iteration = i
-                    break
-
-            # If the period(s) we're graphing resolve to a single
-            # iteration in a run with multiple iterations, then we can
-            # try to find a unique title suffix based on distinct param
-            # values for that iteration.
-            if iteration and len(collector) > 1:
-                unique = collector[iteration].copy()
-                for i, params in collector.items():
-                    if i != iteration:
-                        for p in list(unique.keys()):
-                            if p in params and unique[p] == params[p]:
-                                del unique[p]
-                if unique:
-                    name_suffix = (
-                        " (" + ",".join([f"{p}={v}" for p, v in unique.items()]) + ")"
-                    )
-
-        if len(run_id_list) > 1:
-            name_suffix += f" {{run {run_id_list.index(run_id) + 1}}}"
-
-        options = (" [" + ",".join(names) + "]") if names else ""
-        return metric + options + name_suffix
+        self.logger.info(f"Processing took {duration} seconds")
+        return results
 
     async def get_metrics_graph(self, graphdata: GraphList) -> dict[str, Any]:
         """Return metrics data for a run
@@ -1821,8 +2006,43 @@ class CrucibleService:
         """
         start = time.time()
         graphlist = []
-        default_run_id = graphdata.run
-        layout: dict[str, Any] = {"width": "1500"}
+        if graphdata.relative:
+            if graphdata.absolute_relative:
+                x_label = "sample runtime (HH:MM:SS)"
+                format = "%H:%M:%S"
+            else:
+                x_label = "sample runtime (seconds)"
+                format = None
+        else:
+            x_label = "sample timestamp"
+            format = "%Y:%M:%d %X %Z"
+        xaxis = {
+            "title": {
+                "text": x_label,
+                "font": {"color": "gray", "variant": "petite-caps", "weight": 1000},
+            },
+        }
+        if format:
+            xaxis["type"] = "date"
+            xaxis["tickformat"] = format
+        layout: dict[str, Any] = {
+            "showlegend": True,
+            "responsive": True,
+            "autosize": True,
+            "xaxis_title": x_label,
+            "yaxis_title": "Metric value",
+            "xaxis": xaxis,
+            "legend": {
+                "groupclick": "toggleitem",
+                "xref": "container",
+                "yref": "container",
+                "xanchor": "right",
+                "yanchor": "top",
+                "x": 0.9,
+                "y": 1,
+                "orientation": "h",
+            },
+        }
         axes = {}
         yaxis = None
         cindex = 0
@@ -1832,25 +2052,21 @@ class CrucibleService:
         # Construct a de-duped ordered list of run IDs, starting with the
         # default.
         run_id_list = []
-        if default_run_id:
-            run_id_list.append(default_run_id)
-        run_id_missing = False
         for g in graphdata.graphs:
-            if g.run:
-                if g.run not in run_id_list:
-                    run_id_list.append(g.run)
-            else:
-                run_id_missing = True
-
-        if run_id_missing and not default_run_id:
-            raise HTTPException(
-                status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
-            )
+            if not g.run:
+                raise HTTPException(
+                    status.HTTP_400_BAD_REQUEST, "each graph request must have a run ID"
+                )
+            if g.run not in run_id_list:
+                run_id_list.append(g.run)
 
         for g in graphdata.graphs:
-            run_id = g.run if g.run else default_run_id
+            run_id = g.run
             names = g.names
             metric: str = g.metric
+            run_idx = None
+            if len(run_id_list) > 1:
+                run_idx = f"Run {run_id_list.index(run_id) + 1}"
 
             # The caller can provide a title for each graph; but, if not, we
             # journey down dark overgrown pathways to fabricate a default with
@@ -1859,7 +2075,7 @@ class CrucibleService:
             if g.title:
                 title = g.title
             else:
-                title = await self._graph_title(
+                title = await self._make_title(
                     run_id, run_id_list, g, params_by_run, periods_by_run
                 )
 
@@ -1870,7 +2086,8 @@ class CrucibleService:
                 periodlist=g.periods,
                 aggregate=g.aggregate,
             )
-            filters = [{"terms": {"metric_desc.id": ids}}]
+            mdidn = self._get_id_field("metric_desc")
+            filters = [{"terms": {f"metric_desc.{mdidn}": ids}}]
             filters.extend(await self._build_timestamp_range_filters(g.periods))
             y_max = 0.0
             points: list[Point] = []
@@ -1887,9 +2104,7 @@ class CrucibleService:
                     size=0,
                     filters=filters,
                     aggregations={
-                        "duration": {
-                            "stats": {"field": "metric_data.duration"}
-                        }
+                        "duration": {"stats": {"field": "metric_data.duration"}}
                     },
                 )
                 if aggdur["aggregations"]["duration"]["count"] > 0:
@@ -1905,9 +2120,7 @@ class CrucibleService:
                                     "interval": interval,
                                 },
                                 "aggs": {
-                                    "value": {
-                                        "sum": {"field": "metric_data.value"}
-                                    }
+                                    "value": {"sum": {"field": "metric_data.value"}}
                                 },
                             }
                         },
@@ -1915,9 +2128,7 @@ class CrucibleService:
                     for h in self._aggs(data, "interval"):
                         begin = int(h["key"])
                         end = begin + interval - 1
-                        points.append(
-                            Point(begin, end, float(h["value"]["value"]))
-                        )
+                        points.append(Point(begin, end, float(h["value"]["value"])))
             else:
                 data = await self.search("metric_data", filters=filters)
                 for h in self._hits(data, ["metric_data"]):
@@ -1932,19 +2143,32 @@ class CrucibleService:
             x = []
             y = []
 
+            first = None
+
             for p in sorted(points, key=lambda a: a.begin):
-                x.extend(
-                    [self._format_timestamp(p.begin), self._format_timestamp(p.end)]
-                )
+                if graphdata.relative:
+                    if not first:
+                        first = p.begin
+                    if graphdata.absolute_relative:
+                        s = self._format_timestamp(p.begin - first)
+                        e = self._format_timestamp(p.end - first)
+                    else:
+                        s = (p.begin - first) / 1000
+                        e = (p.end - first) / 1000
+                    x.extend([s, e])
+                else:
+                    s = self._format_timestamp(p.begin)
+                    e = self._format_timestamp(p.end)
+                    x.extend([s, e])
                 y.extend([p.value, p.value])
                 y_max = max(y_max, p.value)
 
             if g.color:
                 color = g.color
             else:
-                color = colors[cindex]
+                color = COLOR_NAMES[cindex]
                 cindex += 1
-                if cindex >= len(colors):
+                if cindex >= len(COLOR_NAMES):
                     cindex = 0
             graphitem = {
                 "x": x,
@@ -1953,11 +2177,14 @@ class CrucibleService:
                 "type": "scatter",
                 "mode": "line",
                 "marker": {"color": color},
-                "labels": {
-                    "x": "sample timestamp",
-                    "y": "samples / second",
-                },
             }
+
+            if run_idx:
+                graphitem["legendgroup"] = run_idx
+                graphitem["legendgrouptitle"] = {
+                    "text": run_idx,
+                    "font": {"variant": "small-caps", "style": "italic"},
+                }
 
             # Y-axis scaling and labeling is divided by benchmark label;
             # so store each we've created to reuse. (E.g., if we graph
@@ -1989,6 +2216,5 @@ class CrucibleService:
                 axes[metric] = yref
             graphitem["yaxis"] = yref
             graphlist.append(graphitem)
-        duration = time.time() - start
-        print(f"Processing took {duration} seconds")
+        self.logger.info("Processing took %.3f seconds", time.time() - start)
         return {"data": graphlist, "layout": layout}

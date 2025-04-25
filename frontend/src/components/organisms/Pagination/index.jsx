@@ -1,6 +1,7 @@
 import { Pagination, PaginationVariant } from "@patternfly/react-core";
 import {
   checkTableData,
+  fetchNextJobs,
   setPage,
   setPageOptions,
 } from "@/actions/paginationActions";
@@ -8,11 +9,14 @@ import {
 import PropTypes from "prop-types";
 import { useCallback } from "react";
 import { useDispatch } from "react-redux";
+import { useNavigate } from "react-router-dom";
 
 const RenderPagination = (props) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const perPageOptions = [
+    { title: "10", value: 10 },
     { title: "25", value: 25 },
     { title: "50", value: 50 },
     { title: "100", value: 100 },
@@ -34,10 +38,14 @@ const RenderPagination = (props) => {
 
   const onNextClick = useCallback(
     (_evt, newPage) => {
-      if (props.type === "cpt") {
-        dispatch(setPage(newPage, props.type));
+      if (props.type === "ilab") {
+        dispatch(fetchNextJobs(newPage));
+      } else {
+        if (props.type === "cpt") {
+          dispatch(setPage(newPage, props.type));
+        }
+        dispatch(checkTableData(newPage, props.type));
       }
-      dispatch(checkTableData(newPage, props.type));
     },
     [dispatch, props.type]
   );
