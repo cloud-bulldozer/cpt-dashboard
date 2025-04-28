@@ -22,7 +22,7 @@ spec:
     spec:
       {{- with .Values.initContainers }}
       initContainers:
-        {{- toYaml . | nident 8 }}
+        {{- toYaml . | nindent 8 }}
       {{- end }}
       {{- with .Values.volumes }}
       volumes:
@@ -45,6 +45,9 @@ spec:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.frontend.securityContext | nindent 12 }}
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp
         - name: backend
           image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
           imagePullPolicy: "Always"
