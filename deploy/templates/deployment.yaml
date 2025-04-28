@@ -22,11 +22,7 @@ spec:
     spec:
       {{- with .Values.initContainers }}
       initContainers:
-        {{- toYaml . | nindent 8 }}
-      {{- end }}
-      {{- with .Values.volumes }}
-      volumes:
-        {{- toYaml . | nindent 8 }}
+        {{- toYaml . | nident 8 }}
       {{- end }}
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
@@ -63,6 +59,8 @@ spec:
               mountPath: /backend/ocpperf.toml
               subPath: ocpperf.toml
       volumes:
+        - name: tmp
+          emptyDir: {}
         - name: config
           secret:
             secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}
