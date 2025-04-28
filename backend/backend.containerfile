@@ -6,17 +6,18 @@ ENV PATH=/root/.local/bin:$PATH \
     PATH=/usr/local/bin:$PATH
 
 RUN useradd -m -d /home/appuser appuser && \
+    chmod 755 /home/appuser && \
     mkdir /home/appuser/backend && \
     chown appuser:appuser /home/appuser/backend && \
     chmod 777 /home/appuser/backend
 
-# RUN mkdir /backend
+
 
 COPY app/ /home/appuser/backend/app
 COPY scripts/ /home/appuser/backend/scripts
 COPY pyproject.toml /home/appuser/backend
 COPY poetry.lock /home/appuser/backend
-# COPY version.json /backend
+
 
 WORKDIR /home/appuser/backend
 
