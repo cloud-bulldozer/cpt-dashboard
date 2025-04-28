@@ -20,16 +20,27 @@ spec:
       labels:
         {{- include "dashboard.selectorLabels" . | nindent 8 }}   
     spec:
-      {{- with .Values.initContainers }}
       initContainers:
-        {{- toYaml . | nident 8 }}
-      {{- end }}
+        - name: init-tmp
+          image: busybox
+          command: ["sh", "-c", "chmod 1777 /tmp"]
+          securityContext:
+            runAsUser: 0
+          volumeMounts:
+            - name: tmp
+              mountPath: /tmp        
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: tmp
+          emptyDir: {}
+        - name: config
+          secret:
+            secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}      
       containers:
         - name: frontend
           image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
@@ -58,10 +69,5 @@ spec:
             - name: config 
               mountPath: /backend/ocpperf.toml
               subPath: ocpperf.toml
-      volumes:
-        - name: tmp
-          emptyDir: {}
-        - name: config
-          secret:
-            secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}
+
 
