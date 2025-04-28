@@ -21,7 +21,7 @@ frontend:
 
 backend:
   image:
-    repository: quay.io/cloud-bulldozer/backend
+    repository: quay.io/mleader/backend
     tag: latest
   resources: {}
   securityContext: {}

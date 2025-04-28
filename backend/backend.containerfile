@@ -10,19 +10,24 @@ COPY app/ /backend/app
 COPY scripts/ /backend/scripts
 COPY pyproject.toml /backend
 COPY poetry.lock /backend
-COPY version.json /backend
+# COPY version.json /backend
 
 WORKDIR /backend
 
 EXPOSE 8000
 
-RUN dnf install -y pip gcc python3-devel gcc-c++
+RUN dnf install -y pip gcc python3-devel gcc-c++ git
 
 RUN pip install --user poetry && \
     poetry self add poetry-plugin-export && \
     poetry export --without-hashes -f requirements.txt -o requirements.txt && \
     pip install -U typing-extensions && \
     pip install --user dash && \
-    pip install --no-cache-dir -r requirements.txt
+    pip install --no-cache-dir -r requirements.txt && \
+    ln -s ~/.local/bin/poetry /usr/local/bin/poetry 
+
+COPY version.json version.json
+
+WORKDIR /backend
 
 ENTRYPOINT ["/bin/bash", "./scripts/start.sh"]
