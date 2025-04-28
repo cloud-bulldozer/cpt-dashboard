@@ -2,32 +2,37 @@ FROM quay.io/centos/centos:stream9
 
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
-    PYTHONPATH=/backend
+    PYTHONPATH=/backend \
+    PATH=/usr/local/bin:$PATH
 
-RUN mkdir /backend
+RUN useradd -m -d /home/appuser appuser && \
+    mkdir /home/appuser/backend && \
+    chown appuser:appuser /home/appuser/backend && \
+    chmod 777 /home/appuser/backend
 
-COPY app/ /backend/app
-COPY scripts/ /backend/scripts
-COPY pyproject.toml /backend
-COPY poetry.lock /backend
+# RUN mkdir /backend
+
+COPY app/ /home/appuser/backend/app
+COPY scripts/ /home/appuser/backend/scripts
+COPY pyproject.toml /home/appuser/backend
+COPY poetry.lock /home/appuser/backend
 # COPY version.json /backend
 
-WORKDIR /backend
+WORKDIR /home/appuser/backend
 
 EXPOSE 8000
 
 RUN dnf install -y pip gcc python3-devel gcc-c++ git
 
-RUN pip install --user poetry && \
+RUN pip install poetry && \
     poetry self add poetry-plugin-export && \
     poetry export --without-hashes -f requirements.txt -o requirements.txt && \
     pip install -U typing-extensions && \
     pip install --user dash && \
-    pip install --no-cache-dir -r requirements.txt && \
-    ln -s ~/.local/bin/poetry /usr/local/bin/poetry 
+    pip install --no-cache-dir -r requirements.txt 
 
 COPY version.json version.json
 
-WORKDIR /backend
+WORKDIR /home/appuser/backend
 
 ENTRYPOINT ["/bin/bash", "./scripts/start.sh"]
