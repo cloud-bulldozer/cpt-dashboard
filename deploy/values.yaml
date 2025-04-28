@@ -29,5 +29,6 @@ backend:
 podAnnotations:
   alpha.image.policy.openshift.io/resolve-names: '*'
 
-podSecurityContext: {}
+podSecurityContext: 
+  fsGroup: 1000650000
 

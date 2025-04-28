@@ -20,15 +20,6 @@ spec:
       labels:
         {{- include "dashboard.selectorLabels" . | nindent 8 }}   
     spec:
-      initContainers:
-        - name: init-tmp
-          image: busybox
-          command: ["sh", "-c", "chmod 1777 /tmp"]
-          securityContext:
-            runAsUser: 0
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp        
       {{- with .Values.imagePullSecrets }}
       imagePullSecrets:
         {{- toYaml . | nindent 8 }}
