@@ -31,22 +31,3 @@ podAnnotations:
 
 podSecurityContext: {}
 
-volumes:
-  - name: tmp
-    emptyDir: {}
-
-initContainers:
-  - name: init-tmp
-    image: busybox
-    command: ["sh", "-c", "chmod 1777 /tmp"]
-    securityContext:
-      runAsUser: 0
-    volumeMounts:
-      - name: tmp
-        mountPath: /tmp
-
-containers:
-  - name: frontend
-    volumeMounts:
-      - name: tmp
-        mountPath: /tmp
