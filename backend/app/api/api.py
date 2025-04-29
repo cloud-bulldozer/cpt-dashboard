@@ -15,6 +15,7 @@ from app.api.v1.endpoints.telco import telcoGraphs
 from app.api.v1.endpoints.ols import olsJobs
 from app.api.v1.endpoints.ols import olsGraphs
 from app.api.v1.endpoints.ocm import ocmJobs
+from app.api.v1.endpoints.ilab import ilab
 
 
 router = APIRouter()
@@ -47,6 +48,9 @@ router.include_router(horreum.router, tags=["horreum"])
 
 # OCM endpoint
 router.include_router(ocmJobs.router, tags=["ocm"])
+
+# InstructLab endpoint
+router.include_router(router=ilab.router, tags=["ilab"])
 
 
 @router.get(
