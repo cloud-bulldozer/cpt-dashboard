@@ -27,7 +27,7 @@ COPY pyproject.toml poetry.lock version.json ./
 RUN poetry export --without-hashes -f requirements.txt -o requirements.txt && \
     pip3 install --no-cache-dir -r requirements.txt && \
     # Ensure generated cache and config files are group-writable
-    # for both OpenShift (random UID in GID=0) and Podman (root) \
+    # for both OpenShift (random UID in GID=0) and Podman (root) 
     # environments
     chmod -R g+rwX /opt/backend/.cache/pypoetry /opt/backend/.config/pypoetry
 
