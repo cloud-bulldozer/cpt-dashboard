@@ -21,7 +21,6 @@ RUN mkdir -p /opt/backend /opt/backend/.config/pypoetry /opt/backend/.cache/pypo
     chmod -R g+rwX /opt/backend
 
 WORKDIR /opt/backend
-EXPOSE 8000
 
 # 3) Copy manifest files & install Python deps via export
 COPY pyproject.toml poetry.lock version.json ./
@@ -35,4 +34,5 @@ RUN poetry export --without-hashes -f requirements.txt -o requirements.txt && \
 COPY app/     ./app
 COPY scripts/ ./scripts
 
+EXPOSE 8000
 ENTRYPOINT ["/bin/bash", "scripts/start.sh"]

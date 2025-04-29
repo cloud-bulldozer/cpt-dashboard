@@ -18,7 +18,6 @@ frontend:
     tag: latest
   resources: {}
 
-
 backend:
   image:
     repository: quay.io/mleader/backend
