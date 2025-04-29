@@ -14,7 +14,7 @@ elasticsearch:
 
 frontend:
   image:
-    repository: quay.io/cloud-bulldozer/frontend
+    repository: quay.io/mleader/frontend
     tag: latest
   resources: {}
 
@@ -29,6 +29,6 @@ backend:
 podAnnotations:
   alpha.image.policy.openshift.io/resolve-names: '*'
 
-podSecurityContext: 
-  fsGroup: 1000660000
+podSecurityContext: {}
+  # fsGroup: 1000660000
 

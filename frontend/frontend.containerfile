@@ -13,9 +13,10 @@ RUN npm run build
 FROM nginxinc/nginx-unprivileged:1.27-alpine
 COPY --chown=nginx:nginx --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/nginx/html/
 COPY --chown=nginx:nginx nginx.conf /etc/nginx/nginx.conf
-RUN touch /tmp/nginx.pid
+# RUN touch /tmp/nginx.pid 
 
 USER nginx
+RUN touch /var/cache/nginx/nginx.pid
 EXPOSE 3000
 
 ENTRYPOINT ["nginx"]

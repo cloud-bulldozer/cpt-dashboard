@@ -3,7 +3,8 @@ FROM quay.io/centos/centos:stream9
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
     PYTHONPATH=/backend \
-    PATH=/usr/local/bin:$PATH
+    PATH=/usr/local/bin:$PATH 
+
 
 RUN useradd -m -d /home/appuser appuser && \
     chmod 755 /home/appuser && \
@@ -26,6 +27,7 @@ EXPOSE 8000
 RUN dnf install -y pip gcc python3-devel gcc-c++ git
 
 RUN pip install poetry && \
+    poetry config virtualenvs.in-project true && \
     poetry self add poetry-plugin-export && \
     poetry export --without-hashes -f requirements.txt -o requirements.txt && \
     pip install -U typing-extensions && \
