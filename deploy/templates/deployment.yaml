@@ -27,8 +27,6 @@ spec:
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
       volumes:
-        - name: tmp
-          emptyDir: {}
         - name: config
           secret:
             secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}      
@@ -43,9 +41,6 @@ spec:
             {{- toYaml .Values.frontend.resources | nindent 12 }}
           securityContext:
             {{- toYaml .Values.frontend.securityContext | nindent 12 }}
-          volumeMounts:
-            - name: tmp
-              mountPath: /tmp
         - name: backend
           image: {{ .Values.backend.image.repository }}:{{ .Values.backend.image.tag }}
           imagePullPolicy: "Always"
