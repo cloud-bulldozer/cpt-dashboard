@@ -12,10 +12,10 @@ RUN dnf install -y python3-pip gcc python3-devel gcc-c++ && \
     poetry self add poetry-plugin-export && \
     dnf clean all
 
-# 2) Prepare world-writable dirs (for arbitrary UID)
-RUN mkdir -p /opt/backend && \
-    mkdir -p /opt/backend/.config/pypoetry && \
-    mkdir -p /opt/backend/.cache/pypoetry && \
+# 2) Prepare writable dirs
+#    Grant group rwx so both OpenShift’s random non-root UID (in GID=0) and
+#    Podman's default user, root, can write
+RUN mkdir -p /opt/backend /opt/backend/.config/pypoetry /opt/backend/.cache/pypoetry && \
     chmod -R g+rwX /opt/backend
 
 WORKDIR /opt/backend
@@ -24,10 +24,10 @@ EXPOSE 8000
 # 3) Copy manifest files & install Python deps
 COPY pyproject.toml poetry.lock version.json ./
 RUN poetry config virtualenvs.in-project true && \
-    poetry export --without-hashes -f requirements.txt -o requirements.txt && \
-    pip3 install --no-cache-dir -r requirements.txt && \
-    chmod -R g+rwX /opt/backend/.cache/pypoetry && \
-    chmod -R g+rwX /opt/backend/.config/pypoetry
+    poetry install --no-dev --no-interaction --no-ansi && \
+    # Ensure generated cache and config files are group-writable
+    # for both OpenShift (random UID in GID=0) and Podman (root) environments
+    chmod -R g+rwX /opt/backend/.cache/pypoetry /opt/backend/.config/pypoetry
 
 # 4) Copy application code and scripts
 COPY app/     ./app
