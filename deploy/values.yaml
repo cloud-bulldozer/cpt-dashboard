@@ -30,5 +30,5 @@ podAnnotations:
   alpha.image.policy.openshift.io/resolve-names: '*'
 
 podSecurityContext: 
-  fsGroup: 1000650000
+  fsGroup: 1000660000
 
