@@ -19,7 +19,7 @@ RUN npm run build
 # ─────────────────────────────────────────────────────────────────────────────
 # Stage 2: runtime with unprivileged NGINX
 # ─────────────────────────────────────────────────────────────────────────────
-FROM nginxinc/nginx-unprivileged:1.27-alpine
+FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine
 
 # 1) Become root so we can fix ownership and create the PID file
 USER root
