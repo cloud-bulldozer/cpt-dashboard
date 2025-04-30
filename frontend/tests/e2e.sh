@@ -19,9 +19,11 @@ export POD_NAME=${POD_NAME:-FUNC${RANDOM}}
 podman pod create "${POD_NAME}"
 trap cleanup EXIT
 
+CYPRESS_POD="${POD_NAME}-e2e"
+
 podman build -t frontend -f ${FRONTEND}/frontend.containerfile ${FRONTEND}
 ${BACKEND}/tests/e2e_backend.sh
 podman run --pod=${POD_NAME} -d --name="${POD_NAME}-front" frontend
 podman build -t e2e-frontend -f ${FRONTEND}/e2e_frontend.containerfile ${FRONTEND}
-podman run --pod=${POD_NAME} --name="${POD_NAME}-e2e" e2e-frontend
-podman cp cypress-e2e:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
+podman run --pod=${POD_NAME} --name=${CYPRESS_POD} e2e-frontend
+podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
