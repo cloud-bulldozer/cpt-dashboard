@@ -14,13 +14,13 @@ elasticsearch:
 
 frontend:
   image:
-    repository: quay.io/mleader/frontend
+    repository: quay.io/cloud-bulldozer/frontend
     tag: latest
   resources: {}
 
 backend:
   image:
-    repository: quay.io/mleader/backend
+    repository: quay.io/cloud-bulldozer/backend
     tag: latest
   resources: {}
   securityContext: {}
