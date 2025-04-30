@@ -7,7 +7,7 @@ WORKDIR /usr/src/cpt-dashboard
 
 # Install dependencies first so we can leverage Docker cache
 COPY package*.json ./
-RUN npm ci
+RUN npm clean-install
 
 # Copy source and build
 COPY public/ public/
