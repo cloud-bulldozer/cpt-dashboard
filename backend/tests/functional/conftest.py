@@ -28,22 +28,23 @@ def restore_snapshot():
     while not ok:
         try:
             db = Elasticsearch("http://localhost:9200")
+            db.cluster.health(wait_for_status="yellow")
+            print(f"Opensearch claims ready after {time.time()-start:.3f} seconds")
             r = db.indices.get("*")
+            cdm = {i for i in r.keys() if i.startswith("cdmv")}
+            if cdm:
+                print(f"CDM indices appear to be available: {','.join(cdm)}")
+            else:
+                # Opensearch hasn't been loaded yet, so restore the snapshot
+                print("Restoring 'base' snapshot...")
+                r = db.snapshot.create_repository(repository="functional", body={"type": "fs", "settings": {"location": "/var/tmp/snapshot"}})
+                assert r.get("acknowledged") is True
+                r = db.snapshot.get(repository="functional", snapshot="base")
+                # We expect one snapshot, named "base"
+                assert r["snapshots"][0]["snapshot"] == "base"
+                r = db.snapshot.restore(repository="functional", snapshot="base", body={"indices": "cdmv*dev-*"}, wait_for_completion=True)
+                assert r["snapshot"]["shards"]["failed"] == 0
             ok = True
         except Exception as exc:
             print(f"Opensearch isn't ready: {str(exc)!r}")
             time.sleep(5)
-    print(f"Opensearch ready after {time.time()-start:.3f} seconds")
-    cdm = {i for i in r.keys() if i.startswith("cdmv")}
-    if cdm:
-        print(f"CDM indices appear to be available: {','.join(cdm)}")
-    else:
-        # Opensearch hasn't been loaded yet, so restore the snapshot
-        print("Restoring 'base' snapshot...")
-        r = db.snapshot.create_repository(repository="functional", body={"type": "fs", "settings": {"location": "/var/tmp/snapshot"}})
-        assert r.get("acknowledged") is True
-        r = db.snapshot.get(repository="functional", snapshot="base")
-        # We expect one snapshot, named "base"
-        assert r["snapshots"][0]["snapshot"] == "base"
-        r = db.snapshot.restore(repository="functional", snapshot="base", body={"indices": "cdmv*dev-*"}, wait_for_completion=True)
-        assert r["snapshot"]["shards"]["failed"] == 0

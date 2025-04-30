@@ -19,6 +19,7 @@ export POD_NAME=${POD_NAME:-FUNC${RANDOM}}
 podman pod create "${POD_NAME}"
 trap cleanup EXIT
 
+${BACKEND}/scripts/version.py
 podman build -f backend.containerfile --tag backend "${BACKEND}"
 podman build -f frontend.containerfile --tag frontend "${FRONTEND}"
 podman build -f tests/functional/setup/functional.containerfile --tag functional "${BACKEND}"
