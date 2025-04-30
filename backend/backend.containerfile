@@ -20,7 +20,7 @@ RUN dnf install -y python3-pip gcc python3-devel gcc-c++ && \
 RUN mkdir -p ${HOME} ${HOME}/.config/pypoetry ${HOME}/.cache/pypoetry && \
     chmod -R g+rwX ${HOME}
 
-WORKDIR /opt/backend
+WORKDIR ${HOME}
 
 # 3) Copy manifest files & install Python deps via export
 COPY pyproject.toml poetry.lock version.json ./
