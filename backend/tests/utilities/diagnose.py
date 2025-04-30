@@ -1,3 +1,13 @@
+"""Tool to analyze CDM data to help identify "broken" runs.
+
+Traverse the CDM hierarchy (run to iteration to sample to period to metric
+descriptors and data) to identify inconsistencies and incomplete data.
+
+The purpose is to help identify "anointed" sample runs to migrate into the
+captive Opensearch snapshot for functional testing; but this can be used to
+validate any CDMv7 Opensearch instance.
+"""
+
 from collections import defaultdict
 from dataclasses import dataclass, field
 import datetime
@@ -11,6 +21,7 @@ import argparse
 
 @dataclass
 class Info:
+    """Accumulate summary information about a run"""
     id: str
     good: bool = True
     errors: dict[str, int] = field(default_factory=lambda: defaultdict(int))
@@ -146,6 +157,14 @@ def hits(
 
 
 def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
+    """Traverse a CDM database and accumulate information.
+
+    We record an Info object for each run, including information about broken
+    and inconsistent documents, and report the outcome.
+
+    The analysis can take a while -- we use the Watcher class to show periodic
+    progress messages if requested.
+    """
     start = time.time()
     runs = {}
     watcher.update("finding runs")
