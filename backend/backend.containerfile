@@ -17,8 +17,8 @@ RUN dnf install -y python3-pip gcc python3-devel gcc-c++ && \
 # 2) Prepare writable dirs
 #    Grant group rwx so both OpenShift’s random non-root UID (in GID=0) and
 #    Podman's default user, root, can write
-RUN mkdir -p /opt/backend /opt/backend/.config/pypoetry /opt/backend/.cache/pypoetry && \
-    chmod -R g+rwX /opt/backend
+RUN mkdir -p ${HOME} ${HOME}/.config/pypoetry ${HOME}/.cache/pypoetry && \
+    chmod -R g+rwX ${HOME}
 
 WORKDIR /opt/backend
 
@@ -29,7 +29,7 @@ RUN poetry export --without-hashes -f requirements.txt -o requirements.txt && \
     # Ensure generated cache and config files are group-writable
     # for both OpenShift (random UID in GID=0) and Podman (root) 
     # environments
-    chmod -R g+rwX /opt/backend/.cache/pypoetry /opt/backend/.config/pypoetry
+    chmod -R g+rwX ${HOME}/.cache/pypoetry ${HOME}/.config/pypoetry
 
 COPY app/     ./app
 COPY scripts/ ./scripts
