@@ -53,7 +53,7 @@ spec:
             {{- toYaml .Values.backend.resources | nindent 12 }}
           volumeMounts:
             - name: config 
-              mountPath: /backend/ocpperf.toml
+              mountPath: /opt/backend/ocpperf.toml
               subPath: ocpperf.toml
 
 
