@@ -1,4 +1,4 @@
-FROM cypress/browsers:22.14.0
+FROM docker.io/cypress/browsers:22.14.0
 
 WORKDIR /usr/src/cpt-dashboard
 

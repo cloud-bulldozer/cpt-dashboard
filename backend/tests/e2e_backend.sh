@@ -14,7 +14,7 @@ podman build -f backend.containerfile --tag backend .
 echo "building backend functional test image"
 podman build -f tests/functional.containerfile --tag functional .
 
-export POD_NAME="e2e"
+export POD_NAME=${POD_NAME:-e2e}
 
 echo "cleaning up and recreating pod"
 podman pod rm -f ${POD_NAME}
