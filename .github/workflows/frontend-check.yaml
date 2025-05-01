@@ -9,7 +9,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout project
-        uses: actions/checkout@v4   
+        uses: actions/checkout@v4
       - name: build tests image
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
       - name: run unit tests
@@ -19,34 +19,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: checkout project
-        uses: actions/checkout@v4   
+        uses: actions/checkout@v4
       - name: build tests image
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
       - name: run component tests
-        run: podman run --rm -it e2e-frontend run cypress:cp        
-        
+        run: podman run --rm -it e2e-frontend run cypress:cp
+
   e2e-tests:
     runs-on: ubuntu-latest
     env:
       POD_NAME: e2e
     steps:
       - name: checkout
-        uses: actions/checkout@v4   
-      - name: build frontend 
-        run: podman build -t frontend -f frontend/frontend.containerfile ./frontend        
-      - name: run backend
-        run: ./backend/tests/e2e_backend.sh
-      - name: run frontend
-        run: podman run --pod=${POD_NAME} -d --name=front frontend
-      - name: build cypress end-to-end tests
-        run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
-      - name: run cypress e2e
-        run: podman run --pod=${POD_NAME} --name=cypress-e2e e2e-frontend
-      - name: copy e2e screenshots from container
-        run: podman cp cypress-e2e:/usr/src/cpt-dashboard/cypress/screenshots $(pwd)/frontend/cypress/screenshots
+        uses: actions/checkout@v4
+      - name: run frontend e2e tests
+        run: ./frontend/tests/e2e.sh
       - name: save cypress test screenshots
         uses: actions/upload-artifact@v4
         with:
           name: e2e-images
           if-no-files-found: error
-          path: ./frontend/cypress/screenshots/ocp.cy.js        
+          path: ./frontend/cypress/screenshots/ocp.cy.js

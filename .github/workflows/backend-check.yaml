@@ -62,3 +62,23 @@ jobs:
             path: ${{ env.COVERAGE }}/html
             if-no-files-found: warn
             retention-days: 30
+
+  backend-functional:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.9.20"]
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+      - name: Run functional tests in pod
+        run: |
+          cd backend
+          tests/functional/setup/test.sh

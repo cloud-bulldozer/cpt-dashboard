@@ -14,7 +14,7 @@ podman build -f backend.containerfile --tag backend .
 echo "building backend functional test image"
 podman build -f tests/functional.containerfile --tag functional .
 
-export POD_NAME="e2e"
+export POD_NAME=${POD_NAME:-e2e}
 
 echo "cleaning up and recreating pod"
 podman pod rm -f ${POD_NAME}
@@ -26,4 +26,4 @@ podman run --rm --pod=${POD_NAME} --entrypoint python3 functional tests/db_seed.
 echo "deploying backend"
 podman run -d --pod=${POD_NAME} \
   -v "${BACKEND}/tests/ocpperf_test.toml:/backend/ocpperf.toml:z" \
-  --name=back backend
+  --name="${POD_NAME}-back" backend
