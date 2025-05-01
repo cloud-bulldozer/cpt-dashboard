@@ -17,9 +17,6 @@ frontend:
     repository: quay.io/cloud-bulldozer/frontend
     tag: latest
   resources: {}
-  securityContext:
-    privileged: true
-    allowPrivilegeEscalation: true
 
 backend:
   image:
@@ -32,4 +29,3 @@ podAnnotations:
   alpha.image.policy.openshift.io/resolve-names: '*'
 
 podSecurityContext: {}
-  # fsGroup: 2000

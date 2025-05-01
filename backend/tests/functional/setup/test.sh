@@ -27,6 +27,6 @@ podman build -f tests/functional/setup/functional.containerfile --tag functional
 POD="--pod ${POD_NAME}"
 
 "${SETUP}"/opensearch.sh
-podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" localhost/backend
+podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/opt/backend/ocpperf.toml:Z" localhost/backend
 podman run -d ${POD} --name="${POD_NAME}-front" localhost/frontend
 podman run ${POD} --name="${POD_NAME}-func" localhost/functional

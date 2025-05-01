@@ -26,6 +26,10 @@ spec:
       {{- end }}
       securityContext:
         {{- toYaml .Values.podSecurityContext | nindent 8 }}
+      volumes:
+        - name: config
+          secret:
+            secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}      
       containers:
         - name: frontend
           image: {{ .Values.frontend.image.repository }}:{{ .Values.frontend.image.tag }}
@@ -51,8 +55,5 @@ spec:
             - name: config 
               mountPath: /backend/ocpperf.toml
               subPath: ocpperf.toml
-      volumes:
-        - name: config
-          secret:
-            secretName: {{ .Values.elasticsearch.existingSecretName | default (printf "%s" (include "dashboard.fullname" .)) }}
+
 

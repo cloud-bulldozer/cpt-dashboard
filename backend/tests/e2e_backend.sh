@@ -25,5 +25,5 @@ echo "seeding db"
 podman run --rm --pod=${POD_NAME} --entrypoint python3 functional tests/db_seed.py
 echo "deploying backend"
 podman run -d --pod=${POD_NAME} \
-  -v "${BACKEND}/tests/ocpperf_test.toml:/backend/ocpperf.toml:z" \
+  -v "${BACKEND}/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:z" \
   --name="${POD_NAME}-back" backend
