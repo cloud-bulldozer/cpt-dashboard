@@ -32,7 +32,7 @@ RUN poetry install --no-root --no-interaction --no-ansi && \
 COPY app/     ./app
 COPY scripts/ ./scripts
 
-# install project as a package
+# separate installation for project source code as a package
 RUN poetry install --no-interaction --no-ansi
 
 EXPOSE 8000
