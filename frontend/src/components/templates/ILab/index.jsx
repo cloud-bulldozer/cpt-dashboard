@@ -18,14 +18,14 @@ import {
   Tr,
 } from "@patternfly/react-table";
 import {
-  fetchILabJobs,
+  fetchIlabJobs,
   fetchMetricsInfo,
   fetchPeriods,
   setIlabDateFilter,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import ILabGraph from "./ILabGraph";
@@ -40,7 +40,26 @@ const ILab = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
 
-  const { start_date, end_date } = useSelector((state) => state.ilab);
+  const {
+    results,
+    tableColumns,
+    activeSortDir,
+    activeSortIndex,
+    page,
+    perPage,
+    summary,
+    tableFilters,
+    filterOptions,
+    categoryFilterValue,
+    filterData,
+    appliedFilters,
+    start_date,
+    end_date,
+    graphData,
+    selectedFilters,
+    totalItems,
+    tableData,
+  } = useSelector((state) => state.ilab);
   const [expandedResult, setExpandedResult] = useState([]);
   const [expanded, setAccExpanded] = useState(["bordered-toggle1"]);
 
@@ -69,10 +88,6 @@ const ILab = () => {
     }
   };
 
-  const { totalItems, page, perPage, tableData } = useSelector(
-    (state) => state.ilab
-  );
-
   useEffect(() => {
     if (searchParams.size > 0) {
       // date filter is set apart
@@ -91,7 +106,7 @@ const ILab = () => {
   }, []);
 
   useEffect(() => {
-    dispatch(fetchILabJobs());
+    dispatch(fetchIlabJobs());
   }, [dispatch]);
 
   const columnNames = {
@@ -105,14 +120,31 @@ const ILab = () => {
     status: "Status",
   };
 
+  //Filter Helper
+  const modifiedTableFilters = useMemo(
+    () =>
+      tableFilters.filter(
+        (item) => item.value !== "endDate" && item.value !== "startDate"
+      ),
+    [tableFilters]
+  );
+  const updateSelectedFilter = (category, value, isFromMetrics = false) => {};
+
   return (
     <>
       <TableFilter
+        tableFilters={modifiedTableFilters}
+        filterOptions={filterOptions}
+        categoryFilterValue={categoryFilterValue}
+        appliedFilters={appliedFilters}
+        filterData={filterData}
         start_date={start_date}
         end_date={end_date}
+        selectedFilters={selectedFilters}
+        updateSelectedFilter={updateSelectedFilter}
+        navigation={navigate}
         type={"ilab"}
         showColumnMenu={false}
-        navigation={navigate}
       />
       <Table aria-label="Misc table" isStriped>
         <Thead>
@@ -125,7 +157,7 @@ const ILab = () => {
           </Tr>
         </Thead>
         <Tbody>
-          {tableData.map((item, rowIndex) => (
+          {results.map((item, rowIndex) => (
             <>
               <Tr key={uid()}>
                 <Td

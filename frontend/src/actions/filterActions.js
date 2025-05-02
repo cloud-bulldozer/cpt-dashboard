@@ -1,4 +1,4 @@
-import { fetchILabJobs, setIlabDateFilter } from "./ilabActions";
+import { fetchIlabJobs, setIlabDateFilter } from "./ilabActions";
 import {
   applyCPTDateFilter,
   removeCPTAppliedFilters,

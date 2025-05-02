@@ -46,6 +46,7 @@ const sideMenuOptions = [
     id: CONSTANTS.ILAB_NAV,
     key: "ilab",
     displayName: "ILAB",
+    type: "ilab",
   },
 ];
 

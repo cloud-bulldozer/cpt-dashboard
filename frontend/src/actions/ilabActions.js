@@ -5,8 +5,12 @@ import API from "@/utils/axiosInstance";
 import { appendQueryString } from "@/utils/helper";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 
-export const fetchILabJobs =
+export const fetchIlabJobs =
   (shouldStartFresh = false) =>
   async (dispatch, getState) => {
     try {
@@ -54,15 +58,15 @@ export const fetchILabJobs =
     }
     dispatch({ type: TYPES.COMPLETED });
   };
-export const sliceIlabTableRows =
-  (startIdx, endIdx) => (dispatch, getState) => {
-    const results = [...getState().ilab.results];
 
-    dispatch({
-      type: TYPES.SET_ILAB_INIT_JOBS,
-      payload: results.slice(startIdx, endIdx),
-    });
-  };
+export const applyFilters = () => (dispatch) => {
+  dispatch(setIlabOffset(INITAL_OFFSET));
+  dispatch(setIlabPage(START_PAGE));
+  dispatch(fetchIlabJobs());
+  dispatch(buildFilterData());
+  dispatch(tableReCalcValues());
+};
+
 export const setIlabDateFilter =
   (start_date, end_date, navigate) => (dispatch, getState) => {
     const appliedFilters = getState().ilab.appliedFilters;
@@ -77,6 +81,47 @@ export const setIlabDateFilter =
 
     appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
   };
+
+export const removeIlabAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch, getState) => {
+    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
+    dispatch(applyFilters());
+  };
+
+export const applyIlabDateFilter =
+  (start_date, end_date, navigate) => (dispatch) => {
+    dispatch(setIlabOffset(INITAL_OFFSET));
+    dispatch(setIlabPage(START_PAGE));
+    dispatch(setIlabDateFilter(start_date, end_date, navigate));
+    dispatch(fetchIlabJobs());
+  };
+
+export const setIlabCatFilters = (category) => (dispatch, getState) => {};
+
+export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {};
+
+export const setIlabOtherSummaryFilter = () => (dispatch, getState) => {};
+
+export const setIlabPage = (pageNo) => ({
+  type: TYPES.SET_ILAB_PAGE,
+  payload: pageNo,
+});
+
+export const setIlabOffset = (offset) => ({
+  type: TYPES.SET_ILAB_OFFSET,
+  payload: offset,
+});
+
+export const setIlabPageOptions = (page, perPage) => ({
+  type: TYPES.SET_ILAB_PAGE_OPTIONS,
+  payload: { page, perPage },
+});
+
+export const tableReCalcValues = () => (dispatch, getState) => {
+  const { page, perPage } = getState().ilab;
+
+  dispatch(setIlabPageOptions(page, perPage));
+};
 
 export const fetchMetricsInfo = (uid) => async (dispatch) => {
   try {
@@ -169,16 +214,6 @@ export const fetchGraphData =
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
 
-export const setIlabPage = (pageNo) => ({
-  type: TYPES.SET_ILAB_PAGE,
-  payload: pageNo,
-});
-
-export const setIlabPageOptions = (page, perPage) => ({
-  type: TYPES.SET_ILAB_PAGE_OPTIONS,
-  payload: { page, perPage },
-});
-
 export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   const results = cloneDeep(getState().ilab.results);
   const { totalItems, perPage } = getState().ilab;
@@ -191,7 +226,7 @@ export const checkIlabJobs = (newPage) => (dispatch, getState) => {
       typeof results[endIdx] === "undefined") &&
     results.length < totalItems
   ) {
-    dispatch(fetchILabJobs());
+    dispatch(fetchIlabJobs());
   }
 };
 
@@ -202,12 +237,4 @@ export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
     type: TYPES.SET_ILAB_SELECTED_METRICS,
     payload: metrics_selected,
   });
-};
-
-export const tableReCalcValues = () => (dispatch, getState) => {
-  const { page, perPage } = getState().ilab;
-
-  const startIdx = page !== 1 ? (page - 1) * perPage : 0;
-  const endIdx = page !== 1 ? page * perPage - 1 : perPage;
-  dispatch(sliceIlabTableRows(startIdx, endIdx));
 };

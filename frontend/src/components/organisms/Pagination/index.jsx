@@ -42,12 +42,6 @@ const RenderPagination = (props) => {
     },
     [dispatch, props.type]
   );
-
-  const checkAndFetch = (_evt, newPage) => {
-    if (props.type === "ilab") {
-      dispatch(fetchNextJobs(newPage));
-    }
-  };
   return (
     <Pagination
       itemCount={props?.items}
@@ -55,7 +49,6 @@ const RenderPagination = (props) => {
       perPage={props.perPage}
       page={props.page}
       variant={PaginationVariant.bottom}
-      onNextClick={checkAndFetch}
       perPageOptions={perPageOptions}
       onSetPage={onSetPage}
       onPerPageSelect={onPerPageSelect}

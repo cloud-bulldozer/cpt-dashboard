@@ -12,15 +12,29 @@ import {
   sliceCPTTableRows,
 } from "./homeActions";
 import {
+  fetchQuayJobsData,
+  setQuayOffset,
+  setQuayPage,
+  setQuayPageOptions,
+} from "./quayActions";
+import {
+  fetchTelcoJobsData,
+  setTelcoOffset,
+  setTelcoPage,
+  setTelcoPageOptions,
+} from "./telcoActions";
+import {
+  fetchOLSJobsData,
+  setOLSOffset,
+  setOLSPage,
+  setOLSPageOptions,
+} from "./olsActions";
+import {
+  fetchIlabJobs,
+  setIlabOffset,
   setIlabPage,
   setIlabPageOptions,
-  sliceIlabTableRows,
 } from "./ilabActions";
-import { setOCPPage, setOCPPageOptions, sliceOCPTableRows } from "./ocpActions";
-import { setQuayPage, setQuayPageOptions } from "./quayActions";
-import { setTelcoPage, setTelcoPageOptions } from "./telcoActions";
-
-import { checkIlabJobs } from "./ilabActions";
 
 export const setPage = (newPage, currType) => (dispatch) => {
   const actions = {
@@ -56,7 +70,7 @@ const fetchActions = {
   telco: fetchTelcoJobsData,
   cpt: fetchOCPJobsData,
   ols: fetchOLSJobsData,
-  ilab: fetchIlabPageOptions,
+  ilab: fetchIlabJobs,
 };
 const offsetActions = {
   ocp: setOCPOffset,
@@ -87,8 +101,4 @@ export const checkTableData = (newPage, currType) => (dispatch, getState) => {
     dispatch(offsetActions[currType](offset));
     dispatch(fetchActions[currType]());
   }
-};
-
-export const fetchNextJobs = (newPage) => (dispatch) => {
-  dispatch(checkIlabJobs(newPage));
 };
