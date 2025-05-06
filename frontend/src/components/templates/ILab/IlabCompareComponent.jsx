@@ -22,7 +22,7 @@ import { useState } from "react";
 
 const IlabCompareComponent = () => {
   // const { data } = props;
-  const { page, perPage, totalItems, tableData } = useSelector(
+  const { page, perPage, totalItems, results } = useSelector(
     (state) => state.ilab
   );
   const dispatch = useDispatch();
@@ -59,7 +59,7 @@ const IlabCompareComponent = () => {
         <Menu onSelect={onSelect} selected={selectedItems}>
           <MenuContent>
             <MenuList>
-              {tableData.map((item) => {
+              {results.map((item) => {
                 return (
                   <MenuItem
                     key={uid()}

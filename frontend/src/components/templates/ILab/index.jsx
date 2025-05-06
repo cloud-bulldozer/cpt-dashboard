@@ -34,10 +34,6 @@ const ILab = () => {
 
   const {
     results,
-    tableColumns,
-    activeSortDir,
-    activeSortIndex,
-    summary,
     tableFilters,
     filterOptions,
     categoryFilterValue,
@@ -45,10 +41,8 @@ const ILab = () => {
     appliedFilters,
     start_date,
     end_date,
-    graphData,
     selectedFilters,
     totalItems,
-    tableData,
     comparisonSwitch,
     page,
     perPage,
@@ -148,7 +142,7 @@ const ILab = () => {
               </Tr>
             </Thead>
             <Tbody>
-              {tableData.map((item, rowIndex) => (
+              {results.map((item, rowIndex) => (
                 <>
                   <Tr key={uid()}>
                     <Td

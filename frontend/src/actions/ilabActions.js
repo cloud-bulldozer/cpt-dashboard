@@ -317,8 +317,8 @@ export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
 };
 
 export const getMetaRowdId = () => (dispatch, getState) => {
-  const tableData = getState().ilab.tableData;
-  const metaId = tableData.map((item) => `metadata-toggle-${item.id}`);
+  const results = getState().ilab.results;
+  const metaId = results.map((item) => `metadata-toggle-${item.id}`);
   dispatch(setMetaRowExpanded(metaId));
 };
 export const toggleComparisonSwitch = () => ({

@@ -35,7 +35,6 @@ const initialState = {
   periods: [],
   filterOptions: [],
   metrics_selected: {},
-  tableData: [],
   comparisonSwitch: false,
   metaRowExpanded: [],
 };
@@ -76,7 +75,7 @@ const ILabReducer = (state = initialState, action = {}) => {
     case TYPES.SET_ILAB_GRAPH_DATA:
       return { ...state, graphData: payload };
     case TYPES.SET_ILAB_INIT_JOBS:
-      return { ...state, tableData: payload };
+      return { ...state, results: payload };
     case TYPES.SET_ILAB_MULTIGRAPH_DATA:
       return { ...state, multiGraphData: payload };
     case TYPES.TOGGLE_COMPARISON_SWITCH:
