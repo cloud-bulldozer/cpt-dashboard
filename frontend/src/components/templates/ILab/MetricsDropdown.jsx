@@ -17,7 +17,6 @@ const MetricsSelect = (props) => {
   /* Metrics select */
   const [isOpen, setIsOpen] = useState(false);
   const dispatch = useDispatch();
-  // const [selected, setSelected] = useState("Select a value");
 
   const toggle1 = (toggleRef, selected) => (
     <MenuToggle
@@ -36,9 +35,7 @@ const MetricsSelect = (props) => {
     setIsOpen(!isOpen);
   };
   const onSelect = (_event, value) => {
-    console.log("selected", value);
     const run = value.split("*");
-    //setSelected(run[1].trim());
     dispatch(setSelectedMetrics(run[0].trim(), run[1].trim()));
     setIsOpen(false);
     dispatch(fetchGraphData(run[0].trim(), run[1].trim(), run[2].trim()));
