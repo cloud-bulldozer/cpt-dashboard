@@ -7,7 +7,7 @@ import {
 
 const initialState = {
   isLoading: false,
-  isGraphLoading: true,
+  isGraphLoading: false,
 };
 
 const LoadingReducer = (state = initialState, action = {}) => {

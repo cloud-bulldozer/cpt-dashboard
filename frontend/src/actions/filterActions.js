@@ -1,3 +1,4 @@
+import { fetchIlabJobs, setIlabDateFilter } from "./ilabActions";
 import {
   applyCPTDateFilter,
   removeCPTAppliedFilters,
@@ -33,6 +34,13 @@ import {
   setTelcoCatFilters,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
+import {
+  applyIlabDateFilter,
+  removeIlabAppliedFilters,
+  setIlabAppliedFilters,
+  setIlabCatFilters,
+  setIlabOtherSummaryFilter,
+} from "./ilabActions";
 
 import store from "@/store/store";
 
@@ -45,6 +53,7 @@ export const setCatFilters = (category, currType) => {
     quay: setQuayCatFilters,
     telco: setTelcoCatFilters,
     ols: setOLSCatFilters,
+    ilab: setIlabCatFilters,
   };
   dispatch(actions[currType](category));
 };
@@ -56,6 +65,7 @@ export const setAppliedFilters = (navigation, currType) => {
     quay: setQuayAppliedFilters,
     telco: setTelcoAppliedFilters,
     ols: setOLSAppliedFilters,
+    ilab: setIlabAppliedFilters,
   };
   dispatch(actions[currType](navigation));
 };
@@ -67,6 +77,7 @@ export const removeAppliedFilters = (key, value, navigation, currType) => {
     quay: removeQuayAppliedFilters,
     telco: removeTelcoAppliedFilters,
     ols: removeOLSAppliedFilters,
+    ilab: removeIlabAppliedFilters,
   };
   dispatch(actions[currType](key, value, navigation));
 };
@@ -78,6 +89,7 @@ export const setDateFilter = (date, key, navigation, currType) => {
     quay: applyQuayDateFilter,
     telco: applyTelcoDateFilter,
     ols: applyOLSDateFilter,
+    ilab: applyIlabDateFilter,
   };
   dispatch(actions[currType](date, key, navigation));
 };
@@ -89,6 +101,7 @@ export const setOtherSummaryFilter = (currType) => {
     quay: setQuayOtherSummaryFilter,
     telco: setTelcoOtherSummaryFilter,
     ols: setOLSOtherSummaryFilter,
+    ilab: setIlabOtherSummaryFilter,
   };
   dispatch(actions[currType]());
 };

@@ -42,6 +42,12 @@ const sideMenuOptions = [
     displayName: "Quay",
     type: "quay",
   },
+  {
+    id: CONSTANTS.ILAB_NAV,
+    key: "ilab",
+    displayName: "ILAB",
+    type: "ilab",
+  },
 ];
 
 const MenuOptions = () => {

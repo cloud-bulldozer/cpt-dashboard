@@ -5,6 +5,7 @@ import * as APP_ROUTES from "./utils/routeConstants";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./components/templates/Home";
+import ILab from "./components/templates/ILab";
 import MainLayout from "./containers/MainLayout";
 import OCP from "./components/templates/OCP";
 import OLS from "./components/templates/OLS";
@@ -28,6 +29,7 @@ function App() {
             <Route path={APP_ROUTES.TELCO} element={<Telco />} />
             <Route path={APP_ROUTES.OLS} element={<OLS />} />
             <Route path={APP_ROUTES.QUAY} element={<Quay />} />
+            <Route path={APP_ROUTES.ILAB} element={<ILab />} />
           </Route>
         </Routes>
       </BrowserRouter>
