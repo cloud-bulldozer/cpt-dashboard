@@ -29,6 +29,12 @@ import {
   setOLSPage,
   setOLSPageOptions,
 } from "./olsActions";
+import {
+  fetchIlabJobs,
+  setIlabOffset,
+  setIlabPage,
+  setIlabPageOptions,
+} from "./ilabActions";
 
 export const setPage = (newPage, currType) => (dispatch) => {
   const actions = {
@@ -37,6 +43,7 @@ export const setPage = (newPage, currType) => (dispatch) => {
     quay: setQuayPage,
     telco: setTelcoPage,
     ols: setOLSPage,
+    ilab: setIlabPage,
   };
   dispatch(actions[currType](newPage));
 };
@@ -48,6 +55,7 @@ export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
     quay: setQuayPageOptions,
     telco: setTelcoPageOptions,
     ols: setOLSPageOptions,
+    ilab: setIlabPageOptions,
   };
   dispatch(actions[currType](newPage, newPerPage));
 };
@@ -62,6 +70,7 @@ const fetchActions = {
   telco: fetchTelcoJobsData,
   cpt: fetchOCPJobsData,
   ols: fetchOLSJobsData,
+  ilab: fetchIlabJobs,
 };
 const offsetActions = {
   ocp: setOCPOffset,
@@ -69,6 +78,7 @@ const offsetActions = {
   telco: setTelcoOffset,
   cpt: setCPTOffset,
   ols: setOLSOffset,
+  ilab: setIlabOffset,
 };
 
 export const checkTableData = (newPage, currType) => (dispatch, getState) => {
