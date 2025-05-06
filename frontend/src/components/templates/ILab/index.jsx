@@ -131,7 +131,7 @@ const ILab = () => {
   const updateSelectedFilter = (category, value, isFromMetrics = false) => {};
 
   return (
-    <>
+    <div className="ilab-table-container">
       <TableFilter
         tableFilters={modifiedTableFilters}
         filterOptions={filterOptions}
@@ -266,7 +266,7 @@ const ILab = () => {
         perPage={perPage}
         type={"ilab"}
       />
-    </>
+    </div>
   );
 };
 
