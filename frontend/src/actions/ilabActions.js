@@ -271,12 +271,6 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
             periods: [p.id],
           });
         }
-        // graphs.push({
-        //   run: uid,
-        //   metric,
-        //   aggregate: true,
-        //   periods: [p.id],
-        // });
       });
     });
     const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
@@ -313,16 +307,6 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
   }
   dispatch({ type: TYPES.COMPLETED });
 };
-
-export const setIlabPage = (pageNo) => ({
-  type: TYPES.SET_ILAB_PAGE,
-  payload: pageNo,
-});
-
-export const setIlabPageOptions = (page, perPage) => ({
-  type: TYPES.SET_ILAB_PAGE_OPTIONS,
-  payload: { page, perPage },
-});
 
 export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   const results = cloneDeep(getState().ilab.results);
