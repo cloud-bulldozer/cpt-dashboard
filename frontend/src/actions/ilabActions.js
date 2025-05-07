@@ -194,7 +194,6 @@ export const fetchGraphData =
         }
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
-        run: uid,
         name: `graph ${uid}`,
         graphs,
       });

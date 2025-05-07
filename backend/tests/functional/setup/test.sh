@@ -22,7 +22,7 @@ export POD_NAME=${POD_NAME:-FUNC${RANDOM}}
 # the pod when this script exits.
 if [ ${DEVEL} ]
 then
-    PUBLISH="--publish 127.0.0.1:8000:8000"
+    PUBLISH="--publish 127.0.0.1:8000:8000 --publish 127.0.0.1:9200:9200"
 else
     PUBLISH=""
     trap cleanup EXIT
