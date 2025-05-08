@@ -12,7 +12,7 @@ services:
       - "9200"
     volumes:
       - ./backend/tests/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
-      - ./backend/tests/fixtures/search_db_snapshots:/var/tmp/snapshot:z
+      - ./backend/tests/fixtures/search_db_snapshots/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
     environment:
       - discovery.type=single-node
       - DISABLE_INSTALL_DEMO_CONFIG=true
@@ -22,7 +22,7 @@ services:
       - -c
       - |
         # unpack the tar before starting Opensearch
-        cd /var/tmp/snapshot
+        cd /var/tmp
         tar xfz snapshot.tar.gz
         # now exec the upstream entrypoint so ES boots normally
         exec /usr/share/opensearch/opensearch-docker-entrypoint.sh      
