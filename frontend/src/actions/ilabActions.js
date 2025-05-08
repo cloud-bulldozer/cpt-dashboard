@@ -167,7 +167,8 @@ export const fetchPeriods = (uid) => async (dispatch) => {
 };
 
 export const fetchGraphData =
-  (uid, metric, primary_metric) => async (dispatch, getState) => {
+  (uid, metric = null) =>
+  async (dispatch, getState) => {
     try {
       const periods = getState().ilab.periods.find((i) => i.uid == uid);
       const graphData = cloneDeep(getState().ilab.graphData);
@@ -180,19 +181,32 @@ export const fetchGraphData =
       dispatch({ type: TYPES.GRAPH_LOADING });
       let graphs = [];
       periods?.periods?.forEach((p) => {
-        graphs.push({ metric: p.primary_metric, periods: [p.id] });
-        graphs.push({
-          metric,
-          aggregate: true,
-          periods: [p.id],
-        });
+        if (p.is_primary) {
+          graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
+        }
+        if (metric) {
+          graphs.push({
+            run: uid,
+            metric,
+            aggregate: true,
+            periods: [p.id],
+          });
+        }
       });
       const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
-        run: uid,
-        name: primary_metric,
+        name: `graph ${uid}`,
         graphs,
       });
       if (response.status === 200) {
+        response.data.layout["showlegend"] = true;
+        response.data.layout["responsive"] = "true";
+        response.data.layout["autosize"] = "true";
+        response.data.layout["legend"] = {
+          orientation: "h",
+          xanchor: "left",
+          yanchor: "top",
+          y: -0.1,
+        };
         copyData.push({
           uid,
           data: response.data.data,
@@ -213,6 +227,85 @@ export const fetchGraphData =
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
+
+export const handleMultiGraph = (uids) => async (dispatch, getState) => {
+  try {
+    const periods = getState().ilab.periods;
+    const pUids = periods.map((i) => i.uid);
+
+    const missingPeriods = uids.filter(function (x) {
+      return pUids.indexOf(x) < 0;
+    });
+
+    await Promise.all(
+      missingPeriods.map(async (uid) => {
+        await dispatch(fetchPeriods(uid)); // Dispatch each item
+      })
+    );
+
+    dispatch(fetchMultiGraphData(uids));
+  } catch (error) {
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
+    dispatch(showFailureToast());
+  }
+};
+export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
+  try {
+    dispatch({ type: TYPES.LOADING });
+    const periods = getState().ilab.periods;
+    const filterPeriods = periods.filter((item) => uids.includes(item.uid));
+
+    let graphs = [];
+    uids.forEach(async (uid) => {
+      const periods = filterPeriods.find((i) => i.uid == uid);
+      periods?.periods?.forEach((p) => {
+        if (p.is_primary) {
+          graphs.push({
+            run: uid,
+            metric: p.primary_metric,
+            periods: [p.id],
+          });
+        }
+      });
+    });
+    const response = await API.post(`/api/v1/ilab/runs/multigraph`, {
+      name: "comparison",
+      relative: true,
+      graphs,
+    });
+    if (response.status === 200) {
+      response.data.layout["showlegend"] = true;
+      response.data.layout["responsive"] = "true";
+      response.data.layout["autosize"] = "true";
+      response.data.layout["legend"] = {
+        orientation: "h",
+        xanchor: "left",
+        yanchor: "top",
+      };
+      const graphData = [];
+      graphData.push({
+        data: response.data.data,
+        layout: response.data.layout,
+      });
+      dispatch({
+        type: TYPES.SET_ILAB_MULTIGRAPH_DATA,
+        payload: graphData,
+      });
+    }
+  } catch (error) {
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
+    dispatch(showFailureToast());
+  }
+  dispatch({ type: TYPES.COMPLETED });
+};
 
 export const checkIlabJobs = (newPage) => (dispatch, getState) => {
   const results = cloneDeep(getState().ilab.results);
@@ -238,3 +331,17 @@ export const setSelectedMetrics = (id, metrics) => (dispatch, getState) => {
     payload: metrics_selected,
   });
 };
+
+export const getMetaRowdId = () => (dispatch, getState) => {
+  const results = getState().ilab.results;
+  const metaId = results.map((item) => `metadata-toggle-${item.id}`);
+  dispatch(setMetaRowExpanded(metaId));
+};
+export const toggleComparisonSwitch = () => ({
+  type: TYPES.TOGGLE_COMPARISON_SWITCH,
+});
+
+export const setMetaRowExpanded = (expandedItems) => ({
+  type: TYPES.SET_EXPANDED_METAROW,
+  payload: expandedItems,
+});

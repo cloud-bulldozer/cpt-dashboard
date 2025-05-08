@@ -10,8 +10,9 @@ inside the Opensearch container.
 """
 import os
 import time
-import pytest
+
 from elasticsearch import Elasticsearch
+import pytest
 
 
 @pytest.fixture(scope="session")
@@ -82,6 +83,13 @@ def restore_snapshot():
                 raise
         print(f"Restored {len(cdm)} indices: {','.join(cdm)}")
         time.sleep(2)  # Paranoia: allow stabilization
+
+        # CDM operations assume large "max result window" (maximum number of
+        # returns), although this is mostly important for metric data. Oddly,
+        # the snapshot save/restore seems to end up dropping that setting on
+        # the one specific index where it matters. So just make sure they're
+        # all OK.
+        db.indices.put_settings(body={"index.max_result_window": 262144})
         hits = db.search(index="cdmv7dev-run")
         ids = [h["_source"]["run"]["id"] for h in hits["hits"]["hits"]]
         print(f"Found run IDs {ids} ({len(ids)})")
