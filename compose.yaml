@@ -3,9 +3,9 @@ networks:
     driver: bridge
 
 services:
-  opensearch-ocp:
+  searchdb-ocp:
     image: docker.io/opensearchproject/opensearch:latest
-    container_name: search-ocp
+    container_name: searchdb-ocp
     networks:
        - e2e-pod
     ports:
@@ -32,9 +32,9 @@ services:
       context: ./backend
       dockerfile: backend.containerfile
     image: backend:latest
-    container_name: e2e-back
+    container_name: backend
     depends_on:
-      - opensearch-ocp
+      - searchdb-ocp
     networks:
       - e2e-pod
     ports:
@@ -49,7 +49,7 @@ services:
       context: ./backend
       dockerfile: tests/functional.containerfile
     image: functional:latest
-    container_name: cpt-db-seed
+    container_name: db-seed
     depends_on:
       - backend
     networks:
@@ -64,8 +64,25 @@ services:
       args:
         VITE_PERF_DATA_API_BASE_URL: http://backend:8000
     image: frontend:latest
-    container_name: front
+    container_name: frontend
     networks:
       - e2e-pod
     ports:
       - "127.0.0.1:3000:3000"
+
+  e2e-frontend:
+    build:
+      context: ./frontend
+      dockerfile: e2e_frontend.containerfile
+    image: e2e_frontend:latest
+    container_name: e2e-frontend
+    depends_on:
+      frontend:
+        condition: service_started
+      db-seed:
+        condition: service_completed_successfully
+    networks:
+      - e2e-pod
+    environment:
+      - GUI_BASE_URL=http://frontend:3000
+    command: ["run", "cypress:run:e2e"]
