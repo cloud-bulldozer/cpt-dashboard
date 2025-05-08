@@ -1,9 +1,17 @@
+// export const getUrl = () => {
+//   const { hostname, protocol } = window.location;
+//   return hostname === "localhost"
+//     ? "http://0.0.0.0:8000"
+//     : `${protocol}//${hostname}`;
+// };
+
 export const getUrl = () => {
-  const { hostname, protocol } = window.location;
-  return hostname === "localhost"
-    ? "http://0.0.0.0:8000"
-    : `${protocol}//${hostname}`;
-};
+  return import.meta.env.VITE_PERF_DATA_API_BASE_URL
+    || (window.location.hostname === "localhost"
+        ? "http://0.0.0.0:8000"
+        : `${window.location.protocol}//${window.location.hostname}`)
+}
+
 
 export const BASE_URL = getUrl();
 
