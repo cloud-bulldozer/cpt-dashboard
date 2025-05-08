@@ -37,7 +37,7 @@ jobs:
       - name: Generate version file
         run: ./backend/scripts/version.py        
       - name: run frontend e2e tests
-        run: ./frontend/tests/e2e-2.sh
+        run: ./frontend/tests/e2e.sh
       - name: save cypress test screenshots
         uses: actions/upload-artifact@v4
         with:
