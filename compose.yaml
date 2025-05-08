@@ -61,11 +61,11 @@ services:
     build: 
       context: ./frontend
       dockerfile: frontend.containerfile
+      args:
+        VITE_PERF_DATA_API_BASE_URL: http://backend:8000
     image: frontend:latest
     container_name: front
     networks:
       - e2e-pod
     ports:
       - "127.0.0.1:3000:3000"
-    environment:
-      - VITE_PERF_DATA_API_BASE_URL="http://backend:8000"
