@@ -42,7 +42,7 @@ services:
     volumes:
       - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
     environment:
-      - CORS_ALLOWED_ORIGINS="http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000"
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
 
   db-seed:
     build:
