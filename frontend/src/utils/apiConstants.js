@@ -1,15 +1,12 @@
-// export const getUrl = () => {
-//   const { hostname, protocol } = window.location;
-//   return hostname === "localhost"
-//     ? "http://0.0.0.0:8000"
-//     : `${protocol}//${hostname}`;
-// };
-
 export const getUrl = () => {
+  const { hostname, origin } = window.location;
+  // 1) build time override for staging or production environment
   return import.meta.env.VITE_PERF_DATA_API_BASE_URL
-    || (window.location.hostname === "localhost"
-        ? "http://0.0.0.0:8000"
-        : `${window.location.protocol}//${window.location.hostname}`)
+    // 2) local dev
+    || (hostname === "localhost"
+        ? "http://localhost:8000"
+        // 3) fallback 
+        : origin)
 }
 
 
