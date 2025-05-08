@@ -1,5 +1,5 @@
 [ocp.elasticsearch]
 indice = "perf_scale_ci"
-url = "http://search-ocp-pod:9200"
+url = "http://opensearch-ocp:9200"
 username = "admin"
 password = "admin"

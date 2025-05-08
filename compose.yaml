@@ -1,0 +1,83 @@
+networks:
+  e2e-pod:
+    driver: bridge
+
+services:
+  opensearch-ocp:
+    image: docker.io/opensearchproject/opensearch:latest
+    container_name: search-ocp
+    networks:
+       - e2e-pod
+    ports:
+      - "9200"
+    volumes:
+      - ./backend/tests/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
+      - ./backend/tests/fixtures/search_db_snapshots:/var/tmp/snapshot:z
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # unpack the tar before starting Opensearch
+        cd /var/tmp/snapshot
+        tar xfz snapshot.tar.gz
+        # now exec the upstream entrypoint so ES boots normally
+        exec /usr/share/opensearch/opensearch-docker-entrypoint.sh      
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: backend.containerfile
+    image: backend:latest
+    container_name: e2e-back
+    depends_on:
+      - opensearch-ocp
+    networks:
+      - e2e-pod
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
+    # environment:
+      # - POD_NAME=e2e
+      # - OPENSEARCH_URL=http://opensearch-ocp:9200
+
+  db-seed:
+    build:
+      context: ./backend
+      dockerfile: tests/functional.containerfile
+    image: functional:latest
+    container_name: cpt-db-seed
+    depends_on:
+      - backend
+    networks:
+      - e2e-pod
+    entrypoint: ["python3", "-u", "tests/db_seed.py"]
+    # command: ["tests/db_seed.py"]
+    restart: "no"
+
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: frontend.containerfile
+    image: frontend:latest
+    container_name: front
+    networks:
+      - e2e-pod
+    ports:
+      - "127.0.0.1:3000:3000"
+
+  # e2e-frontend:
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: frontend/e2e_frontend.containerfile
+  #   image: e2e-frontend
+  #   container_name: cypress-pod
+  #   networks:
+  #     - e2e-pod
+  #   depends_on:
+  #     - frontend
+  #     - db-seed
