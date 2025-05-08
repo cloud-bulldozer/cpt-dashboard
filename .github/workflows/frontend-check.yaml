@@ -31,9 +31,9 @@ jobs:
       POD_NAME: e2e
     steps:
       - name: checkout
-        uses: actions/checkout@
+        uses: actions/checkout@v4
       - name: enable podman socket to facilitate podman compose
-        run: systemctl --user enable --now podman.socket 
+        run: systemctl --user enable --now podman.socket         
       - name: run frontend e2e tests
         run: ./frontend/tests/e2e-2.sh
       - name: save cypress test screenshots
