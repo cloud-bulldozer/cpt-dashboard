@@ -1,6 +1,8 @@
 describe.only('basic user journey', () => {
   beforeEach(() => {
+    cy.intercept("GET", "/api/v1/ocp/jobs*").as("getJobs");
     cy.visit("/");
+    cy.wait("@getJobs");
   });
 
   it("displays each tab in the side menu, then closes the side menu", () => {
