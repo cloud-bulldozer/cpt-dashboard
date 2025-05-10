@@ -1,4 +1,4 @@
-describe('basic user journey', () => {
+describe.only('basic user journey', () => {
   beforeEach(() => {
     cy.visit("/");
   });
