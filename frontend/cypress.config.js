@@ -6,6 +6,13 @@ export default defineConfig({
     baseUrl: process.env.GUI_BASE_URL || "http://localhost:3000",
     setupNodeEvents(on, config) {
       // implement node event listeners here
+      on("task", {
+        log(message) {
+          console.log(message);
+          return null
+        }
+      })
+      return config
     },
   },
 

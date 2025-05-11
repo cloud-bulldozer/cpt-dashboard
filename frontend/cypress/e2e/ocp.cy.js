@@ -1,6 +1,11 @@
 describe('ocp user journey', () => {
   beforeEach(() => {
-    cy.visit("/ocp");
+    cy.intercept('GET', '/api/v1/ocp/jobs*').as('getJobs');
+    cy.intercept('GET', '/api/v1/ocp/filters*').as('getFilters');
+    cy.visit('/ocp?start_date=2025-03-03&end_date=2025-05-09');
+    cy.wait(['@getJobs', '@getFilters']);
+    
+    // cy.visit("/ocp");
     cy.findByTestId("side_menu_options")
       .should("be.visible")
       .within(() => {
@@ -52,6 +57,10 @@ describe('ocp user journey', () => {
           .get(":hidden")
           .type(end_date, {force: true});
       }); 
+
+    // cy.findByText('Summary')
+    //   .should('be.visible') 
+    //   .click({force: true});      
     
     // cy.screenshot("main-data-table");
     cy.screenshot();

@@ -43,8 +43,8 @@ services:
       - "127.0.0.1:8000:8000"
     volumes:
       - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
-    # environment:
-      # - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
+    environment:
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
       # - CORS_ALLOWED_ORIGINS=*
 
   db-seed:
@@ -98,6 +98,16 @@ services:
     environment:
       - GUI_BASE_URL=http://frontend:3000
     command: ["run", "cypress:run:e2e"]
+
+  debug:
+    image: quay.io/centos/centos:stream9
+    container_name: debug
+    networks:
+      - e2e-pod
+    environment:
+      - GUI_BASE_URL=http://frontend:3000
+      - API_BASE_URL=http://backend:8000
+    command: ["sleep", "infinity"]
 
   # e2e-cypress:
   #   profiles:

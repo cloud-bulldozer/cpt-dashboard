@@ -16,7 +16,7 @@ class ORJSONResponse(JSONResponse):
         return orjson.dumps(content)
 
 
-ORIGINS_DEV = ["http://localhost:3000", "localhost:3000", "*"]
+ORIGINS_DEV = ["http://localhost:3000", "localhost:3000"]
 
 
 def parse_origins(origins: typing.Optional[str]) -> list[str]:
