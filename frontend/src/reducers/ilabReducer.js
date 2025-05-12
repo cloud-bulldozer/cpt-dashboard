@@ -6,6 +6,8 @@ const initialState = {
   end_date: "",
   graphData: [],
   multiGraphData: [],
+  isSummaryLoading: false,
+  summaryData: [],
   totalItems: 0,
   tableColumns: [
     { name: "Benchmark", value: "benchmark" },
@@ -82,6 +84,18 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, comparisonSwitch: !state.comparisonSwitch };
     case TYPES.SET_EXPANDED_METAROW:
       return { ...state, metaRowExpanded: payload };
+    case TYPES.SET_ILAB_SUMMARY_LOADING:
+      return { ...state, isSummaryLoading: true };
+    case TYPES.SET_ILAB_SUMMARY_COMPLETE:
+      return { ...state, isSummaryLoading: false };
+    case TYPES.SET_ILAB_SUMMARY_DATA:
+      return {
+        ...state,
+        summaryData: [
+          ...state.summaryData.filter((i) => i.uid !== payload.uid),
+          payload,
+        ],
+      };
     default:
       return state;
   }
