@@ -26,7 +26,7 @@ describe('basic user journey', () => {
     cy.findByText('Summary')
       .should('be.visible') 
       .click({force: true});
-
+    
     cy.findByTestId("data_table_filter")
       .should("be.visible");
 
