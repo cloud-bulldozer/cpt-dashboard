@@ -43,6 +43,10 @@ describe.only('basic user journey', () => {
   });
 
   it("displays the summary and data table and paginates", () => {    
+    cy.findByText('Summary')
+      .should('be.visible') 
+      .click({force: true});      
+
     cy.findByTestId("data_table_filter")
       .should("be.visible");
 
