@@ -72,14 +72,14 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
 
-  e2e-frontend:
+  e2e-in-network:
     profiles:
-      - e2e
+      - e2e-in-network
     build:
       context: ./frontend
       dockerfile: e2e_frontend.containerfile
     image: e2e_frontend:latest
-    container_name: e2e-frontend
+    container_name: e2e-in-network
     depends_on:
       db-seed:
         condition: service_completed_successfully
@@ -89,15 +89,22 @@ services:
       - GUI_BASE_URL=http://frontend:3000
     command: ["run", "cypress:run:e2e"]
 
-  debug:
-    image: quay.io/centos/centos:stream9
-    container_name: debug
-    networks:
-      - e2e-pod
-    environment:
-      - GUI_BASE_URL=http://frontend:3000
-      - API_BASE_URL=http://backend:8000
-    command: ["sleep", "infinity"]
+  e2e-frontend:
+    profiles:
+      - e2e
+    build:
+      context: ./frontend
+      dockerfile: e2e_frontend.containerfile
+    image: e2e_frontend:latest
+    container_name: e2e-frontend
+    depends_on:
+      frontend:
+        condition: service_started    
+      db-seed:
+        condition: service_completed_successfully
+      e2e-frontend:
+        condition: service_completed_successfully
+    command: ["run", "cypress:run:e2e"]
 
   # e2e-cypress:
   #   profiles:
