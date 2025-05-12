@@ -56,6 +56,6 @@ COPY --chown=nginx:root --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/n
 USER nginx
 
 EXPOSE 3000
-# ENTRYPOINT ["/entrypoint.sh"]
-ENTRYPOINT ["nginx"]
-CMD ["-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["nginx"]
+# CMD ["-g", "daemon off;"]
