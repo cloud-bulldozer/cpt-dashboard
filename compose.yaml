@@ -87,6 +87,8 @@ services:
     image: e2e_frontend:latest
     container_name: e2e-in-network
     depends_on:
+      frontend:
+        condition: service_started
       db-seed:
         condition: service_completed_successfully
     networks:
