@@ -98,6 +98,7 @@ services:
     image: e2e_frontend:latest
     container_name: e2e-frontend
     network_mode: host
+    entrypoint: ["npx", "cypress", "run", "--e2e", "--headless"]
     depends_on:
       frontend:
         condition: service_started    
