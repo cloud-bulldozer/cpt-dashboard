@@ -22,7 +22,7 @@ describe('basic user journey', () => {
       .should("not.be.visible");
   });
 
-  it("displays the summary and data table and paginates", () => {    
+  it("displays the summary and data table and paginates", () => {
     cy.findByText('Summary')
       .should('be.visible') 
       .click({force: true});
