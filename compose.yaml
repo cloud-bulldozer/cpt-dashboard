@@ -102,8 +102,6 @@ services:
         condition: service_started    
       db-seed:
         condition: service_completed_successfully
-      e2e-frontend:
-        condition: service_completed_successfully
     command: ["run", "cypress:run:e2e"]
 
   # e2e-cypress:
