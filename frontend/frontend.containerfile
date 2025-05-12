@@ -25,12 +25,12 @@ RUN npm run build
 # ─────────────────────────────────────────────────────────────────────────────
 FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine
 
-# COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 
 # 1) Become root so we can fix ownership and create the PID file
 USER root
 
-# RUN chmod +x /entrypoint.sh && apk add --no-cache bind-tools
+RUN chmod +x /entrypoint.sh && apk add --no-cache bind-tools
 
 RUN \
   # On OpenShift’s Restricted SCC the container runs as an arbitrary UID in GID=0,  \
