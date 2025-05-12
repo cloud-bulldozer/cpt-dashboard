@@ -1,16 +1,4 @@
-export const getUrl = () => {
-  const { hostname, origin } = window.location;
-  // 1) build time override for staging or production environment
-  return import.meta.env.VITE_PERF_DATA_API_BASE_URL
-    // 2) local dev
-    || (hostname === "localhost"
-        ? "http://localhost:8000"
-        // 3) fallback 
-        : origin)
-}
-
-
-export const BASE_URL = getUrl();
+export const BASE_URL = "";
 
 export const AGG_VERSION_API = "/api/version";
 
