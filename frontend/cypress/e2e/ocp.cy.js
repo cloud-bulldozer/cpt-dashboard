@@ -58,10 +58,6 @@ describe('ocp user journey', () => {
           .type(end_date, {force: true});
       }); 
 
-    // cy.findByText('Summary')
-    //   .should('be.visible') 
-    //   .click({force: true});      
-    
     // cy.screenshot("main-data-table");
     cy.screenshot();
 

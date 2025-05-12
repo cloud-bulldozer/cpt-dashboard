@@ -15,6 +15,9 @@ CPT_CONFIG=${CPT_CONFIG:-"${SETUP}/funcconfig.toml"}
 
 trap cleanup EXIT
 
+# generate application version file
+./backend/scripts/version.py       
+
 # depends upon the e2e test's container name in the compose file
 CYPRESS_POD="e2e-in-network"
 
