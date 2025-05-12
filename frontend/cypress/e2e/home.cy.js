@@ -1,4 +1,4 @@
-describe.only('basic user journey', () => {
+describe('basic user journey', () => {
   beforeEach(() => {
     cy.visit("/");
   });
@@ -25,7 +25,7 @@ describe.only('basic user journey', () => {
   it("displays the summary and data table and paginates", () => {    
     cy.findByText('Summary')
       .should('be.visible') 
-      .click({force: true});      
+      .click({force: true});
 
     cy.findByTestId("data_table_filter")
       .should("be.visible");
