@@ -25,7 +25,7 @@ RUN npm run build
 # ─────────────────────────────────────────────────────────────────────────────
 FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine
 
-# COPY entrypoint.sh /entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
 
 ARG VITE_PERF_DATA_API_BASE_URL=http:localhost:8000
 
@@ -58,6 +58,6 @@ COPY --chown=nginx:root --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/n
 USER nginx
 
 EXPOSE 3000
-# ENTRYPOINT ["/entrypoint.sh"]
-ENTRYPOINT ["nginx"]
-CMD ["-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]
+# ENTRYPOINT ["nginx"]
+# CMD ["-g", "daemon off;"]
