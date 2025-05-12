@@ -27,8 +27,6 @@ FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine
 
 COPY entrypoint.sh /entrypoint.sh
 
-ARG VITE_PERF_DATA_API_BASE_URL=http:localhost:8000
-
 # 1) Become root so we can fix ownership and create the PID file
 USER root
 
