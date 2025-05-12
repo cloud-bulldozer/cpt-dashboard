@@ -105,20 +105,20 @@ services:
         condition: service_completed_successfully
     command: ["run", "cypress:run:e2e"]
 
-  dev-cypress:
-    profiles:
-      - dev
-    build:
-      context: ./frontend
-      dockerfile: e2e_frontend.containerfile
-    image: dev-cypress:latest
-    network_mode: host
-    container_name: dev-cypress
-    depends_on:
-      frontend:
-        condition: service_started
-      db-seed:
-        condition: service_completed_successfully
-    ports:
-      - 127.0.0.1:3001:3001
-    command: ["run", "cypress:open"]    
+  # dev-cypress:
+  #   profiles:
+  #     - dev
+  #   build:
+  #     context: ./frontend
+  #     dockerfile: e2e_frontend.containerfile
+  #   image: dev-cypress:latest
+  #   network_mode: host
+  #   container_name: dev-cypress
+  #   depends_on:
+  #     frontend:
+  #       condition: service_started
+  #     db-seed:
+  #       condition: service_completed_successfully
+  #   ports:
+  #     - 127.0.0.1:3001:3001
+  #   command: ["run", "cypress:open"]    
