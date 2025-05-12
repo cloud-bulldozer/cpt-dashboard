@@ -19,7 +19,7 @@ trap cleanup EXIT
 CYPRESS_POD="e2e-frontend"
 
 podman compose build
-podman compose up --detach
+podman compose --profile e2e up --detach
 # watch e2e tests for successful completion
 podman compose logs --follow ${CYPRESS_POD}
 podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
