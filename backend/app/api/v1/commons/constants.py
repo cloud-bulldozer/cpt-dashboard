@@ -21,6 +21,13 @@ FIELDS = (
     "masterNodesCount",
     "infraNodesCount",
     "totalNodesCount",
+    "nodeName",
+    "cpu",
+    "benchmark",
+    "ocpVersion",
+    "jobStatus",
+    "formal",
+    "ciSystem",
 )
 MAX_PAGE = 10000
 OCP_SHORT_VER_LEN = 6
@@ -130,6 +137,9 @@ FIELDS_FILTER_DICT = {
     "ocpVersion": "ocp_version",
     "releaseStream": "ocp_build",
     "jobStatus": "status",
+    "endDate": "_indextime",
+    "startDate": "_indextime",
+    "formal": "isFormal",
 }
 
 HCE_FIELD_CONSTANT_DICT = {

@@ -2,7 +2,7 @@ import orjson
 from app import config
 from splunklib import client, results
 import asyncio
-from app.api.v1.commons.constants import SPLUNK_SEMAPHORE_COUNT
+from app.api.v1.commons.constants import SPLUNK_SEMAPHORE_COUNT, FIELDS_FILTER_DICT
 
 SEMAPHORE = asyncio.Semaphore(SPLUNK_SEMAPHORE_COUNT)
 
@@ -36,16 +36,34 @@ class SplunkService:
             print(f"Error connecting to splunk: {e}")
             return None
 
-    def build_search_query(self, searchList=""):
+    def build_search_query(self, searchList="", sort=None):
         search_query = f"search index={self.indice} "
+
+        order_symbol = ""
+        sort_field = ""
+
+        if sort and isinstance(sort, list) and sort:
+            sort_key = list(sort[0].keys())[0]
+            sort_order = sort[0][sort_key].get("order", "asc")
+            sort_field = FIELDS_FILTER_DICT.get(sort_key, sort_key)
+            order_symbol = "-" if sort_order == "desc" else ""
 
         if searchList:
             search_query += f"{searchList} "
-        search_query += "| eventstats count AS total_records | fields total_records _raw host source sourcetype _bkt _serial _indextime"
+        search_query += "| eventstats count AS total_records "
+
+        if sort_field:
+            search_query += f"| sort {order_symbol} {sort_field} "
+
+        search_query += (
+            "| fields total_records _raw host source sourcetype _bkt _serial _indextime"
+        )
 
         return search_query
 
-    async def query(self, query, searchList="", size=100, offset=0, max_results=10000):
+    async def query(
+        self, query, searchList="", sort=None, size=100, offset=0, max_results=10000
+    ):
         """
         Query data from splunk server using splunk lib sdk
 
@@ -54,7 +72,7 @@ class SplunkService:
             OPTIONAL: searchList (string): additional query parameters for index
         """
         query.update({"count": size, "offset": offset})
-        search_query = self.build_search_query(searchList)
+        search_query = self.build_search_query(searchList, sort)
 
         try:
 
