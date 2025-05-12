@@ -43,11 +43,11 @@ describe.only('basic user journey', () => {
   });
 
   it("displays the summary and data table and paginates", () => {    
-    // cy.findByTestId("data_table_filter")
-    //   .should("be.visible");
+    cy.findByTestId("data_table_filter")
+      .should("be.visible");
 
-    // cy.findByTestId("data_table_pagination")
-    //   .scrollIntoView()
-    //   .should("be.visible");
+    cy.findByTestId("data_table_pagination")
+      .scrollIntoView()
+      .should("be.visible");
   });
 });
