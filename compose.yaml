@@ -5,6 +5,11 @@ networks:
 services:
   searchdb-ocp:
     image: docker.io/opensearchproject/opensearch:latest
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sSf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      retries: 5
+      start_period: 15s    
     container_name: searchdb-ocp
     networks:
        - e2e-pod
@@ -51,7 +56,8 @@ services:
     image: functional:latest
     container_name: db-seed
     depends_on:
-      - backend
+      searchdb-ocp:
+        condition: service_healthy
     networks:
       - e2e-pod
     entrypoint: ["python3", "-u", "tests/db_seed.py"]
@@ -98,6 +104,9 @@ services:
     image: e2e_frontend:latest
     container_name: e2e-frontend
     network_mode: host
+    # avoid Xvfb collisions on your local machine b/c the
+    # cypress base image in e2e_frontend wraps its entrypoint 
+    # in an xvfb-run call
     entrypoint: ["npx", "cypress", "run", "--e2e", "--headless"]
     depends_on:
       frontend:

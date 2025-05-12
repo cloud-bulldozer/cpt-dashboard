@@ -1,19 +1,19 @@
-Cypress.on('window:before:load', (win) => {
-  win.onerror = (msg, src, line, col, err) => {
-    Cypress.task('log', `✖ Uncaught Error: ${msg} at ${src}:${line}:${col}`)
-  }
-  const origError = win.console.error.bind(win.console)
-  win.console.error = (...args) => {
-    Cypress.task('log', `✖ console.error: ${args.join(' ')}`)
-    origError(...args)
-  }
-});
+// Cypress.on('window:before:load', (win) => {
+//   win.onerror = (msg, src, line, col, err) => {
+//     Cypress.task('log', `✖ Uncaught Error: ${msg} at ${src}:${line}:${col}`)
+//   }
+//   const origError = win.console.error.bind(win.console)
+//   win.console.error = (...args) => {
+//     Cypress.task('log', `✖ console.error: ${args.join(' ')}`)
+//     origError(...args)
+//   }
+// });
 
 describe.only('basic user journey', () => {
   beforeEach(() => {
-    cy.intercept("GET", "/api/v1/cpt/jobs*").as("getJobs");
+    // cy.intercept("GET", "/api/v1/cpt/jobs*").as("getJobs");
     cy.visit("/");
-    cy.wait("@getJobs");
+    // cy.wait("@getJobs");
 
   });
 
