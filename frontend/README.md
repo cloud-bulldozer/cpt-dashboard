@@ -112,7 +112,7 @@ Execute the end-to-end tests.
 ./frontend/tests/e2e.sh
 ```
 
-#### Interactive E2E Test Execution
+#### Interactive E2E (and Component) Test Development
 
 If necessary, build the application's required images
 ```shell
@@ -121,7 +121,7 @@ podman compose build
 
 Start CPT-Dashboard frontend, and backend data service end-to-end test dependencies.
 ```shell
-podman compose up --detach searchdb-ocp backend frontend db-seed
+podman compose up --detach
 ```
 
 [Open Cypress](https://docs.cypress.io/app/core-concepts/open-mode) GUI to view test execution.
