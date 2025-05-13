@@ -7,8 +7,6 @@ WORKDIR /usr/src/cpt-dashboard
 
 ARG VITE_PERF_DATA_API_BASE_URL=http://localhost:8000
 
-RUN echo ">>> BUILD ARG VITE_PERF_DATA_API_BASE_URL is: $VITE_PERF_DATA_API_BASE_URL"
-
 # Install dependencies first so we can leverage Docker cache
 COPY package*.json ./
 RUN npm clean-install
