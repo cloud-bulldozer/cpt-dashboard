@@ -4,20 +4,20 @@ networks:
 
 services:
   searchdb-ocp:
+    container_name: searchdb-ocp
     image: docker.io/opensearchproject/opensearch:latest
     healthcheck:
       test: ["CMD-SHELL", "curl -sSf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
       interval: 10s
       retries: 5
       start_period: 15s    
-    container_name: searchdb-ocp
     networks:
        - e2e-pod
     ports:
       - "9200"
     volumes:
       - ./backend/tests/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
-      - ./backend/tests/fixtures/search_db_snapshots/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
+      - ./backend/tests/fixtures/search_db_snapshots/ocp-snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
     environment:
       - discovery.type=single-node
       - DISABLE_INSTALL_DEMO_CONFIG=true
@@ -33,11 +33,11 @@ services:
         exec /usr/share/opensearch/opensearch-docker-entrypoint.sh      
 
   backend:
+    container_name: backend
     build:
       context: ./backend
       dockerfile: backend.containerfile
     image: backend:latest
-    container_name: backend
     depends_on:
       - searchdb-ocp
     networks:
@@ -52,11 +52,11 @@ services:
       - "127.0.0.1:8000:8000"      
 
   db-seed:
+    container_name: db-seed  
+    image: functional:latest    
     build:
       context: ./backend
       dockerfile: tests/functional.containerfile
-    image: functional:latest
-    container_name: db-seed
     depends_on:
       searchdb-ocp:
         condition: service_healthy
@@ -66,13 +66,13 @@ services:
     restart: "no"
 
   frontend:
+    container_name: frontend
+    image: frontend:latest    
     build: 
       context: ./frontend
       dockerfile: frontend.containerfile
       args:
         VITE_PERF_DATA_API_BASE_URL: http://backend:8000
-    image: frontend:latest
-    container_name: frontend
     networks:
       e2e-pod:
         aliases:
@@ -81,13 +81,13 @@ services:
       - "127.0.0.1:3000:3000"
 
   e2e-in-network:
+    container_name: e2e-in-network
     profiles:
       - e2e-in-network
+    image: e2e_frontend:latest
     build:
       context: ./frontend
       dockerfile: e2e_frontend.containerfile
-    image: e2e_frontend:latest
-    container_name: e2e-in-network
     depends_on:
       frontend:
         condition: service_started
@@ -100,13 +100,13 @@ services:
     command: ["run", "cypress:run:e2e"]
 
   e2e-frontend:
+    container_name: e2e-frontend
     profiles:
       - e2e
+    image: e2e_frontend:latest      
     build:
       context: ./frontend
       dockerfile: e2e_frontend.containerfile
-    image: e2e_frontend:latest
-    container_name: e2e-frontend
     network_mode: host
     # avoid Xvfb collisions on your local machine b/c the
     # cypress base image in e2e_frontend wraps its entrypoint 
