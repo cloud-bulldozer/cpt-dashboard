@@ -5,10 +5,12 @@ import {
   setActiveSortIndex,
 } from "@/actions/sortingActions";
 
+import CustomEmptyState from "@/components/molecules/EmptyState";
 import PropTypes from "prop-types";
 import RenderPagination from "@/components/organisms/Pagination";
 import TableRows from "@/components/molecules/TableRows";
-import { uid } from "@/utils/helper.js";
+import { isEmptyObject } from "@/utils/helper.js";
+import { useSelector } from "react-redux";
 
 const TableLayout = (props) => {
   const {
@@ -37,55 +39,66 @@ const TableLayout = (props) => {
     },
     columnIndex,
   });
+  const isLoading = useSelector((state) => state.loading.isLoading);
 
+  const appliedFilters = useSelector(
+    (state) => state[props.type].appliedFilters
+  );
+  const isFilterApplied = !isEmptyObject(appliedFilters);
   return (
     <>
-      <Table isStriped ouiaId="main_data_table">
-        <Thead>
-          <Tr>
-            {addExpansion && <Th />}
+      {!isLoading && tableData.length === 0 ? (
+        <CustomEmptyState type={isFilterApplied ? "noFilterData" : "noData"} />
+      ) : (
+        <>
+          <Table isStriped ouiaId="main_data_table">
+            <Thead>
+              <Tr>
+                {addExpansion && <Th />}
 
-            {tableColumns?.length > 0 &&
-              tableColumns.map((col, idx) => (
-                <Th
-                  key={uid()}
-                  sort={shouldSort ? getSortParams(idx, col.value) : ""}
-                >
-                  {col.name}
-                </Th>
-              ))}
-          </Tr>
-        </Thead>
-        {!addExpansion ? (
-          <Tbody>
-            <TableRows
-              rows={tableData}
-              columns={tableColumns}
-              addExpansion={addExpansion}
-              isRunExpanded={props?.isRunExpanded}
-              setRunExpanded={props?.setRunExpanded}
-              graphData={props?.graphData}
-              type={props.type}
-            />
-          </Tbody>
-        ) : (
-          <TableRows
-            rows={tableData}
-            columns={tableColumns}
-            addExpansion={addExpansion}
-            isRunExpanded={props?.isRunExpanded}
-            setRunExpanded={props?.setRunExpanded}
-            graphData={props?.graphData}
+                {tableColumns?.length > 0 &&
+                  tableColumns.map((col, idx) => (
+                    <Th
+                      key={`${col.value}-${idx}`}
+                      sort={shouldSort ? getSortParams(idx, col.value) : ""}
+                    >
+                      {col.name}
+                    </Th>
+                  ))}
+              </Tr>
+            </Thead>
+            {!addExpansion ? (
+              <Tbody>
+                <TableRows
+                  rows={tableData}
+                  columns={tableColumns}
+                  addExpansion={addExpansion}
+                  isRunExpanded={props?.isRunExpanded}
+                  setRunExpanded={props?.setRunExpanded}
+                  graphData={props?.graphData}
+                  type={props.type}
+                />
+              </Tbody>
+            ) : (
+              <TableRows
+                rows={tableData}
+                columns={tableColumns}
+                addExpansion={addExpansion}
+                isRunExpanded={props?.isRunExpanded}
+                setRunExpanded={props?.setRunExpanded}
+                graphData={props?.graphData}
+                type={props.type}
+              />
+            )}
+          </Table>
+          <RenderPagination
+            items={totalItems}
+            page={page}
+            perPage={perPage}
             type={props.type}
           />
-        )}
-      </Table>
-      <RenderPagination
-        items={totalItems}
-        page={page}
-        perPage={perPage}
-        type={props.type}
-      />
+        </>
+      )}
     </>
   );
 };
