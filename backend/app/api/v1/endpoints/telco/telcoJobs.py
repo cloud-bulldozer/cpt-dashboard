@@ -36,6 +36,7 @@ async def jobs(
     pretty: bool = Query(False, description="Output content in pretty format."),
     size: int = Query(None, description="Number of jobs to fetch"),
     offset: int = Query(None, description="Offset Number to fetch jobs from"),
+    sort: str = Query(None, description="To sort fields on specified direction"),
     filter: str = Query(None, description="Query to filter the jobs"),
 ):
     if start_date is None:
@@ -54,7 +55,9 @@ async def jobs(
         )
     offset, size = normalize_pagination(offset, size)
 
-    results = await getData(start_date, end_date, size, offset, filter, "telco.splunk")
+    results = await getData(
+        start_date, end_date, size, offset, sort, filter, "telco.splunk"
+    )
 
     jobs = []
     if "data" in results and len(results["data"]) >= 1:
