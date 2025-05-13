@@ -98,6 +98,8 @@ const TelcoReducer = (state = initialState, action = {}) => {
       return { ...state, activeSortIndex: payload };
     case TYPES.SET_TELCO_SORT_DIR:
       return { ...state, activeSortDir: payload };
+    case TYPES.SET_TELCO_SORT_OBJ:
+      return { ...state, sort: payload };
     case TYPES.SET_TELCO_PAGE:
       return { ...state, page: payload };
     case TYPES.SET_TELCO_PAGE_OPTIONS:
