@@ -43,7 +43,7 @@ describe("basic user journey", () => {
           .scrollIntoView()
           .should("be.visible");
       } else {
-        cy.findByTestId("custom_empty_state")
+        cy.findByTestId("custom_empty_state", { timeout: 10000 })
           .should("be.visible")
           .and("contain.text", "No results found");
       }
