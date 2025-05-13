@@ -98,15 +98,6 @@ npm --prefix frontend run cypress:cp
 - Starting directory is the project root
 - Podman/Docker Compose
 
-Enable Podman Socket to facilitate Podman Compose
-```shell
-systemctl --user enable --now podman.socket         
-```
-
-Generate a CPT Dashboard version file.
-```shell
-./backend/scripts/version.py        
-```
 Execute the end-to-end tests.
 ```shell
 ./frontend/tests/e2e.sh
