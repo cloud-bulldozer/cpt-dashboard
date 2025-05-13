@@ -29,9 +29,17 @@ describe("basic user journey", () => {
     cy.findByText("Summary").should("be.visible").click({ force: true });
 
     cy.get("body").then(($body) => {
-      if ($body.find('[data-ouia-component-id="data_table_filter"]').length) {
-        cy.findByTestId("data_table_filter").should("be.visible");
-        cy.findByTestId("data_table_pagination")
+      const hasFilter =
+        $body.find('[data-ouia-component-id="data_table_filter"]').length > 0;
+      const hasPagination =
+        $body.find('[data-ouia-component-id="data_table_pagination"]').length >
+        0;
+
+      if (hasFilter && hasPagination) {
+        cy.get('[data-ouia-component-id="data_table_filter"]').should(
+          "be.visible"
+        );
+        cy.get('[data-ouia-component-id="data_table_pagination"]')
           .scrollIntoView()
           .should("be.visible");
       } else {
