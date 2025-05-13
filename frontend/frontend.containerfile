@@ -57,5 +57,3 @@ USER nginx
 
 EXPOSE 3000
 ENTRYPOINT ["/entrypoint.sh"]
-# ENTRYPOINT ["nginx"]
-# CMD ["-g", "daemon off;"]

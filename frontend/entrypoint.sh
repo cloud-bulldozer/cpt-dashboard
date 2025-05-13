@@ -1,4 +1,7 @@
 #!/bin/sh
+# the performance data api host name is dependent 
+# upon its service name as determined in your 
+# container orchestration, currently it is 'backend'
 
 set -e
 
