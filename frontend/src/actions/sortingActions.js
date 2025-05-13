@@ -58,6 +58,7 @@ const sortObjActions = {
   ocp: TYPES.SET_OCP_SORT_OBJ,
   quay: TYPES.SET_QUAY_SORT_OBJ,
   ols: TYPES.SET_OLS_SORT_OBJ,
+  telco: TYPES.SET_TELCO_SORT_OBJ,
 };
 export const sortTable = (colName, currState) => (dispatch, getState) => {
   const { activeSortDir, activeSortIndex } = getState()[currState];
@@ -75,11 +76,13 @@ export const sortTable = (colName, currState) => (dispatch, getState) => {
       typeof activeSortIndex !== "undefined"
     ) {
       dispatch({ type: offsetActions[currState], payload: 0 });
-      let fieldName = countObj.includes(colName)
-        ? colName
-        : `${colName}.keyword`;
-      if (colName === "build") {
+      let fieldName = "";
+      if (currState === "telco") {
+        fieldName = colName;
+      } else if (colName === "build") {
         fieldName = "ocpVersion.keyword";
+      } else {
+        fieldName = countObj.includes(colName) ? colName : `${colName}.keyword`;
       }
 
       const sortParam = `${fieldName}:${activeSortDir}`;

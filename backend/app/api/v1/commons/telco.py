@@ -14,6 +14,7 @@ async def getData(
     end_datetime: date,
     size: int,
     offset: int,
+    sort: str,
     filter: str,
     configpath: str,
 ):
@@ -36,11 +37,13 @@ async def getData(
         "latest_time": "{}T23:59:59".format(end_datetime.strftime("%Y-%m-%d")),
         "output_mode": "json",
     }
+
+    sort_terms = utils.build_sort_terms(sort) if sort is not None else []
     searchList = constructFilterQuery(filter)
 
     splunk = SplunkService(configpath=configpath)
     response = await splunk.query(
-        query=query, size=size, offset=offset, searchList=searchList
+        query=query, size=size, offset=offset, sort=sort_terms, searchList=searchList
     )
     mapped_list = []
     if response:

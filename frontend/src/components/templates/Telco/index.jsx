@@ -145,7 +145,7 @@ const Telco = () => {
         isRunExpanded={isRunExpanded}
         setRunExpanded={setRunExpanded}
         graphData={graphData}
-        shouldSort={false}
+        shouldSort={true}
       />
     </>
   );
