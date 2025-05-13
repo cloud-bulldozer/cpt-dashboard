@@ -42,7 +42,7 @@ class SplunkService:
         order_symbol = ""
         sort_field = ""
 
-        if sort and isinstance(sort, list) and sort:
+        if sort:
             sort_key = list(sort[0].keys())[0]
             sort_order = sort[0][sort_key].get("order", "asc")
             sort_field = FIELDS_FILTER_DICT.get(sort_key, sort_key)
