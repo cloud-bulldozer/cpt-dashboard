@@ -1,7 +1,9 @@
 #!/bin/bash
 set -ex # Fail on error
 BRANCH=$(git rev-parse --show-toplevel)
-SETUP=${BRANCH}/backend/tests/functional/setup
+TESTS=${BRANCH}/backend/tests
+SNAPSHOT=${TESTS}/fixtures/search_db_snapshots
+SETUP=${TESTS}/functional/setup
 
 if [[ -n "${POD_NAME}" ]] ;then
     echo "Running in POD ${POD_NAME}"
@@ -16,7 +18,7 @@ fi
 
 podman run -d ${POD} --name "${NAME}" \
     -v "${SETUP}"/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z \
-    -v "${SETUP}"/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z \
+    -v "${SNAPSHOT}"/ilab-snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z \
     ${PORTS} \
     -e "discovery.type=single-node" -e "DISABLE_INSTALL_DEMO_CONFIG=true" \
     -e "DISABLE_SECURITY_PLUGIN=true" \
