@@ -14,13 +14,13 @@ elasticsearch:
 
 frontend:
   image:
-    repository: default-route-openshift-image-registry.apps-crc.testing/cpt-dashboard/frontend
+    repository: quay.io/cloud-bulldozer/frontend
     tag: latest
   resources: {}
 
 backend:
   image:
-    repository: default-route-openshift-image-registry.apps-crc.testing/cpt-dashboard/backend
+    repository: quay.io/cloud-bulldozer/backend
     tag: latest
   resources: {}
   securityContext: {}
