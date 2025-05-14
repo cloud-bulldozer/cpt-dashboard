@@ -26,4 +26,6 @@ ${BACKEND}/tests/e2e_backend.sh
 podman run --pod=${POD_NAME} -d --name="${POD_NAME}-front" frontend
 podman build -t e2e-frontend -f ${FRONTEND}/e2e_frontend.containerfile ${FRONTEND}
 podman run --pod=${POD_NAME} --name=${CYPRESS_POD} e2e-frontend
-podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
+
+# TODO: no screenshots to upload until e2e tests are remediated
+# podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
