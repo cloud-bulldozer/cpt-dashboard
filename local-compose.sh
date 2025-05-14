@@ -12,5 +12,5 @@ podman compose --file ${TOP}/compose.yaml down
 
 ${BACKEND}/scripts/version.py
 
-podman compose --file ${TOP}/compose.yaml build
-podman compose --file ${TOP}/compose.yaml up --detach
+podman compose --file ${TOP}/compose.yaml build frontend-host backend-host
+podman compose --file ${TOP}/compose.yaml up --detach frontend-host backend-host

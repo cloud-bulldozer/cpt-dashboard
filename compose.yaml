@@ -1,3 +1,21 @@
+x-backend: &backend_base
+  container_name: backend
+  build:
+    context: ./backend
+    dockerfile: backend.containerfile
+  image: backend:latest
+  volumes:
+    - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
+  environment:
+    - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
+
+x-frontend: &frontend_base
+  container_name: frontend
+  build:
+    context: ./frontend
+    dockerfile: frontend.containerfile
+  image: frontend:latest
+
 networks:
   e2e-pod:
     driver: bridge
@@ -32,72 +50,72 @@ services:
         # now exec the upstream entrypoint so ES boots normally
         exec /usr/share/opensearch/opensearch-docker-entrypoint.sh      
 
-  backend:
-    container_name: backend
-    build:
-      context: ./backend
-      dockerfile: backend.containerfile
-    image: backend:latest
-    depends_on:
-      - searchdb-ocp
-    networks:
-      e2e-pod:
-        aliases:
-          - backend
-    volumes:
-      - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
-    environment:
-      - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
-    ports:
-      - "127.0.0.1:8000:8000"      
-
   db-seed:
-    container_name: db-seed  
-    image: functional:latest    
+    container_name: db-seed
+    image: functional:latest
     build:
       context: ./backend
       dockerfile: tests/functional.containerfile
     depends_on:
       searchdb-ocp:
         condition: service_healthy
-    networks:
-      - e2e-pod
+    networks: [e2e-pod]
     entrypoint: ["python3", "-u", "tests/db_seed.py"]
     restart: "no"
 
+  backend:
+    <<: *backend_base
+    depends_on:
+      - searchdb-ocp
+    networks:
+      e2e-pod:
+        aliases: [backend]
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  backend-host:
+    <<: *backend_base
+    profiles: [host]
+    network_mode: host
+    ports:
+      - "8000:8000"
+
   frontend:
-    container_name: frontend
-    image: frontend:latest    
-    build: 
+    <<: *frontend_base
+    build:
       context: ./frontend
       dockerfile: frontend.containerfile
       args:
         VITE_PERF_DATA_API_BASE_URL: http://backend:8000
     networks:
       e2e-pod:
-        aliases:
-          - frontend
+        aliases: [frontend]
     ports:
       - "127.0.0.1:3000:3000"
 
+  frontend-host:
+    <<: *frontend_base
+    profiles: [host]
+    entrypoint: ["nginx", "-g", "daemon off;"]
+    extra_hosts:
+      - "backend:127.0.0.1"
+    network_mode: host
+    ports:
+      - "3000:3000"
+
   e2e-frontend:
     container_name: e2e-frontend
-    profiles:
-      - e2e
-    image: e2e-frontend:latest      
+    profiles: [e2e]
     build:
       context: ./frontend
       dockerfile: e2e_frontend.containerfile
-      tags:
-        - e2e-frontend:latest
+      tags: [e2e-frontend:latest]
+    image: e2e-frontend:latest
     network_mode: host
-    # avoid Xvfb collisions on your local machine b/c the
-    # cypress base image in e2e_frontend wraps its entrypoint 
-    # in an xvfb-run call
     entrypoint: ["npx", "cypress", "run", "--e2e", "--headless"]
     depends_on:
       frontend:
-        condition: service_started    
+        condition: service_started
       db-seed:
         condition: service_completed_successfully
     command: ["run", "cypress:run:e2e"]
