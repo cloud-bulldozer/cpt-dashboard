@@ -13,7 +13,7 @@ const msgToShow = {
   noFilterData: "No results match the filter criteria.",
 };
 const CustomEmptyState = ({ type }) => (
-  <EmptyState data-testid="custom_empty_state">
+  <EmptyState ouiaId="custom_empty_state">
     <EmptyStateHeader
       titleText="No results found"
       headingLevel="h4"

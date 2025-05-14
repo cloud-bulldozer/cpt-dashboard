@@ -28,23 +28,9 @@ describe("basic user journey", () => {
     cy.wait("@fetchSummary").its("response.statusCode").should("eq", 200);
     cy.findByText("Summary").should("be.visible").click({ force: true });
 
-    cy.get("body").then(($body) => {
-      const hasFilter =
-        $body.find('[data-ouia-component-id="data_table_filter"]').length > 0;
-      const hasPagination =
-        $body.find('[data-ouia-component-id="data_table_pagination"]').length >
-        0;
-
-      if (hasFilter) {
-        cy.get('[data-ouia-component-id="data_table_filter"]').should(
-          "be.visible"
-        );
-      }
-      if (hasPagination) {
-        cy.get('[data-ouia-component-id="data_table_pagination"]')
-          .scrollIntoView()
-          .should("be.visible");
-      }
-    });
+    cy.findByTestId("data_table_filter").should("be.visible");
+    cy.findByTestId("data_table_pagination")
+      .scrollIntoView()
+      .should("be.visible");
   });
 });
