@@ -59,6 +59,8 @@ const HomeReducer = (state = initialState, action = {}) => {
         ...state,
         results: payload,
       };
+    case TYPES.SET_CPT_INIT_JOBS:
+      return { ...state, tableData: payload };
     case TYPES.SET_CPT_PAGE_TOTAL:
       return {
         ...state,

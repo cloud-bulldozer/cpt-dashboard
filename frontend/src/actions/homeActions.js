@@ -89,7 +89,7 @@ export const setCPTOffset = (offset) => ({
 });
 
 export const sliceCPTTableRows = (startIdx, endIdx) => (dispatch, getState) => {
-  const results = [...getState().cpt.filteredResults];
+  const results = [...getState().cpt.results];
 
   dispatch({
     type: TYPES.SET_CPT_INIT_JOBS,

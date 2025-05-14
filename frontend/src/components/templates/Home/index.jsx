@@ -22,6 +22,7 @@ const Home = () => {
   const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
 
   const {
+    tableData,
     tableColumns,
     activeSortDir,
     activeSortIndex,
@@ -100,7 +101,7 @@ const Home = () => {
       />
 
       <TableLayout
-        tableData={results}
+        tableData={tableData}
         tableColumns={tableColumns}
         activeSortIndex={activeSortIndex}
         activeSortDir={activeSortDir}

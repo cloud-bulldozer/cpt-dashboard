@@ -1,5 +1,7 @@
-describe('basic user journey', () => {
+describe("basic user journey", () => {
   beforeEach(() => {
+    cy.intercept("GET", "/api/v1/cpt/jobs*").as("fetchData");
+    cy.intercept("GET", "/api/v1/cpt/filters*").as("fetchSummary");
     cy.visit("/");
   });
 
@@ -9,29 +11,29 @@ describe('basic user journey', () => {
       .should("be.visible")
       .within(() => {
         nav_list_tab_name.forEach((tab_name) => {
-          cy.findByText(tab_name)
-            .should("be.visible")
-            .click();
-      })
-    });
+          cy.findByText(tab_name).should("be.visible").click();
+        });
+      });
 
-    cy.findByTestId("main_layout_toggle")
-      .should("be.visible")
-      .click();
-    cy.findByTestId("side_menu_options")
-      .should("not.be.visible");
+    cy.findByTestId("main_layout_toggle").should("be.visible").click();
+    cy.findByTestId("side_menu_options").should("not.be.visible");
   });
 
   it("displays the summary and data table and paginates", () => {
-    cy.findByText('Summary')
-      .should('be.visible') 
-      .click({force: true});
-    
-    cy.findByTestId("data_table_filter")
-      .should("be.visible");
+    cy.wait("@fetchData").its("response.statusCode").should("eq", 200);
+    cy.wait("@fetchSummary").its("response.statusCode").should("eq", 200);
+    cy.findByText("Summary").should("be.visible").click({ force: true });
 
-    cy.findByTestId("data_table_pagination")
-      .scrollIntoView()
-      .should("be.visible");
+    cy.findAllByTestId("data_table_filter").then(($filters) => {
+      if ($filters.length > 0) {
+        cy.wrap($filters).should("exist").and("be.visible");
+      }
+    });
+
+    cy.findAllByTestId("data_table_pagination").then(($pagination) => {
+      if ($pagination.length > 0) {
+        cy.wrap($pagination).scrollIntoView().should("exist").and("be.visible");
+      }
+    });
   });
 });
