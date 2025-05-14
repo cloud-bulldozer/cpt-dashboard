@@ -34,9 +34,10 @@ jobs:
         uses: actions/checkout@v4
       - name: run frontend e2e tests
         run: ./frontend/tests/e2e.sh
-      - name: save cypress test screenshots
-        uses: actions/upload-artifact@v4
-        with:
-          name: e2e-images
-          if-no-files-found: error
-          path: ./frontend/cypress/screenshots/ocp.cy.js
+      # TODO: add back when the e2e tests capture screenshots
+      # - name: save cypress test screenshots
+      #   uses: actions/upload-artifact@v4
+      #   with:
+      #     name: e2e-images
+      #     if-no-files-found: error
+      #     path: ./frontend/cypress/screenshots/ocp.cy.js
