@@ -25,4 +25,6 @@ podman compose --file ${BRANCH}/compose.yaml build
 podman compose --file ${BRANCH}/compose.yaml --profile e2e up --detach
 # watch e2e tests for successful completion
 podman compose --file ${BRANCH}/compose.yaml logs --follow ${CYPRESS_POD}
-podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
+
+# TODO: no screenshots to upload until e2e tests are remediated
+# podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots

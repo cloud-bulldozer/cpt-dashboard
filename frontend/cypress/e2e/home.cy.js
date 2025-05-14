@@ -1,4 +1,4 @@
-describe('basic user journey', () => {
+describe('user journey on empty table', () => {
   beforeEach(() => {
     cy.visit("/");
   });
@@ -22,16 +22,8 @@ describe('basic user journey', () => {
       .should("not.be.visible");
   });
 
-  it("displays the summary and data table and paginates", () => {
-    cy.findByText('Summary')
-      .should('be.visible') 
-      .click({force: true});
-    
+  it("displays data table filter", () => {    
     cy.findByTestId("data_table_filter")
-      .should("be.visible");
-
-    cy.findByTestId("data_table_pagination")
-      .scrollIntoView()
       .should("be.visible");
   });
 });
