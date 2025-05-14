@@ -11,9 +11,9 @@ const ILabSummary = (props) => {
     const data = summaryData?.find((a) => a.uid === id);
     return data;
   };
-  const hasSummaryData = (ids) => {
+  const hasSummaryData = (runs) => {
     const hasData = Boolean(
-      summaryData.filter((i) => ids.includes(i.uid)).length === ids.length
+      summaryData.filter((i) => runs.includes(i.uid)).length === ids.length
     );
     return hasData;
   };
@@ -23,11 +23,12 @@ const ILabSummary = (props) => {
       {hasSummaryData(ids) ? (
         <Table
           variant="compact"
-          className="box"
+          hasNoInset
+          className="summary-table"
           key={uid()}
-          aria-label="summary-table"
+          aria-label="Statistical summary table"
         >
-          <Thead>
+          <Thead noWrap>
             <Tr>
               {ids.length > 1 ? <Th>Run</Th> : <></>}
               <Th>Metric</Th>
@@ -40,14 +41,12 @@ const ILabSummary = (props) => {
           <Tbody>
             {ids.map((id, ridx) =>
               getSummaryData(id).data.map((stat, sidx) => (
-                <Tr
-                  hasNoInset
-                  key={uid()}
-                  {...(ridx % 2 === 0 && { isStriped: true })}
-                >
+                <Tr key={uid()} {...(ridx % 2 === 0 && { isStriped: true })}>
                   {ids.length > 1 && sidx === 0 ? (
                     <Td rowSpan={getSummaryData(id).data.length}>{ridx + 1}</Td>
-                  ) : undefined}
+                  ) : (
+                    <></>
+                  )}
                   <Td>{stat.title}</Td>
                   <Td>
                     {typeof stat.min === "number"
@@ -84,6 +83,6 @@ const ILabSummary = (props) => {
 };
 
 ILabSummary.propTypes = {
-  item: PropType.object,
+  ids: PropType.array,
 };
 export default ILabSummary;

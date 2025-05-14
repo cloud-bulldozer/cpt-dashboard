@@ -36,7 +36,7 @@ const initialState = {
   metrics: [],
   periods: [],
   filterOptions: [],
-  metrics_selected: {},
+  metrics_selected: [],
   comparisonSwitch: false,
   metaRowExpanded: [],
 };
