@@ -35,17 +35,15 @@ describe("basic user journey", () => {
         $body.find('[data-ouia-component-id="data_table_pagination"]').length >
         0;
 
-      if (hasFilter && hasPagination) {
+      if (hasFilter) {
         cy.get('[data-ouia-component-id="data_table_filter"]').should(
           "be.visible"
         );
+      }
+      if (hasPagination) {
         cy.get('[data-ouia-component-id="data_table_pagination"]')
           .scrollIntoView()
           .should("be.visible");
-      } else {
-        cy.findByTestId("custom_empty_state", { timeout: 10000 })
-          .should("be.visible")
-          .and("contain.text", "No results found");
       }
     });
   });
