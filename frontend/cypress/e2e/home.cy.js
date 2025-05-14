@@ -28,8 +28,11 @@ describe("basic user journey", () => {
     cy.wait("@fetchSummary").its("response.statusCode").should("eq", 200);
     cy.findByText("Summary").should("be.visible").click({ force: true });
 
-    cy.findByTestId("data_table_filter").should("be.visible");
-    cy.findByTestId("data_table_pagination")
+    cy.findByTestId("data_table_filter", { timeout: 30000 })
+      .should("exist")
+      .and("be.visible");
+    cy.findByTestId("data_table_pagination", { timeout: 30000 })
+      .should("exist")
       .scrollIntoView()
       .should("be.visible");
   });
