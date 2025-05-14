@@ -6,16 +6,11 @@
 #
 #
 TOP=$(git rev-parse --show-toplevel)
-BACKEND=${TOP}/opt/backend
+BACKEND=${TOP}/backend
 
-CPT_BACKEND_PORT=${CPT_BACKEND_PORT:-8000}
-CPT_FRONTEND_PORT=${CPT_FRONTEND_PORT:-3000}
-CPT_CONFIG=${CPT_CONFIG:-"${BACKEND}/ocpperf.toml"}
-podman rm -f front back
+podman compose --file ${TOP}/compose.yaml down
 
 ${BACKEND}/scripts/version.py
-podman build -f backend/backend.containerfile --tag backend
-podman build -f frontend/frontend.containerfile --tag frontend
 
-podman run -d --name=back -p ${CPT_BACKEND_PORT}:8000 --network=host -v "${CPT_CONFIG}:/opt/backend/ocpperf.toml:Z" localhost/backend
-podman run -d --name=front --net=host -p ${CPT_FRONTEND_PORT}:3000 localhost/frontend
+podman compose --file ${TOP}/compose.yaml build
+podman compose --file ${TOP}/compose.yaml up --detach

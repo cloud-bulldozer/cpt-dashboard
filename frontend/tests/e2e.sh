@@ -16,13 +16,13 @@ CPT_CONFIG=${CPT_CONFIG:-"${SETUP}/funcconfig.toml"}
 trap cleanup EXIT
 
 # generate application version file
-./backend/scripts/version.py       
+${BACKEND}/scripts/version.py     
 
 # depends upon the e2e test's container name in the compose file
 CYPRESS_POD="e2e-frontend"
 
-podman compose build
-podman compose --profile e2e up --detach
+podman compose --file ${BRANCH}/compose.yaml build
+podman compose --file ${BRANCH}/compose.yaml --profile e2e up --detach
 # watch e2e tests for successful completion
-podman compose logs --follow ${CYPRESS_POD}
+podman compose --file ${BRANCH}/compose.yaml logs --follow ${CYPRESS_POD}
 podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
