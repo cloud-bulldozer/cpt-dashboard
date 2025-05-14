@@ -80,27 +80,6 @@ services:
     ports:
       - "127.0.0.1:3000:3000"
 
-  e2e-in-network:
-    container_name: e2e-in-network
-    profiles:
-      - e2e-in-network
-    image: e2e-frontend:latest
-    build:
-      context: ./frontend
-      dockerfile: e2e_frontend.containerfile
-      tags:
-        - e2e-frontend:latest
-    depends_on:
-      frontend:
-        condition: service_started
-      db-seed:
-        condition: service_completed_successfully
-    networks:
-      - e2e-pod
-    environment:
-      - GUI_BASE_URL=http://frontend:3000
-    command: ["run", "cypress:run:e2e"]
-
   e2e-frontend:
     container_name: e2e-frontend
     profiles:
