@@ -1886,10 +1886,6 @@ class TestCrucible:
             expected = {
                 "data": [
                     {
-                        "labels": {
-                            "x": "sample timestamp",
-                            "y": "samples / second",
-                        },
                         "marker": {
                             "color": "black",
                         },
@@ -1912,7 +1908,32 @@ class TestCrucible:
                     },
                 ],
                 "layout": {
-                    "width": "1500",
+                    "autosize": True,
+                    "legend": {
+                        "orientation": "h",
+                        "x": 0.9,
+                        "xanchor": "right",
+                        "xref": "container",
+                        "y": 1,
+                        "yanchor": "top",
+                        "yref": "container",
+                    },
+                    "responsive": True,
+                    "showlegend": True,
+                    "xaxis": {
+                        "tickformat": "%Y:%M:%d %X %Z",
+                        "title": {
+                            "font": {
+                                "color": "gray",
+                                "variant": "petite-caps",
+                                "weight": 1000,
+                            },
+                            "text": "sample timestamp",
+                        },
+                        "type": "date",
+                    },
+                    "xaxis_title": "sample timestamp",
+                    "yaxis_title": "Metric value",
                     "yaxis": {
                         "color": "black",
                         "title": "source::type",
@@ -1923,10 +1944,6 @@ class TestCrucible:
             expected = {
                 "data": [
                     {
-                        "labels": {
-                            "x": "sample timestamp",
-                            "y": "samples / second",
-                        },
                         "marker": {
                             "color": "black",
                         },
@@ -1949,7 +1966,32 @@ class TestCrucible:
                     },
                 ],
                 "layout": {
-                    "width": "1500",
+                    "autosize": True,
+                    "legend": {
+                        "orientation": "h",
+                        "x": 0.9,
+                        "xanchor": "right",
+                        "xref": "container",
+                        "y": 1,
+                        "yanchor": "top",
+                        "yref": "container",
+                    },
+                    "responsive": True,
+                    "showlegend": True,
+                    "xaxis": {
+                        "tickformat": "%Y:%M:%d %X %Z",
+                        "title": {
+                            "font": {
+                                "color": "gray",
+                                "variant": "petite-caps",
+                                "weight": 1000,
+                            },
+                            "text": "sample timestamp",
+                        },
+                        "type": "date",
+                    },
+                    "xaxis_title": "sample timestamp",
+                    "yaxis_title": "Metric value",
                     "yaxis": {
                         "color": "black",
                         "title": "source::type",
