@@ -24,6 +24,7 @@ backend:
     tag: latest
   resources: {}
   securityContext: {}
+  name: backend
 
 podAnnotations:
   alpha.image.policy.openshift.io/resolve-names: '*'

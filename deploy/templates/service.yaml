@@ -18,7 +18,7 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: backend
+  name: {{ .Values.backend.name }}
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "dashboard.labels" . | nindent 4 }}
