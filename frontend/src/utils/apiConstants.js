@@ -1,11 +1,4 @@
-export const getUrl = () => {
-  const { hostname, protocol } = window.location;
-  return hostname === "localhost"
-    ? "http://0.0.0.0:8000"
-    : `${protocol}//${hostname}`;
-};
-
-export const BASE_URL = getUrl();
+export const BASE_URL = "";
 
 export const AGG_VERSION_API = "/api/version";
 

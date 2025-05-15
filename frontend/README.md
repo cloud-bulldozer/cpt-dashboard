@@ -95,31 +95,24 @@ npm --prefix frontend run cypress:cp
 ### E2E Tests
 
 #### Requirements
-- Three shell terminals
 - Starting directory is the project root
-- Podman, Docker
-- NodeJS 22+
+- Podman/Docker Compose
 
-Start CPT-Dashboard backend data service end-to-end test dependency.
+Execute the end-to-end tests.
 ```shell
-./backend/e2e_backend.sh
+./frontend/tests/e2e.sh
 ```
 
-Start frontend GUI server and execute end-to-end tests.
+#### Interactive E2E (and Component) Test Development
+
+If necessary, build the application's required images
 ```shell
-npm --prefix frontend run cypress:run:ci
+podman compose build
 ```
 
-#### Interactive E2E Test Execution
-
-Start CPT-Dashboard backend data service end-to-end test dependency.
+Start CPT-Dashboard frontend, and backend data service end-to-end test dependencies.
 ```shell
-./backend/e2e_backend.sh
-```
-
-Start CPT-Dashboard frontend GUI.
-```shell
-npm --prefix frontend run dev
+podman compose up --detach
 ```
 
 [Open Cypress](https://docs.cypress.io/app/core-concepts/open-mode) GUI to view test execution.

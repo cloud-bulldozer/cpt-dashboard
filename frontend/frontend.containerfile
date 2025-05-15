@@ -5,6 +5,8 @@ FROM node:22-bookworm-slim AS builder
 
 WORKDIR /usr/src/cpt-dashboard
 
+ARG VITE_PERF_DATA_API_BASE_URL=http://localhost:8000
+
 # Install dependencies first so we can leverage Docker cache
 COPY package*.json ./
 RUN npm clean-install
@@ -21,8 +23,12 @@ RUN npm run build
 # ─────────────────────────────────────────────────────────────────────────────
 FROM docker.io/nginxinc/nginx-unprivileged:1.27-alpine
 
+COPY entrypoint.sh /entrypoint.sh
+
 # 1) Become root so we can fix ownership and create the PID file
 USER root
+
+RUN chmod +x /entrypoint.sh && apk add --no-cache bind-tools
 
 RUN \
   # On OpenShift’s Restricted SCC the container runs as an arbitrary UID in GID=0,  \
@@ -48,5 +54,4 @@ COPY --chown=nginx:root --from=builder /usr/src/cpt-dashboard/dist/ /usr/share/n
 USER nginx
 
 EXPOSE 3000
-ENTRYPOINT ["nginx"]
-CMD ["-g", "daemon off;"]
+ENTRYPOINT ["/entrypoint.sh"]

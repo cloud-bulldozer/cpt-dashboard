@@ -1,3 +1,4 @@
+import os
 import typing
 
 from fastapi import FastAPI, Request
@@ -15,7 +16,22 @@ class ORJSONResponse(JSONResponse):
         return orjson.dumps(content)
 
 
-origins = ["http://localhost:3000", "localhost:3000"]
+ORIGINS_DEV = ["http://localhost:3000", "localhost:3000"]
+
+
+def parse_origins(origins: typing.Optional[str]) -> list[str]:
+    """Parse a comma delimited list of allowed URL Origins.
+    """
+    if not origins:
+        return ORIGINS_DEV.copy()    
+    return [
+        raw.strip().rstrip("/")          # strip whitespace and trailing slash
+        for raw in origins.split(",")
+        if raw.strip()                   # filter out empty strings
+    ] + ORIGINS_DEV
+
+
+origins = parse_origins(os.getenv("CORS_ALLOWED_ORIGINS"))
 
 app = FastAPI(
     default_response_class=ORJSONResponse,

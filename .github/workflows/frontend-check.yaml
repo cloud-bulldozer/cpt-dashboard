@@ -32,6 +32,8 @@ jobs:
     steps:
       - name: checkout
         uses: actions/checkout@v4
+      - name: enable podman socket to facilitate podman compose
+        run: systemctl --user enable --now podman.socket         
       - name: run frontend e2e tests
         run: ./frontend/tests/e2e.sh
       # TODO: add back when the e2e tests capture screenshots
