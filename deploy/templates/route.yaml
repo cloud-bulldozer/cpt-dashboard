@@ -30,7 +30,7 @@ spec:
     targetPort: 8000
   to:
     kind: Service
-    name: {{ include "dashboard.fullname" . }}
+    name: {{ .Values.backend.name }}
     weight: 100
   wildcardPolicy: None
 {{ end }}
