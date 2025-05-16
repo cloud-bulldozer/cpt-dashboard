@@ -451,7 +451,7 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
     let graphs = [];
     periods?.periods?.forEach((p) => {
       if (p.is_primary) {
-        graphs.push({ run: uid, metric: p.primary_metric, periods: [p.id] });
+        graphs.push({ run: uid, metric: p.primary_metric, aggregate: true, periods: [p.id] });
       }
       if (metrics) {
         metrics.forEach((metric) => {
@@ -555,6 +555,7 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
           graphs.push({
             run: uid,
             metric: p.primary_metric,
+            aggregate: true,
             periods: [p.id],
             title: makeTitle(run, p, p.primary_metric, template),
           });
