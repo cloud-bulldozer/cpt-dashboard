@@ -2038,6 +2038,7 @@ class CrucibleService:
             "yaxis_title": "Metric value",
             "xaxis": xaxis,
             "legend": {
+                "groupclick": "toggleitem",
                 "xref": "container",
                 "yref": "container",
                 "xanchor": "right",
