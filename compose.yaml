@@ -4,8 +4,6 @@ x-backend: &backend_base
     context: ./backend
     dockerfile: backend.containerfile
   image: backend:latest
-  volumes:
-    - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
   environment:
     - CORS_ALLOWED_ORIGINS=http://localhost:3000,localhost:3000,http://frontend:3000,frontend:3000
 
@@ -67,6 +65,8 @@ services:
     <<: *backend_base
     depends_on:
       - searchdb-ocp
+    volumes:
+      - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z      
     networks:
       e2e-pod:
         aliases: [backend]
@@ -76,6 +76,8 @@ services:
   backend-host:
     <<: *backend_base
     profiles: [host]
+    volumes:
+      - ./backend/ocpperf.toml:/opt/backend/ocpperf.toml:Z
     network_mode: host
     ports:
       - "8000:8000"
