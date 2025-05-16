@@ -10,6 +10,7 @@ import {
   Tr,
 } from "@patternfly/react-table";
 import {
+  fetchIlabFilters,
   fetchIlabJobs,
   fetchGraphData,
   fetchMetricsInfo,
@@ -72,6 +73,7 @@ const ILab = () => {
   };
 
   useEffect(() => {
+    dispatch(fetchIlabFilters());
     if (searchParams.size > 0) {
       // date filter is set apart
       const startDate = searchParams.get("start_date");
