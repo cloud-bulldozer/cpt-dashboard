@@ -44,7 +44,7 @@ const ILabSummary = (props) => {
             >
               <Thead noWrap>
                 <Tr>
-                  {ids.length > 1 ? <Th>Run</Th> : <></>}
+                  {ids.length > 1 && <Th>Run</Th>}
                   <Th>Metric</Th>
                   <Th>Min</Th>
                   <Th>Average</Th>
@@ -56,12 +56,10 @@ const ILabSummary = (props) => {
                 {ids.map((id, ridx) =>
                   getSummaryData(id).data.map((stat, sidx) => (
                     <Tr key={uid()}>
-                      {ids.length > 1 && sidx === 0 ? (
+                      {ids.length > 1 && sidx === 0 && (
                         <Td rowSpan={getSummaryData(id).data.length}>
                           {ridx + 1}
                         </Td>
-                      ) : (
-                        <></>
                       )}
                       <Td>{stat.title}</Td>
                       <Td>

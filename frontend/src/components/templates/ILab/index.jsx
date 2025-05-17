@@ -9,12 +9,15 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
+  fetchILabJobs,
   fetchIlabFilters,
   fetchIlabJobs,
   fetchGraphData,
   fetchMetricsInfo,
   fetchPeriods,
+  fetchRowAPIs,
   fetchSummaryData,
   setIlabDateFilter,
   toggleComparisonSwitch,
@@ -23,7 +26,6 @@ import {
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
@@ -62,13 +64,8 @@ const ILab = () => {
         ? [...otherExpandedRunNames, run.id]
         : otherExpandedRunNames;
     });
-    if (isExpanding) {
-      await Promise.all([
-        await dispatch(fetchPeriods(run.id)),
-        await dispatch(fetchMetricsInfo(run.id)),
-        await dispatch(fetchGraphData(run.id)),
-        await dispatch(fetchSummaryData(run.id)),
-      ]);
+    if (isExpanding && !isResultExpanded(run.id)) {
+      dispatch(fetchRowAPIs(run));
     }
   };
 
@@ -121,11 +118,10 @@ const ILab = () => {
   );
   const updateSelectedFilter = (category, value, isFromMetrics = false) => {};
 
-  const onSwitchChange = () => {
+  const onSwitchChange = useCallback(() => {
     dispatch(toggleComparisonSwitch());
     dispatch(updateURL(navigate));
-  };
-
+  }, [dispatch, navigate]);
   return (
     <div className="ilab-table-container">
       <TableFilter
@@ -168,10 +164,9 @@ const ILab = () => {
                         isExpanded: isResultExpanded(item.id),
                         onToggle: () =>
                           setExpanded(item, !isResultExpanded(item.id)),
-                        expandId: `expandId-${uid()}`,
+                        expandId: `expandId-${item.id}`,
                       }}
                     />
-
                     <Td>{item.primary_metrics[0]}</Td>
                     <Th>{formatDateTime(item.begin_date)}</Th>
                     <Th>{formatDateTime(item.end_date)}</Th>

@@ -7,65 +7,69 @@ import {
   Skeleton,
 } from "@patternfly/react-core";
 import {
-  fetchGraphData,
-  fetchMultiGraphData,
-  fetchSummaryData,
-  handleSummaryData,
-  toggleSelectedMetric,
+  retrieveGraphAndSummary,
+  setSelectedMetrics,
 } from "@/actions/ilabActions";
+import { useCallback, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import PropTypes from "prop-types";
-import { useState } from "react";
 
 const MetricsSelect = (props) => {
-  const { metrics, metrics_selected } = useSelector((state) => state.ilab);
-  const { ids } = props;
+  const metrics = useSelector((state) => state.ilab.metrics);
+  const metrics_selected = useSelector((state) => state.ilab.metrics_selected);
+  const { ids, selectedMetric, setSelectedMetric } = props;
+  const comparisonSwitch = useSelector((state) => state.ilab.comparisonSwitch);
 
   /* Metrics select */
   const [isOpen, setIsOpen] = useState(false);
-  const dispatch = useDispatch();
-
-  const toggle1 = (toggleRef) => (
-    <MenuToggle
-      ref={toggleRef}
-      onClick={onToggleClick}
-      isExpanded={isOpen}
-      badge={<Badge isRead>{`${metrics_selected.length} selected`}</Badge>}
-    >
-      Additional metrics
-    </MenuToggle>
+  const [isDirty, setIsDirty] = useState(false);
+  const [currentSelections, setCurrentSelections] = useState(
+    comparisonSwitch ? selectedMetric || [] : metrics_selected || []
   );
 
-  const onToggleClick = async () => {
-    setIsOpen(!isOpen);
-  };
+  const dispatch = useDispatch();
+
+  const onToggleClick = useCallback(() => {
+    setIsOpen((prev) => !prev);
+  }, []);
+
+  const toggle = useCallback(
+    (toggleRef) => (
+      <MenuToggle
+        ref={toggleRef}
+        onClick={onToggleClick}
+        isExpanded={isOpen}
+        badge={<Badge isRead>{`${currentSelections.length} selected`}</Badge>}
+      >
+        Additional metrics
+      </MenuToggle>
+    ),
+    [isOpen, onToggleClick, currentSelections?.length]
+  );
+
   const onSelect = (_event, metric) => {
-    dispatch(toggleSelectedMetric(metric));
+    setIsDirty(true);
+    setCurrentSelections((prevSelections) =>
+      prevSelections.includes(metric)
+        ? prevSelections.filter((m) => m !== metric)
+        : [...prevSelections, metric]
+    );
   };
 
-  const onOpenChange = async (nextOpen) => {
-    if (!nextOpen && ids.length > 0) {
+  const closeMenu = () => {
+    if (ids.length > 0 && isDirty) {
       // If we're closing, fetch data
-
-      if (ids.length === 1) {
-        await Promise.all([
-          await dispatch(fetchGraphData(ids[0])),
-          await dispatch(fetchSummaryData(ids[0])),
-        ]);
+      // setSelectedMetric is for expanded row else it is comparison view
+      if (setSelectedMetric) {
+        setSelectedMetric(currentSelections);
       } else {
-        await Promise.all([
-          await dispatch(fetchMultiGraphData(ids)),
-          await dispatch(handleSummaryData(ids)),
-        ]);
+        dispatch(setSelectedMetrics(currentSelections));
       }
+      dispatch(retrieveGraphAndSummary(ids));
     }
-    setIsOpen(nextOpen);
-  };
-
-  const getMetricsData = (id) => {
-    const data = metrics?.filter((a) => a.uid === id);
-    return data?.metrics;
+    setIsDirty(false);
+    setIsOpen(false);
   };
   const hasAllMetricsData = (runs) => {
     const hasData = Boolean(
@@ -74,20 +78,15 @@ const MetricsSelect = (props) => {
     return hasData;
   };
 
-  // de-dup a "set" using object keys
-  var collector = {};
-  if (hasAllMetricsData(ids)) {
-    const datas = metrics.filter((a) => ids.includes(a.uid));
-    if (datas) {
-      datas.forEach((a) => {
-        if (a.metrics) {
-          a.metrics.forEach((k) => (collector[k] = true));
-        }
-      });
-    }
-  }
-  const all_metrics = Object.keys(collector).sort();
+  const all_metrics = useMemo(() => {
+    const collector = new Set();
+    metrics
+      .filter((a) => ids.includes(a.uid))
+      .forEach((a) => a.metrics?.forEach((k) => collector.add(k)));
+    return [...collector].sort();
+  }, [metrics, ids]);
 
+  const createItemId = (value) => `select-multi-${value.replace(" ", "-")}`;
   /* Metrics select */
   return (
     <>
@@ -96,16 +95,19 @@ const MetricsSelect = (props) => {
           id="checkbox-select"
           role="menu"
           isOpen={isOpen}
-          selected={metrics_selected}
+          selected={currentSelections}
           onSelect={onSelect}
-          onOpenChange={onOpenChange}
-          toggle={toggle1}
+          onOpenChange={(isOpen) => {
+            !isOpen && closeMenu();
+          }}
+          toggle={toggle}
         >
           <SelectList>
             {all_metrics.map((metric) => (
               <SelectOption
                 key={metric}
-                isSelected={metrics_selected.includes(metric)}
+                id={createItemId(metric)}
+                isSelected={currentSelections.includes(metric)}
                 hasCheckbox
                 value={metric}
               >
@@ -123,5 +125,7 @@ const MetricsSelect = (props) => {
 
 MetricsSelect.propTypes = {
   ids: PropTypes.array,
+  selectedMetric: PropTypes.array,
+  setSelectedMetric: PropTypes.func,
 };
 export default MetricsSelect;

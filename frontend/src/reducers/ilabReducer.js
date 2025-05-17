@@ -41,6 +41,7 @@ const initialState = {
   metrics_selected: [],
   comparisonSwitch: false,
   metaRowExpanded: [],
+  selectedMetricsPerRun: {},
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -102,6 +103,8 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, runFilters: payload };
     case TYPES.SET_ILAB_METRIC_TEMPLATE:
       return { ...state, metricTemplate: payload };
+    case TYPES.SET_SELECTED_METRICS_PER_RUN:
+      return { ...state, selectedMetricsPerRun: payload };
     default:
       return state;
   }
