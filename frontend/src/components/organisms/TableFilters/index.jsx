@@ -86,8 +86,17 @@ const TableFilter = (props) => {
   const onCategoryChange = (_event, value) => {
     setCatFilters(value, type);
   };
-  const onOptionsChange = () => {
-    setAppliedFilters(navigation, type);
+  const onOptionsChange = async () => {
+    const selectedFilterObj = selectedFilters.reduce((acc, item) => {
+      if (item.value.length > 0) {
+        acc[item.key] = item.value;
+      }
+      return acc;
+    }, {});
+    const _ = await import("lodash");
+    if (!_.isEqual(selectedFilterObj, appliedFilters)) {
+      setAppliedFilters(navigation, type);
+    }
   };
   const deleteItem = async (key, value) => {
     await updateSelectedFilter(key, value, false);
