@@ -1,47 +1,40 @@
-describe('ocp user journey', () => {
+describe("ocp user journey", () => {
   beforeEach(() => {
+    cy.intercept("GET", "/api/v1/ocp/jobs*").as("fetchData");
     cy.visit("/ocp");
     cy.findByTestId("side_menu_options")
       .should("be.visible")
       .within(() => {
-        cy.findByText("OCP")
-          .should("be.visible")
-          .click();
+        cy.findByText("OCP").should("be.visible").click();
       });
-    cy.findByTestId("main_layout_toggle")  
-      .click();
-    cy.findByTestId("side_menu_options")
-      .should("not.be.visible");
+    cy.findByTestId("main_layout_toggle").click();
+    cy.findByTestId("side_menu_options").should("not.be.visible");
   });
 
-  it.skip("expands a table row's details row to display cluster config metadata table", () => {
-    // TODO: remediate test to correctly find and enter input into the 
-    //       start and end date pickers
-
-    // ocp data only exists in this date range
-    const start_date = "2025-03-01"
-    const end_date = "2025-03-30"
+  it("expands a table row's details row to display cluster config metadata table", () => {
+    const start_date = "2025-03-01";
+    const end_date = "2025-03-30";
 
     // find date filter inputs
-    cy.findByTestId("data_table_filter")      
+    cy.findByTestId("data_table_filter")
       .find(`[ouiaid="date_filter"]`)
       .within(($date_filter) => {
         cy.wrap($date_filter)
           .find(`[class="react-date-picker__inputGroup"]`)
           .as("date_pickers_inputs");
       });
-    
+
     // set start date
     // by convention, the first date input on the left receives the start date
     cy.get("@date_pickers_inputs")
       .first()
       .within(($date_pickers) => {
         cy.wrap($date_pickers)
-          .get("input", {hidden: true})
+          .get("input", { hidden: true })
           // the date value is saved within the hidden element
           // in this date picker group
           .get(":hidden")
-          .type(start_date, {force: true});
+          .type(start_date, { force: true });
       });
 
     // set end date
@@ -50,40 +43,34 @@ describe('ocp user journey', () => {
       .last()
       .within(($date_pickers) => {
         cy.wrap($date_pickers)
-          .get("input", {hidden: true})
-          // the date value is saved within the hidden element 
+          .get("input", { hidden: true })
+          // the date value is saved within the hidden element
           // in this date picker group
           .get(":hidden")
-          .type(end_date, {force: true});
-      }); 
-    
+          .type(end_date, { force: true });
+      });
+
+    // cy.screenshot("main-data-table");
     cy.screenshot();
 
     cy.findByTestId("main_data_table")
       .get("tbody")
-      .find(`[data-ouia-component-type="PF5/TableRow"]`, 
-          {hidden: false})
+      .find(`[data-ouia-component-type="PF5/TableRow"]`, { hidden: false })
       .as("table_row")
       .first();
 
-    // in the list of table row elements, each table row is 
+    // in the list of table row elements, each table row is
     // paired with a subsequent hidden row that can be expanded
     // to display details
-    cy.get("@table_row")
-      .next()
-      .as("expandable_rows")        
-      .should("not.be.visible");
+    cy.get("@table_row").next().as("expandable_rows").should("not.be.visible");
 
     cy.get("@table_row")
-      .find(`[data-ouia-component-type="PF5/Button"]`, 
-          {expanded: false})
+      .find(`[data-ouia-component-type="PF5/Button"]`, { expanded: false })
       .first()
       .as("tgl_details")
       .click();
 
-    cy.get("@expandable_rows")
-      .first()
-      .should("be.visible");
+    cy.get("@expandable_rows").first().should("be.visible");
 
     // cluster config input
     cy.get("@expandable_rows")
@@ -91,12 +78,10 @@ describe('ocp user journey', () => {
       .find(`[data-ouia-component-id="metadata-table"]`)
       .should("be.visible");
 
-    cy.screenshot();      
+    cy.screenshot();
 
     // close expandable row
-    cy.get("@tgl_details")
-      .click();
-    cy.get("@expandable_rows")
-      .should("not.be.visible");
+    cy.get("@tgl_details").click();
+    cy.get("@expandable_rows").should("not.be.visible");
   });
 });
