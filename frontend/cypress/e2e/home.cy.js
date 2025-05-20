@@ -28,15 +28,24 @@ describe("basic user journey", () => {
     cy.wait("@fetchSummary").its("response.statusCode").should("eq", 200);
     cy.findByText("Summary").should("be.visible").click({ force: true });
 
-    cy.findAllByTestId("data_table_filter").then(($filters) => {
-      if ($filters.length > 0) {
-        cy.wrap($filters).should("exist").and("be.visible");
-      }
-    });
+    cy.document().then((doc) => {
+      const hasFilter = doc.querySelector(
+        '[data-ouia-component-id="data_table_filter"]'
+      );
+      const hasPagination = doc.querySelector(
+        '[data-ouia-component-id="data_table_pagination"]'
+      );
 
-    cy.findAllByTestId("data_table_pagination").then(($pagination) => {
-      if ($pagination.length > 0) {
-        cy.wrap($pagination).scrollIntoView().should("exist").and("be.visible");
+      if (hasFilter) {
+        cy.get('[data-ouia-component-id="data_table_filter"]').should(
+          "be.visible"
+        );
+      }
+
+      if (hasPagination) {
+        cy.get('[data-ouia-component-id="data_table_pagination"]')
+          .scrollIntoView()
+          .should("be.visible");
       }
     });
   });
