@@ -9,22 +9,17 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
-import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import {
-  fetchILabJobs,
   fetchIlabFilters,
   fetchIlabJobs,
-  fetchGraphData,
-  fetchMetricsInfo,
-  fetchPeriods,
   fetchRowAPIs,
-  fetchSummaryData,
   setIlabDateFilter,
   toggleComparisonSwitch,
   updateFromURL,
   updateURL,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { useNavigate, useSearchParams } from "react-router-dom";
 
@@ -174,7 +169,10 @@ const ILab = () => {
                       <StatusCell value={item.status} />
                     </Td>
                   </Tr>
-                  <Tr key={`${item.id}-exp`} isExpanded={isResultExpanded(item.id)}>
+                  <Tr
+                    key={`${item.id}-exp`}
+                    isExpanded={isResultExpanded(item.id)}
+                  >
                     <Td colSpan={8}>
                       <ExpandableRowContent>
                         <IlabRowContent item={item} />

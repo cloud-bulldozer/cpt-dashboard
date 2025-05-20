@@ -45,11 +45,11 @@ const ILabSummary = (props) => {
               <Thead noWrap>
                 <Tr>
                   {ids.length > 1 && <Th>Run</Th>}
-                  <Th>Metric</Th>
-                  <Th>Min</Th>
-                  <Th>Average</Th>
-                  <Th>Max</Th>
-                  <Th>Standard Deviation</Th>
+                  <Th width={35}>Metric</Th>
+                  <Th width={10}>Min</Th>
+                  <Th width={10}>Average</Th>
+                  <Th width={10}>Max</Th>
+                  <Th width={10}>Standard Deviation</Th>
                 </Tr>
               </Thead>
               <Tbody>

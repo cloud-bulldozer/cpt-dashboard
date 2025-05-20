@@ -11,31 +11,23 @@ const ILabGraph = (props) => {
 
   const graphDataCopy = cloneDeep(graphData);
 
-  const getGraphData = (id) => {
-    const data = graphDataCopy?.filter((a) => a.uid === id);
-    return data;
-  };
-  const hasGraphData = (uuid) => {
-    const hasData = getGraphData(uuid).length > 0;
+  const currentGraph = graphDataCopy?.find((a) => a.uid === item.id);
+  if (currentGraph) {
+    return (
+      <Plot
+        data={currentGraph.data}
+        layout={currentGraph.layout}
+        key={uid()}
+        style={{ width: "100%", height: "100%" }}
+      />
+    );
+  }
 
-    return hasData;
-  };
+  if (isGraphLoading) {
+    return <div className="loader"></div>;
+  }
 
-  return (
-    <>
-      {hasGraphData(item.id) ? (
-        <Plot
-          data={getGraphData(item.id)[0]?.data}
-          layout={getGraphData(item.id)[0]?.layout}
-          key={uid()}
-        />
-      ) : isGraphLoading && !hasGraphData(item.id) ? (
-        <div className="loader"></div>
-      ) : (
-        <></>
-      )}
-    </>
-  );
+  return null;
 };
 
 ILabGraph.propTypes = {
