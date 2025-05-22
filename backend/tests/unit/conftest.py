@@ -25,6 +25,6 @@ def fake_elastic(monkeypatch, fake_config):
 
 @pytest.fixture
 async def fake_crucible(fake_elastic):
-    crucible = CrucibleService("TEST", version=7)
+    crucible = CrucibleService("TEST", version="v7dev")
     yield crucible
     await crucible.close()

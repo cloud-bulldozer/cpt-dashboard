@@ -66,6 +66,17 @@ store to find information about runs, tags, params, iterations, samples,
 periods, plus various ways to expose and aggregate metric data both for
 primary benchmarks and non-periodic tools.
 
+The Crucible service supports a range of CDM (Common Data Model) versions. An
+OpenSearch instance may support either CDMv7, CDMv8, or CDMv9. Version 9 adds
+support for a shared OpenSearch instance with a design that intends to support
+mixing several versions; so that, in the future, Crucible would support a single
+server with both CDMv9 and CDMv10 indices, interleaving results from all indices
+within a specified date range.
+
+Note that while the Crucible service currently supports both CDMv7 and CDMv8, CDMv8
+will be automatically selected if CDMv8 indices exist; the service will use only
+one set of indices (either CDMv7 or CDMv8) after initialization.
+
 The `get_runs` API is the primary entry point, returning an object that
 supports filtering, sorting, and pagination of the Crucible run data decorated
 with useful iteration, tag, and parameter data.
