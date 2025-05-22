@@ -1,15 +1,15 @@
 import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
+import {
+  INITAL_OFFSET,
+  START_PAGE,
+} from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { showFailureToast } from "@/actions/toastActions";
-import {
-  INITAL_OFFSET,
-  START_PAGE,
-} from "@/assets/constants/paginationConstants";
 
 /**
  * Fetch and store InstructLab jobs based on configured filters.
@@ -75,7 +75,6 @@ export const applyFilters = () => (dispatch) => {
   dispatch(setIlabOffset(INITAL_OFFSET));
   dispatch(setIlabPage(START_PAGE));
   dispatch(fetchIlabJobs());
-  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
 };
 
@@ -125,7 +124,6 @@ export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {};
  * @param {string} category
  */
 export const setIlabOtherSummaryFilter = () => (dispatch, getState) => {};
-
 
 /**
  * Store the current page number for page fetch.
@@ -451,7 +449,12 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
     let graphs = [];
     periods?.periods?.forEach((p) => {
       if (p.is_primary) {
-        graphs.push({ run: uid, metric: p.primary_metric, aggregate: true, periods: [p.id] });
+        graphs.push({
+          run: uid,
+          metric: p.primary_metric,
+          aggregate: true,
+          periods: [p.id],
+        });
       }
       if (metrics) {
         metrics.forEach((metric) => {
