@@ -75,7 +75,6 @@ export const applyFilters = () => (dispatch) => {
   dispatch(setIlabOffset(INITAL_OFFSET));
   dispatch(setIlabPage(START_PAGE));
   dispatch(fetchIlabJobs());
-  //  dispatch(buildFilterData());
   dispatch(tableReCalcValues());
 };
 

@@ -27,7 +27,7 @@ const ILabGraph = (props) => {
     return <div className="loader"></div>;
   }
 
-  return null;
+  return <></>;
 };
 
 ILabGraph.propTypes = {
