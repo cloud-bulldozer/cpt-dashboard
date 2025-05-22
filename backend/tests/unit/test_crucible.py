@@ -1,4 +1,3 @@
-from collections import defaultdict
 from datetime import datetime, timezone
 import json
 
@@ -10,9 +9,15 @@ import app.config
 from app.services.crucible_svc import (
     CommonParams,
     CrucibleService,
+    DataDTO,
     GraphList,
+    IterationDTO,
     Metric,
+    MetricDTO,
     Parser,
+    PeriodDTO,
+    RunDTO,
+    SampleDTO,
 )
 from tests.unit.fake_elastic import Request
 
@@ -84,6 +89,188 @@ class TestList:
     )
     def test_split_empty(self, input, output):
         assert output == CrucibleService._split_list(input)
+
+
+class TestDTOs:
+
+    def test_run_dto_bad(self):
+        """Try to build a DTO with a bad document"""
+        with pytest.raises(HTTPException) as exc:
+            RunDTO({"foo": {}, "cdm": {"ver": "v7dev"}})
+        assert 500 == exc.value.status_code
+        assert (
+            "Raw CDM object is missing required keys: {'run'} not in {'cdm', 'foo'}"
+            == exc.value.detail
+        )
+
+    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "run-uuid")))
+    def test_run_dto(self, version, id):
+        body = {
+            "benchmark": "test",
+            "email": "test@example.com",
+            "name": "CI",
+            "source": "cdm.example.com/var/lib/abc",
+        }
+        run = RunDTO(
+            {
+                "cdm": {"ver": version},
+                "run": body
+                | {
+                    id: "foobar",
+                    "begin": "1726162827982",
+                    "end": "1726164203132",
+                    "host": "foobar@plugh.dnd",
+                },
+            }
+        )
+        assert run.id == "foobar"
+        assert run.version == version
+        assert (
+            body
+            | {
+                "id": "foobar",
+                "begin": 1726162827982,
+                "begin_date": "2024-09-12 17:40:27.982000+00:00",
+                "end": 1726164203132,
+                "end_date": "2024-09-12 18:03:23.132000+00:00",
+                "iterations": [],
+                "params": {},
+                "primary_metrics": [],
+                "status": None,
+                "host": "foobar@plugh.dnd",
+                "harness": None,
+                "tags": {},
+            }
+            == run.json()
+        )
+
+    @pytest.mark.parametrize(
+        "version,id", (("v7dev", "id"), ("v8dev", "iteration-uuid"))
+    )
+    def test_iteration_dto(self, version, id):
+        body = {
+            "num": 1,
+            "path": "foobar",
+            "status": "pass",
+        }
+        iter = IterationDTO(
+            {
+                "cdm": {"ver": version},
+                "iteration": body
+                | {
+                    id: "foobar",
+                    "primary-metric": "test::metric",
+                    "primary-period": "measurement",
+                },
+            }
+        )
+        assert iter.id == "foobar"
+        assert iter.version == version
+        assert (
+            body
+            | {
+                "id": "foobar",
+                "primary_metric": "test::metric",
+                "primary_period": "measurement",
+                "params": {},
+            }
+            == iter.json()
+        )
+
+    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "sample-uuid")))
+    def test_sample_dto(self, version, id):
+        body = {
+            "path": None,
+            "status": "pass",
+        }
+        iter = SampleDTO(
+            {"cdm": {"ver": version}, "sample": body | {id: "foobar", "num": "1"}}
+        )
+        assert iter.id == "foobar"
+        assert iter.version == version
+        assert body | {"id": "foobar", "num": 1} == iter.json()
+
+    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "period-uuid")))
+    def test_period_dto(self, version, id):
+        body = {"name": "measurement"}
+        iter = PeriodDTO(
+            {
+                "cdm": {"ver": version},
+                "period": body
+                | {id: "foobar", "begin": "1726162827982", "end": "1726164203132"},
+            }
+        )
+        assert iter.id == "foobar"
+        assert iter.version == version
+        assert (
+            body
+            | {
+                "id": "foobar",
+                "begin": 1726162827982,
+                "begin_date": "2024-09-12 17:40:27.982000+00:00",
+                "end": 1726164203132,
+                "end_date": "2024-09-12 18:03:23.132000+00:00",
+            }
+            == iter.json()
+        )
+
+    @pytest.mark.parametrize(
+        "version,id", (("v7dev", "id"), ("v8dev", "metric_desc-uuid"))
+    )
+    def test_metric_dto(self, version, id):
+        body = {
+            "class": "throughput",
+            "names": {"benchmark-name": "none", "tool-name": "test"},
+            "source": "test",
+            "type": "metric",
+        }
+        iter = MetricDTO(
+            {
+                "cdm": {"ver": version},
+                "metric_desc": body
+                | {id: "foobar", "names-list": ["benchmark-name", "tool-name"]},
+            }
+        )
+        assert iter.id == "foobar"
+        assert iter.version == version
+        assert (
+            body | {"id": "foobar", "names_list": ["benchmark-name", "tool-name"]}
+            == iter.json()
+        )
+
+    @pytest.mark.parametrize(
+        "version,id", (("v7dev", "id"), ("v8dev", "metric_data-uuid"))
+    )
+    def test_data_dto(self, version, id):
+        body = {}
+        iter = DataDTO(
+            {
+                "cdm": {"ver": version},
+                "metric_data": body
+                | {
+                    id: "foobar",
+                    "begin": "1724702817001",
+                    "duration": 15000,
+                    "end": "1724702832000",
+                    "value": "82.930000",
+                },
+            }
+        )
+        assert iter.id == "foobar"
+        assert iter.version == version
+        assert (
+            body
+            | {
+                "id": "foobar",
+                "begin": 1724702817001,
+                "begin_date": "2024-08-26 20:06:57.001000+00:00",
+                "duration": 15000,
+                "end": 1724702832000,
+                "end_date": "2024-08-26 20:07:12+00:00",
+                "value": 82.930000,
+            }
+            == iter.json()
+        )
 
 
 class TestFormatters:
@@ -823,6 +1010,7 @@ class TestCrucible:
                             "begin": "110",
                             "end": "7000",
                             "benchmark": "test",
+                            "source": "abc",
                         }
                     },
                     {
@@ -831,6 +1019,7 @@ class TestCrucible:
                             "begin": "110",
                             "end": "6000",
                             "benchmark": "test",
+                            "email": "a@b.c",
                         }
                     },
                 ]
@@ -842,7 +1031,7 @@ class TestCrucible:
                 {
                     "run": {"id": "r1"},
                     "iteration": {
-                        "id": "i1",
+                        "id": "r1-i1",
                         "num": 1,
                         "primary-period": "tp",
                         "primary-metric": "src::tst1",
@@ -852,7 +1041,7 @@ class TestCrucible:
                 {
                     "run": {"id": "r1"},
                     "iteration": {
-                        "id": "i2",
+                        "id": "r1-i2",
                         "num": 2,
                         "primary-period": "tp",
                         "primary-metric": "src::tst2",
@@ -862,7 +1051,7 @@ class TestCrucible:
                 {
                     "run": {"id": "r1"},
                     "iteration": {
-                        "id": "i3",
+                        "id": "r1-i3",
                         "num": 3,
                         "primary-period": "tp",
                         "primary-metric": "src::tst1",
@@ -876,13 +1065,23 @@ class TestCrucible:
             [
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i1"},
-                    "period": {"begin": 0, "end": 100, "name": "default"},
+                    "iteration": {"id": "r1-i1"},
+                    "period": {
+                        "id": "r1-p1",
+                        "begin": 0,
+                        "end": 100,
+                        "name": "default",
+                    },
                 },
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i2"},
-                    "period": {"begin": 100, "end": 5000, "name": "default"},
+                    "iteration": {"id": "r1-i2"},
+                    "period": {
+                        "id": "r1-p2",
+                        "begin": 100,
+                        "end": 5000,
+                        "name": "default",
+                    },
                 },
             ],
         )
@@ -902,27 +1101,27 @@ class TestCrucible:
             params = [
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i1"},
+                    "iteration": {"id": "r1-i1"},
                     "param": {"arg": "b", "val": "cde"},
                 },
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i1"},
+                    "iteration": {"id": "r1-i1"},
                     "param": {"arg": "z", "val": "xyzzy"},
                 },
                 {
                     "run": {"id": "r3"},
-                    "iteration": {"id": "i1"},
+                    "iteration": {"id": "r3-i1"},
                     "param": {"arg": "z", "val": "xyzzy"},
                 },
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i2"},
+                    "iteration": {"id": "r1-i2"},
                     "param": {"arg": "b", "val": "cde"},
                 },
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "i2"},
+                    "iteration": {"id": "r1-i2"},
                     "param": {"arg": "x", "val": "plugh"},
                 },
             ]
@@ -932,51 +1131,64 @@ class TestCrucible:
             "offset": 0,
             "results": [
                 {
+                    "id": "r1",
                     "begin": 0,
                     "begin_date": "1970-01-01 00:00:00+00:00",
                     "benchmark": "test",
                     "end": 5000,
                     "end_date": "1970-01-01 00:00:05+00:00",
-                    "id": "r1",
+                    "name": None,
+                    "source": None,
+                    "email": None,
+                    "host": None,
+                    "harness": None,
                     "iterations": [
                         {
-                            "iteration": 1,
-                            "params": defaultdict(
-                                None,
-                                {
+                            "id": "r1-i1",
+                            "num": 1,
+                            "params": (
+                                {}
+                                if noparam
+                                else {
                                     "b": "cde",
                                     "z": "xyzzy",
-                                },
+                                }
                             ),
+                            "path": None,
                             "primary_metric": "src::tst1",
                             "primary_period": "tp",
                             "status": "pass",
                         },
                         {
-                            "iteration": 2,
-                            "params": defaultdict(
-                                None,
-                                {
+                            "id": "r1-i2",
+                            "num": 2,
+                            "params": (
+                                {}
+                                if noparam
+                                else {
                                     "b": "cde",
                                     "x": "plugh",
-                                },
+                                }
                             ),
+                            "path": None,
                             "primary_metric": "src::tst2",
                             "primary_period": "tp",
                             "status": "pass",
                         },
                         {
-                            "iteration": 3,
+                            "id": "r1-i3",
+                            "num": 3,
                             "params": {},
+                            "path": None,
                             "primary_metric": "src::tst1",
                             "primary_period": "tp",
                             "status": "fail",
                         },
                     ],
                     "params": {},
-                    "primary_metrics": {"src::tst1", "src::tst2"},
+                    "primary_metrics": ["src::tst1", "src::tst2"],
                     "status": "fail",
-                    "tags": defaultdict(None, {"a": 42}),
+                    "tags": {"a": 42},
                 },
             ],
             "sort": [],
