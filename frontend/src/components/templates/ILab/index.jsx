@@ -86,7 +86,7 @@ const ILab = () => {
     } else {
       dispatch(updateURL(navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     dispatch(fetchIlabJobs());
@@ -111,7 +111,7 @@ const ILab = () => {
       ),
     [tableFilters]
   );
-  const updateSelectedFilter = (category, value, isFromMetrics = false) => {};
+  const updateSelectedFilter = () => {};
 
   const onSwitchChange = useCallback(() => {
     dispatch(toggleComparisonSwitch());

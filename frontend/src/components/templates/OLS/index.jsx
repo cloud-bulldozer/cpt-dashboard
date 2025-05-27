@@ -17,7 +17,7 @@ import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
-const OLS = () => {
+const OLSTab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -60,7 +60,7 @@ const OLS = () => {
       dispatch(setSelectedFilterFromUrl(params));
       dispatch(setOLSDateFilter(startDate, endDate, navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
@@ -152,4 +152,4 @@ const OLS = () => {
   );
 };
 
-export default OLS;
+export default OLSTab;

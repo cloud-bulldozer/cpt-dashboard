@@ -61,7 +61,7 @@ const Telco = () => {
       dispatch(setSelectedFilterFromUrl(params));
       dispatch(setTelcoDateFilter(startDate, endDate, navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {

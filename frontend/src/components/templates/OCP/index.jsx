@@ -17,7 +17,7 @@ import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
-const OCP = () => {
+const OCPTab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -61,7 +61,7 @@ const OCP = () => {
       dispatch(setSelectedFilterFromUrl(params));
       dispatch(setOCPDateFilter(startDate, endDate, navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
@@ -153,4 +153,4 @@ const OCP = () => {
   );
 };
 
-export default OCP;
+export default OCPTab;

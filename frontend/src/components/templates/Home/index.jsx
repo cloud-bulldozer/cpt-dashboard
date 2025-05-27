@@ -58,7 +58,7 @@ const Home = () => {
       dispatch(setSelectedFilterFromUrl(params));
       dispatch(setCPTDateFilter(startDate, endDate, navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {

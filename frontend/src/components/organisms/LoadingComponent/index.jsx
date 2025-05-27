@@ -1,5 +1,6 @@
 import "./index.less";
 
+import PropTypes from "prop-types";
 import { Spinner } from "@patternfly/react-core";
 import { useSelector } from "react-redux";
 
@@ -18,5 +19,7 @@ const LoadingComponent = ({ children }) => {
     </div>
   );
 };
-
+LoadingComponent.propTypes = {
+  children: PropTypes.element,
+};
 export default LoadingComponent;

@@ -1,4 +1,3 @@
-import { fetchIlabJobs, setIlabDateFilter } from "./ilabActions";
 import {
   applyCPTDateFilter,
   removeCPTAppliedFilters,
@@ -6,6 +5,13 @@ import {
   setCPTCatFilters,
   setCPTOtherSummaryFilter,
 } from "./homeActions";
+import {
+  applyIlabDateFilter,
+  removeIlabAppliedFilters,
+  setIlabAppliedFilters,
+  setIlabCatFilters,
+  setIlabOtherSummaryFilter,
+} from "./ilabActions";
 import {
   applyOCPDateFilter,
   removeOCPAppliedFilters,
@@ -34,13 +40,6 @@ import {
   setTelcoCatFilters,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
-import {
-  applyIlabDateFilter,
-  removeIlabAppliedFilters,
-  setIlabAppliedFilters,
-  setIlabCatFilters,
-  setIlabOtherSummaryFilter,
-} from "./ilabActions";
 
 import store from "@/store/store";
 

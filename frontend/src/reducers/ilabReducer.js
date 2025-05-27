@@ -37,7 +37,6 @@ const initialState = {
   offset: 0,
   metrics: [],
   periods: [],
-  filterOptions: [],
   metrics_selected: [],
   comparisonSwitch: false,
   metaRowExpanded: [],
