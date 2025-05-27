@@ -1,23 +1,24 @@
-import React from "react";
+import * as TYPES from "@/actions/types.js";
+
 import {
-  TextInputGroup,
-  TextInputGroupMain,
-  TextInputGroupUtilities,
   Button,
-  Menu,
-  MenuContent,
-  MenuList,
-  MenuItem,
-  Popper,
   Divider,
   Label,
   LabelGroup,
+  Menu,
+  MenuContent,
+  MenuItem,
+  MenuList,
+  Popper,
+  TextInputGroup,
+  TextInputGroupMain,
+  TextInputGroupUtilities,
 } from "@patternfly/react-core";
+import React, { useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useState } from "react";
+
 import SearchIcon from "@patternfly/react-icons/dist/esm/icons/search-icon";
 import TimesIcon from "@patternfly/react-icons/dist/esm/icons/times-icon";
-import * as TYPES from "@/actions/types.js";
 
 export const MetricTitle = () => {
   const dispatch = useDispatch();
@@ -26,15 +27,20 @@ export const MetricTitle = () => {
   const [hint, setHint] = useState("");
 
   /** auto-completing suggestion text items to be shown in the menu */
-  let suggestionItems = ["<metric>", "<iteration>", "<period>"];
+
   const { runFilters, metricTemplate } = useSelector((state) => state.ilab);
-  for (const s of Object.keys(runFilters).sort()) {
-    if (runFilters[s]) {
-      for (const n of Object.keys(runFilters[s]).sort()) {
-        suggestionItems.push(`<${s}:${n}>`);
+  const suggestionItems = useMemo(() => {
+    const items = ["<metric>", "<iteration>", "<period>"];
+    for (const s of Object.keys(runFilters).sort()) {
+      if (runFilters[s]) {
+        for (const n of Object.keys(runFilters[s]).sort()) {
+          items.push(`<${s}:${n}>`);
+        }
       }
     }
-  }
+    return items;
+  }, [runFilters]);
+
   const [menuItems, setMenuItems] = useState([]);
 
   /** refs used to detect when clicks occur inside vs outside of the textInputGroup and menu popper */
@@ -110,7 +116,7 @@ export const MetricTitle = () => {
     const divider = <Divider key="divider" />;
 
     setMenuItems([headingItem, divider, ...filteredMenuItems]);
-  }, [inputValue]);
+  }, [inputValue, suggestionItems]);
 
   /** add the given string as a chip in the chip group and clear the input */
   const addChip = (newChipText) => {
@@ -184,7 +190,7 @@ export const MetricTitle = () => {
   };
 
   /** add the text of the selected item as a new chip */
-  const onSelect = (event, _itemId) => {
+  const onSelect = (event) => {
     const selectedText = event.target.innerText;
     addChip(selectedText);
     event.stopPropagation();

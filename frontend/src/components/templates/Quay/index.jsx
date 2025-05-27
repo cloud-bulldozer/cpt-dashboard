@@ -61,7 +61,7 @@ const Quay = () => {
       dispatch(setSelectedFilterFromUrl(params));
       dispatch(setQuayDateFilter(startDate, endDate, navigate));
     }
-  }, []);
+  });
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {

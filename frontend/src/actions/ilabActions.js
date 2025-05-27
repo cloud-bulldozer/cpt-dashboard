@@ -105,7 +105,7 @@ export const setIlabDateFilter =
  *
  * @param {string} category
  */
-export const setIlabCatFilters = (category) => (dispatch, getState) => {};
+export const setIlabCatFilters = () => () => {};
 
 /**
  * Set applied filters.
@@ -114,7 +114,7 @@ export const setIlabCatFilters = (category) => (dispatch, getState) => {};
  *
  * @param {function} navigate hook
  */
-export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {};
+export const setIlabAppliedFilters = () => () => {};
 
 /**
  * Set summery filters for non-[success|failure]
@@ -123,7 +123,7 @@ export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {};
  *
  * @param {string} category
  */
-export const setIlabOtherSummaryFilter = () => (dispatch, getState) => {};
+export const setIlabOtherSummaryFilter = () => () => {};
 
 /**
  * Store the current page number for page fetch.
@@ -172,11 +172,9 @@ export const tableReCalcValues = () => (dispatch, getState) => {
  * @param {*} filterValue
  * @param {*} navigate
  */
-export const removeIlabAppliedFilters =
-  (filterKey, filterValue, navigate) => (dispatch, getState) => {
-    appendQueryString({ ...appliedFilters, start_date, end_date }, navigate);
-    dispatch(applyFilters());
-  };
+export const removeIlabAppliedFilters = () => (dispatch) => {
+  dispatch(applyFilters());
+};
 
 /**
  * Apply a new date filter, resetting pagination
