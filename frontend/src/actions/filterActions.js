@@ -40,6 +40,7 @@ import {
   setTelcoCatFilters,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
+import { fetchILabJobs, setIlabDateFilter } from "./ilabActions";
 
 import store from "@/store/store";
 
@@ -91,6 +92,9 @@ export const setDateFilter = (date, key, navigation, currType) => {
     ilab: applyIlabDateFilter,
   };
   dispatch(actions[currType](date, key, navigation));
+  if (currType === "ilab") {
+    dispatch(fetchILabJobs(true));
+  }
 };
 
 export const setOtherSummaryFilter = (currType) => {

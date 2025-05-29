@@ -68,6 +68,8 @@ const TableFilter = (props) => {
     onSwitchChange,
     isSwitchChecked,
     filterData,
+    onSwitchChange,
+    isSwitchChecked,
   } = props;
 
   const getFilterCategory = (name) => {

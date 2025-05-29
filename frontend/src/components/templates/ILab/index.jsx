@@ -9,6 +9,7 @@ import {
   Thead,
   Tr,
 } from "@patternfly/react-table";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import {
   fetchIlabFilters,
   fetchIlabJobs,
@@ -25,6 +26,7 @@ import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
+import ModalComponent from "@/components/molecules/Modal";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
@@ -118,7 +120,8 @@ const ILab = () => {
     dispatch(updateURL(navigate));
   }, [dispatch, navigate]);
   return (
-    <div className="ilab-table-container">
+    <>
+      <ModalComponent />
       <TableFilter
         tableFilters={modifiedTableFilters}
         filterOptions={filterOptions}
@@ -191,7 +194,7 @@ const ILab = () => {
           />
         </>
       )}
-    </div>
+    </>
   );
 };
 

@@ -16,6 +16,8 @@ import ILabGraph from "./ILabGraph";
 import ILabMetadata from "./ILabMetadata";
 import ILabSummary from "./ILabSummary";
 import MetricsSelect from "./MetricsDropdown";
+import ILabSummary from "./ILabSummary";
+import MetricsSelect from "./MetricsDropdown";
 import PropTypes from "prop-types";
 import { uid } from "@/utils/helper";
 import { useCallback } from "react";

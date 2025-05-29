@@ -41,6 +41,8 @@ const initialState = {
   comparisonSwitch: false,
   metaRowExpanded: [],
   selectedMetricsPerRun: {},
+  isModalOpen: false,
+  metadataItem: {},
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -104,6 +106,10 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, metricTemplate: payload };
     case TYPES.SET_SELECTED_METRICS_PER_RUN:
       return { ...state, selectedMetricsPerRun: payload };
+    case TYPES.SET_MODAL_OPEN:
+      return { ...state, isModalOpen: payload };
+    case TYPES.SET_MODAL_METADATA_ITEM:
+      return { ...state, metadataItem: payload };
     default:
       return state;
   }
