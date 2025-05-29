@@ -14,8 +14,15 @@ async def telcoMapper(
     start_datetime: date, end_datetime: date, size: int, offset: int, filter: str
 ):
     updated_filter = await get_updated_telco_filter(filter)
+    sort = None
     response = await getData(
-        start_datetime, end_datetime, size, offset, updated_filter, f"telco.splunk"
+        start_datetime,
+        end_datetime,
+        size,
+        offset,
+        sort,
+        updated_filter,
+        f"telco.splunk",
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -30,7 +37,6 @@ async def telcoMapper(
         return {"data": df, "total": response.get("total", 0)}
 
     df["product"] = "telco"
-    df["releaseStream"] = df.apply(getReleaseStream, axis=1)
     df["version"] = df.get("shortVersion", "")
     df["testName"] = df.get("benchmark", "")
 

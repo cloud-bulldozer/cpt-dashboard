@@ -175,3 +175,5 @@ STANDOUT_PRODUCTS = ["ocp", "telco", "quay"]
 # but instead represent grouped categories such as "Developer", "Insights", etc.
 GENERAL_PRODUCTS = ["hce", "ocm"]
 TELCO_STATUS_MAP = {"success": "passed", "failed": "failed", "failure": "failure"}
+
+REVERSE_RELEASE_STREAM_MAP = {v.lower(): kf for kf, v in RELEASE_STREAM_DICT.items()}
