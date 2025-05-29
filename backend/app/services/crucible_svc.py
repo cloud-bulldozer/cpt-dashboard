@@ -10,18 +10,19 @@ breakout subsets or collection periods as either raw data points, statistical
 aggregate, or Plotly graph format for UI display.
 """
 
-import re
 from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime, timezone
 import logging
+import re
 import time
-from typing import Any, Iterator, Optional, Tuple, Union
+from typing import Any, Callable, Iterator, Optional, Tuple, Union
 
-from app import config
 from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, status
 from pydantic import BaseModel
+
+from app import config
 
 
 class Metric(BaseModel):
@@ -254,12 +255,242 @@ class CommonParams:
         return {k: v for k, v in self.common.items() if k not in self.omit}
 
 
+class DTOField:
+    """Define a field type for the DTO classes
+
+    Three separate names are possible, by default all the same.
+
+    Normally, they're all identical; however when the CDM field name uses a
+    hyphen, we substitute an understore; and when the attribute name is a
+    Python reserved word ("class"), we rename the attribute but "un-rename"
+    the serialized DTO JSON. In a few cases, we want to convert the raw
+    CDM field type from string.
+
+    attr: The name of the DTO class attribute
+    field: The name of the CDM JSON field, if different
+    name: The name of the serialized DTO field, if different
+    type: Type conversion from CDM to DTO
+    synthetic: Skip on input conversion, but serialize on output
+    """
+
+    attr: str
+    field: str
+    name: str
+    type: Optional[Callable[[str], Any]]
+    synthetic: Any
+
+    def __init__(
+        self,
+        attr: str,
+        field: Optional[str] = None,
+        name: Optional[str] = None,
+        type: Optional[Callable[[str], Any]] = None,
+        synthetic: Any = None,
+    ):
+        self.attr = attr
+        self.field = field if field else attr
+        self.name = name if name else attr
+        self.type = type
+        self.synthetic = synthetic
+
+
+class DTO:
+    id: str
+    version: str
+
+    TYPE: str = ""
+    FIELDS: tuple[DTOField, ...] = (DTOField("id"),)
+
+    def id_name(self) -> str:
+        return "id" if self.version == "v7dev" else f"{self.TYPE}-uuid"
+
+    def __init__(self, raw: dict[str, Any]):
+        req_keys = {"cdm", self.TYPE}
+        act_keys = set(raw.keys())
+        if not req_keys.issubset(act_keys):
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail="Raw CDM object is missing required keys: "
+                f"{req_keys - act_keys} not in {act_keys}",
+            )
+        self.version = raw["cdm"]["ver"]
+        s = raw[self.TYPE]
+        self.id = s[self.id_name()]
+        for f in self.FIELDS:
+            if f.synthetic is not None:
+                v = f.synthetic() if isinstance(f.synthetic, Callable) else f.synthetic
+            else:
+                v = s.get(f.field)
+                if v and f.type:
+                    v = f.type(v)
+            setattr(self, f.attr, v)
+
+    def _amend(self, json: dict[str, Any]):
+        """Allow subclasses to extend or modify the JSON
+
+        For example, to translate types for consistency, add formatted
+        dates, etc.
+
+        The base class implementation does nothing.
+        """
+        pass
+
+    def json(self) -> dict[str, Any]:
+        serial: dict[str, Any] = {"id": self.id}
+        for f in self.FIELDS:
+            v = getattr(self, f.attr)
+
+            # Do some automated cleanup type conversions, including serializing
+            # and sorting lists of DTO objects.
+            if isinstance(v, defaultdict):
+                v = {key: val for key, val in v.items()}
+            elif isinstance(v, set):
+                v = sorted(v)
+            elif isinstance(v, list) and len(v) and isinstance(v[0], DTO):
+                v = [i.json() for i in sorted(v, key=lambda i: i.id)]
+            serial[f.name] = v
+        self._amend(serial)
+        return serial
+
+
+class RunDTO(DTO):
+    begin: int
+    end: int
+    benchmark: Optional[str]
+    email: Optional[str]
+    name: Optional[str]
+    source: Optional[str]
+    status: Optional[str]
+    iterations: list["IterationDTO"]
+    tags: dict[str, Any]
+    params: dict[str, Any]
+    primary_metrics: set[str]
+
+    TYPE: str = "run"
+    FIELDS = (
+        DTOField("begin", type=int),
+        DTOField("end", type=int),
+        DTOField("benchmark"),
+        DTOField("email"),
+        DTOField("name"),
+        DTOField("source"),
+        DTOField("status", synthetic=None),
+        DTOField("harness", synthetic=None),
+        DTOField("host", synthetic=None),
+        DTOField("iterations", synthetic=list),
+        DTOField("tags", synthetic=dict),
+        DTOField("params", synthetic=dict),
+        DTOField("primary_metrics", synthetic=set),
+    )
+
+    def _amend(self, json: dict[str, Any]):
+        json["begin_date"] = CrucibleService._format_timestamp(self.begin)
+        json["end_date"] = CrucibleService._format_timestamp(self.end)
+
+
+class IterationDTO(DTO):
+    num: int
+    path: str
+    primary_metric: str
+    primary_period: str
+    status: str
+    params: str
+
+    TYPE: str = "iteration"
+    FIELDS = (
+        DTOField("num"),
+        DTOField("path"),
+        DTOField("status"),
+        DTOField("primary_metric", "primary-metric"),
+        DTOField("primary_period", "primary-period"),
+        DTOField("params", synthetic=dict),
+    )
+
+
+class SampleDTO(DTO):
+    num: int
+    path: str
+    status: str
+
+    TYPE: str = "sample"
+    FIELDS = (DTOField("num", type=int), DTOField("path"), DTOField("status"))
+
+
+class PeriodDTO(DTO):
+    begin: int
+    end: int
+    name: str
+
+    TYPE: str = "period"
+    FIELDS = (DTOField("begin", type=int), DTOField("end", type=int), DTOField("name"))
+
+    def _amend(self, json: dict[str, Any]):
+        json["begin_date"] = CrucibleService._format_timestamp(self.begin)
+        json["end_date"] = CrucibleService._format_timestamp(self.end)
+
+
+class TagDTO(DTO):
+    name: str
+    val: str
+
+    TYPE: str = "tag"
+    FIELDS = (DTOField("name"), DTOField("val"))
+
+
+class ParamDTO(DTO):
+    arg: str
+    val: str
+
+    TYPE: str = "param"
+    FIELDS = (DTOField("arg"), DTOField("val"))
+
+
+class MetricDTO(DTO):
+    metric_class: str
+    names: dict[str, Any]
+    names_list: list[str]
+    source: str
+    type: str
+
+    TYPE: str = "metric_desc"
+    FIELDS = (
+        DTOField("metric_class", "class", "class"),
+        DTOField("names"),
+        DTOField("names_list", "names-list"),
+        DTOField("source"),
+        DTOField("type"),
+    )
+
+
+class DataDTO(DTO):
+    begin: int
+    duration: int
+    end: int
+    value: float
+
+    TYPE: str = "metric_data"
+    FIELDS = (
+        DTOField("begin", type=int),
+        DTOField("duration", type=int),
+        DTOField("end", type=int),
+        DTOField("value", type=float),
+    )
+
+    def _amend(self, json: dict[str, Any]):
+        json["begin_date"] = CrucibleService._format_timestamp(self.begin)
+        json["end_date"] = CrucibleService._format_timestamp(self.end)
+
+
 class CrucibleService:
     """Support convenient generalized access to Crucible data
 
-    This implements access to the "v7" Crucible "Common Data Model" through
-    OpenSearch queries.
+    This implements access to the Crucible "Common Data Model" (versions 7 and 8)
+    through OpenSearch queries.
     """
+
+    # CDM version identifiers
+    CDMV7 = "v7dev"
+    CDMV8 = "v8dev"
 
     # OpenSearch massive limit on hits in a single query
     BIGQUERY = 262144
@@ -305,7 +536,7 @@ class CrucibleService:
     logger = logging.getLogger("CrucibleService")
     logger.addHandler(handler)
 
-    def __init__(self, configpath: str = "crucible", version: int = 8):
+    def __init__(self, configpath: str = "crucible", version: str = CDMV7):
         """Initialize a Crucible CDM (OpenSearch) connection.
 
         Generally the `configpath` should be scoped, like `ilab.crucible` so
@@ -327,44 +558,44 @@ class CrucibleService:
         self.elastic = AsyncElasticsearch(self.url, basic_auth=self.auth)
         self.logger.info("Initializing CDM V7 service to %s", self.url)
 
-    def set_cdm_version(self, version):
+    def set_cdm_version(self, version: str):
         """Set up for a specific version of the CDM.
 
         We currently support v7 and v8. To dynamically select the latest CDM
         version active on an Opensearch instance, call detect_cdm() on a
         CrucibleService instance.
         """
-        if version < 7 or version > 8:
+        if version not in (self.CDMV7, self.CDMV8):
             raise HTTPException(
                 status_code=400,
-                detail=f"The Crucible service supports CDM versions 7 and 8: {version} was specified",
+                detail=(
+                    "The Crucible service supports CDM versions 7 and 8: "
+                    f"{version} was specified"
+                ),
             )
         self.logger.info(f"Selecting CDM version {version}")
         self.cdm_version = version
         self.id_names = {
-            "run": "id" if version == 7 else "run-uuid",
-            "iteration": "id" if version == 7 else "iteration-uuid",
-            "period": "id" if version == 7 else "period-uuid",
-            "sample": "id" if version == 7 else "sample-uuid",
-            "metric_desc": "id" if version == 7 else "metric_desc-uuid",
+            k: "id" if version == self.CDMV7 else f"{k}-uuid"
+            for k in ("run", "iteration", "sample", "period", "metric_desc")
         }
 
     async def detect_cdm(self):
         indices = await self.elastic.indices.get("cdmv*")
         versions = set()
-        vpat = re.compile(r"cdmv(?P<version>\d+)dev-")
+        vpat = re.compile(r"cdm(?P<version>v\d+dev)-")
         for i in indices.keys():
             match = vpat.match(i)
             if match:
                 try:
-                    versions.add(int(match.group("version")))
+                    versions.add(match.group("version"))
                 except Exception as e:
                     self.logger.debug(f"Skipping index {i}: {str(e)!r}")
         latest = max(versions)
         self.set_cdm_version(latest)
 
     def _get_index(self, root: str) -> str:
-        return f"cdmv{self.cdm_version:d}dev-{root}"
+        return f"cdm{self.cdm_version}-{root}"
 
     def _get_id_field(self, root: str) -> str:
         return self.id_names[root]
@@ -1322,6 +1553,8 @@ class CrucibleService:
         # In order to filter by param or tag values, we need to produce a list
         # of matching RUN IDs from each index. We'll then drop any RUN ID that's
         # not on both lists.
+        tagids = set()
+        paramids = set()
         if tag_filters:
             tagids = await self._get_run_ids("tag", tag_filters)
         if param_filters:
@@ -1355,12 +1588,11 @@ class CrucibleService:
         periods: dict[str, tuple[int, int]] = {}
         tags = defaultdict(defaultdict)
         params = defaultdict(defaultdict)
-        run_params = defaultdict(list)
         ridn = self._get_id_field("run")
         iidn = self._get_id_field("iteration")
 
         for i in self._hits(rawiterations):
-            iterations[i["run"][ridn]].append(i["iteration"])
+            iterations[i["run"][ridn]].append(IterationDTO(i))
 
         # Organize tags by run ID
         for t in self._hits(rawtags):
@@ -1368,12 +1600,12 @@ class CrucibleService:
 
         # Organize period timestamps by run ID
         for p in self._hits(rawperiods):
-            period = p["period"]
+            period = PeriodDTO(p)
             rid = p["run"][ridn]
             range = periods.get(rid)
             try:
-                b = int(period["begin"])
-                e = int(period["end"])
+                b = period.begin
+                e = period.end
             except Exception as e:
                 self.logger.warning(f"bad timestamp in period {period}: {str(e)!r}")
                 continue
@@ -1385,13 +1617,12 @@ class CrucibleService:
 
         # Organize params by iteration ID
         for p in self._hits(rawparams):
-            run_params[p["run"][ridn]].append(p)
             params[p["iteration"][iidn]][p["param"]["arg"]] = p["param"]["val"]
 
         runs = {}
         for h in self._hits(hits):
-            run = h["run"]
-            rid = run[ridn]
+            run = RunDTO(h)
+            rid = run.id
 
             # Filter the runs by our tag and param queries
             if param_filters and rid not in paramids:
@@ -1400,73 +1631,45 @@ class CrucibleService:
             if tag_filters and rid not in tagids:
                 continue
 
-            # Convert string timestamps (milliseconds from epoch) to int.
-            # If the run document has no begin or end, look for the periods
-            b = None
-            e = None
-            if run.get("begin") and run.get("end"):
-                try:
-                    b = int(run["begin"])
-                    e = int(run["end"])
-                except Exception as exc:
-                    self.logger.warning(f"bad timestamps in run {run}: {str(exc)!r}")
-            if (b is None or e is None) and rid in periods:
-                b, e = periods[rid]
-            if b is None or e is None:
-                self.logger.warning(
-                    f"can't find begin/end timestamps for run {rid}: ignoring"
-                )
-                continue
-            run["begin"] = b
-            run["end"] = e
+            if not run.begin or not run.end:
+                if rid in periods:
+                    b, e = periods[rid]
+                    if b is None or e is None:
+                        self.logger.warning(
+                            f"can't find begin/end timestamps for run {rid}: ignoring"
+                        )
+                        continue
+                    self.logger.info(
+                        f"normalizing run {rid} timestamps to period ({b} -> {e})"
+                    )
+                    run.begin = b
+                    run.end = e
 
-            # Always normalize the Crucible RUN ID field to "id" regardless
-            # of the CDM version, for client consistency.
-            if ridn != "id":
-                run["id"] = rid
-                del run[ridn]
-            run["tags"] = tags.get(rid, {})
-            run["iterations"] = []
-            run["primary_metrics"] = set()
+            run.tags = tags.get(rid, {})
             common = CommonParams()
 
             # Collect unique iterations: the status is "fail" if any iteration
             # for that run ID failed.
             for i in iterations.get(rid, []):
-                iparams = params.get(i[iidn], {})
-                if "status" not in run:
-                    run["status"] = i["status"]
+                iparams = params.get(i.id, {})
+                i.params = iparams
+                if not run.status:
+                    run.status = i.status
                 else:
-                    if i["status"] != "pass":
-                        run["status"] = i["status"]
+                    if i.status != "pass":
+                        run.status = i.status
                 common.add(iparams)
-                run["primary_metrics"].add(i["primary-metric"])
-                run["iterations"].append(
-                    {
-                        "iteration": i["num"],
-                        "primary_metric": i["primary-metric"],
-                        "primary_period": i["primary-period"],
-                        "status": i["status"],
-                        "params": iparams,
-                    }
-                )
-            run["iterations"].sort(key=lambda i: i["iteration"])
-            run["params"] = common.render()
-            try:
-                run["begin_date"] = self._format_timestamp(run["begin"])
-                run["end_date"] = self._format_timestamp(run["end"])
-            except KeyError as e:
-                self.logger.warning("Missing 'run' key %r in %s", str(e), run)
-                run["begin_date"] = self._format_timestamp("0")
-                run["end_date"] = self._format_timestamp("0")
-
+                run.primary_metrics.add(i.primary_metric)
+                run.iterations.append(i)
+            run.iterations.sort(key=lambda i: i.num)
+            run.params = common.render()
             runs[rid] = run
 
         count = len(runs)
         total = hits["hits"]["total"]["value"]
         results.update(
             {
-                "results": list(runs.values()),
+                "results": [r.json() for r in runs.values()],
                 "count": count,
                 "total": total,
             }
@@ -1559,7 +1762,6 @@ class CrucibleService:
             A list of iteration documents
         """
         ridn = self._get_id_field("run")
-        iidn = self._get_id_field("iteration")
         hits = await self.search(
             index="iteration",
             filters=[{"term": {f"run.{ridn}": run}}],
@@ -2109,9 +2311,7 @@ class CrucibleService:
                     size=0,
                     filters=filters,
                     aggregations={
-                        "duration": {
-                            "stats": {"field": "metric_data.duration"}
-                        }
+                        "duration": {"stats": {"field": "metric_data.duration"}}
                     },
                 )
                 if aggdur["aggregations"]["duration"]["count"] > 0:
@@ -2127,9 +2327,7 @@ class CrucibleService:
                                     "interval": interval,
                                 },
                                 "aggs": {
-                                    "value": {
-                                        "sum": {"field": "metric_data.value"}
-                                    }
+                                    "value": {"sum": {"field": "metric_data.value"}}
                                 },
                             }
                         },
@@ -2137,9 +2335,7 @@ class CrucibleService:
                     for h in self._aggs(data, "interval"):
                         begin = int(h["key"])
                         end = begin + interval - 1
-                        points.append(
-                            Point(begin, end, float(h["value"]["value"]))
-                        )
+                        points.append(Point(begin, end, float(h["value"]["value"])))
             else:
                 data = await self.search("metric_data", filters=filters)
                 for h in self._hits(data, ["metric_data"]):

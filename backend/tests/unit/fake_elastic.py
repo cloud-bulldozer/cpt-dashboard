@@ -51,7 +51,7 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
         root_index: str,
         hit_list: Optional[list[dict[str, Any]]] = None,
         aggregations: Optional[dict[str, Any]] = None,
-        version: int = 7,
+        version: str = "v7dev",
         repeat: int = 1,
     ):
         """Add a canned response to an Opensearch query
@@ -70,13 +70,12 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
             version: CDM version
             repeat:
         """
-        ver = f"v{version:d}dev"
-        index = f"cdm{ver}-{root_index}"
+        index = f"cdm{version}-{root_index}"
         hits = []
         if hit_list:
             for d in hit_list:
                 source = d
-                source["cdm"] = {"ver": ver}
+                source["cdm"] = {"ver": version}
                 hits.append(
                     {
                         "_index": index,
