@@ -1,30 +1,16 @@
 #!/bin/bash
-set -ex
-
-cleanup () {
-    set +e
-    echo "Cleaning up..."
-    podman compose down
-}
+if [ ${DEBUG} ]; then set -ex ;fi
 
 BRANCH="$(git rev-parse --show-toplevel)"
-BACKEND="${BRANCH}/backend"
+TESTING="${BRANCH}/testing"
 FRONTEND="${BRANCH}/frontend"
-SETUP="${BACKEND}"/tests/functional/setup
-CPT_CONFIG=${CPT_CONFIG:-"${SETUP}/funcconfig.toml"}
 
-trap cleanup EXIT
+. ${TESTING}/pod_setup.sh
+CYPRESS="${POD_NAME}-cypress"
+CONTAINERS+=( "${CYPRESS}" )
 
-# generate application version file
-${BACKEND}/scripts/version.py     
-
-# depends upon the e2e test's container name in the compose file
-CYPRESS_POD="e2e-frontend"
-
-podman compose --file ${BRANCH}/compose.yaml build
-podman compose --file ${BRANCH}/compose.yaml --profile e2e up --detach
-# watch e2e tests for successful completion
-podman compose --file ${BRANCH}/compose.yaml logs --follow ${CYPRESS_POD}
+podman build -f ${FRONTEND}/e2e_frontend.containerfile --tag cypress "${FRONTEND}"
+podman run ${POD} --name="${CYPRESS}" localhost/cypress
 
 # TODO: no screenshots to upload until e2e tests are remediated
-# podman cp ${CYPRESS_POD}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
+# podman cp ${CYPRESS}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots

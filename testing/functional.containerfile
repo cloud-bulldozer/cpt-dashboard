@@ -4,11 +4,12 @@ ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
     PYTHONPATH=/backend
 
-RUN mkdir -p /backend/tests
+RUN mkdir -p /backend/tests/functional
 
-COPY pyproject.toml /backend
-COPY poetry.lock /backend
-COPY tests/ocpperf_test.toml /backend
+COPY backend/tests/functional/*.py /backend/tests/functional/
+COPY backend/pyproject.toml /backend
+COPY backend/poetry.lock /backend
+COPY testing/db_seed.py /backend
 
 WORKDIR /backend
 
@@ -20,8 +21,6 @@ RUN pip install --user poetry && \
     pip install -U typing-extensions && \
     pip install --user dash && \
     pip install --no-cache-dir -r requirements.txt
-
-ADD tests/ /backend/tests/    
 
 ENV SERVER=http://localhost:8000
 
