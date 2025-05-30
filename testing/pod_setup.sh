@@ -65,6 +65,7 @@ echo "Creating version"
 ${BACKEND}/scripts/version.py
 podman build -f backend.containerfile --tag backend "${BACKEND}"
 podman build -f frontend.containerfile --tag frontend "${FRONTEND}"
+podman build -f ${TESTING}/functional.containerfile --tag functional "${BRANCH}"
 
 export POD="--pod ${POD_NAME}"
 
