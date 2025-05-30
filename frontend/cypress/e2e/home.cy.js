@@ -1,8 +1,4 @@
-<<<<<<< HEAD
 describe('user journey on empty table', () => {
-=======
-describe("basic user journey", () => {
->>>>>>> ef2d304 (update home e2e)
   beforeEach(() => {
     cy.intercept("GET", "/api/v1/cpt/jobs*").as("fetchData");
     cy.intercept("GET", "/api/v1/cpt/filters*").as("fetchSummary");

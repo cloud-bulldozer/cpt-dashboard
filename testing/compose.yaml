@@ -1,3 +1,12 @@
+# docker compose file to deploy a test environment
+#
+# Not currently used: limitations in the podman compose engine mean we need to
+# rely on podman's preference for the docker compose engine, and I'd like to
+# avoid dependency on docker.
+#
+# This was however a good experiment and I'd like to build on this at some
+# point.
+
 x-backend: &backend_base
   container_name: backend
   build:
@@ -26,14 +35,14 @@ services:
       test: ["CMD-SHELL", "curl -sSf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
       interval: 10s
       retries: 5
-      start_period: 15s    
+      start_period: 15s
     networks:
        - e2e-pod
     ports:
       - "9200"
     volumes:
-      - ./backend/tests/functional/setup/ocp_opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
-      - ./backend/tests/fixtures/search_db_snapshots/ocp-snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
+      - ./testing/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
+      - ./testing/ocp/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
     environment:
       - discovery.type=single-node
       - DISABLE_INSTALL_DEMO_CONFIG=true
@@ -46,19 +55,48 @@ services:
         cd /var/tmp
         tar xfz snapshot.tar.gz
         # now exec the upstream entrypoint so ES boots normally
-        exec /usr/share/opensearch/opensearch-docker-entrypoint.sh      
+        exec /usr/share/opensearch/opensearch-docker-entrypoint.sh
+
+  searchdb-ilab:
+    container_name: searchdb-ilab
+    image: docker.io/opensearchproject/opensearch:latest
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sSf 'http://localhost:9200/_cluster/health?wait_for_status=yellow&timeout=5s' > /dev/null"]
+      interval: 10s
+      retries: 5
+      start_period: 15s
+    networks:
+       - e2e-pod
+    ports:
+      - "9200"
+    volumes:
+      - ./testing/opensearch.yml:/usr/share/opensearch/config/opensearch.yml:z
+      - ./testing/ilab/snapshot.tar.gz:/var/tmp/snapshot.tar.gz:z
+    environment:
+      - discovery.type=single-node
+      - DISABLE_INSTALL_DEMO_CONFIG=true
+      - DISABLE_SECURITY_PLUGIN=true
+    entrypoint:
+      - /bin/bash
+      - -c
+      - |
+        # unpack the tar before starting Opensearch
+        cd /var/tmp
+        tar xfz snapshot.tar.gz
+        # now exec the upstream entrypoint so ES boots normally
+        exec /usr/share/opensearch/opensearch-docker-entrypoint.sh
 
   db-seed:
     container_name: db-seed
     image: functional:latest
     build:
-      context: ./backend
-      dockerfile: tests/functional.containerfile
+      context: .
+      dockerfile: testing/functional.containerfile
     depends_on:
       searchdb-ocp:
         condition: service_healthy
     networks: [e2e-pod]
-    entrypoint: ["python3", "-u", "tests/db_seed.py"]
+    entrypoint: ["/backend/db_seed.py"]
     restart: "no"
 
   backend:
@@ -66,7 +104,7 @@ services:
     depends_on:
       - searchdb-ocp
     volumes:
-      - ./backend/tests/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z      
+      - ./testing/ocpperf_test.toml:/opt/backend/ocpperf.toml:Z
     networks:
       e2e-pod:
         aliases: [backend]
