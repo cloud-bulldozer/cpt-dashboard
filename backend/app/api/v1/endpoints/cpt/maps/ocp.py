@@ -2,7 +2,7 @@ from app.api.v1.commons.ocp import getData, getFilterData
 from app.api.v1.commons.utils import getReleaseStream, buildReleaseStreamFilter
 from datetime import date
 import pandas as pd
-from app.api.v1.commons.constants import keys_to_keep
+from app.api.v1.commons.constants import keys_to_keep, REVERSE_RELEASE_STREAM_MAP
 from urllib.parse import urlencode
 from app.api.v1.commons.utils import get_dict_from_qs
 
@@ -85,10 +85,18 @@ async def get_updated_filter(filter):
     if not filter:
         return ""
     query_params = get_dict_from_qs(filter)
-
     # Rename testName to benchmark
     if "testName" in query_params:
         query_params["benchmark"] = query_params.pop("testName")
+    # Reverse map for release stream
+    if "releaseStream" in query_params:
+        values = query_params["releaseStream"]
+        fill = [
+            f"*{REVERSE_RELEASE_STREAM_MAP[val.lower()]}*"
+            for val in values
+            if val.lower() in REVERSE_RELEASE_STREAM_MAP
+        ]
+        query_params["releaseStream"] = fill
     # Remove product from the query params as all products will be ocp
     query_params.pop("product", None)
     return urlencode(query_params, doseq=True) if query_params else ""
