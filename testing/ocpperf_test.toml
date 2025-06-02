@@ -3,3 +3,8 @@ indice = "perf_scale_ci"
 url = "http://searchdb-ocp:9200"
 username = "admin"
 password = "admin"
+
+[ilab.crucible]
+url = "http://localhost:9200"
+username = ""
+password = ""

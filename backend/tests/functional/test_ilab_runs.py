@@ -1,6 +1,5 @@
 from dataclasses import dataclass
 from datetime import datetime, timezone
-import os
 
 import pytest
 import requests
@@ -50,7 +49,7 @@ RUNS: list[Run] = [
 ]
 
 
-class TestRun:
+class TestIlabRuns:
 
     def test_get_runs(self, server):
 
