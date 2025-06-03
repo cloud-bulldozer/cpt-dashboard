@@ -311,7 +311,7 @@ class DTO:
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
                 detail="Raw CDM object is missing required keys: "
-                f"{req_keys - act_keys} not in {act_keys}",
+                f"{sorted(req_keys - act_keys)} not in {sorted(act_keys)}",
             )
         self.version = raw["cdm"]["ver"]
         s = raw[self.TYPE]
