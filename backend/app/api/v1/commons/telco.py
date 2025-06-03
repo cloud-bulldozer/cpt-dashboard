@@ -132,7 +132,7 @@ async def getFilterData(
 
                 # Build the dictionary for the current field
                 transformed_value = (
-                    utils.buildReleaseStreamFilter(value)
+                    utils.buildReleaseStreamFilter([value])
                     if field == "releaseStream"
                     else v
                 )
