@@ -99,7 +99,7 @@ class TestDTOs:
             RunDTO({"foo": {}, "cdm": {"ver": "v7dev"}})
         assert 500 == exc.value.status_code
         assert (
-            "Raw CDM object is missing required keys: {'run'} not in {'cdm', 'foo'}"
+            "Raw CDM object is missing required keys: ['run'] not in ['cdm', 'foo']"
             == exc.value.detail
         )
 
