@@ -1,22 +1,20 @@
 import {
   fetchDataConcurrently,
-  setCPTDateFilter,
-  setFilterFromURL,
   setSelectedFilter,
-  setSelectedFilterFromUrl,
 } from "@/actions/homeActions.js";
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@//components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
+import { useInitFiltersFromURL } from "@/utils/hooks/useInitFiltersFromURL";
+import { useNavigate } from "react-router-dom";
 
 const Home = () => {
   const dispatch = useDispatch();
-  const [searchParams] = useSearchParams();
+
   const navigate = useNavigate();
   const hasFetchedRef = useRef(false);
   const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
@@ -41,25 +39,7 @@ const Home = () => {
     totalJobs,
   } = useSelector((state) => state.cpt);
 
-  useEffect(() => {
-    if (searchParams.size > 0) {
-      // date filter is set apart
-      const startDate = searchParams.get("start_date");
-      const endDate = searchParams.get("end_date");
-
-      searchParams.delete("start_date");
-      searchParams.delete("end_date");
-      const params = Object.fromEntries(searchParams);
-      const obj = {};
-      for (const key in params) {
-        obj[key] = params[key].split(",");
-      }
-      dispatch(setFilterFromURL(obj));
-      dispatch(setSelectedFilterFromUrl(params));
-      dispatch(setCPTDateFilter(startDate, endDate, navigate));
-    }
-  });
-
+  useInitFiltersFromURL("cpt");
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
       dispatch(fetchDataConcurrently());

@@ -146,18 +146,20 @@ export const setQuayAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
-  const selectedFilters = cloneDeep(getState().quay.selectedFilters);
-  for (const key in params) {
-    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
-  }
-  dispatch({
-    type: TYPES.SET_QUAY_SELECTED_FILTERS,
-    payload: selectedFilters,
-  });
-};
+export const setSelectedQuayFilterFromUrl =
+  (params) => (dispatch, getState) => {
+    const selectedFilters = cloneDeep(getState().quay.selectedFilters);
+    for (const key in params) {
+      selectedFilters.find((i) => i.name === key).value =
+        params[key].split(",");
+    }
+    dispatch({
+      type: TYPES.SET_QUAY_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
 
-export const setFilterFromURL = (searchParams) => ({
+export const setFilterQuayFromURL = (searchParams) => ({
   type: TYPES.SET_QUAY_APPLIED_FILTERS,
   payload: searchParams,
 });

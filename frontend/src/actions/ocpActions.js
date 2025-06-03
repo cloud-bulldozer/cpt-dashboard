@@ -111,7 +111,7 @@ export const applyFilters = () => (dispatch) => {
   dispatch(tableReCalcValues());
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+export const setSelectedOCPFilterFromUrl = (params) => (dispatch, getState) => {
   const selectedFilters = cloneDeep(getState().ocp.selectedFilters);
   for (const key in params) {
     selectedFilters.find((i) => i.name === key).value = params[key].split(",");
@@ -185,7 +185,7 @@ export const applyOCPDateFilter =
     dispatch(fetchOCPJobs());
     dispatch(buildFilterData());
   };
-export const setFilterFromURL = (searchParams) => ({
+export const setOCPFilterFromURL = (searchParams) => ({
   type: TYPES.SET_OCP_APPLIED_FILTERS,
   payload: searchParams,
 });

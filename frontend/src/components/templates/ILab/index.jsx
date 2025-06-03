@@ -13,26 +13,24 @@ import {
   fetchIlabFilters,
   fetchIlabJobs,
   fetchRowAPIs,
-  setIlabDateFilter,
   toggleComparisonSwitch,
-  updateFromURL,
   updateURL,
 } from "@/actions/ilabActions";
 import { formatDateTime, uid } from "@/utils/helper";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
+import { useInitFiltersFromURL } from "@/utils/hooks/useInitFiltersFromURL";
+import { useNavigate } from "react-router-dom";
 
 const ILab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
 
   const {
     results,
@@ -64,32 +62,11 @@ const ILab = () => {
     }
   };
 
-  useEffect(() => {
-    dispatch(fetchIlabFilters());
-    if (searchParams.size > 0) {
-      // date filter is set apart
-      const startDate = searchParams.get("start_date");
-      const endDate = searchParams.get("end_date");
-
-      searchParams.delete("start_date");
-      searchParams.delete("end_date");
-      const params = Object.fromEntries(searchParams);
-      const obj = {};
-      for (const key in params) {
-        obj[key] = params[key].split(",");
-      }
-      if (startDate || endDate) {
-        dispatch(setIlabDateFilter(startDate, endDate, navigate));
-      }
-
-      dispatch(updateFromURL(obj));
-    } else {
-      dispatch(updateURL(navigate));
-    }
-  });
+  useInitFiltersFromURL("ilab");
 
   useEffect(() => {
     dispatch(fetchIlabJobs());
+    dispatch(fetchIlabFilters());
   }, [dispatch, navigate]);
 
   const columnNames = {

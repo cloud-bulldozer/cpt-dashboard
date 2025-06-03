@@ -2,25 +2,23 @@ import {
   buildFilterData,
   fetchGraphData,
   fetchOLSJobsData,
-  setFilterFromURL,
-  setOLSDateFilter,
   setSelectedFilter,
-  setSelectedFilterFromUrl,
   setTableColumns,
 } from "@/actions/olsActions.js";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useNavigate, useSearchParams } from "react-router-dom";
 
 import MetricsTab from "@/components/organisms/MetricsTab";
 import TableFilter from "@/components/organisms/TableFilters";
 import TableLayout from "@/components/organisms/TableLayout";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
+import { useInitFiltersFromURL } from "@/utils/hooks/useInitFiltersFromURL";
+import { useNavigate } from "react-router-dom";
 
 const OLSTab = () => {
   const dispatch = useDispatch();
   const navigate = useNavigate();
-  const [searchParams] = useSearchParams();
+
   const hasFetchedRef = useRef(false);
   const {
     results,
@@ -43,24 +41,7 @@ const OLSTab = () => {
   } = useSelector((state) => state.ols);
   const fromSideMenu = useSelector((state) => state.sidemenu.fromSideMenu);
 
-  useEffect(() => {
-    if (searchParams.size > 0) {
-      // date filter is set apart
-      const startDate = searchParams.get("start_date");
-      const endDate = searchParams.get("end_date");
-
-      searchParams.delete("start_date");
-      searchParams.delete("end_date");
-      const params = Object.fromEntries(searchParams);
-      const obj = {};
-      for (const key in params) {
-        obj[key] = params[key].split(",");
-      }
-      dispatch(setFilterFromURL(obj));
-      dispatch(setSelectedFilterFromUrl(params));
-      dispatch(setOLSDateFilter(startDate, endDate, navigate));
-    }
-  });
+  useInitFiltersFromURL("ols");
 
   useEffect(() => {
     if (!fromSideMenu && results.length === 0 && !hasFetchedRef.current) {
