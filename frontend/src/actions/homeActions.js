@@ -112,7 +112,7 @@ export const setCPTCatFilters = (category) => (dispatch, getState) => {
   });
 };
 
-export const setSelectedFilterFromUrl =
+export const setSelectedCPTFilterFromUrl =
   (params) => async (dispatch, getState) => {
     const cloneDeep = await getCloneDeep();
     const selectedFilters = cloneDeep(getState().cpt.selectedFilters);
@@ -188,7 +188,7 @@ export const applyFilters = () => (dispatch) => {
   dispatch(tableReCalcValues());
 };
 
-export const setFilterFromURL = (searchParams) => ({
+export const setCPTFilterFromURL = (searchParams) => ({
   type: TYPES.SET_APPLIED_FILTERS,
   payload: searchParams,
 });

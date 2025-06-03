@@ -146,7 +146,7 @@ export const setOLSAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
+export const setSelectedOLSFilterFromUrl = (params) => (dispatch, getState) => {
   const selectedFilters = cloneDeep(getState().ols.selectedFilters);
   for (const key in params) {
     selectedFilters.find((i) => i.name === key).value = params[key].split(",");
@@ -157,7 +157,7 @@ export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
   });
 };
 
-export const setFilterFromURL = (searchParams) => ({
+export const setOLSFilterFromURL = (searchParams) => ({
   type: TYPES.SET_OLS_APPLIED_FILTERS,
   payload: searchParams,
 });

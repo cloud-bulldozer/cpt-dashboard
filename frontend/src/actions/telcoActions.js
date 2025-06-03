@@ -140,21 +140,23 @@ export const setTelcoAppliedFilters = (navigate) => (dispatch, getState) => {
   dispatch(applyFilters());
 };
 
-export const setFilterFromURL = (searchParams) => ({
+export const setTelcoFilterFromURL = (searchParams) => ({
   type: TYPES.SET_TELCO_APPLIED_FILTERS,
   payload: searchParams,
 });
 
-export const setSelectedFilterFromUrl = (params) => (dispatch, getState) => {
-  const selectedFilters = cloneDeep(getState().telco.selectedFilters);
-  for (const key in params) {
-    selectedFilters.find((i) => i.name === key).value = params[key].split(",");
-  }
-  dispatch({
-    type: TYPES.SET_TELCO_SELECTED_FILTERS,
-    payload: selectedFilters,
-  });
-};
+export const setSelectedTelcoFilterFromUrl =
+  (params) => (dispatch, getState) => {
+    const selectedFilters = cloneDeep(getState().telco.selectedFilters);
+    for (const key in params) {
+      selectedFilters.find((i) => i.name === key).value =
+        params[key].split(",");
+    }
+    dispatch({
+      type: TYPES.SET_TELCO_SELECTED_FILTERS,
+      payload: selectedFilters,
+    });
+  };
 
 export const setSelectedFilter =
   (selectedCategory, selectedOption, isFromMetrics) => (dispatch) => {
