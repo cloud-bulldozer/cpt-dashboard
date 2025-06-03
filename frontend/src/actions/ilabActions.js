@@ -761,3 +761,25 @@ export const getSelectedMetrics = (uid) => (dispatch, getState) => {
   }
   return metrics;
 };
+/**
+ * Toggle the Modal with Metdata
+ *
+ * @param {string} id
+ */
+export const setModalOpen = (id) => (dispatch, getState) => {
+  const results = getState().ilab.results;
+  let item = [];
+  if (id) {
+    item = results.filter((item) => item.id === id);
+  }
+
+  const isModalOpen = getState().ilab.isModalOpen;
+  dispatch({
+    type: TYPES.SET_MODAL_OPEN,
+    payload: !isModalOpen,
+  });
+  dispatch({
+    type: TYPES.SET_MODAL_METADATA_ITEM,
+    payload: item?.[0],
+  });
+};
