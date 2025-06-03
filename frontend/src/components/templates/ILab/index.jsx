@@ -22,7 +22,7 @@ import { useDispatch, useSelector } from "react-redux";
 
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
-import ModalComponent from "@/components/molecules/Modal";
+import ModalComponent from "@/components/molecules/ModalComponent";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
 import TableFilter from "@/components/organisms/TableFilters";
