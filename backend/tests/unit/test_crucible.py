@@ -103,32 +103,45 @@ class TestDTOs:
             == exc.value.detail
         )
 
-    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "run-uuid")))
-    def test_run_dto(self, version, id):
+    @pytest.mark.parametrize(
+        "version,id,index,full_id",
+        (
+            ("v7dev", "id", None, None),
+            ("v7dev", "id", "cdmv7dev-run", None),
+            ("v8dev", "run-uuid", None, None),
+            ("v8dev", "run-uuid", "cdmv8dev-run", None),
+            ("v9dev", "run-uuid", None, None),
+            ("v9dev", "run-uuid", "cdm-v9dev-run@2025.05", "foobar@v9dev@2025.05"),
+        ),
+    )
+    def test_run_dto(self, version, id, index, full_id):
         body = {
             "benchmark": "test",
             "email": "test@example.com",
             "name": "CI",
             "source": "cdm.example.com/var/lib/abc",
         }
-        run = RunDTO(
-            {
-                "cdm": {"ver": version},
-                "run": body
-                | {
-                    id: "foobar",
-                    "begin": "1726162827982",
-                    "end": "1726164203132",
-                    "host": "foobar@plugh.dnd",
-                },
-            }
-        )
-        assert run.id == "foobar"
+        source = {
+            "cdm": {"ver": version},
+            "run": body
+            | {
+                id: "foobar",
+                "begin": "1726162827982",
+                "end": "1726164203132",
+                "host": "foobar@plugh.dnd",
+            },
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        run = RunDTO(source)
+        assert run.uuid == "foobar"
+        assert run.location.render() == (full_id if full_id else "foobar")
         assert run.version == version
         assert (
             body
             | {
-                "id": "foobar",
+                "id": full_id if full_id else "foobar",
+                "uuid": "foobar",
                 "begin": 1726162827982,
                 "begin_date": "2024-09-12 17:40:27.982000+00:00",
                 "end": 1726164203132,
@@ -164,12 +177,13 @@ class TestDTOs:
                 },
             }
         )
-        assert iter.id == "foobar"
+        assert iter.location.render() == "foobar"
         assert iter.version == version
         assert (
             body
             | {
                 "id": "foobar",
+                "uuid": "foobar",
                 "primary_metric": "test::metric",
                 "primary_period": "measurement",
                 "params": {},
@@ -183,35 +197,77 @@ class TestDTOs:
             "path": None,
             "status": "pass",
         }
-        iter = SampleDTO(
-            {"cdm": {"ver": version}, "sample": body | {id: "foobar", "num": "1"}}
-        )
-        assert iter.id == "foobar"
-        assert iter.version == version
-        assert body | {"id": "foobar", "num": 1} == iter.json()
-
-    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "period-uuid")))
-    def test_period_dto(self, version, id):
-        body = {"name": "measurement"}
-        iter = PeriodDTO(
+        sample = SampleDTO(
             {
                 "cdm": {"ver": version},
-                "period": body
-                | {id: "foobar", "begin": "1726162827982", "end": "1726164203132"},
+                "iteration": {
+                    "id" if version == "v7dev" else "iteration-uuid": "one",
+                    "num": 1,
+                    "primary-metric": "source::type",
+                    "primary-period": "measurement",
+                },
+                "sample": body | {id: "foobar", "num": "1"},
             }
         )
-        assert iter.id == "foobar"
-        assert iter.version == version
+        assert sample.location.render() == "foobar"
+        assert sample.version == version
         assert (
             body
             | {
                 "id": "foobar",
+                "uuid": "foobar",
+                "iteration": 1,
+                "num": 1,
+                "primary_metric": "source::type",
+                "primary_period": "measurement",
+            }
+            == sample.json()
+        )
+
+    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "period-uuid")))
+    def test_period_dto(self, version, id):
+        body = {"name": "measurement"}
+        period = PeriodDTO(
+            {
+                "cdm": {"ver": version},
+                "run": {"id": "one"},
+                "iteration": {
+                    "id": "one-one",
+                    "num": 1,
+                    "primary-period": "measurement",
+                    "primary-metric": "source::type",
+                    "status": "pass",
+                },
+                "sample": {"id": "one-one-one", "num": "1"},
+                "period": body
+                | {
+                    id: "foobar",
+                    "name": "measurement",
+                    "uuid": "foobar",
+                    "begin": "1726162827982",
+                    "end": "1726164203132",
+                },
+            }
+        )
+        assert period.location.render() == "foobar"
+        assert period.version == version
+        assert (
+            body
+            | {
+                "id": "foobar",
+                "uuid": "foobar",
                 "begin": 1726162827982,
                 "begin_date": "2024-09-12 17:40:27.982000+00:00",
                 "end": 1726164203132,
                 "end_date": "2024-09-12 18:03:23.132000+00:00",
+                "iteration": 1,
+                "sample": "1",
+                "name": "measurement",
+                "is_primary": True,
+                "primary_metric": "source::type",
+                "status": "pass",
             }
-            == iter.json()
+            == period.json()
         )
 
     @pytest.mark.parametrize(
@@ -224,18 +280,23 @@ class TestDTOs:
             "source": "test",
             "type": "metric",
         }
-        iter = MetricDTO(
+        metric = MetricDTO(
             {
                 "cdm": {"ver": version},
                 "metric_desc": body
                 | {id: "foobar", "names-list": ["benchmark-name", "tool-name"]},
             }
         )
-        assert iter.id == "foobar"
-        assert iter.version == version
+        assert metric.location.render() == "foobar"
+        assert metric.version == version
         assert (
-            body | {"id": "foobar", "names_list": ["benchmark-name", "tool-name"]}
-            == iter.json()
+            body
+            | {
+                "id": "foobar",
+                "uuid": "foobar",
+                "names_list": ["benchmark-name", "tool-name"],
+            }
+            == metric.json()
         )
 
     @pytest.mark.parametrize(
@@ -243,12 +304,11 @@ class TestDTOs:
     )
     def test_data_dto(self, version, id):
         body = {}
-        iter = DataDTO(
+        data = DataDTO(
             {
                 "cdm": {"ver": version},
                 "metric_data": body
                 | {
-                    id: "foobar",
                     "begin": "1724702817001",
                     "duration": 15000,
                     "end": "1724702832000",
@@ -256,20 +316,16 @@ class TestDTOs:
                 },
             }
         )
-        assert iter.id == "foobar"
-        assert iter.version == version
+        assert data.version == version
         assert (
             body
             | {
-                "id": "foobar",
-                "begin": 1724702817001,
-                "begin_date": "2024-08-26 20:06:57.001000+00:00",
-                "duration": 15000,
-                "end": 1724702832000,
-                "end_date": "2024-08-26 20:07:12+00:00",
+                "begin": "2024-08-26 20:06:57.001000+00:00",
+                "duration": 15.0,
+                "end": "2024-08-26 20:07:12+00:00",
                 "value": 82.930000,
             }
-            == iter.json()
+            == data.json()
         )
 
 
@@ -304,38 +360,6 @@ class TestFormatters:
     def test_format_timestamp(self, input, output):
         assert output == CrucibleService._format_timestamp(input)
 
-    def test_format_data(self):
-        begin = 1726165775123
-        duration = 10244
-        raw = {
-            "begin": str(begin),
-            "end": str(begin + duration),
-            "duration": str(duration),
-            "value": "100.3",
-        }
-        expect = {
-            "begin": "2024-09-12 18:29:35.123000+00:00",
-            "end": "2024-09-12 18:29:45.367000+00:00",
-            "duration": 10.244,
-            "value": 100.3,
-        }
-        assert expect == CrucibleService._format_data(raw)
-
-    def test_format_period(self, fake_crucible: CrucibleService):
-        raw = {
-            "begin": "1726165775123",
-            "end": "1726165785234",
-            "id": "ABC-123",
-            "name": "measurement",
-        }
-        expect = {
-            "begin": "2024-09-12 18:29:35.123000+00:00",
-            "end": "2024-09-12 18:29:45.234000+00:00",
-            "id": "ABC-123",
-            "name": "measurement",
-        }
-        assert expect == fake_crucible._format_period(raw)
-
 
 class TestHits:
 
@@ -360,6 +384,14 @@ class TestHits:
         expected = [{"a": 1}, {"b": 1}]
         payload = [{"_source": a} for a in expected]
         assert expected == list(CrucibleService._hits({"hits": {"hits": payload}}))
+
+    def test_raw_hits(self):
+        """Test that iteration through "raw" hits works"""
+
+        expected = [{"_source": {"a": 1}}, {"_source": {"b": 1}}]
+        assert expected == list(
+            CrucibleService._hits({"hits": {"hits": expected}}, raw=True)
+        )
 
     def test_hits_fields(self):
         """Test that iteration through hit fields works"""
@@ -1065,7 +1097,15 @@ class TestCrucible:
             [
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i1"},
+                    "iteration": {
+                        "id": "r1-i1",
+                        "num": 1,
+                        "path": None,
+                        "primary-metric": "test::metric",
+                        "primary-period": "p1",
+                        "status": "pass",
+                    },
+                    "sample": {"num": 2, "path": None, "status": "pass", "id": "r1-s1"},
                     "period": {
                         "id": "r1-p1",
                         "begin": 0,
@@ -1075,7 +1115,15 @@ class TestCrucible:
                 },
                 {
                     "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i2"},
+                    "iteration": {
+                        "id": "r1-i2",
+                        "num": 2,
+                        "path": None,
+                        "primary-metric": "test::metric",
+                        "primary-period": "p1",
+                        "status": "pass",
+                    },
+                    "sample": {"num": 1, "path": None, "status": "pass", "id": "r1-s2"},
                     "period": {
                         "id": "r1-p2",
                         "begin": 100,
@@ -1132,6 +1180,7 @@ class TestCrucible:
             "results": [
                 {
                     "id": "r1",
+                    "uuid": "r1",
                     "begin": 0,
                     "begin_date": "1970-01-01 00:00:00+00:00",
                     "benchmark": "test",
@@ -1145,6 +1194,7 @@ class TestCrucible:
                     "iterations": [
                         {
                             "id": "r1-i1",
+                            "uuid": "r1-i1",
                             "num": 1,
                             "params": (
                                 {}
@@ -1161,6 +1211,7 @@ class TestCrucible:
                         },
                         {
                             "id": "r1-i2",
+                            "uuid": "r1-i2",
                             "num": 2,
                             "params": (
                                 {}
@@ -1177,6 +1228,7 @@ class TestCrucible:
                         },
                         {
                             "id": "r1-i3",
+                            "uuid": "r1-i3",
                             "num": 3,
                             "params": {},
                             "path": None,
@@ -1326,24 +1378,30 @@ class TestCrucible:
         iterations = [
             {
                 "id": "one",
+                "uuid": "one",
                 "num": 1,
                 "path": None,
+                "params": {},
                 "primary_metric": "test::metric1",
                 "primary_period": "measurement",
                 "status": "pass",
             },
             {
                 "id": "two",
+                "uuid": "two",
                 "num": 2,
                 "path": None,
+                "params": {},
                 "primary_metric": "test::metric2",
                 "primary_period": "measurement",
                 "status": "pass",
             },
             {
                 "id": "three",
+                "uuid": "three",
                 "num": 3,
                 "path": None,
+                "params": {},
                 "primary_metric": "test::metric1",
                 "primary_period": "measurement",
                 "status": "pass",
@@ -1370,14 +1428,15 @@ class TestCrucible:
             "A sample query requires either a run or iteration ID" == exc.value.detail
         )
 
-    @pytest.mark.parametrize("ids", (("one", None), (None, 1)))
+    @pytest.mark.parametrize("ids", (("one", None), (None, "one-one")))
     async def test_get_samples(self, fake_crucible: CrucibleService, ids):
         """Get samples for a run ID"""
         samples = [
             {
-                "num": "1",
-                "path": None,
                 "id": "one",
+                "uuid": "one",
+                "num": 1,
+                "path": None,
                 "status": "pass",
                 "primary_metric": "pm",
                 "primary_period": "m",
@@ -1385,7 +1444,8 @@ class TestCrucible:
             },
             {
                 "id": "two",
-                "num": "2",
+                "uuid": "two",
+                "num": 2,
                 "path": None,
                 "status": "pass",
                 "primary_metric": "pm",
@@ -1394,7 +1454,8 @@ class TestCrucible:
             },
             {
                 "id": "three",
-                "num": "3",
+                "uuid": "three",
+                "num": 3,
                 "path": None,
                 "status": "pass",
                 "primary_metric": "pm",
@@ -1413,6 +1474,7 @@ class TestCrucible:
                 {
                     "run": {"id": "one"},
                     "iteration": {
+                        "id": "one-one",
                         "primary-metric": "pm",
                         "primary-period": "m",
                         "num": 1,
@@ -1435,15 +1497,19 @@ class TestCrucible:
         )
 
     @pytest.mark.parametrize(
-        "ids", (("one", None, None), (None, 1, None), (None, None, 1))
+        "ids",
+        (("one", None, None), (None, "one-one", None), (None, None, "one-one-one")),
     )
     async def test_get_periods(self, fake_crucible: CrucibleService, ids):
         """Get samples for a run ID"""
         periods = [
             {
-                "begin": "2024-12-05 21:16:31.046000+00:00",
-                "end": "2024-12-05 21:40:31.166000+00:00",
+                "begin": 1733433391046,
+                "end": 1733434831166,
+                "begin_date": "2024-12-05 21:16:31.046000+00:00",
+                "end_date": "2024-12-05 21:40:31.166000+00:00",
                 "id": "306C8A78-B352-11EF-8E37-AD212D0A0B9F",
+                "uuid": "306C8A78-B352-11EF-8E37-AD212D0A0B9F",
                 "name": "measurement",
                 "is_primary": True,
                 "iteration": 1,
@@ -1458,21 +1524,23 @@ class TestCrucible:
                 {
                     "run": {"id": "one"},
                     "iteration": {
+                        "id": "one-one",
                         "primary-metric": p["primary_metric"],
                         "primary-period": "measurement",
                         "num": 1,
                         "status": p["status"],
                     },
-                    "sample": {"num": 1, "status": p["status"], "path": None},
+                    "sample": {
+                        "id": "one-one-one",
+                        "num": 1,
+                        "status": p["status"],
+                        "path": None,
+                    },
                     "period": {
                         "id": p["id"],
                         "name": p["name"],
-                        "begin": str(
-                            int(datetime.fromisoformat(p["begin"]).timestamp() * 1000)
-                        ),
-                        "end": str(
-                            int(datetime.fromisoformat(p["end"]).timestamp() * 1000)
-                        ),
+                        "begin": p["begin"],
+                        "end": p["end"],
                         "primary-metric": p["primary_metric"],
                         "status": p["status"],
                     },
