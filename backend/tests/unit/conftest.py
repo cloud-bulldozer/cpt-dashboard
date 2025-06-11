@@ -28,3 +28,10 @@ async def fake_crucible(fake_elastic):
     crucible = CrucibleService("TEST", version="v7dev")
     yield crucible
     await crucible.close()
+
+
+@pytest.fixture
+async def fake_crucible_v9(fake_elastic):
+    crucible = CrucibleService("TEST", version="v9dev")
+    yield crucible
+    await crucible.close()

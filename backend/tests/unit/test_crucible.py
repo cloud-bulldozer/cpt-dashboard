@@ -10,6 +10,7 @@ from app.services.crucible_svc import (
     CommonParams,
     CrucibleService,
     DataDTO,
+    FullID,
     GraphList,
     IterationDTO,
     Metric,
@@ -87,8 +88,46 @@ class TestList:
             (["a", "b,c", "d"], ["a", "b", "c", "d"]),
         ),
     )
-    def test_split_empty(self, input, output):
+    def test_split_list(self, input, output):
         assert output == CrucibleService._split_list(input)
+
+    @pytest.mark.parametrize(
+        "input,output",
+        (
+            (None, []),
+            (["a"], [FullID("a")]),
+            (["a@v9dev@2024.10"], [FullID("a", "v9dev", "2024.10")]),
+            (["a", "b"], [FullID("a"), FullID("b")]),
+            (["a@v8dev@2025.02,b"], [FullID("a", "v8dev", "2025.02"), FullID("b")]),
+            (["a", "b,c", "d"], [FullID("a"), FullID("b"), FullID("c"), FullID("d")]),
+        ),
+    )
+    def test_split_id_list(self, input, output):
+        assert output == CrucibleService._split_id_list(input)
+
+
+class TestFullID:
+
+    @pytest.mark.parametrize(
+        "params,string",
+        (
+            (("abc", "v9dev", "2025.05"), "abc@v9dev@2025.05"),
+            (("abc", None, None), "abc"),
+            (("abc", "v9dev", None), "abc@v9dev@"),
+            (("abc", None, "2025.05"), "abc@@2025.05"),
+        ),
+    )
+    def test_create(self, params, string):
+        full = FullID(*params)
+        assert full.render() == string
+
+        render = FullID.decode(string)
+        assert render == full
+
+    def test_idempotent(self):
+        """Decoding a FullID returns the FullID"""
+        full_id = FullID("abc", "v9dev", "2025.05")
+        assert full_id == FullID.decode(full_id)
 
 
 class TestDTOs:
@@ -327,6 +366,45 @@ class TestDTOs:
             }
             == data.json()
         )
+
+
+class TestGetIndex:
+
+    def test_v7_simple(self, fake_crucible):
+        """Test a simple CDMv7 date range"""
+        idx = fake_crucible._get_index("run")
+        assert idx == "cdmv7dev-run"
+
+    def test_v7_date(self, fake_crucible):
+        """Test with a CDMv7 date range (no effect)"""
+        idx = fake_crucible._get_index("run", "2025-01-01", "2025-03-03")
+        assert idx == "cdmv7dev-run"
+
+    @pytest.mark.parametrize("fid", (FullID("abc", "v7dev"), "abc@v7dev"))
+    def test_v7_ref_id(self, fake_crucible, fid):
+        """Test locking index with a reference ID, both string and FullID"""
+        idx = fake_crucible._get_index("run", ref_id=fid)
+        assert idx == "cdmv7dev-run"
+
+    def test_v9_simple(self, fake_crucible_v9):
+        """Test a simple CDMv9 index"""
+        idx = fake_crucible_v9._get_index("run")
+        assert idx == "cdm-v9dev-run@*"
+
+    def test_v9_date(self, fake_crucible_v9):
+        """Test an index date range"""
+        idx = fake_crucible_v9._get_index("run", "2025-01-01", "2025-03-05")
+        assert (
+            idx == "cdm-v9dev-run@2025.01,cdm-v9dev-run@2025.02,cdm-v9dev-run@2025.03"
+        )
+
+    @pytest.mark.parametrize(
+        "fid", (FullID("abc", "v9dev", "2025.05"), "abc@v9dev@2025.05")
+    )
+    def test_v9_ref_id(self, fake_crucible_v9, fid):
+        """Test locking index with a reference ID, both string and FullID"""
+        idx = fake_crucible_v9._get_index("run", ref_id=fid)
+        assert idx == "cdm-v9dev-run@2025.05"
 
 
 class TestFormatters:
@@ -722,12 +800,12 @@ class TestCrucible:
     async def test_search_args(self, fake_crucible: CrucibleService):
         await fake_crucible.search(
             "run",
-            [{"term": "a"}],
-            [{"x": {"field": "a"}}],
-            [{"key": "asc"}],
-            "run",
-            42,
-            69,
+            filters=[{"term": "a"}],
+            aggregations=[{"x": {"field": "a"}}],
+            sort=[{"key": "asc"}],
+            source="run",
+            size=42,
+            offset=69,
             x=2,
             z=3,
         )
@@ -1525,7 +1603,7 @@ class TestCrucible:
                     "run": {"id": "one"},
                     "iteration": {
                         "id": "one-one",
-                        "primary-metric": p["primary_metric"],
+                        "primary-metric": None,
                         "primary-period": "measurement",
                         "num": 1,
                         "status": p["status"],
@@ -1542,6 +1620,22 @@ class TestCrucible:
                         "begin": p["begin"],
                         "end": p["end"],
                         "primary-metric": p["primary_metric"],
+                        "status": p["status"],
+                    },
+                }
+                for p in periods
+            ],
+        )
+        fake_crucible.elastic.set_query(
+            "iteration",
+            [
+                {
+                    "run": {"id": "one"},
+                    "iteration": {
+                        "id": "one-one",
+                        "primary-metric": p["primary_metric"],
+                        "primary-period": "measurement",
+                        "num": 1,
                         "status": p["status"],
                     },
                 }
