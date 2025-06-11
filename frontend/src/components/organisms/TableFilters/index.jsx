@@ -155,7 +155,7 @@ const TableFilter = (props) => {
           <ToolbarItem>
             <DatePicker
               onChange={(date) =>
-                endDateChangeHandler(formatDate(date), start_date)
+                endDateChangeHandler(start_date, formatDate(date))
               }
               minDate={new Date(start_date)}
               clearIcon={null}
