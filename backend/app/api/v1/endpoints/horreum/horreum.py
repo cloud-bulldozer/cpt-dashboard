@@ -1,10 +1,10 @@
 from http import HTTPStatus
 from typing import Annotated, Any
 
+from fastapi import APIRouter, Path, Request, Response
 from fastapi.responses import JSONResponse
 
 from app.services.horreum_svc import HorreumService
-from fastapi import APIRouter, Path, Request, Response
 
 router = APIRouter()
 

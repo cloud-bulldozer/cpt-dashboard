@@ -1,16 +1,17 @@
+from datetime import date, datetime, timedelta
 import json
-from fastapi import Response
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter, HTTPException
-from ...commons.ocp import getData, getFilterData
-from ...commons.example_responses import (
-    ocp_200_response,
-    response_422,
-    ocp_filter_200_response,
-)
+
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.param_functions import Query
+
 from app.api.v1.commons.utils import normalize_pagination
 
+from ...commons.example_responses import (
+    ocp_200_response,
+    ocp_filter_200_response,
+    response_422,
+)
+from ...commons.ocp import getData, getFilterData
 
 router = APIRouter()
 

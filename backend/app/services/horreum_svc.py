@@ -1,9 +1,10 @@
 import sys
 from typing import Optional
 
-import requests
-from app import config
 from keycloak.keycloak_openid import KeycloakOpenID
+import requests
+
+from app import config
 
 
 class HorreumService:

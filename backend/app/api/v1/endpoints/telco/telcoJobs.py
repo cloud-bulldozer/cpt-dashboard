@@ -1,10 +1,11 @@
+from datetime import date, datetime, timedelta
 import json
-from fastapi import Response
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter, HTTPException
-from app.api.v1.commons.telco import getData, getFilterData
-from app.api.v1.commons.example_responses import telco_200_response, response_422
+
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.param_functions import Query
+
+from app.api.v1.commons.example_responses import response_422, telco_200_response
+from app.api.v1.commons.telco import getData, getFilterData
 from app.api.v1.commons.utils import normalize_pagination
 
 router = APIRouter()

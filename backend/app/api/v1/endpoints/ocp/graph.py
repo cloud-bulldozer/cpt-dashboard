@@ -1,12 +1,14 @@
 from datetime import datetime, timedelta
-from app.api.v1.commons.utils import getMetadata
-import trio
-import semver
-from fastapi import APIRouter
 import io
-import pprint
 from json import loads
+import pprint
+
+from fastapi import APIRouter
 import pandas as pd
+import semver
+import trio
+
+from app.api.v1.commons.utils import getMetadata
 from app.services.search import ElasticService
 
 router = APIRouter()
@@ -190,7 +192,7 @@ async def graph(uuid: str):
         # We need to look at the jobSummary to ensure all UUIDs have similar iteration count.
         job = await jobSummary([uuid])
         jobs = await jobSummary(uuids)
-        ids = jobFilter(job,jobs)
+        ids = jobFilter(job, jobs)
 
         oData = await getBurnerResults(uuid, ids, index, metric, quantileName)
         oMetrics = await processBurner(oData)
@@ -199,31 +201,34 @@ async def graph(uuid: str):
         cData = await getBurnerResults(uuid, [uuid], index, metric, quantileName)
         nMetrics = await processBurner(cData)
         nMetrics = nMetrics.reset_index()
-        x=[]
-        y=[]
+        x = []
+        y = []
         for index, row in oMetrics.iterrows():
             test = "vmiLatencyQuantilesMeasurement-p99"
-            value = row['P99']
-            x.append(int(value)/1000)
+            value = row["P99"]
+            x.append(int(value) / 1000)
             y.append(test)
         old = {
-            'y' : x,
-            'x' : y,
-            'name' : 'Previous results p99',
-            'type' : 'bar',
-            'orientation' : 'v'}
-        x=[]
-        y=[]
+            "y": x,
+            "x": y,
+            "name": "Previous results p99",
+            "type": "bar",
+            "orientation": "v",
+        }
+        x = []
+        y = []
         for index, row in nMetrics.iterrows():
             test = "vmiLatencyQuantilesMeasurement-p99"
-            value = row['P99']
-            x.append(int(value)/1000)
+            value = row["P99"]
+            x.append(int(value) / 1000)
             y.append(test)
-        new = {'y' : x,
-            'x' : y,
-            'name' : 'Current results P99',
-            'type' : 'bar',
-            'orientation' : 'v'}
+        new = {
+            "y": x,
+            "x": y,
+            "name": "Current results P99",
+            "type": "bar",
+            "orientation": "v",
+        }
         metrics.append(old)
         metrics.append(new)
     else:
@@ -313,16 +318,21 @@ def jobFilter(pdata: dict, data: dict):
     # need at least one record to avoid out of bounds error
     if not pdata or not data:
         return []
-    columns = ['uuid','jobConfig.jobIterations']
+    columns = ["uuid", "jobConfig.jobIterations"]
     pdf = pd.json_normalize(pdata)
     # for jsons without a jobConfig.jobIteration value, json_normalize()
     # fills in Not a Number (NaN)
-    pick_df = pd.DataFrame(pdf, columns=columns).dropna(subset=['jobConfig.jobIterations'])
+    pick_df = pd.DataFrame(pdf, columns=columns).dropna(
+        subset=["jobConfig.jobIterations"]
+    )
     df = pd.json_normalize(data)
     # same as above
-    ndf = pd.DataFrame(df, columns=columns).dropna(subset=['jobConfig.jobIterations'])
-    records_matched = ndf['jobConfig.jobIterations'].isin(pick_df['jobConfig.jobIterations'])
-    return ndf[ records_matched ]['uuid'].unique().tolist()
+    ndf = pd.DataFrame(df, columns=columns).dropna(subset=["jobConfig.jobIterations"])
+    records_matched = ndf["jobConfig.jobIterations"].isin(
+        pick_df["jobConfig.jobIterations"]
+    )
+    return ndf[records_matched]["uuid"].unique().tolist()
+
 
 def burnerFilter(data: dict):
     #
@@ -398,7 +408,8 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str):
     await es.close()
     return runs
 
-async def getBurnerResults(uuid: str, uuids: list, index: str ):
+
+async def getBurnerResults(uuid: str, uuids: list, index: str):
     if len(uuids) > 1:
         if len(uuid) > 0 and uuid in uuids:
             uuids.remove(uuid)

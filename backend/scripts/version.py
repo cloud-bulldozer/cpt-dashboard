@@ -8,8 +8,8 @@ that we can include information that's not available at runtime.
 from datetime import datetime, timezone
 import json
 from pathlib import Path
-import sys
 import subprocess
+import sys
 from typing import Optional
 
 
