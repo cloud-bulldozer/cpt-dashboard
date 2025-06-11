@@ -96,7 +96,7 @@ const ILab = () => {
     dispatch(updateURL(navigate));
   }, [dispatch, navigate]);
   return (
-    <>
+    <div className="ilab-table-container">
       <ModalComponent />
       <TableFilter
         tableFilters={modifiedTableFilters}
@@ -170,7 +170,7 @@ const ILab = () => {
           />
         </>
       )}
-    </>
+    </div>
   );
 };
 
