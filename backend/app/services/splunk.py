@@ -1,8 +1,10 @@
-import orjson
-from app import config
-from splunklib import client, results
 import asyncio
-from app.api.v1.commons.constants import SPLUNK_SEMAPHORE_COUNT, FIELDS_FILTER_DICT
+
+import orjson
+from splunklib import client, results
+
+from app import config
+from app.api.v1.commons.constants import FIELDS_FILTER_DICT, SPLUNK_SEMAPHORE_COUNT
 
 SEMAPHORE = asyncio.Semaphore(SPLUNK_SEMAPHORE_COUNT)
 

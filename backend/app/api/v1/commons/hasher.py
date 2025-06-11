@@ -1,5 +1,6 @@
-import zlib
 import hashlib
+import zlib
+
 from cryptography.fernet import Fernet
 
 symmetric_encryptor = b"k3tGwuK6O59c0SEMmnIeJUEpTN5kuxibPy8Q8VfYC6A="

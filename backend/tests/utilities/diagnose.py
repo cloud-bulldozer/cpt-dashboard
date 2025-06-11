@@ -22,6 +22,7 @@ from elasticsearch import Elasticsearch
 @dataclass
 class Info:
     """Accumulate summary information about a run"""
+
     id: str
     good: bool = True
     errors: dict[str, int] = field(default_factory=lambda: defaultdict(int))

@@ -1,7 +1,9 @@
 from datetime import date
+
+from app.api.v1.commons.constants import OLS_FIELD_CONSTANT_DICT
 import app.api.v1.commons.utils as utils
 from app.services.search import ElasticService
-from app.api.v1.commons.constants import OLS_FIELD_CONSTANT_DICT
+
 
 async def getFilterData(
     start_datetime: date, end_datetime: date, filter: str, configpath: str

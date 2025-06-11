@@ -1,8 +1,10 @@
 from datetime import date, datetime
+
 import pandas as pd
-from app.services.search import ElasticService
-import app.api.v1.commons.utils as utils
+
 from app.api.v1.commons.constants import OCM_FIELD_CONSTANT_DICT
+import app.api.v1.commons.utils as utils
+from app.services.search import ElasticService
 
 
 async def getData(

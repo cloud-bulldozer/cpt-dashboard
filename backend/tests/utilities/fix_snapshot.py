@@ -24,7 +24,6 @@ from typing import Any
 
 from elasticsearch import Elasticsearch
 
-
 # Conventional CDM query limit
 SIZE: int = 262144
 
@@ -750,18 +749,22 @@ def snapshot(server: Elasticsearch):
                 "Unexpected snapshot: expect functional/base: "
                 f"{snapshot['repository']}/{snapshot['snapshot']}"
             )
-        print(f"Indices: {', '.join([str(i) for i in snapshot['indices'].keys() if i.startswith('cdm')])}")
+        print(
+            f"Indices: {', '.join([str(i) for i in snapshot['indices'].keys() if i.startswith('cdm')])}"
+        )
         r = server.snapshot.delete(repository="functional", snapshot="base")
         if r.get("acknowledged") is not True:
             raise Exception(f"Snapshot 'base' deletion failed with {r}")
         elif args.verbose:
             print(f"DELETE: {r}")
-    r = server.snapshot.create(repository="functional", snapshot="base", wait_for_completion=True)
+    r = server.snapshot.create(
+        repository="functional", snapshot="base", wait_for_completion=True
+    )
     snap = r["snapshot"]
     if snap.get("failures"):
         raise Exception(f"Snapshot failures: {r['failures']}")
     print(f"SNAP: {snap}")
-    indices = {i for i in snap['indices'] if i.startswith("cdm")}
+    indices = {i for i in snap["indices"] if i.startswith("cdm")}
     expected = {index(i) for i in INDICES}
     if indices != expected:
         print(f"Expected indices {expected}")
