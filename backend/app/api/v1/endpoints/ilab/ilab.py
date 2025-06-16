@@ -8,8 +8,9 @@ configuration path "ilab.crucible".
 from datetime import datetime, timedelta, timezone
 from typing import Annotated, Any, Optional
 
-from app.services.crucible_svc import CrucibleService, GraphList, Metric
 from fastapi import APIRouter, Depends, Query
+
+from app.services.crucible_svc import CrucibleService, GraphList, Metric
 
 router = APIRouter()
 

@@ -1,16 +1,16 @@
+from datetime import date, datetime, timedelta
 import json
-from fastapi import Response
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter
-from ...endpoints.ocp.ocpJobs import jobs as ocpJobs
-from ...commons.ols import getFilterData
-from ...commons.example_responses import (
-    ols_200_response,
-    response_422,
-    ocp_filter_200_response,
-)
+
+from fastapi import APIRouter, Response
 from fastapi.param_functions import Query
 
+from ...commons.example_responses import (
+    ocp_filter_200_response,
+    ols_200_response,
+    response_422,
+)
+from ...commons.ols import getFilterData
+from ...endpoints.ocp.ocpJobs import jobs as ocpJobs
 
 router = APIRouter()
 
@@ -48,12 +48,9 @@ async def jobs(
     filter = (
         filter_clause
         if not filter
-        else filter
-        if filter_clause in filter
-        else f"{filter}&{filter_clause}"
+        else filter if filter_clause in filter else f"{filter}&{filter_clause}"
     )
-    return await ocpJobs(start_date, end_date, pretty, 
-                         size, offset, sort, filter)
+    return await ocpJobs(start_date, end_date, pretty, size, offset, sort, filter)
 
 
 @router.get(
@@ -100,9 +97,7 @@ async def filters(
     filter = (
         filter_clause
         if not filter
-        else filter
-        if filter_clause in filter
-        else f"{filter}&{filter_clause}"
+        else filter if filter_clause in filter else f"{filter}&{filter_clause}"
     )
     results = await getFilterData(start_date, end_date, filter, "ocp.elasticsearch")
 

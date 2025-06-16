@@ -1,10 +1,15 @@
-from app.api.v1.commons.ocp import getData, getFilterData
-from app.api.v1.commons.utils import getReleaseStream, buildReleaseStreamFilter
 from datetime import date
-import pandas as pd
-from app.api.v1.commons.constants import keys_to_keep, REVERSE_RELEASE_STREAM_MAP
 from urllib.parse import urlencode
-from app.api.v1.commons.utils import get_dict_from_qs
+
+import pandas as pd
+
+from app.api.v1.commons.constants import keys_to_keep, REVERSE_RELEASE_STREAM_MAP
+from app.api.v1.commons.ocp import getData, getFilterData
+from app.api.v1.commons.utils import (
+    buildReleaseStreamFilter,
+    get_dict_from_qs,
+    getReleaseStream,
+)
 
 
 ################################################################

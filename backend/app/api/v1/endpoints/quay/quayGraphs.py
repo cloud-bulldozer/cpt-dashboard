@@ -1,10 +1,10 @@
+from datetime import date, datetime, timedelta
 import json
-from fastapi import Response
-from datetime import datetime, timedelta, date
-from fastapi import APIRouter
+
+from fastapi import APIRouter, Response
+
 from app.api.v1.commons.utils import getMetadata
 from app.services.search import ElasticService
-
 
 router = APIRouter()
 

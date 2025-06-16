@@ -1,22 +1,17 @@
 import json
 from pathlib import Path
+
 from fastapi import APIRouter
 
-from app.api.v1.endpoints.ocp import results
-from app.api.v1.endpoints.ocp import ocpJobs
-from app.api.v1.endpoints.ocp import graph
 from app.api.v1.endpoints.cpt import cptJobs
-from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.horreum import horreum
-from app.api.v1.endpoints.quay import quayJobs
-from app.api.v1.endpoints.quay import quayGraphs
-from app.api.v1.endpoints.telco import telcoJobs
-from app.api.v1.endpoints.telco import telcoGraphs
-from app.api.v1.endpoints.ols import olsJobs
-from app.api.v1.endpoints.ols import olsGraphs
-from app.api.v1.endpoints.ocm import ocmJobs
 from app.api.v1.endpoints.ilab import ilab
-
+from app.api.v1.endpoints.jira import jira
+from app.api.v1.endpoints.ocm import ocmJobs
+from app.api.v1.endpoints.ocp import graph, ocpJobs, results
+from app.api.v1.endpoints.ols import olsGraphs, olsJobs
+from app.api.v1.endpoints.quay import quayGraphs, quayJobs
+from app.api.v1.endpoints.telco import telcoGraphs, telcoJobs
 
 router = APIRouter()
 
