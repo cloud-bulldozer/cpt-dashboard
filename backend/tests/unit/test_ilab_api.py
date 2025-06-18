@@ -18,10 +18,10 @@ def client(monkeypatch):
     """
 
     async def fake_select(self):
-        pass
+        self.versions = {"v8dev"}
 
     monkeypatch.setattr(
-        "app.api.v1.endpoints.ilab.ilab.CrucibleService.detect_cdm", fake_select
+        "app.api.v1.endpoints.ilab.ilab.CrucibleService.detect_versions", fake_select
     )
     yield TestClient(fastapi_app)
 

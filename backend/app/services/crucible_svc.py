@@ -345,7 +345,6 @@ class DTO:
     TYPE: str = ""
     TOPKEYS = frozenset(("_source", "_index"))
     FIELDS = ()
-    INDEXRE = re.compile(r"cdm-(?P<ver>v\d+dev)-\w+@(?P<date>\d{4}\.\d{2})")
 
     def __init__(self, raw: dict[str, Any]):
         """Construct a DTO from a OpenSearch 'hit'
@@ -445,15 +444,15 @@ class DTOId(DTO):
         DTOField("id", synthetic=True),
         DTOField("uuid"),
     )
+    INDEXRE = re.compile(r"cdm-?(?P<ver>v\d+dev)-\w+(@(?P<date>\d{4}\.\d{2}))?")
 
     def id_name(self) -> str:
         """Identify the name of the 'uuid' field
 
-        For CDMv7 (the earliest we support) this is just "id"; for later
-        versions it changes to "<root>-uuid" ("run-uuid", "iteration-uuid",
+        A CDM record's UUID is "<root>-uuid" ("run-uuid", "iteration-uuid",
         etc.)
         """
-        return "id" if self.version == "v7dev" else f"{self.TYPE}-uuid"
+        return f"{self.TYPE}-uuid"
 
     def __init__(self, raw: dict[str, Any]):
         """Capture the index if we can"""
@@ -462,7 +461,7 @@ class DTOId(DTO):
         self.uuid = s[self.id_name()]
         self.location = FullID(self.uuid)
         index = None
-        if self.is_raw and self.version >= "v9dev":
+        if self.is_raw:
             index = raw["_index"]
             match = self.INDEXRE.match(index)
             if match:
@@ -664,11 +663,6 @@ class CrucibleService:
     through OpenSearch queries.
     """
 
-    # CDM version identifiers
-    CDMV7 = "v7dev"
-    CDMV8 = "v8dev"
-    CDMV9 = "v9dev"
-
     # OpenSearch massive limit on hits in a single query
     BIGQUERY = 262144
 
@@ -713,7 +707,7 @@ class CrucibleService:
     logger = logging.getLogger("CrucibleService")
     logger.addHandler(handler)
 
-    def __init__(self, configpath: str = "crucible", version: str = CDMV7):
+    def __init__(self, configpath: str = "crucible"):
         """Initialize a Crucible CDM (OpenSearch) connection.
 
         Generally the `configpath` should be scoped, like `ilab.crucible` so
@@ -731,49 +725,34 @@ class CrucibleService:
         self.password = self.cfg.get(configpath + ".password")
         self.auth = (self.user, self.password) if self.user or self.password else None
         self.url = self.cfg.get(configpath + ".url")
-        self.set_cdm_version(version)
+        self.versions = set()
         self.elastic = AsyncElasticsearch(self.url, http_auth=self.auth)
-        self.logger.info("Initializing CDM V7 service to %s", self.url)
+        self.logger.info("Initializing CDM service to %s", self.url)
 
-    def set_cdm_version(self, version: str):
-        """Set up for a specific version of the CDM.
+    async def detect_versions(self):
+        """Determine which CDM versions are present on the server
 
-        We currently support v7 and v8. To dynamically select the latest CDM
-        version active on an Opensearch instance, call detect_cdm() on a
-        CrucibleService instance.
+        This is a bit tricky: because we're using the Async OpenSearch client,
+        we need to "await" the response, which we can't do in the synchronous
+        constructor, so we do it dynamically when needed, to compute a full
+        index name.
         """
-        if version not in (self.CDMV7, self.CDMV8, self.CDMV9):
-            raise HTTPException(
-                status_code=400,
-                detail=(
-                    "The Crucible service supports CDM versions 7 through 9: "
-                    f"{version} was specified"
-                ),
+        if not self.versions:
+            indices = await self.elastic.indices.get(
+                "cdm*-run*", allow_no_indices=True, ignore_unavailable=True
             )
-        self.logger.info(f"Selecting CDM version {version}")
-        self.cdm_version = version
-        self.id_names = {
-            k: "id" if version == self.CDMV7 else f"{k}-uuid"
-            for k in ("run", "iteration", "sample", "period", "metric_desc")
-        }
+            versions = set()
+            vpat = re.compile(r"cdm-?(?P<version>v\d+dev)-")
+            for i in indices.keys():
+                match = vpat.match(i)
+                if match:
+                    try:
+                        versions.add(match.group("version"))
+                    except Exception as e:
+                        self.logger.debug(f"Skipping index {i}: {str(e)!r}")
+            self.versions = versions
 
-    async def detect_cdm(self):
-        indices = await self.elastic.indices.get(
-            "cdm*-run*", allow_no_indices=True, ignore_unavailable=True
-        )
-        versions = set()
-        vpat = re.compile(r"cdm-?(?P<version>v\d+dev)-")
-        for i in indices.keys():
-            match = vpat.match(i)
-            if match:
-                try:
-                    versions.add(match.group("version"))
-                except Exception as e:
-                    self.logger.debug(f"Skipping index {i}: {str(e)!r}")
-        latest = max(versions)
-        self.set_cdm_version(latest)
-
-    def _get_index(
+    async def _get_index(
         self,
         root: str,
         begin: Optional[str] = None,
@@ -782,7 +761,7 @@ class CrucibleService:
     ) -> str:
         """Construct an index string for a query
 
-        This may resolve to a single index, fully qualified ("cdmv7dev-run") or
+        This may resolve to a single index, fully qualified ("cdmv8dev-run") or
         to a list of indices, possibly with wildcards, like "cdm-v9dev-run@*",
         or "cdm-v9dev-run@2025.04,cdm-v9dev-run@2025.05", depending on the CDM
         version and parameters.
@@ -803,30 +782,38 @@ class CrucibleService:
             ri = FullID.decode(ref_id)
             version = ri.version
             date = ri.date
-        if not version:
-            version = self.cdm_version
+
+        # If we have a reference ID, we lock the index to that reference
         if version and date:
             index_string = f"cdm-{version}-{root}@{date}"
-        elif version < "v9dev":
+        elif version and version < "v9dev":
             index_string = f"cdm{version}-{root}"
-        elif not begin:
-            # A missing begin date could result in hundreds of indices
-            # that don't exist, making an impractically long URL. Instead,
-            # just fall back to a wildcard pattern.
-            index_string = f"cdm-{version}-{root}@*"
         else:
-            months = []
-            e = end if end else datetime.now(timezone.utc).isoformat()
-            first_month = (datetime.fromisoformat(begin)).replace(day=1)
-            last_month = datetime.fromisoformat(e) + relativedelta(day=31)
-            for m in rrule.rrule(rrule.MONTHLY, dtstart=first_month, until=last_month):
-                months.append(f"cdm-{version}-{root}@{m.year:04}.{m.month:02}")
-            index_string = ",".join(months)
+            # No reference ID, so we need to analyze the CDM indices available
+            await self.detect_versions()
+            indices = set()
+            for version in self.versions:
+                if version < "v9dev":
+                    indices.add(f"cdm{version}-{root}")
+                elif not begin:
+                    # A missing begin date could result in hundreds of indices
+                    # that don't exist, making an impractically long URL.
+                    # Instead, fall back to a wildcard pattern.
+                    indices.add(f"cdm-{version}-{root}@*")
+                else:
+                    e = end if end else datetime.now(timezone.utc).isoformat()
+                    first_month = (datetime.fromisoformat(begin)).replace(day=1)
+                    last_month = datetime.fromisoformat(e) + relativedelta(day=31)
+                    for m in rrule.rrule(
+                        rrule.MONTHLY, dtstart=first_month, until=last_month
+                    ):
+                        indices.add(f"cdm-{version}-{root}@{m.year:04}.{m.month:02}")
+            index_string = ",".join(indices)
         return index_string
 
     def _get_id_field(self, root: str) -> str:
         """Get the versioned name of the CDM uuid field for an index"""
-        return self.id_names[root]
+        return f"{root}-uuid"
 
     @staticmethod
     def _get(source: dict[str, Any], fields: list[str], default: Optional[Any] = None):
@@ -1266,7 +1253,7 @@ class CrucibleService:
             query.update({"from": offset})
         if aggregations:
             query.update({"aggs": aggregations})
-        idx = self._get_index(index, begin=begin, end=end, ref_id=ref_id)
+        idx = await self._get_index(index, begin=begin, end=end, ref_id=ref_id)
         start = time.time()
         value = await self.elastic.search(index=idx, body=query, **kwargs)
         self.logger.info(
@@ -1422,7 +1409,7 @@ class CrucibleService:
             index, source=f"run.{ridn}", filters=filters, ignore_unavailable=True
         )
         self.logger.debug("HITS: %s", filtered["hits"]["hits"])
-        return set([x for x in self._hits(filtered, ["run", "id"])])
+        return set([x for x in self._hits(filtered, ["run", ridn])])
 
     async def _make_title(
         self,
@@ -1797,7 +1784,7 @@ class CrucibleService:
         for p in self._hits(rawparams):
             params[p["iteration"][iidn]][p["param"]["arg"]] = p["param"]["val"]
 
-        runs = {}
+        runs = []
         for h in self._hits(hits, raw=True):
             run = RunDTO(h)
             rid = run.uuid
@@ -1841,13 +1828,13 @@ class CrucibleService:
                 run.iterations.append(i)
             run.iterations.sort(key=lambda i: i.num)
             run.params = common.render()
-            runs[rid] = run
+            runs.append(run)
 
         count = len(runs)
         total = hits["hits"]["total"]["value"]
         results.update(
             {
-                "results": [r.json() for r in runs.values()],
+                "results": [r.json() for r in runs],
                 "count": count,
                 "total": total,
             }

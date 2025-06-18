@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """Tool to analyze CDM data to help identify "broken" runs.
 
 Traverse the CDM hierarchy (run to iteration to sample to period to metric
@@ -8,6 +9,7 @@ captive Opensearch snapshot for functional testing; but this can be used to
 validate any CDMv7 Opensearch instance.
 """
 
+import argparse
 from collections import defaultdict
 from dataclasses import dataclass, field
 import datetime
@@ -126,7 +128,7 @@ verifier: Optional[Verify] = None
 
 
 def index(root: str) -> str:
-    return f"cdmv7dev-{root}"
+    return f"cdmv8dev-{root}"
 
 
 def hits(
@@ -171,7 +173,7 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
     watcher.update("finding runs")
     rq = cdm.search(index=index("run"), sort=["run.begin:asc"], size=10000)
     for r in hits(rq, ["run"]):
-        info = Info(r["id"], benchmark=r["benchmark"])
+        info = Info(r["run-uuid"], benchmark=r["benchmark"])
         runs[info.id] = info
         info.begin = r.get("begin", 0)
         info.end = r.get("end", 0)
@@ -181,14 +183,14 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
         watcher.update(f"finding {info.id} tags")
         tq = cdm.search(
             index=index("tag"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={"query": {"bool": {"filter": {"term": {"run.run-uuid": info.id}}}}},
             size=10000,
         )
         info.tags = {t["name"]: t["val"] for t in hits(tq, ["tag"])}
         watcher.update(f"finding {info.id} iterations")
         iq = cdm.search(
             index=index("iteration"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={"query": {"bool": {"filter": {"term": {"run.run-uuid": info.id}}}}},
             size=10000,
         )
         info.iterations = len(iq["hits"]["hits"])
@@ -196,7 +198,7 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
         watcher.update(f"finding {info.id} params")
         pq = cdm.search(
             index=index("param"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={"query": {"bool": {"filter": {"term": {"run.run-uuid": info.id}}}}},
             size=10000,
         )
         for p in hits(pq):
@@ -206,33 +208,50 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
         watcher.update(f"finding {info.id} samples")
         sq = cdm.search(
             index=index("sample"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={"query": {"bool": {"filter": {"term": {"run.run-uuid": info.id}}}}},
             size=10000,
         )
         info.samples = len(sq["hits"]["hits"])
         watcher.update(f"finding {info.id} periods")
         pq = cdm.search(
             index=index("period"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={"query": {"bool": {"filter": {"term": {"run.run-uuid": info.id}}}}},
             size=10000,
         )
         info.periods = len(iq["hits"]["hits"])
+        begin = None
+        end = None
+        missing_time = False
         for p in hits(pq, ["period"]):
             b = p.get("begin")
             e = p.get("end")
             if not b or not e:
+                missing_time = True
                 info.errors[f"period {p['name']}: missing/bad timestamps"] += 1
                 info.good = False
+            else:
+                if not info.begin or not info.end:
+                    if not begin or b < begin:
+                        begin = b
+                    if not end or e > end:
+                        end = e
+        if begin and end:
+            info.begin = begin
+            info.end = end
+        elif missing_time:
+            info.errors[f"run {info.id}: can't construct timeline from periods"] += 1
         watcher.update(f"finding {info.id} metrics")
         mq = cdm.search(
             index=index("metric_desc"),
-            body={"query": {"bool": {"filter": {"term": {"run.id": info.id}}}}},
+            body={
+                "query": {"bool": {"filter": {"term": {"run.run-run-uuid": info.id}}}}
+            },
             size=10000,
         )
         metrics = {}
         for m in hits(mq, ["metric_desc"]):
             name = f"{m['source']}::{m['type']}"
-            metrics[m["id"]] = name
+            metrics[m["metrics_desc-uuid"]] = name
             info.metrics[name] = 0
         watcher.update(f"finding {info.id} metric data")
         dq = cdm.search(
@@ -240,14 +259,18 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
             body={
                 "query": {
                     "bool": {
-                        "filter": {"terms": {"metric_desc.id": list(metrics.keys())}}
+                        "filter": {
+                            "terms": {
+                                "metric_desc.metric_desc-uuid": list(metrics.keys())
+                            }
+                        }
                     }
                 }
             },
             size=100000,
         )
         for d in hits(dq):
-            id = d["metric_desc"]["id"]
+            id = d["metric_desc"]["metric_desc.run-uuid"]
             data = d["metric_data"]
             info.metrics[metrics[id]] += 1
             if not data.get("begin") or not data.get("end"):
@@ -263,6 +286,7 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
     watcher.update(f"generating report")
     baddies = 0
     marks = defaultdict(int)
+    metrics = defaultdict(int)
     first = True
     for run in runs.values():
         if not run.good:
@@ -270,6 +294,8 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
         if (run.good and args.bad) or (not run.good and args.good):
             continue
         marks[run.benchmark] += 1
+        for p in run.primary:
+            metrics[p] += 1
         if args.id:
             print(run.id)
             continue
@@ -312,16 +338,21 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
             print("  Errors:")
             for e, i in run.errors.items():
                 print(f"    ({i:>3d}) {e!r}")
-    if args.summary or not args.id:
+    if args.summary and not args.id:
         print(f"{len(runs)} runs analyzed: {baddies} are busted")
         print("Benchmarks:")
+        blen = max([len(x) for x in marks.keys()]) + 1
         for b in sorted(marks.keys()):
-            print(f"  {b:>10s}: {marks[b]:5d}")
+            print(f"  {b:>{blen}s}: {marks[b]:5d}")
+        print("primary metrics:")
+        mlen = max([len(x) for x in metrics.keys()]) + 1
+        for b in sorted(metrics.keys()):
+            print(f"  {b:>{mlen}s}: {metrics[b]:5d}")
         print(f"Analysis took {time.time() - start:03f} seconds")
 
 
 parser = argparse.ArgumentParser("diagnose")
-parser.add_argument("server", help="CDM v7 Opensearch server address")
+parser.add_argument("server", help="CDM v8 Opensearch server address")
 parser.add_argument(
     "-b", "--bad-only", dest="bad", action="store_true", help="Only report bad runs"
 )
@@ -365,5 +396,7 @@ try:
     diagnose(cdm, args)
     sys.exit(0)
 except Exception as exc:
+    if args.verbose:
+        raise
     print(f"Something smells odd: {str(exc)!r}")
     sys.exit(1)
