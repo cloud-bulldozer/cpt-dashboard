@@ -135,7 +135,7 @@ class TestDTOs:
     def test_run_dto_bad(self):
         """Try to build a DTO with a bad document"""
         with pytest.raises(HTTPException) as exc:
-            RunDTO({"foo": {}, "cdm": {"ver": "v7dev"}})
+            RunDTO({"foo": {}, "cdm": {"ver": "v8dev"}})
         assert 500 == exc.value.status_code
         assert (
             "Raw CDM object is missing required keys: ['run'] not in ['cdm', 'foo']"
@@ -143,17 +143,15 @@ class TestDTOs:
         )
 
     @pytest.mark.parametrize(
-        "version,id,index,full_id",
+        "version,index,full_id",
         (
-            ("v7dev", "id", None, None),
-            ("v7dev", "id", "cdmv7dev-run", None),
-            ("v8dev", "run-uuid", None, None),
-            ("v8dev", "run-uuid", "cdmv8dev-run", None),
-            ("v9dev", "run-uuid", None, None),
-            ("v9dev", "run-uuid", "cdm-v9dev-run@2025.05", "foobar@v9dev@2025.05"),
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-run", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-run@2025.05", "foobar@v9dev@2025.05"),
         ),
     )
-    def test_run_dto(self, version, id, index, full_id):
+    def test_run_dto(self, version, index, full_id):
         body = {
             "benchmark": "test",
             "email": "test@example.com",
@@ -164,7 +162,7 @@ class TestDTOs:
             "cdm": {"ver": version},
             "run": body
             | {
-                id: "foobar",
+                "run-uuid": "foobar",
                 "begin": "1726162827982",
                 "end": "1726164203132",
                 "host": "foobar@plugh.dnd",
@@ -174,7 +172,6 @@ class TestDTOs:
             source = {"_index": index, "_source": source}
         run = RunDTO(source)
         assert run.uuid == "foobar"
-        assert run.location.render() == (full_id if full_id else "foobar")
         assert run.version == version
         assert (
             body
@@ -197,31 +194,37 @@ class TestDTOs:
         )
 
     @pytest.mark.parametrize(
-        "version,id", (("v7dev", "id"), ("v8dev", "iteration-uuid"))
+        "version,index,full_id",
+        (
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-iteration", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-iteration@2025.05", "foobar@v9dev@2025.05"),
+        ),
     )
-    def test_iteration_dto(self, version, id):
+    def test_iteration_dto(self, version, index, full_id):
         body = {
             "num": 1,
             "path": "foobar",
             "status": "pass",
         }
-        iter = IterationDTO(
-            {
-                "cdm": {"ver": version},
-                "iteration": body
-                | {
-                    id: "foobar",
-                    "primary-metric": "test::metric",
-                    "primary-period": "measurement",
-                },
-            }
-        )
-        assert iter.location.render() == "foobar"
+        source = {
+            "cdm": {"ver": version},
+            "iteration": body
+            | {
+                "iteration-uuid": "foobar",
+                "primary-metric": "test::metric",
+                "primary-period": "measurement",
+            },
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        iter = IterationDTO(source)
         assert iter.version == version
         assert (
             body
             | {
-                "id": "foobar",
+                "id": full_id if full_id else "foobar",
                 "uuid": "foobar",
                 "primary_metric": "test::metric",
                 "primary_period": "measurement",
@@ -230,30 +233,38 @@ class TestDTOs:
             == iter.json()
         )
 
-    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "sample-uuid")))
-    def test_sample_dto(self, version, id):
+    @pytest.mark.parametrize(
+        "version,index,full_id",
+        (
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-sample", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-sample@2025.05", "foobar@v9dev@2025.05"),
+        ),
+    )
+    def test_sample_dto(self, version, index, full_id):
         body = {
             "path": None,
             "status": "pass",
         }
-        sample = SampleDTO(
-            {
-                "cdm": {"ver": version},
-                "iteration": {
-                    "id" if version == "v7dev" else "iteration-uuid": "one",
-                    "num": 1,
-                    "primary-metric": "source::type",
-                    "primary-period": "measurement",
-                },
-                "sample": body | {id: "foobar", "num": "1"},
-            }
-        )
-        assert sample.location.render() == "foobar"
+        source = {
+            "cdm": {"ver": version},
+            "iteration": {
+                "iteration-uuid": "one",
+                "num": 1,
+                "primary-metric": "source::type",
+                "primary-period": "measurement",
+            },
+            "sample": body | {"sample-uuid": "foobar", "num": "1"},
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        sample = SampleDTO(source)
         assert sample.version == version
         assert (
             body
             | {
-                "id": "foobar",
+                "id": full_id if full_id else "foobar",
                 "uuid": "foobar",
                 "iteration": 1,
                 "num": 1,
@@ -263,37 +274,44 @@ class TestDTOs:
             == sample.json()
         )
 
-    @pytest.mark.parametrize("version,id", (("v7dev", "id"), ("v8dev", "period-uuid")))
-    def test_period_dto(self, version, id):
+    @pytest.mark.parametrize(
+        "version,index,full_id",
+        (
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-period", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-period@2025.05", "foobar@v9dev@2025.05"),
+        ),
+    )
+    def test_period_dto(self, version, index, full_id):
         body = {"name": "measurement"}
-        period = PeriodDTO(
-            {
-                "cdm": {"ver": version},
-                "run": {"id": "one"},
-                "iteration": {
-                    "id": "one-one",
-                    "num": 1,
-                    "primary-period": "measurement",
-                    "primary-metric": "source::type",
-                    "status": "pass",
-                },
-                "sample": {"id": "one-one-one", "num": "1"},
-                "period": body
-                | {
-                    id: "foobar",
-                    "name": "measurement",
-                    "uuid": "foobar",
-                    "begin": "1726162827982",
-                    "end": "1726164203132",
-                },
-            }
-        )
-        assert period.location.render() == "foobar"
+        source = {
+            "cdm": {"ver": version},
+            "run": {"run-uuid": "one"},
+            "iteration": {
+                "iteration-uuid": "one-one",
+                "num": 1,
+                "primary-period": "measurement",
+                "primary-metric": "source::type",
+                "status": "pass",
+            },
+            "sample": {"sample-uuid": "one-one-one", "num": "1"},
+            "period": body
+            | {
+                "period-uuid": "foobar",
+                "name": "measurement",
+                "begin": "1726162827982",
+                "end": "1726164203132",
+            },
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        period = PeriodDTO(source)
         assert period.version == version
         assert (
             body
             | {
-                "id": "foobar",
+                "id": full_id if full_id else "foobar",
                 "uuid": "foobar",
                 "begin": 1726162827982,
                 "begin_date": "2024-09-12 17:40:27.982000+00:00",
@@ -310,28 +328,37 @@ class TestDTOs:
         )
 
     @pytest.mark.parametrize(
-        "version,id", (("v7dev", "id"), ("v8dev", "metric_desc-uuid"))
+        "version,index,full_id",
+        (
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-metric_desc", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-metric_desc@2025.05", "foobar@v9dev@2025.05"),
+        ),
     )
-    def test_metric_dto(self, version, id):
+    def test_metric_dto(self, version, index, full_id):
         body = {
             "class": "throughput",
             "names": {"benchmark-name": "none", "tool-name": "test"},
             "source": "test",
             "type": "metric",
         }
-        metric = MetricDTO(
-            {
-                "cdm": {"ver": version},
-                "metric_desc": body
-                | {id: "foobar", "names-list": ["benchmark-name", "tool-name"]},
-            }
-        )
-        assert metric.location.render() == "foobar"
+        source = {
+            "cdm": {"ver": version},
+            "metric_desc": body
+            | {
+                "metric_desc-uuid": "foobar",
+                "names-list": ["benchmark-name", "tool-name"],
+            },
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        metric = MetricDTO(source)
         assert metric.version == version
         assert (
             body
             | {
-                "id": "foobar",
+                "id": full_id if full_id else "foobar",
                 "uuid": "foobar",
                 "names_list": ["benchmark-name", "tool-name"],
             }
@@ -339,22 +366,29 @@ class TestDTOs:
         )
 
     @pytest.mark.parametrize(
-        "version,id", (("v7dev", "id"), ("v8dev", "metric_data-uuid"))
+        "version,index,full_id",
+        (
+            ("v8dev", None, None),
+            ("v8dev", "cdmv8dev-metric_data", "foobar@v8dev@"),
+            ("v9dev", None, None),
+            ("v9dev", "cdm-v9dev-metric_data@2025.05", "foobar@v9dev@2025.05"),
+        ),
     )
-    def test_data_dto(self, version, id):
+    def test_data_dto(self, version, index, full_id):
         body = {}
-        data = DataDTO(
-            {
-                "cdm": {"ver": version},
-                "metric_data": body
-                | {
-                    "begin": "1724702817001",
-                    "duration": 15000,
-                    "end": "1724702832000",
-                    "value": "82.930000",
-                },
-            }
-        )
+        source = {
+            "cdm": {"ver": version},
+            "metric_data": body
+            | {
+                "begin": "1724702817001",
+                "duration": 15000,
+                "end": "1724702832000",
+                "value": "82.930000",
+            },
+        }
+        if index:
+            source = {"_index": index, "_source": source}
+        data = DataDTO(source)
         assert data.version == version
         assert (
             body
@@ -370,40 +404,44 @@ class TestDTOs:
 
 class TestGetIndex:
 
-    def test_v7_simple(self, fake_crucible):
-        """Test a simple CDMv7 date range"""
-        idx = fake_crucible._get_index("run")
-        assert idx == "cdmv7dev-run"
+    async def test_v8_simple(self, fake_crucible):
+        """Test a simple CDMv8 date range"""
+        idx = await fake_crucible._get_index("run")
+        assert idx == "cdmv8dev-run"
 
-    def test_v7_date(self, fake_crucible):
-        """Test with a CDMv7 date range (no effect)"""
-        idx = fake_crucible._get_index("run", "2025-01-01", "2025-03-03")
-        assert idx == "cdmv7dev-run"
+    async def test_v8_date(self, fake_crucible):
+        """Test with a CDMv8 date range (no effect)"""
+        idx = await fake_crucible._get_index("run", "2025-01-01", "2025-03-03")
+        assert idx == "cdmv8dev-run"
 
-    @pytest.mark.parametrize("fid", (FullID("abc", "v7dev"), "abc@v7dev"))
-    def test_v7_ref_id(self, fake_crucible, fid):
+    @pytest.mark.parametrize("fid", (FullID("abc", "v8dev"), "abc@v8dev"))
+    async def test_v8_ref_id(self, fake_crucible, fid):
         """Test locking index with a reference ID, both string and FullID"""
-        idx = fake_crucible._get_index("run", ref_id=fid)
-        assert idx == "cdmv7dev-run"
+        idx = await fake_crucible._get_index("run", ref_id=fid)
+        assert idx == "cdmv8dev-run"
 
-    def test_v9_simple(self, fake_crucible_v9):
+    async def test_v9_simple(self, fake_crucible):
         """Test a simple CDMv9 index"""
-        idx = fake_crucible_v9._get_index("run")
+        fake_crucible.versions = {"v9dev"}
+        idx = await fake_crucible._get_index("run")
         assert idx == "cdm-v9dev-run@*"
 
-    def test_v9_date(self, fake_crucible_v9):
+    async def test_v9_date(self, fake_crucible):
         """Test an index date range"""
-        idx = fake_crucible_v9._get_index("run", "2025-01-01", "2025-03-05")
-        assert (
-            idx == "cdm-v9dev-run@2025.01,cdm-v9dev-run@2025.02,cdm-v9dev-run@2025.03"
-        )
+        fake_crucible.versions = {"v9dev"}
+        idx = await fake_crucible._get_index("run", "2025-01-01", "2025-03-05")
+        assert set(idx.split(",")) == {
+            "cdm-v9dev-run@2025.01",
+            "cdm-v9dev-run@2025.02",
+            "cdm-v9dev-run@2025.03",
+        }
 
     @pytest.mark.parametrize(
         "fid", (FullID("abc", "v9dev", "2025.05"), "abc@v9dev@2025.05")
     )
-    def test_v9_ref_id(self, fake_crucible_v9, fid):
+    async def test_v9_ref_id(self, fake_crucible, fid):
         """Test locking index with a reference ID, both string and FullID"""
-        idx = fake_crucible_v9._get_index("run", ref_id=fid)
+        idx = await fake_crucible._get_index("run", ref_id=fid)
         assert idx == "cdm-v9dev-run@2025.05"
 
 
@@ -686,7 +724,7 @@ class TestFilterBuilders:
                     "dis_max": {
                         "queries": [
                             {"bool": {"must_not": {"exists": {"field": "period"}}}},
-                            {"terms": {"period.id": periods}},
+                            {"terms": {"period.period-uuid": periods}},
                         ]
                     }
                 }
@@ -732,7 +770,7 @@ class TestFilterBuilders:
                 [
                     {
                         "period": {
-                            "id": "one",
+                            "period-uuid": "one",
                             "begin": "1733505934677",
                             "end": "1733507347857",
                         }
@@ -752,19 +790,22 @@ class TestFilterBuilders:
         plist = None
         if periods:
             fake_crucible.elastic.set_query("period", periods)
-            plist = [p["period"]["id"] for p in periods]
+            plist = [p["period"]["period-uuid"] for p in periods]
         assert result == await fake_crucible._build_timestamp_range_filters(plist)
 
     @pytest.mark.parametrize(
         "period,name",
         (
-            ({"period": {"id": "one"}}, "run None:None,iteration None,sample None"),
+            (
+                {"period": {"period-uuid": "one"}},
+                "run None:None,iteration None,sample None",
+            ),
             (
                 {
-                    "run": {"id": "rid", "benchmark": "test", "begin": "1234"},
-                    "iteration": {"id": "iid", "num": 1},
-                    "sample": {"id": "sid", "num": 1},
-                    "period": {"id": "one", "begin": "5423"},
+                    "run": {"run-uuid": "rid", "benchmark": "test", "begin": "1234"},
+                    "iteration": {"iteration-uuid": "iid", "num": 1},
+                    "sample": {"sample-uuid": "sid", "num": 1},
+                    "period": {"period-uuid": "one", "begin": "5423"},
                 },
                 "run test:1234,iteration 1,sample 1",
             ),
@@ -811,7 +852,7 @@ class TestCrucible:
         )
         assert [
             Request(
-                "cdmv7dev-run",
+                "cdmv8dev-run",
                 {
                     "_source": "run",
                     "aggs": [
@@ -857,22 +898,22 @@ class TestCrucible:
         (
             (
                 [
-                    {"metric_desc": {"id": "one-metric"}},
+                    {"metric_desc": {"metric_desc-uuid": "one-metric"}},
                 ],
                 ["one-metric"],
                 False,
             ),
             (
                 [
-                    {"metric_desc": {"id": "one-metric"}},
+                    {"metric_desc": {"metric_desc-uuid": "one-metric"}},
                 ],
                 ["one-metric"],
                 True,
             ),
             (
                 [
-                    {"metric_desc": {"id": "one-metric"}},
-                    {"metric_desc": {"id": "two-metric"}},
+                    {"metric_desc": {"metric_desc-uuid": "one-metric"}},
+                    {"metric_desc": {"metric_desc-uuid": "two-metric"}},
                 ],
                 ["one-metric", "two-metric"],
                 True,
@@ -894,23 +935,49 @@ class TestCrucible:
         (
             (
                 [
-                    {"metric_desc": {"id": "one-metric", "names": {"john": "yes"}}},
-                    {"metric_desc": {"id": "two-metric", "names": {"john": "no"}}},
+                    {
+                        "metric_desc": {
+                            "metric_desc-uuid": "one-metric",
+                            "names": {"john": "yes"},
+                        }
+                    },
+                    {
+                        "metric_desc": {
+                            "metric_desc-uuid": "two-metric",
+                            "names": {"john": "no"},
+                        }
+                    },
                 ],
                 (2, [], {"john": ["no", "yes"]}),
             ),
             (
                 [
                     {
-                        "period": {"id": "p1"},
-                        "metric_desc": {"id": "three-metric", "names": {"john": "yes"}},
+                        "period": {"period-uuid": "p1"},
+                        "metric_desc": {
+                            "metric_desc-uuid": "three-metric",
+                            "names": {"john": "yes"},
+                        },
                     },
-                    {"metric_desc": {"id": "four-metric", "names": {"fred": "why"}}},
                     {
-                        "period": {"id": "p2"},
-                        "metric_desc": {"id": "five-metric", "names": {"john": "sure"}},
+                        "metric_desc": {
+                            "metric_desc-uuid": "four-metric",
+                            "names": {"fred": "why"},
+                        }
                     },
-                    {"metric_desc": {"id": "six-metric", "names": {"john": "maybe"}}},
+                    {
+                        "period": {"period-uuid": "p2"},
+                        "metric_desc": {
+                            "metric_desc-uuid": "five-metric",
+                            "names": {"john": "sure"},
+                        },
+                    },
+                    {
+                        "metric_desc": {
+                            "metric_desc-uuid": "six-metric",
+                            "names": {"john": "maybe"},
+                        }
+                    },
                 ],
                 (4, ["p1", "p2"], {"john": ["maybe", "sure", "yes"]}),
             ),
@@ -1038,7 +1105,11 @@ class TestCrucible:
         """
         fake_crucible.elastic.set_query(
             "period",
-            [{"run": {"id": "one"}}, {"run": {"id": "two"}}, {"run": {"id": "three"}}],
+            [
+                {"run": {"run-uuid": "one"}},
+                {"run": {"run-uuid": "two"}},
+                {"run": {"run-uuid": "three"}},
+            ],
         )
         assert {"one", "two", "three"} == await fake_crucible._get_run_ids(
             "period", [{"term": {"period.name": "measurement"}}]
@@ -1108,7 +1179,14 @@ class TestCrucible:
         although that's mostly covered by earlier tests.
         """
         runs = [
-            {"run": {"id": "r1", "begin": begin, "end": end, "benchmark": "test"}},
+            {
+                "run": {
+                    "run-uuid": "r1",
+                    "begin": begin,
+                    "end": end,
+                    "benchmark": "test",
+                }
+            },
         ]
         if miss:
             # Add additional runs which will be rejected by filters
@@ -1116,7 +1194,7 @@ class TestCrucible:
                 [
                     {
                         "run": {
-                            "id": "r2",
+                            "run-uuid": "r2",
                             "begin": "110",
                             "end": "7000",
                             "benchmark": "test",
@@ -1125,7 +1203,7 @@ class TestCrucible:
                     },
                     {
                         "run": {
-                            "id": "r3",
+                            "run-uuid": "r3",
                             "begin": "110",
                             "end": "6000",
                             "benchmark": "test",
@@ -1139,9 +1217,9 @@ class TestCrucible:
             "iteration",
             [
                 {
-                    "run": {"id": "r1"},
+                    "run": {"run-uuid": "r1"},
                     "iteration": {
-                        "id": "r1-i1",
+                        "iteration-uuid": "r1-i1",
                         "num": 1,
                         "primary-period": "tp",
                         "primary-metric": "src::tst1",
@@ -1149,9 +1227,9 @@ class TestCrucible:
                     },
                 },
                 {
-                    "run": {"id": "r1"},
+                    "run": {"run-uuid": "r1"},
                     "iteration": {
-                        "id": "r1-i2",
+                        "iteration-uuid": "r1-i2",
                         "num": 2,
                         "primary-period": "tp",
                         "primary-metric": "src::tst2",
@@ -1159,9 +1237,9 @@ class TestCrucible:
                     },
                 },
                 {
-                    "run": {"id": "r1"},
+                    "run": {"run-uuid": "r1"},
                     "iteration": {
-                        "id": "r1-i3",
+                        "iteration-uuid": "r1-i3",
                         "num": 3,
                         "primary-period": "tp",
                         "primary-metric": "src::tst1",
@@ -1174,36 +1252,46 @@ class TestCrucible:
             "period",
             [
                 {
-                    "run": {"id": "r1"},
+                    "run": {"run-uuid": "r1"},
                     "iteration": {
-                        "id": "r1-i1",
+                        "iteration-uuid": "r1-i1",
                         "num": 1,
                         "path": None,
                         "primary-metric": "test::metric",
                         "primary-period": "p1",
                         "status": "pass",
                     },
-                    "sample": {"num": 2, "path": None, "status": "pass", "id": "r1-s1"},
+                    "sample": {
+                        "num": 2,
+                        "path": None,
+                        "status": "pass",
+                        "sample-uuid": "r1-s1",
+                    },
                     "period": {
-                        "id": "r1-p1",
+                        "period-uuid": "r1-p1",
                         "begin": 0,
                         "end": 100,
                         "name": "default",
                     },
                 },
                 {
-                    "run": {"id": "r1"},
+                    "run": {"run-uuid": "r1"},
                     "iteration": {
-                        "id": "r1-i2",
+                        "iteration-uuid": "r1-i2",
                         "num": 2,
                         "path": None,
                         "primary-metric": "test::metric",
                         "primary-period": "p1",
                         "status": "pass",
                     },
-                    "sample": {"num": 1, "path": None, "status": "pass", "id": "r1-s2"},
+                    "sample": {
+                        "num": 1,
+                        "path": None,
+                        "status": "pass",
+                        "sample-uuid": "r1-s2",
+                    },
                     "period": {
-                        "id": "r1-p2",
+                        "period-uuid": "r1-p2",
                         "begin": 100,
                         "end": 5000,
                         "name": "default",
@@ -1216,8 +1304,8 @@ class TestCrucible:
             tags = []
         else:
             tags = [
-                {"run": {"id": "r1"}, "tag": {"name": "a", "val": 42}},
-                {"run": {"id": "r2"}, "tag": {"name": "a", "val": 42}},
+                {"run": {"run-uuid": "r1"}, "tag": {"name": "a", "val": 42}},
+                {"run": {"run-uuid": "r2"}, "tag": {"name": "a", "val": 42}},
             ]
         fake_crucible.elastic.set_query("tag", tags, repeat=2)
 
@@ -1226,28 +1314,28 @@ class TestCrucible:
         else:
             params = [
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i1"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "r1-i1"},
                     "param": {"arg": "b", "val": "cde"},
                 },
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i1"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "r1-i1"},
                     "param": {"arg": "z", "val": "xyzzy"},
                 },
                 {
-                    "run": {"id": "r3"},
-                    "iteration": {"id": "r3-i1"},
+                    "run": {"run-uuid": "r3"},
+                    "iteration": {"iteration-uuid": "r3-i1"},
                     "param": {"arg": "z", "val": "xyzzy"},
                 },
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i2"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "r1-i2"},
                     "param": {"arg": "b", "val": "cde"},
                 },
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "r1-i2"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "r1-i2"},
                     "param": {"arg": "x", "val": "plugh"},
                 },
             ]
@@ -1257,7 +1345,7 @@ class TestCrucible:
             "offset": 0,
             "results": [
                 {
-                    "id": "r1",
+                    "id": "r1@v8dev@",
                     "uuid": "r1",
                     "begin": 0,
                     "begin_date": "1970-01-01 00:00:00+00:00",
@@ -1271,7 +1359,7 @@ class TestCrucible:
                     "harness": None,
                     "iterations": [
                         {
-                            "id": "r1-i1",
+                            "id": "r1-i1@v8dev@",
                             "uuid": "r1-i1",
                             "num": 1,
                             "params": (
@@ -1288,7 +1376,7 @@ class TestCrucible:
                             "status": "pass",
                         },
                         {
-                            "id": "r1-i2",
+                            "id": "r1-i2@v8dev@",
                             "uuid": "r1-i2",
                             "num": 2,
                             "params": (
@@ -1305,7 +1393,7 @@ class TestCrucible:
                             "status": "pass",
                         },
                         {
-                            "id": "r1-i3",
+                            "id": "r1-i3@v8dev@",
                             "uuid": "r1-i3",
                             "num": 3,
                             "params": {},
@@ -1356,9 +1444,9 @@ class TestCrucible:
         fake_crucible.elastic.set_query(
             "tag",
             [
-                {"run": {"id": "one"}, "tag": {"name": "a", "val": 123}},
-                {"run": {"id": "one"}, "tag": {"name": "b", "val": "hello"}},
-                {"run": {"id": "one"}, "tag": {"name": "c", "val": False}},
+                {"run": {"run-uuid": "one"}, "tag": {"name": "a", "val": 123}},
+                {"run": {"run-uuid": "one"}, "tag": {"name": "b", "val": "hello"}},
+                {"run": {"run-uuid": "one"}, "tag": {"name": "c", "val": False}},
             ],
         )
         assert {"a": 123, "b": "hello", "c": False} == await fake_crucible.get_tags(
@@ -1378,28 +1466,28 @@ class TestCrucible:
         """Get parameters for a run"""
         params = [
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "a", "val": 10},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "b", "val": 5},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "c", "val": "val"},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid2"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid2"},
                 "param": {"arg": "a", "val": 7},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid2"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid2"},
                 "param": {"arg": "c", "val": "val"},
             },
         ]
@@ -1414,18 +1502,18 @@ class TestCrucible:
         """Get parameters for an iteration"""
         params = [
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "a", "val": 10},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "b", "val": 5},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "c", "val": "val"},
             },
         ]
@@ -1438,13 +1526,13 @@ class TestCrucible:
         """Cover an obscure log warning case"""
         params = [
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "a", "val": 10},
             },
             {
-                "run": {"id": "rid"},
-                "iteration": {"id": "iid1"},
+                "run": {"run-uuid": "rid"},
+                "iteration": {"iteration-uuid": "iid1"},
                 "param": {"arg": "a", "val": 5},
             },
         ]
@@ -1455,7 +1543,7 @@ class TestCrucible:
         """Get iterations for a run ID"""
         iterations = [
             {
-                "id": "one",
+                "id": "one@v8dev@",
                 "uuid": "one",
                 "num": 1,
                 "path": None,
@@ -1465,7 +1553,7 @@ class TestCrucible:
                 "status": "pass",
             },
             {
-                "id": "two",
+                "id": "two@v8dev@",
                 "uuid": "two",
                 "num": 2,
                 "path": None,
@@ -1475,7 +1563,7 @@ class TestCrucible:
                 "status": "pass",
             },
             {
-                "id": "three",
+                "id": "three@v8dev@",
                 "uuid": "three",
                 "num": 3,
                 "path": None,
@@ -1489,8 +1577,11 @@ class TestCrucible:
             "iteration",
             [
                 {
-                    "run": {"id": "one"},
-                    "iteration": {k.replace("_", "-"): v for k, v in i.items()},
+                    "run": {"run-uuid": "one"},
+                    "iteration": {
+                        "iteration-uuid" if k == "uuid" else k.replace("_", "-"): v
+                        for k, v in i.items()
+                    },
                 }
                 for i in iterations
             ],
@@ -1511,7 +1602,7 @@ class TestCrucible:
         """Get samples for a run ID"""
         samples = [
             {
-                "id": "one",
+                "id": "one@v8dev@",
                 "uuid": "one",
                 "num": 1,
                 "path": None,
@@ -1521,7 +1612,7 @@ class TestCrucible:
                 "iteration": 1,
             },
             {
-                "id": "two",
+                "id": "two@v8dev@",
                 "uuid": "two",
                 "num": 2,
                 "path": None,
@@ -1531,7 +1622,7 @@ class TestCrucible:
                 "iteration": 1,
             },
             {
-                "id": "three",
+                "id": "three@v8dev@",
                 "uuid": "three",
                 "num": 3,
                 "path": None,
@@ -1542,17 +1633,17 @@ class TestCrucible:
             },
         ]
         raw_samples = [
-            {"num": "1", "path": None, "id": "one", "status": "pass"},
-            {"id": "two", "num": "2", "path": None, "status": "pass"},
-            {"id": "three", "num": "3", "path": None, "status": "pass"},
+            {"sample-uuid": "one", "num": "1", "path": None, "status": "pass"},
+            {"sample-uuid": "two", "num": "2", "path": None, "status": "pass"},
+            {"sample-uuid": "three", "num": "3", "path": None, "status": "pass"},
         ]
         fake_crucible.elastic.set_query(
             "sample",
             [
                 {
-                    "run": {"id": "one"},
+                    "run": {"run-uuid": "one"},
                     "iteration": {
-                        "id": "one-one",
+                        "iteration-uuid": "one-one",
                         "primary-metric": "pm",
                         "primary-period": "m",
                         "num": 1,
@@ -1586,7 +1677,7 @@ class TestCrucible:
                 "end": 1733434831166,
                 "begin_date": "2024-12-05 21:16:31.046000+00:00",
                 "end_date": "2024-12-05 21:40:31.166000+00:00",
-                "id": "306C8A78-B352-11EF-8E37-AD212D0A0B9F",
+                "id": "306C8A78-B352-11EF-8E37-AD212D0A0B9F@v8dev@",
                 "uuid": "306C8A78-B352-11EF-8E37-AD212D0A0B9F",
                 "name": "measurement",
                 "is_primary": True,
@@ -1600,22 +1691,22 @@ class TestCrucible:
             "period",
             [
                 {
-                    "run": {"id": "one"},
+                    "run": {"run-uuid": "one"},
                     "iteration": {
-                        "id": "one-one",
+                        "iteration-uuid": "one-one",
                         "primary-metric": None,
                         "primary-period": "measurement",
                         "num": 1,
                         "status": p["status"],
                     },
                     "sample": {
-                        "id": "one-one-one",
+                        "sample-uuid": "one-one-one",
                         "num": 1,
                         "status": p["status"],
                         "path": None,
                     },
                     "period": {
-                        "id": p["id"],
+                        "period-uuid": p["uuid"],
                         "name": p["name"],
                         "begin": p["begin"],
                         "end": p["end"],
@@ -1630,9 +1721,9 @@ class TestCrucible:
             "iteration",
             [
                 {
-                    "run": {"id": "one"},
+                    "run": {"run-uuid": "one"},
                     "iteration": {
-                        "id": "one-one",
+                        "iteration-uuid": "one-one",
                         "primary-metric": p["primary_metric"],
                         "primary-period": "measurement",
                         "num": 1,
@@ -1655,7 +1746,7 @@ class TestCrucible:
         }
         query = [
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1663,7 +1754,7 @@ class TestCrucible:
                 },
             },
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1671,7 +1762,7 @@ class TestCrucible:
                 },
             },
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1679,7 +1770,7 @@ class TestCrucible:
                 },
             },
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1687,13 +1778,13 @@ class TestCrucible:
                 },
             },
             {
-                "run": {"id": "one"},
-                "period": {"id": "p1"},
+                "run": {"run-uuid": "one"},
+                "period": {"period-uuid": "p1"},
                 "metric_desc": {"source": "source1", "type": "type2", "names": {}},
             },
             {
-                "run": {"id": "one"},
-                "period": {"id": "p2"},
+                "run": {"run-uuid": "one"},
+                "period": {"period-uuid": "p2"},
                 "metric_desc": {"source": "source1", "type": "type2", "names": {}},
             },
         ]
@@ -1727,7 +1818,7 @@ class TestCrucible:
             "breakouts": {"name1": ["value1", "value2"]},
         }
         md1 = {
-            "run": {"id": "one"},
+            "run": {"run-uuid": "one"},
             "metric_desc": {
                 "source": "source1",
                 "type": "type1",
@@ -1736,7 +1827,7 @@ class TestCrucible:
             },
         }
         md2 = {
-            "run": {"id": "one"},
+            "run": {"run-uuid": "one"},
             "metric_desc": {
                 "source": "source1",
                 "type": "type1",
@@ -1745,13 +1836,13 @@ class TestCrucible:
         }
         if period:
             metrics["periods"] = ["p1", "p2"]
-            md1["period"] = {"id": "p1"}
-            md2["period"] = {"id": "p2"}
+            md1["period"] = {"period-uuid": "p1"}
+            md2["period"] = {"period-uuid": "p2"}
         query = [
             md1,
             md2,
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1760,7 +1851,7 @@ class TestCrucible:
                 },
             },
             {
-                "run": {"id": "one"},
+                "run": {"run-uuid": "one"},
                 "metric_desc": {
                     "source": "source1",
                     "type": "type1",
@@ -1784,13 +1875,13 @@ class TestCrucible:
 
         fake_crucible.elastic.set_query(
             "metric_desc",
-            [{"metric_desc": {"id": "one-metric", "names": {}}}],
+            [{"metric_desc": {"metric_desc-uuid": "one-metric", "names": {}}}],
         )
         fake_crucible.elastic.set_query(
             "metric_data",
             [
                 {
-                    "metric_desc": {"id": "one-metric"},
+                    "metric_desc": {"metric_desc-uuid": "one-metric"},
                     "metric_data": {
                         "begin": "1726165775123",
                         "end": "1726165789213",
@@ -1799,7 +1890,7 @@ class TestCrucible:
                     },
                 },
                 {
-                    "metric_desc": {"id": "one-metric"},
+                    "metric_desc": {"metric_desc-uuid": "one-metric"},
                     "metric_data": {
                         "begin": "1726165790000",
                         "end": "1726165804022",
@@ -1826,14 +1917,14 @@ class TestCrucible:
         assert expected == await fake_crucible.get_metrics_data("runid", "source::type")
         assert fake_crucible.elastic.requests == [
             Request(
-                "cdmv7dev-metric_desc",
+                "cdmv8dev-metric_desc",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "runid",
+                                        "run.run-uuid": "runid",
                                     },
                                 },
                                 {
@@ -1854,14 +1945,14 @@ class TestCrucible:
                 kwargs={"ignore_unavailable": True},
             ),
             Request(
-                "cdmv7dev-metric_data",
+                "cdmv8dev-metric_data",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "terms": {
-                                        "metric_desc.id": [
+                                        "metric_desc.metric_desc-uuid": [
                                             "one-metric",
                                         ],
                                     },
@@ -1881,8 +1972,8 @@ class TestCrucible:
         fake_crucible.elastic.set_query(
             "metric_desc",
             [
-                {"metric_desc": {"id": "one-metric", "names": {}}},
-                {"metric_desc": {"id": "two-metric", "names": {}}},
+                {"metric_desc": {"metric_desc-uuid": "one-metric", "names": {}}},
+                {"metric_desc": {"metric_desc-uuid": "two-metric", "names": {}}},
             ],
         )
         fake_crucible.elastic.set_query(
@@ -1920,14 +2011,14 @@ class TestCrucible:
         )
         expected_requests = [
             Request(
-                "cdmv7dev-metric_desc",
+                "cdmv8dev-metric_desc",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "r1",
+                                        "run.run-uuid": "r1",
                                     },
                                 },
                                 {
@@ -1948,7 +2039,7 @@ class TestCrucible:
                 kwargs={"ignore_unavailable": True},
             ),
             Request(
-                "cdmv7dev-metric_data",
+                "cdmv8dev-metric_data",
                 {
                     "aggs": {
                         "duration": {
@@ -1962,7 +2053,7 @@ class TestCrucible:
                             "filter": [
                                 {
                                     "terms": {
-                                        "metric_desc.id": [
+                                        "metric_desc.metric_desc-uuid": [
                                             "one-metric",
                                             "two-metric",
                                         ],
@@ -1975,7 +2066,7 @@ class TestCrucible:
                 },
             ),
             Request(
-                "cdmv7dev-metric_data",
+                "cdmv8dev-metric_data",
                 {
                     "aggs": {
                         "interval": {
@@ -1997,7 +2088,7 @@ class TestCrucible:
                             "filter": [
                                 {
                                     "terms": {
-                                        "metric_desc.id": [
+                                        "metric_desc.metric_desc-uuid": [
                                             "one-metric",
                                             "two-metric",
                                         ],
@@ -2018,7 +2109,12 @@ class TestCrucible:
         fake_crucible.elastic.set_query(
             "metric_desc",
             [
-                {"metric_desc": {"id": "one-metric", "names": {"a": "1"}}},
+                {
+                    "metric_desc": {
+                        "metric_desc-uuid": "one-metric",
+                        "names": {"a": "1"},
+                    }
+                },
             ],
         )
         expected = [
@@ -2053,14 +2149,14 @@ class TestCrucible:
         )
         assert fake_crucible.elastic.requests == [
             Request(
-                "cdmv7dev-metric_desc",
+                "cdmv8dev-metric_desc",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "runid",
+                                        "run.run-uuid": "runid",
                                     },
                                 },
                                 {
@@ -2082,7 +2178,7 @@ class TestCrucible:
                 kwargs={"ignore_unavailable": True},
             ),
             Request(
-                "cdmv7dev-metric_data",
+                "cdmv8dev-metric_data",
                 {
                     "aggs": {
                         "score": {"extended_stats": {"field": "metric_data.value"}}
@@ -2092,7 +2188,7 @@ class TestCrucible:
                             "filter": [
                                 {
                                     "terms": {
-                                        "metric_desc.id": [
+                                        "metric_desc.metric_desc-uuid": [
                                             "one-metric",
                                         ],
                                     },
@@ -2133,12 +2229,12 @@ class TestCrucible:
         period_runs = [
             {
                 "r1": {
-                    "i1": [{"id": "p1", "name": "dave"}],
-                    "i2": [{"id": "p2", "name": "amy"}],
+                    "i1": [{"period-uuid": "p1", "name": "dave"}],
+                    "i2": [{"period-uuid": "p2", "name": "amy"}],
                 }
             },
-            {"r1": {"i1": [{"id": "p1", "name": "alyssa"}]}},
-            {"r1": {"i1": [{"id": "p2", "name": "ken"}]}},
+            {"r1": {"i1": [{"period-uuid": "p1", "name": "alyssa"}]}},
+            {"r1": {"i1": [{"period-uuid": "p2", "name": "ken"}]}},
         ][period_idx]
         name = await fake_crucible._make_title(
             "r1",
@@ -2158,8 +2254,8 @@ class TestCrucible:
             "param",
             [
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "i1"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "i1"},
                     "param": {"arg": "a", "val": "1"},
                 },
             ],
@@ -2168,9 +2264,9 @@ class TestCrucible:
             "period",
             [
                 {
-                    "run": {"id": "r1"},
-                    "iteration": {"id": "i1"},
-                    "period": {"id": "p1", "name": "alan"},
+                    "run": {"run-uuid": "r1"},
+                    "iteration": {"iteration-uuid": "i1"},
+                    "period": {"period-uuid": "p1", "name": "alan"},
                 },
             ],
         )
@@ -2184,14 +2280,14 @@ class TestCrucible:
         assert name == "source::type"
         assert fake_crucible.elastic.requests == [
             Request(
-                "cdmv7dev-param",
+                "cdmv8dev-param",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "r1",
+                                        "run.run-uuid": "r1",
                                     },
                                 },
                             ],
@@ -2201,14 +2297,14 @@ class TestCrucible:
                 },
             ),
             Request(
-                "cdmv7dev-period",
+                "cdmv8dev-period",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "r1",
+                                        "run.run-uuid": "r1",
                                     },
                                 },
                             ],
@@ -2241,9 +2337,11 @@ class TestCrucible:
     async def test_metrics_graph(self, count, fake_crucible: CrucibleService):
         """Return graph for aggregated metrics"""
 
-        metrics = [{"metric_desc": {"id": "one-metric", "names": {}}}]
+        metrics = [{"metric_desc": {"metric_desc-uuid": "one-metric", "names": {}}}]
         if count:
-            metrics.append({"metric_desc": {"id": "two-metric", "names": {}}})
+            metrics.append(
+                {"metric_desc": {"metric_desc-uuid": "two-metric", "names": {}}}
+            )
             fake_crucible.elastic.set_query(
                 "metric_data",
                 aggregations={
@@ -2415,14 +2513,14 @@ class TestCrucible:
         )
         expected_requests = [
             Request(
-                "cdmv7dev-metric_desc",
+                "cdmv8dev-metric_desc",
                 {
                     "query": {
                         "bool": {
                             "filter": [
                                 {
                                     "term": {
-                                        "run.id": "r1",
+                                        "run.run-uuid": "r1",
                                     },
                                 },
                                 {
@@ -2447,7 +2545,7 @@ class TestCrucible:
             expected_requests.extend(
                 [
                     Request(
-                        "cdmv7dev-metric_data",
+                        "cdmv8dev-metric_data",
                         {
                             "aggs": {
                                 "duration": {
@@ -2461,7 +2559,7 @@ class TestCrucible:
                                     "filter": [
                                         {
                                             "terms": {
-                                                "metric_desc.id": [
+                                                "metric_desc.metric_desc-uuid": [
                                                     "one-metric",
                                                     "two-metric",
                                                 ],
@@ -2474,7 +2572,7 @@ class TestCrucible:
                         },
                     ),
                     Request(
-                        "cdmv7dev-metric_data",
+                        "cdmv8dev-metric_data",
                         {
                             "aggs": {
                                 "interval": {
@@ -2496,7 +2594,7 @@ class TestCrucible:
                                     "filter": [
                                         {
                                             "terms": {
-                                                "metric_desc.id": [
+                                                "metric_desc.metric_desc-uuid": [
                                                     "one-metric",
                                                     "two-metric",
                                                 ],
@@ -2513,14 +2611,16 @@ class TestCrucible:
         else:
             expected_requests.append(
                 Request(
-                    "cdmv7dev-metric_data",
+                    "cdmv8dev-metric_data",
                     {
                         "query": {
                             "bool": {
                                 "filter": [
                                     {
                                         "terms": {
-                                            "metric_desc.id": ["one-metric"],
+                                            "metric_desc.metric_desc-uuid": [
+                                                "one-metric"
+                                            ],
                                         },
                                     },
                                 ],

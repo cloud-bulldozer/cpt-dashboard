@@ -8,3 +8,8 @@ TESTING="${BRANCH}/testing"
 CONTAINERS+=( "${POD_NAME}-func" )
 
 podman run ${POD} --name="${POD_NAME}-func" localhost/functional
+status=$?
+echo "Functional test status ${status}"
+if [[ $status -ne 0 ]] ;then
+    podman logs "${POD_NAME}-back"
+fi

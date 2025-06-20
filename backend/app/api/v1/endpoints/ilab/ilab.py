@@ -30,7 +30,6 @@ async def crucible_svc():
     crucible = None
     try:
         crucible = CrucibleService(CONFIGPATH)
-        await crucible.detect_cdm()
         yield crucible
     finally:
         if crucible:

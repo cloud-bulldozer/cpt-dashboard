@@ -51,7 +51,7 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
         root_index: str,
         hit_list: Optional[list[dict[str, Any]]] = None,
         aggregations: Optional[dict[str, Any]] = None,
-        version: str = "v7dev",
+        version: str = "v8dev",
         repeat: int = 1,
     ):
         """Add a canned response to an Opensearch query
@@ -68,9 +68,13 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
             hit_list: list of hit objects to be returned
             aggregation_list: list of aggregation objects to return
             version: CDM version
-            repeat:
+            repeat: how many times to return a mock before moving on
         """
-        index = f"cdm{version}-{root_index}"
+        index = (
+            f"cdm{version}-{root_index}"
+            if version < "v9dev"
+            else f"cdm-{version}-{root_index}"
+        )
         hits = []
         if hit_list:
             for d in hit_list:
