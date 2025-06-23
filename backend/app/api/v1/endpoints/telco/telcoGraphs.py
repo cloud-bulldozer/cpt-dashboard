@@ -150,77 +150,77 @@ def process_cpu_util(json_data: str, is_row: bool):
     defined_threshold = 3.0
     bytes_per_gb = 1024 * 1024 * 1024
     for each_scenario in json_data["scenarios"]:
-       if each_scenario["scenario_name"] == "steadyworkload":
-          for each_type in each_scenario["types"]:
-             if each_type["type_name"] == "total":
-                total_max_cpu = each_type.get("max_cpu", 0)
-                break
-          total_avg_cpu = each_scenario.get("avg_cpu_total") or 0
-          total_avg_mem = each_scenario.get("avg_mem_total") or 0
-          break
+        if each_scenario["scenario_name"] == "steadyworkload":
+            for each_type in each_scenario["types"]:
+                if each_type["type_name"] == "total":
+                    total_max_cpu = each_type.get("max_cpu", 0)
+                    break
+            total_avg_cpu = each_scenario.get("avg_cpu_total") or 0
+            total_avg_mem = each_scenario.get("avg_mem_total") or 0
+            break
     if total_max_cpu > defined_threshold:
-       minus_max_cpu = total_max_cpu - defined_threshold
+        minus_max_cpu = total_max_cpu - defined_threshold
     if total_avg_cpu > defined_threshold:
-       minus_avg_cpu = total_avg_cpu - defined_threshold
+        minus_avg_cpu = total_avg_cpu - defined_threshold
     # Convert memory from bytes to GB
     total_avg_mem /= bytes_per_gb
     if is_row:
-       return 1 if (minus_avg_cpu != 0 or minus_max_cpu != 0) else 0
+        return 1 if (minus_avg_cpu != 0 or minus_max_cpu != 0) else 0
     else:
-       return {
-          "cpu_util": {
-              "cpu_usage": [
-             {
-                "name": "Data Points",
-                "x": ["total_max_cpu", "total_avg_cpu"],
-                "y": [total_max_cpu, total_avg_cpu],
-                "mode": "markers",
-                "marker": {
-                   "size": 10,
+        return {
+            "cpu_util": {
+                "cpu_usage": [
+                {
+                    "name": "Data Points",
+                    "x": ["total_max_cpu", "total_avg_cpu"],
+                    "y": [total_max_cpu, total_avg_cpu],
+                    "mode": "markers",
+                    "marker": {
+                    "size": 10,
+                    },
+                    "error_y": {
+                    "type": "data",
+                    "symmetric": "false",
+                    "array": [0, 0],
+                    "arrayminus": [minus_max_cpu, minus_avg_cpu]
+                    },
+                    "type": "scatter",
                 },
-                "error_y": {
-                   "type": "data",
-                   "symmetric": "false",
-                   "array": [0, 0],
-                   "arrayminus": [minus_max_cpu, minus_avg_cpu]
-                },
-                "type": "scatter",
-             },
-             {
-                "name": "Threshold",
-                "x": ["total_max_cpu", "total_avg_cpu"],
-                "y": [defined_threshold, defined_threshold],
-                "mode": "lines",
-                "marker": {
-                   "size": 15,
-                },
-                "line": {
-                   "dash": "dot",
-                   "width": 3,
-                },
-                "type": "scatter",
-             }
-          ],
-          "memory_usage": [
-             {
-                "name": "Data Points",
-                "x": ["total_avg_mem"],
-                "y": [total_avg_mem],
-                "mode": "markers",
-                "marker": {
-                   "size": 10,
-                },
-                "error_y": {
-                   "type": "data",
-                   "symmetric": "false",
-                   "array": [0, 0],
-                   "arrayminus": []
-                },
-                "type": "scatter",
-             }
-          ]
-          }
-       }
+                {
+                    "name": "Threshold",
+                    "x": ["total_max_cpu", "total_avg_cpu"],
+                    "y": [defined_threshold, defined_threshold],
+                    "mode": "lines",
+                    "marker": {
+                    "size": 15,
+                    },
+                    "line": {
+                    "dash": "dot",
+                    "width": 3,
+                    },
+                    "type": "scatter",
+                }
+            ],
+            "memory_usage": [
+                {
+                    "name": "Data Points",
+                    "x": ["total_avg_mem"],
+                    "y": [total_avg_mem],
+                    "mode": "markers",
+                    "marker": {
+                    "size": 10,
+                    },
+                    "error_y": {
+                    "type": "data",
+                    "symmetric": "false",
+                    "array": [0, 0],
+                    "arrayminus": []
+                    },
+                    "type": "scatter",
+                }
+            ]
+            }
+        }
 
 
 def process_rfc_2544(json_data: str, is_row: bool):
