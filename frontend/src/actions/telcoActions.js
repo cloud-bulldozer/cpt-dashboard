@@ -1,5 +1,5 @@
-import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "@/actions/types.js";
+import * as API_ROUTES from "@/utils/apiConstants";
 
 import {
   INITAL_OFFSET,
@@ -14,10 +14,10 @@ import {
   getSelectedFilter,
 } from "./commonActions";
 
+import { showFailureToast } from "@/actions/toastActions";
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
-import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchTelcoJobsData = () => async (dispatch) => {
   try {
@@ -246,9 +246,7 @@ export const fetchGraphData =
         if (response.status === 200) {
           let result;
           if (
-            benchmark === "oslat" ||
-            benchmark === "cyclictest" ||
-            benchmark === "deployment"
+            ["oslat","cyclictest","deployment","cpu_util"].includes(benchmark)
           ) {
             const benchmarkData = response.data[benchmark];
             result = Object.keys(response.data[benchmark]).map((key) => [

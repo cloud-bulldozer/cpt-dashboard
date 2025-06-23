@@ -168,11 +168,12 @@ def process_cpu_util(json_data: str, is_row: bool):
        return 1 if (minus_avg_cpu != 0 or minus_max_cpu != 0) else 0
     else:
        return {
-          "cpu_util": [
+          "cpu_util": {
+              "cpu_usage": [
              {
                 "name": "Data Points",
-                "x": ["total_max_cpu", "total_avg_cpu", "total_avg_mem"],
-                "y": [total_max_cpu, total_avg_cpu, total_avg_mem],
+                "x": ["total_max_cpu", "total_avg_cpu"],
+                "y": [total_max_cpu, total_avg_cpu],
                 "mode": "markers",
                 "marker": {
                    "size": 10,
@@ -199,7 +200,26 @@ def process_cpu_util(json_data: str, is_row: bool):
                 },
                 "type": "scatter",
              }
+          ],
+          "memory_usage": [
+             {
+                "name": "Data Points",
+                "x": ["total_avg_mem"],
+                "y": [total_avg_mem],
+                "mode": "markers",
+                "marker": {
+                   "size": 10,
+                },
+                "error_y": {
+                   "type": "data",
+                   "symmetric": "false",
+                   "array": [0, 0],
+                   "arrayminus": []
+                },
+                "type": "scatter",
+             }
           ]
+          }
        }
 
 
