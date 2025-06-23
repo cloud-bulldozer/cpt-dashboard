@@ -246,12 +246,15 @@ def update_filter_product(filter):
     filter_dict = get_dict_from_qs(filter) if filter else {}
     filter_product = filter_dict.pop("product", None)
 
-    # The product filter dropdown includes options like "ocp", "telco", "quay", "Developer", "Insights", etc.
+    # The product filter dropdown includes options like "ocp", "telco", "quay",
+    # "Developer", "Insights", etc
+    #
     # Among these, "ocp", "quay", and "telco" are considered STANDOUT_PRODUCTS.
     # These standout products are handled through a product-to-mapper lookup,
-    # so they do NOT need to be included in the filter_dict explicitly.
-    # The remaining products (like "Developer", "Insights", etc.) must be filtered using "hce" and "ocm" mappers,
-    # so they are retained in the filter_dict for backend filtering.
+    # so they do NOT need to be included in the filter_dict explicitly. The
+    # remaining products (like "Developer", "Insights", etc.) must be filtered
+    # using "hce" and "ocm" mappers, so they are retained in the filter_dict
+    # for backend filtering.
 
     if filter_product:
         matched = [p for p in filter_product if p in constants.STANDOUT_PRODUCTS]

@@ -364,7 +364,8 @@ def clone(source: Elasticsearch, target: Elasticsearch, ids: list[str]):
             )
             if args.verbose > 1:
                 print(
-                    f"Cloning {name} bucket {metric}: {len(ids)} IDs: {len(a['hits']['hits'])} found"
+                    f"Cloning {name} bucket {metric}: {len(ids)} "
+                    f"IDs: {len(a['hits']['hits'])} found"
                 )
             batches = []
             batch = 0

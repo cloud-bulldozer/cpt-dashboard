@@ -93,7 +93,7 @@ async def run_filters(crucible: Annotated[CrucibleService, Depends(crucible_svc)
                         "email": "rhel-ai-user@example.com",
                         "id": "bd72561c-cc20-400b-b6f6-d9534a60033a",
                         "name": '"RHEL-AI User"',
-                        "source": "n42-h01-b01-mx750c.example.com//var/lib/crucible/run/ilab--2024-09-11_19:43:53_UTC--bd72561c-cc20-400b-b6f6-d9534a60033a",
+                        "source": "a.example.com//var/lib/crucible/run/ilab--<date>--<uuid>",
                         "status": "pass",
                         "begin_date": "1970-01-01 00:00:00+00:00",
                         "end_date": "1970-01-01 00:00:00+00:00",

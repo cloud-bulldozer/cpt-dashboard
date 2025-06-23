@@ -32,8 +32,6 @@ jobs:
           cd backend
           tox -e format,isort
       - name: Check for lint
-        # Report errors but don't fail until we achieve stability!
-        continue-on-error: true
         run: |
           cd backend
           tox -e lint

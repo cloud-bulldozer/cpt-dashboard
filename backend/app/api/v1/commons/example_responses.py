@@ -170,8 +170,11 @@ ols_response_example = {
             "networkType": "OVNKubernetes",
             "buildTag": "1886955825944072192",
             "jobStatus": "success",
-            "buildUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/pull/openshift_release/60981/rehearse-60981-periodic-ci-openshift-ols-load-generator-main-ols-load-test-100workers/1886955825944072192",
-            "upstreamJob": "rehearse-60981-periodic-ci-openshift-ols-load-generator-main-ols-load-test-100workers",
+            "buildUrl": "https://prow.ci.openshift.org/view/gs/test-platform-results/pr-logs/"
+            "pull/openshift_release/60981/rehearse-60981-periodic-ci-openshift-ols-"
+            "load-generator-main-ols-load-test-100workers/1886955825944072192",
+            "upstreamJob": "rehearse-60981-periodic-ci-openshift-ols-load-generator-main-"
+            "ols-load-test-100workers",
             "upstreamJobBuild": "778dd992-8353-4cec-9807-7343290267f8",
             "executionDate": "2025-02-05T03:19:50Z",
             "jobDuration": "3396",

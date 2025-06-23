@@ -1,7 +1,4 @@
-from datetime import date, datetime, timedelta
-import json
-
-from fastapi import APIRouter, Response
+from fastapi import APIRouter
 
 from app.api.v1.commons.utils import getMetadata
 from app.services.search import ElasticService
@@ -212,7 +209,6 @@ async def getQuayMetrics(uuids: list, index: str):
 
 
 async def getMatchRuns(meta: dict):
-    version = meta["ocpVersion"][:4]
     query = {
         "query": {
             "bool": {

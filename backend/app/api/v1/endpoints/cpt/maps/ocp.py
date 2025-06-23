@@ -29,7 +29,7 @@ async def ocpMapper(
         offset,
         sort,
         updated_filter,
-        f"ocp.elasticsearch",
+        "ocp.elasticsearch",
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -51,7 +51,7 @@ async def ocpFilter(start_datetime: date, end_datetime: date, filter: str):
     updated_filter = await get_updated_filter(filter)
 
     response = await getFilterData(
-        start_datetime, end_datetime, updated_filter, f"ocp.elasticsearch"
+        start_datetime, end_datetime, updated_filter, "ocp.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:

@@ -1,12 +1,7 @@
-from datetime import datetime, timedelta
-import io
-from json import loads
 import pprint
 
 from fastapi import APIRouter
 import pandas as pd
-import semver
-import trio
 
 from app.api.v1.commons.utils import getMetadata
 from app.services.search import ElasticService
@@ -179,11 +174,19 @@ async def graph(uuid: str):
         }
         metrics.append(old)
         metrics.append(new)
-
     elif meta["benchmark"] == "ingress-perf":
         uuids = await getMatchRuns(meta, False)
         index = "ingress-performance"
+
+        # The 'ingress-perf' benchmark graph path is unimplemented: we do
+        # nothing with the data fetched here, and the returned graph is
+        # empty. It's not entirely clear what should be graphed here, so
+        # this is just a filler to consume "data"
         data = await getResults(uuid, uuids, index)
+        print(
+            f"Found {len(data)} data points with "
+            f"{'' if len(data) == 0 else sorted(data[0].keys())}"
+        )
     elif meta["benchmark"] == "virt-density":
         index = "ripsaw-kube-burner*"
         metric = "vmiLatencyQuantilesMeasurement"
@@ -360,11 +363,14 @@ def netperfFilter(df):
         "test",
     ]
     ndf = pd.DataFrame(df, columns=columns)
-    hnfilter = df[(ndf.hostNetwork == True)].index
+
+    # NOTE: flake8 doesn't like "== True", but the pandas filter won't work
+    # as "is True", so mark these with "# noqa" to disable the complaint.
+    hnfilter = df[(ndf.hostNetwork == True)].index  # noqa
     hnd = ndf.drop(hnfilter)
-    sfilter = hnd[(hnd.service == True)].index
+    sfilter = hnd[(hnd.service == True)].index  # noqa
     sdf = hnd.drop(sfilter)
-    azfilter = sdf[(sdf.acrossAZ == True)].index
+    azfilter = sdf[(sdf.acrossAZ == True)].index  # noqa
     adf = sdf.drop(azfilter)
     d = adf[(adf.parallelism == 1)]
     d = d[d.profile.str.contains("TCP_STREAM")]
@@ -450,8 +456,7 @@ async def getResults(uuid: str, uuids: list, index: str):
     return runs
 
 
-async def getMatchRuns(meta: dict, workerCount: False):
-    index = "perf_scale_ci"
+async def getMatchRuns(meta: dict, workerCount: bool = False):
     version = meta["ocpVersion"][:4]
     query = {
         "query": {

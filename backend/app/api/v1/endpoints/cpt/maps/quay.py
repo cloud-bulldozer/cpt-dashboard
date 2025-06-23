@@ -25,7 +25,7 @@ async def quayMapper(
         offset,
         sort,
         updated_filter,
-        f"quay.elasticsearch",
+        "quay.elasticsearch",
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -45,7 +45,7 @@ async def quayFilter(start_datetime: date, end_datetime: date, filter: str):
     updated_filter = await get_updated_filter(filter)
 
     response = await getFilterData(
-        start_datetime, end_datetime, updated_filter, f"quay.elasticsearch"
+        start_datetime, end_datetime, updated_filter, "quay.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:

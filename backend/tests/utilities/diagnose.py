@@ -283,7 +283,7 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
                 info.good = False
                 info.errors[f"metric {metrics[id]} sample missing value"] += 1
 
-    watcher.update(f"generating report")
+    watcher.update("generating report")
     baddies = 0
     marks = defaultdict(int)
     metrics = defaultdict(int)
@@ -306,10 +306,12 @@ def diagnose(cdm: Elasticsearch, args: argparse.Namespace):
             if first:
                 first = False
                 print(
-                    f"{'Run ID':<36s} {'Benchmark':<10s} {'Start time':<16s} It Sa Pd Errors Primary"
+                    f"{'Run ID':<36s} {'Benchmark':<10s} {'Start time':<16s} "
+                    "It Sa Pd Errors Primary"
                 )
                 print(
-                    f"{'':-<36s} {'':-<10s} {'':-<16s} {'':-<2s} {'':-<2s} {'':-<2s} {'':-<6s} {'':-<20s}"
+                    f"{'':-<36s} {'':-<10s} {'':-<16s} {'':-<2s} {'':-<2s} "
+                    f"{'':-<2s} {'':-<6s} {'':-<20s}"
                 )
             print(
                 f"{run.id:36s} {run.benchmark:10s} {t:%Y-%m-%d %H:%M} "

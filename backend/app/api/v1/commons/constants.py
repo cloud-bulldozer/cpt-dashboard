@@ -168,11 +168,12 @@ keys_to_keep = ["product", "testName", "jobStatus", "ciSystem", "releaseStream"]
 
 SPLUNK_SEMAPHORE_COUNT = 5  # Arbitrary concurrency limit in an asyncio semaphore
 
-# These products don't need to be included in the filter dict when applying filters on the Home tab,
-# as the filtering function will automatically handle them using the corresponding product-to-mapper lookup.
+# These products don't need to be included in the filter dict when applying
+# filters on the Home tab, as the filtering function will automatically handle
+# them using the corresponding product-to-mapper lookup.
 STANDOUT_PRODUCTS = ["ocp", "telco", "quay"]
 # These products aren't listed by their exact names like "hce" and "ocm",
-# but instead represent grouped categories such as "Developer", "Insights", etc.
+# but instead represent grouped categories such as "Developer" or "Insights".
 GENERAL_PRODUCTS = ["hce", "ocm"]
 TELCO_STATUS_MAP = {"success": "passed", "failed": "failed", "failure": "failure"}
 

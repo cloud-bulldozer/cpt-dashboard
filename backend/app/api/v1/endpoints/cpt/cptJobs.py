@@ -1,7 +1,6 @@
 import asyncio
 from datetime import date, datetime, timedelta
 import json
-from multiprocessing import cpu_count
 import traceback
 from urllib.parse import urlencode
 

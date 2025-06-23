@@ -1,6 +1,5 @@
 import bisect
 from datetime import datetime, timedelta
-import re
 import traceback
 
 from elasticsearch import AsyncElasticsearch
@@ -76,7 +75,10 @@ class ElasticService:
         else:
             """Handles queries that require data from ES docs"""
             if timestamp_field:
-                """Handles queries that have a timestamp field. Queries from both new and archive instances"""
+                """Handles queries that have a timestamp field.
+
+                We handle queries from both new and archive instances
+                """
                 if self.prev_es:
                     self.prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
