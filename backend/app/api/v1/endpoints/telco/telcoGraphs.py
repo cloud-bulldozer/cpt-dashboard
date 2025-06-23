@@ -170,55 +170,55 @@ def process_cpu_util(json_data: str, is_row: bool):
         return {
             "cpu_util": {
                 "cpu_usage": [
-                {
-                    "name": "Data Points",
-                    "x": ["total_max_cpu", "total_avg_cpu"],
-                    "y": [total_max_cpu, total_avg_cpu],
-                    "mode": "markers",
-                    "marker": {
-                    "size": 10,
+                    {
+                        "name": "Data Points",
+                        "x": ["total_max_cpu", "total_avg_cpu"],
+                        "y": [total_max_cpu, total_avg_cpu],
+                        "mode": "markers",
+                        "marker": {
+                            "size": 10,
+                        },
+                        "error_y": {
+                            "type": "data",
+                            "symmetric": "false",
+                            "array": [0, 0],
+                            "arrayminus": [minus_max_cpu, minus_avg_cpu],
+                        },
+                        "type": "scatter",
                     },
-                    "error_y": {
-                    "type": "data",
-                    "symmetric": "false",
-                    "array": [0, 0],
-                    "arrayminus": [minus_max_cpu, minus_avg_cpu]
+                    {
+                        "name": "Threshold",
+                        "x": ["total_max_cpu", "total_avg_cpu"],
+                        "y": [defined_threshold, defined_threshold],
+                        "mode": "lines",
+                        "marker": {
+                            "size": 15,
+                        },
+                        "line": {
+                            "dash": "dot",
+                            "width": 3,
+                        },
+                        "type": "scatter",
                     },
-                    "type": "scatter",
-                },
-                {
-                    "name": "Threshold",
-                    "x": ["total_max_cpu", "total_avg_cpu"],
-                    "y": [defined_threshold, defined_threshold],
-                    "mode": "lines",
-                    "marker": {
-                    "size": 15,
-                    },
-                    "line": {
-                    "dash": "dot",
-                    "width": 3,
-                    },
-                    "type": "scatter",
-                }
-            ],
-            "memory_usage": [
-                {
-                    "name": "Data Points",
-                    "x": ["total_avg_mem"],
-                    "y": [total_avg_mem],
-                    "mode": "markers",
-                    "marker": {
-                    "size": 10,
-                    },
-                    "error_y": {
-                    "type": "data",
-                    "symmetric": "false",
-                    "array": [0, 0],
-                    "arrayminus": []
-                    },
-                    "type": "scatter",
-                }
-            ]
+                ],
+                "memory_usage": [
+                    {
+                        "name": "Data Points",
+                        "x": ["total_avg_mem"],
+                        "y": [total_avg_mem],
+                        "mode": "markers",
+                        "marker": {
+                            "size": 10,
+                        },
+                        "error_y": {
+                            "type": "data",
+                            "symmetric": "false",
+                            "array": [0, 0],
+                            "arrayminus": [],
+                        },
+                        "type": "scatter",
+                    }
+                ],
             }
         }
 
