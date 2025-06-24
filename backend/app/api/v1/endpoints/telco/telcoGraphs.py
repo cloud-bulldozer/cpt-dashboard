@@ -218,7 +218,8 @@ def process_cpu_util(json_data: str, is_row: bool):
                             "arrayminus": [],
                         },
                         "type": "scatter",
-                    },                    {
+                    },
+                    {
                         "name": "Threshold Memory",
                         "x": ["total_avg_mem", ""],
                         "y": [defined_threshold_mem, defined_threshold_mem],
@@ -226,10 +227,7 @@ def process_cpu_util(json_data: str, is_row: bool):
                         "marker": {
                             "size": 15,
                         },
-                        "line": {
-                            "dash": "dot",
-                            "width": 3
-                        },
+                        "line": {"dash": "dot", "width": 3},
                         "type": "scatter",
                     },
                 ],
