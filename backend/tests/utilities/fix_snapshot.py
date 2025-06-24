@@ -17,7 +17,6 @@ E.g.:
 
 import argparse
 from collections import defaultdict
-import json
 import sys
 import time
 from typing import Any
@@ -749,9 +748,8 @@ def snapshot(server: Elasticsearch):
                 "Unexpected snapshot: expect functional/base: "
                 f"{snapshot['repository']}/{snapshot['snapshot']}"
             )
-        print(
-            f"Indices: {', '.join([str(i) for i in snapshot['indices'].keys() if i.startswith('cdm')])}"
-        )
+        idxlist = [str(i) for i in snapshot["indices"].keys() if i.startswith("cdm")]
+        print(f"Indices: {', '.join(idxlist)}")
         r = server.snapshot.delete(repository="functional", snapshot="base")
         if r.get("acknowledged") is not True:
             raise Exception(f"Snapshot 'base' deletion failed with {r}")

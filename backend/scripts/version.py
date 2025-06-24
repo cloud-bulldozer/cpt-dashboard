@@ -45,7 +45,7 @@ def main():
         "branch": branch,
         "display_version": display,
         "date": datetime.now(tz=timezone.utc).isoformat(),
-        "changes": [{f: v for f, v in zip(fields, l.split("###"))} for l in log],
+        "changes": [{f: v for f, v in zip(fields, lg.split("###"))} for lg in log],
     }
     with (backend / "version.json").open("w") as verfile:
         json.dump(vj, fp=verfile)

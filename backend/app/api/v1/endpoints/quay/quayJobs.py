@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 import json
 
-from fastapi import APIRouter, HTTPException, Response
+from fastapi import APIRouter, Response
 from fastapi.param_functions import Query
 
 from app.api.v1.commons.utils import normalize_pagination
@@ -133,6 +133,5 @@ async def filters(
         json_str = json.dumps(results, indent=4)
         return Response(content=json_str, media_type="application/json")
     else:
-        response = {"filterData": [], "summary": {}}
         json_str = json.dumps(results, indent=4)
         return Response(content=json_str, media_type="application/json")

@@ -24,7 +24,7 @@ async def ocmMapper(
     updated_filter = await get_updated_filter(filter)
 
     response = await getData(
-        start_datetime, end_datetime, size, offset, filter, f"ocm.elasticsearch"
+        start_datetime, end_datetime, size, offset, updated_filter, "ocm.elasticsearch"
     )
     if isinstance(response, pd.DataFrame) or not response:
         df = response["data"]
@@ -53,7 +53,7 @@ async def ocmFilter(start_datetime: date, end_datetime: date, filter: str):
     updated_filter = await get_updated_filter(filter)
 
     response = await getFilterData(
-        start_datetime, end_datetime, updated_filter, f"ocm.elasticsearch"
+        start_datetime, end_datetime, updated_filter, "ocm.elasticsearch"
     )
     if isinstance(response, pd.DataFrame) or not response:
         return {"total": 0, "filterData": [], "summary": {}}

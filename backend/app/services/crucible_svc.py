@@ -1606,7 +1606,7 @@ class CrucibleService:
                     "end": "1722880503544",
                     "id": "4e1d2c3c-b01c-4007-a92d-23a561af2c11",
                     "name": "\"A User\"",
-                    "source": "node.example.com//var/lib/crucible/run/ilab--2024-08-05_17:17:13_UTC--4e1d2c3c-b01c-4007-a92d-23a561af2c11",
+                    "source": "<host>/<path>/<name>--<date>--<uuid>",
                     "tags": {
                         "topology": "none"
                     },

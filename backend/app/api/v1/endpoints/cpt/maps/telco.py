@@ -5,7 +5,7 @@ import pandas as pd
 
 from app.api.v1.commons.constants import keys_to_keep
 from app.api.v1.commons.telco import getData, getFilterData
-from app.api.v1.commons.utils import get_dict_from_qs, getReleaseStream
+from app.api.v1.commons.utils import get_dict_from_qs
 
 
 #####################################################################
@@ -23,7 +23,7 @@ async def telcoMapper(
         offset,
         sort,
         updated_filter,
-        f"telco.splunk",
+        "telco.splunk",
     )
 
     if isinstance(response, pd.DataFrame) or not response:

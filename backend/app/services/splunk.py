@@ -154,7 +154,8 @@ class SplunkService:
                     "values(formal) AS isFormal, "
                     'count(eval(status="passed")) AS pass_count,'
                     'count(eval(like(status,"fail%"))) AS fail_count'
-                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream, isFormal, total_records, pass_count, fail_count, jobStatus"
+                    "| fields cpu, nodeName, benchmark, ocpVersion, releaseStream, "
+                    "isFormal, total_records, pass_count, fail_count, jobStatus"
                 )
 
                 # Run Splunk search asynchronously using `oneshot`

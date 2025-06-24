@@ -1,0 +1,6 @@
+[flake8]
+ignore = E203,E226,W503,E704
+
+# Black tries to limit lines to 88 characters: keep flake8 from complaining
+# as long as we're below 100.
+max-line-length = 100

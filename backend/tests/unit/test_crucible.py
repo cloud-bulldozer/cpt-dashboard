@@ -737,7 +737,8 @@ class TestFilterBuilders:
         (
             (
                 "foo:asc",
-                "Sort key 'foo' must be one of begin,benchmark,desc,email,end,harness,host,id,name,source",
+                "Sort key 'foo' must be one of begin,benchmark,desc,email,"
+                "end,harness,host,id,name,source",
             ),
             ("email:up", "Sort direction 'up' must be one of asc,desc"),
         ),
@@ -995,7 +996,8 @@ class TestCrucible:
             )
         assert 422 == exc.value.status_code
         assert {
-            "message": f"More than one metric ({message[0]}) means you should add breakout filters or aggregate.",
+            "message": f"More than one metric ({message[0]}) means you "
+            "should add breakout filters or aggregate.",
             "periods": message[1],
             "names": message[2],
         } == exc.value.detail

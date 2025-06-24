@@ -1,5 +1,4 @@
 from datetime import date
-import traceback
 from urllib.parse import urlencode
 
 import pandas as pd
@@ -35,7 +34,7 @@ async def hceMapper(
     updated_filter = await get_updated_filter(filter)
 
     response = await getData(
-        start_datetime, end_datetime, size, offset, updated_filter, f"hce.elasticsearch"
+        start_datetime, end_datetime, size, offset, updated_filter, "hce.elasticsearch"
     )
 
     if isinstance(response, pd.DataFrame) or not response:
@@ -79,7 +78,7 @@ async def hceFilter(start_datetime: date, end_datetime: date, filter: str):
         updated_filter = await get_updated_filter(filter)
 
         response = await getFilterData(
-            start_datetime, end_datetime, updated_filter, f"hce.elasticsearch"
+            start_datetime, end_datetime, updated_filter, "hce.elasticsearch"
         )
 
         if isinstance(response, pd.DataFrame) or not response:

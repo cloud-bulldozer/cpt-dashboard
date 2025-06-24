@@ -6,7 +6,6 @@ from app import config
 import app.api.v1.commons.constants as constants
 import app.api.v1.commons.hasher as hasher
 import app.api.v1.commons.utils as utils
-import app.api.v1.endpoints.telco.telcoGraphs as telcoGraphs
 from app.services.splunk import SplunkService
 
 
@@ -95,12 +94,6 @@ async def getData(
 async def getFilterData(
     start_datetime: date, end_datetime: date, filter: str, configpath: str
 ):
-
-    cfg = config.get_config()
-    try:
-        jenkins_url = cfg.get("telco.config.job_url")
-    except Exception as e:
-        print(f"Error reading telco configuration: {e}")
 
     query = {
         "earliest_time": "{}T00:00:00".format(start_datetime.strftime("%Y-%m-%d")),
