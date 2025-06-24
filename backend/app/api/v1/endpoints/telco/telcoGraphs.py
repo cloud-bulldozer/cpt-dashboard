@@ -149,6 +149,7 @@ def process_cpu_util(json_data: str, is_row: bool):
     total_avg_mem = 0.0
     defined_threshold = 3.0
     bytes_per_gb = 1024 * 1024 * 1024
+    defined_threshold_mem = 64
     for each_scenario in json_data["scenarios"]:
         if each_scenario["scenario_name"] == "steadyworkload":
             for each_type in each_scenario["types"]:
@@ -217,7 +218,20 @@ def process_cpu_util(json_data: str, is_row: bool):
                             "arrayminus": [],
                         },
                         "type": "scatter",
-                    }
+                    },                    {
+                        "name": "Threshold Memory",
+                        "x": ["total_avg_mem", ""],
+                        "y": [defined_threshold_mem, defined_threshold_mem],
+                        "mode": "lines",
+                        "marker": {
+                            "size": 15,
+                        },
+                        "line": {
+                            "dash": "dot",
+                            "width": 3
+                        },
+                        "type": "scatter",
+                    },
                 ],
             }
         }
