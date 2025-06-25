@@ -9,6 +9,7 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 
 const SelectBox = (props) => {
+  const { options, type, selected } = props;
   const [isOpen, setIsOpen] = useState(false);
 
   const onToggleClick = () => {
@@ -18,6 +19,51 @@ const SelectBox = (props) => {
     setIsOpen(false);
     props.onChange(_event, value);
   };
+  const renderOptions = () => {
+    switch (type) {
+      case "ilab":
+        return (
+          <SelectList>
+            {options.map(({ groupLabel }) => (
+              <SelectOption value={groupLabel} key={groupLabel}>
+                {groupLabel}
+              </SelectOption>
+            ))}
+          </SelectList>
+        );
+      case "ilab_subcategory":
+        return (
+          <SelectList>
+            {options.map(({ key, name }) => (
+              <SelectOption value={key} key={key}>
+                {name}
+              </SelectOption>
+            ))}
+          </SelectList>
+        );
+      case "ilab_type_filter":
+        return (
+          <SelectList>
+            {options.map((option) => (
+              <SelectOption value={option} key={option}>
+                {option}
+              </SelectOption>
+            ))}
+          </SelectList>
+        );
+      default:
+        return (
+          <SelectList>
+            {options.map(({ key, name }) => (
+              <SelectOption value={name} key={key}>
+                {name}
+              </SelectOption>
+            ))}
+          </SelectList>
+        );
+    }
+  };
+
   const toggle = (toggleRef) => (
     <MenuToggle
       ref={toggleRef}
@@ -29,29 +75,21 @@ const SelectBox = (props) => {
         height: "36px",
       }}
     >
-      {props.selected}
+      {selected}
     </MenuToggle>
   );
   return (
-    <>
-      <Select
-        className="select-box"
-        isOpen={isOpen}
-        selected={props.selected}
-        onSelect={onSelect}
-        onOpenChange={(isOpen) => setIsOpen(isOpen)}
-        toggle={toggle}
-        shouldFocusToggleOnSelect
-      >
-        <SelectList>
-          {props.options.map((option) => (
-            <SelectOption value={option.name} key={option.key}>
-              {option.name}
-            </SelectOption>
-          ))}
-        </SelectList>
-      </Select>
-    </>
+    <Select
+      className="select-box"
+      isOpen={isOpen}
+      selected={selected}
+      onSelect={onSelect}
+      onOpenChange={setIsOpen}
+      toggle={toggle}
+      shouldFocusToggleOnSelect
+    >
+      {renderOptions()}
+    </Select>
   );
 };
 
@@ -61,5 +99,6 @@ SelectBox.propTypes = {
   selected: PropTypes.string,
   width: PropTypes.string,
   icon: PropTypes.any,
+  type: PropTypes.string,
 };
 export default SelectBox;

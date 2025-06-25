@@ -27,7 +27,10 @@ const initialState = {
   sort: "",
   filterData: [],
   categoryFilterValue: "",
+  subCategoryFilterValue: "",
+  typeFilterValue: "",
   filterOptions: [],
+  appliedFiltersStr: "",
   appliedFilters: {},
   filteredResults: [],
   summary: {},
@@ -43,6 +46,8 @@ const initialState = {
   selectedMetricsPerRun: {},
   isModalOpen: false,
   metadataItem: {},
+  subCategoryOptions: [],
+  typeFilterOptions: [],
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -101,7 +106,7 @@ const ILabReducer = (state = initialState, action = {}) => {
         ],
       };
     case TYPES.SET_ILAB_RUN_FILTERS:
-      return { ...state, runFilters: payload };
+      return { ...state, filterData: payload };
     case TYPES.SET_ILAB_METRIC_TEMPLATE:
       return { ...state, metricTemplate: payload };
     case TYPES.SET_SELECTED_METRICS_PER_RUN:
@@ -110,6 +115,22 @@ const ILabReducer = (state = initialState, action = {}) => {
       return { ...state, isModalOpen: payload };
     case TYPES.SET_MODAL_METADATA_ITEM:
       return { ...state, metadataItem: payload };
+    case TYPES.SET_ILAB_FILTER_OPTIONS:
+      return { ...state, subCategoryOptions: payload };
+    case TYPES.SET_ILAB_CATEGORY_FILTER:
+      return { ...state, categoryFilterValue: payload };
+    case TYPES.SET_ILAB_SUB_CATEGORY_FILTER:
+      return { ...state, subCategoryFilterValue: payload };
+    case TYPES.SET_ILAB_TYPE_FILTER_OPTIONS:
+      return { ...state, typeFilterOptions: payload };
+    case TYPES.SET_ILAB_TYPE_FILTER:
+      return { ...state, typeFilterValue: payload };
+    case TYPES.SET_ILAB_APPLIED_FILTER:
+      return {
+        ...state,
+        appliedFiltersStr: payload.filterStr,
+        appliedFilters: payload.filter,
+      };
     default:
       return state;
   }
