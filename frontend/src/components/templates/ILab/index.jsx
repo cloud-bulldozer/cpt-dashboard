@@ -20,12 +20,12 @@ import { formatDateTime, uid } from "@/utils/helper";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
+import ILabFilters from "./ILabFilters";
 import IlabCompareComponent from "./IlabCompareComponent";
 import IlabRowContent from "./IlabExpandedRow";
 import ModalComponent from "@/components/molecules/ModalComponent";
 import RenderPagination from "@/components/organisms/Pagination";
 import StatusCell from "./StatusCell";
-import TableFilter from "@/components/organisms/TableFilters";
 import { useInitFiltersFromURL } from "@/utils/hooks/useInitFiltersFromURL";
 import { useNavigate } from "react-router-dom";
 
@@ -98,7 +98,7 @@ const ILab = () => {
   return (
     <div className="ilab-table-container">
       <ModalComponent />
-      <TableFilter
+      <ILabFilters
         tableFilters={modifiedTableFilters}
         filterOptions={filterOptions}
         categoryFilterValue={categoryFilterValue}
