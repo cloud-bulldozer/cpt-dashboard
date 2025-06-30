@@ -9,7 +9,8 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
-import { showFailureToast } from "@/actions/toastActions";
+import { deleteAppliedFilters } from "./commonActions";
+import { showFailureToast } from "./toastActions";
 
 /**
  * Fetch and store InstructLab jobs based on configured filters.
@@ -21,13 +22,15 @@ export const fetchIlabJobs =
   async (dispatch, getState) => {
     try {
       dispatch({ type: TYPES.LOADING });
-      const { start_date, end_date, size, offset, results } = getState().ilab;
+      const { start_date, end_date, size, offset, results, appliedFiltersStr } =
+        getState().ilab;
       const response = await API.get(API_ROUTES.ILABS_JOBS_API_V1, {
         params: {
           ...(start_date && { start_date }),
           ...(end_date && { end_date }),
           ...(size && { size }),
           ...(offset && { offset }),
+          ...(appliedFiltersStr && { filter: appliedFiltersStr }),
         },
       });
       if (response.status === 200) {
@@ -74,7 +77,7 @@ export const fetchIlabJobs =
 export const applyFilters = () => (dispatch) => {
   dispatch(setIlabOffset(INITAL_OFFSET));
   dispatch(setIlabPage(START_PAGE));
-  dispatch(fetchIlabJobs());
+  dispatch(fetchIlabJobs(true));
   dispatch(tableReCalcValues());
 };
 
@@ -101,20 +104,116 @@ export const setIlabDateFilter =
 /**
  * Set the category filters.
  *
- * TODO: currently unimplemented/unused for ILAB
+ * @param {string} category
+ */
+export const setIlabCatFilters = (category) => (dispatch, getState) => {
+  const filterData = [...getState().ilab.filterData];
+  const options = filterData.filter((item) => item.groupLabel === category)[0]
+    .data;
+
+  dispatch({
+    type: TYPES.SET_ILAB_CATEGORY_FILTER,
+    payload: category,
+  });
+  dispatch({
+    type: TYPES.SET_ILAB_FILTER_OPTIONS,
+    payload: options,
+  });
+  dispatch(resetSubCategoryFilters());
+  dispatch(resetTypeFilters());
+};
+
+/**
+ * Set the sub-category filters.
  *
  * @param {string} category
  */
-export const setIlabCatFilters = () => () => {};
+export const setIlabSubCatFilters = (category) => (dispatch, getState) => {
+  const subCategoryOptions = [...getState().ilab.subCategoryOptions];
+  const options = subCategoryOptions.filter((item) => item.key === category)[0]
+    .value;
 
+  dispatch({
+    type: TYPES.SET_ILAB_SUB_CATEGORY_FILTER,
+    payload: category,
+  });
+  dispatch({
+    type: TYPES.SET_ILAB_TYPE_FILTER_OPTIONS,
+    payload: options,
+  });
+  dispatch(resetTypeFilters());
+};
+
+/**
+ * Reset SubCategory and Type Filters when the category changes
+ */
+export const resetSubCategoryFilters = () => ({
+  type: TYPES.SET_ILAB_SUB_CATEGORY_FILTER,
+  payload: "",
+});
+/**
+ * Reset Type Filters when the sub-category changes
+ */
+export const resetTypeFilters = () => ({
+  type: TYPES.SET_ILAB_TYPE_FILTER,
+  payload: "",
+});
+/**
+ * Set Type filter value
+ */
+export const setIlabTypeFilter = (filterValue, navigate) => (dispatch) => {
+  dispatch({ type: TYPES.SET_ILAB_TYPE_FILTER, payload: filterValue });
+  dispatch(setIlabAppliedFilters(navigate));
+};
+/**
+ * Parses a comma-separated filter string and groups values by their filter keys
+ * @param {string} appliedFilter A string representing filters in the format `key:value` (e.g., "status:active,type:user").
+ * @returns {Object} An object where each key maps to an array of its corresponding filter values.
+ *
+ * @example
+ * getGroupedFilters("status:active,type:user,status:inactive")
+ * // Returns: { status: ['active', 'inactive'], type: ['user'] }
+ */
+const getGroupedFilters = (appliedFilter) => {
+  const grouped = appliedFilter.split(",").reduce((acc, item) => {
+    const [key, rest] = item.trim().split(":");
+    if (!rest) return acc;
+
+    const value = rest;
+    if (!acc[key]) acc[key] = [];
+
+    acc[key].push(value);
+    return acc;
+  }, {});
+  return grouped;
+};
 /**
  * Set applied filters.
  *
- * TODO: currently unimplemented/unused for ILAB
- *
  * @param {function} navigate hook
  */
-export const setIlabAppliedFilters = () => () => {};
+export const setIlabAppliedFilters = (navigate) => (dispatch, getState) => {
+  const {
+    typeFilterValue,
+    subCategoryFilterValue,
+    categoryFilterValue,
+    appliedFiltersStr,
+  } = getState().ilab;
+
+  const filterStr = `${categoryFilterValue}:${subCategoryFilterValue}=${typeFilterValue}`;
+  const updatedFilter = appliedFiltersStr
+    ? `${appliedFiltersStr},${filterStr}`
+    : filterStr;
+  dispatch({
+    type: TYPES.SET_ILAB_APPLIED_FILTER,
+    payload: {
+      filterStr: updatedFilter,
+      filter: getGroupedFilters(updatedFilter),
+    },
+  });
+  dispatch(applyFilters());
+  dispatch(updateURL(navigate));
+};
 
 /**
  * Set summery filters for non-[success|failure]
@@ -164,7 +263,16 @@ export const tableReCalcValues = () => (dispatch, getState) => {
 
   dispatch(setIlabPageOptions(page, perPage));
 };
-
+/**
+ * Converts the grouped object to string
+ * @param {Object} grouped
+ * @returns string
+ */
+const convertGroupedToString = (grouped) => {
+  return Object.entries(grouped)
+    .flatMap(([key, values]) => values.map((value) => `${key}:${value}`))
+    .join(",");
+};
 /**
  * Remove applied filters
  *
@@ -172,10 +280,34 @@ export const tableReCalcValues = () => (dispatch, getState) => {
  * @param {*} filterValue
  * @param {*} navigate
  */
-export const removeIlabAppliedFilters = () => (dispatch) => {
-  dispatch(applyFilters());
-};
+export const removeIlabAppliedFilters =
+  (filterKey, filterValue, navigate) => (dispatch) => {
+    const appliedFilters = dispatch(
+      deleteAppliedFilters(filterKey, filterValue, "ilab")
+    );
 
+    dispatch({
+      type: TYPES.SET_ILAB_APPLIED_FILTER,
+      payload: {
+        filterStr: convertGroupedToString(appliedFilters),
+        filter: appliedFilters,
+      },
+    });
+    dispatch(updateURL(navigate));
+    dispatch(applyFilters());
+  };
+export const removeAllFilters = (navigate) => (dispatch) => {
+  dispatch({
+    type: TYPES.SET_ILAB_APPLIED_FILTER,
+    payload: {
+      filterStr: "",
+      filter: {},
+    },
+  });
+  dispatch(updateURL(navigate));
+  dispatch(applyFilters());
+
+};
 /**
  * Apply a new date filter, resetting pagination
  *
@@ -194,10 +326,27 @@ export const applyIlabDateFilter =
 /**
  * Fetch the set of possible InstructLab run filters and store them.
  */
-export const fetchIlabFilters = () => async (dispatch) => {
+export const fetchIlabFilters = () => async (dispatch, getState) => {
   try {
+    const { categoryFilterValue } = getState().ilab;
     const response = await API.get(`/api/v1/ilab/runs/filters`);
-    dispatch({ type: TYPES.SET_ILAB_RUN_FILTERS, payload: response.data });
+    if (response.status === 200) {
+      let filterData = [];
+
+      for (const main in response.data) {
+        const p = response.data[main];
+        const a = [];
+
+        Object.entries(p).forEach(([key, value]) => {
+          a.push({ key, value, name: key });
+        });
+
+        filterData.push({ groupLabel: main, data: a });
+      }
+      const activeFilter = categoryFilterValue || filterData[0].groupLabel;
+      dispatch({ type: TYPES.SET_ILAB_RUN_FILTERS, payload: filterData });
+      dispatch(setIlabCatFilters(activeFilter));
+    }
   } catch (error) {
     console.error(error);
     dispatch(showFailureToast());
@@ -666,8 +815,15 @@ export const setMetaRowExpanded = (expandedItems) => ({
 });
 
 export const updateURL = (navigate) => (dispatch, getState) => {
-  const { perPage, offset, page, comparisonSwitch, start_date, end_date } =
-    getState().ilab;
+  const {
+    perPage,
+    offset,
+    page,
+    comparisonSwitch,
+    start_date,
+    end_date,
+    appliedFiltersStr,
+  } = getState().ilab;
 
   appendQueryString(
     {
@@ -677,6 +833,7 @@ export const updateURL = (navigate) => (dispatch, getState) => {
       comparisonSwitch,
       ...(start_date ? { start_date } : {}),
       ...(end_date ? { end_date } : {}),
+      ...(appliedFiltersStr ? { filter: appliedFiltersStr } : {}),
     },
     navigate
   );
