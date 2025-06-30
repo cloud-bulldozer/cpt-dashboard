@@ -166,16 +166,20 @@ export const setIlabTypeFilter = (filterValue, navigate) => (dispatch) => {
   dispatch(setIlabAppliedFilters(navigate));
 };
 /**
- * Converts the filter string to a grouped filter object
- * @param {string} appliedFilter
- * @returns filter object
+ * Parses a comma-separated filter string and groups values by their filter keys
+ * @param {string} appliedFilter A string representing filters in the format `key:value` (e.g., "status:active,type:user").
+ * @returns {Object} An object where each key maps to an array of its corresponding filter values.
+ *
+ * @example
+ * getGroupedFilters("status:active,type:user,status:inactive")
+ * // Returns: { status: ['active', 'inactive'], type: ['user'] }
  */
 const getGroupedFilters = (appliedFilter) => {
   const grouped = appliedFilter.split(",").reduce((acc, item) => {
     const [key, rest] = item.trim().split(":");
     if (!rest) return acc;
 
-    const value = rest.includes("=") ? rest : rest;
+    const value = rest;
     if (!acc[key]) acc[key] = [];
 
     acc[key].push(value);
@@ -260,7 +264,7 @@ export const tableReCalcValues = () => (dispatch, getState) => {
   dispatch(setIlabPageOptions(page, perPage));
 };
 /**
- * Converts the groubed object to string
+ * Converts the grouped object to string
  * @param {Object} grouped
  * @returns string
  */
@@ -292,7 +296,18 @@ export const removeIlabAppliedFilters =
     dispatch(updateURL(navigate));
     dispatch(applyFilters());
   };
+export const removeAllFilters = (navigate) => (dispatch) => {
+  dispatch({
+    type: TYPES.SET_ILAB_APPLIED_FILTER,
+    payload: {
+      filterStr: "",
+      filter: {},
+    },
+  });
+  dispatch(updateURL(navigate));
+  dispatch(applyFilters());
 
+};
 /**
  * Apply a new date filter, resetting pagination
  *

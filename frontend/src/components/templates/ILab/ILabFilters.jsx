@@ -2,6 +2,7 @@ import "react-date-picker/dist/DatePicker.css";
 import "react-calendar/dist/Calendar.css";
 
 import {
+  Button,
   Chip,
   ChipGroup,
   Switch,
@@ -10,6 +11,7 @@ import {
   ToolbarItem,
 } from "@patternfly/react-core";
 import {
+  removeAllFilters,
   setIlabCatFilters,
   setIlabSubCatFilters,
   setIlabTypeFilter,
@@ -66,11 +68,7 @@ export const ILabFilters = (props) => {
   return (
     <>
       {filterData.length > 0 && (
-        <Toolbar
-          id="filter-toolbar"
-          ouiaId="data_table_filter"
-          clearAllFilters={() => console.log("hey")}
-        >
+        <Toolbar id="filter-toolbar" ouiaId="data_table_filter">
           <ToolbarContent className="field-filter">
             <ToolbarItem style={{ marginInlineEnd: 0 }}>
               <SelectBox
@@ -156,6 +154,14 @@ export const ILabFilters = (props) => {
               ))}
             </ChipGroup>
           ))}
+          <Button
+            variant="link"
+            onClick={() => {
+              dispatch(removeAllFilters(navigate));
+            }}
+          >
+            Clear all filters
+          </Button>
         </>
       )}
     </>
