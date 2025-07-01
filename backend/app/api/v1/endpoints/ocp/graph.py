@@ -8,9 +8,6 @@ from app.services.search import ElasticService
 
 router = APIRouter()
 
-"""
-"""
-
 
 @router.get("/api/v1/ocp/graph/trend/{version}/{count}/{benchmark}")
 async def trend(benchmark: str, count: int, version: str):
@@ -415,7 +412,13 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str):
     return runs
 
 
-async def getBurnerResults(uuid: str, uuids: list, index: str):
+async def getBurnerResults(
+    uuid: str,
+    uuids: list,
+    index: str,
+    metric: str = "podLatencyQuantilesMeasurement",
+    quantileName: str = "Ready",
+):
     if len(uuids) > 1:
         if len(uuid) > 0 and uuid in uuids:
             uuids.remove(uuid)
@@ -428,8 +431,8 @@ async def getBurnerResults(uuid: str, uuids: list, index: str):
             "query_string": {
                 "query": (
                     f'( uuid: "{ids}" )'
-                    f' AND metricName: "podLatencyQuantilesMeasurement"'
-                    f' AND quantileName: "Ready"'
+                    f" AND metricName: {metric}"
+                    f' AND quantileName: "{quantileName}"'
                 )
             }
         }
