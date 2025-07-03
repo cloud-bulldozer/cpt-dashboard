@@ -1,10 +1,10 @@
-import pytest
 from unittest.mock import Mock, patch
+
 import orjson
+import pytest
 
-from app.services.splunk import SplunkService, SEMAPHORE
 from app.api.v1.commons.constants import FIELDS_FILTER_DICT, SPLUNK_SEMAPHORE_COUNT
-
+from app.services.splunk import SEMAPHORE, SplunkService
 
 """Unit tests for SplunkService.
 
