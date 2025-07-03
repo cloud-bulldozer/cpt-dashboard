@@ -55,7 +55,7 @@ class SplunkService:
         search_query += "| eventstats count AS total_records "
 
         if sort_field:
-            search_query += f"| sort {order_symbol} {sort_field} "
+            search_query += f"| sort {order_symbol}{sort_field} "
 
         search_query += (
             "| fields total_records _raw host source sourcetype _bkt _serial _indextime"
@@ -186,6 +186,6 @@ class SplunkService:
             except Exception as e:
                 print(f"Error on building data for filters: {e}")
 
-    async def close(self):
+    def close(self):
         """Closes splunk client connections"""
-        await self.service.logout()
+        self.service.logout()
