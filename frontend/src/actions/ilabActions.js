@@ -6,11 +6,11 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
+import { showFailureToast, showToast } from "./toastActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { deleteAppliedFilters } from "./commonActions";
-import { showFailureToast } from "./toastActions";
 
 /**
  * Fetch and store InstructLab jobs based on configured filters.
@@ -66,7 +66,11 @@ export const fetchIlabJobs =
         dispatch(tableReCalcValues());
       }
     } catch (error) {
-      dispatch(showFailureToast());
+      if (error?.response?.detail?.message) {
+        dispatch(showToast(error?.response?.detail?.message));
+      } else {
+        dispatch(showFailureToast);
+      }
     }
     dispatch({ type: TYPES.COMPLETED });
   };
@@ -306,7 +310,6 @@ export const removeAllFilters = (navigate) => (dispatch) => {
   });
   dispatch(updateURL(navigate));
   dispatch(applyFilters());
-
 };
 /**
  * Apply a new date filter, resetting pagination

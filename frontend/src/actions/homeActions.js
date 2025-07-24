@@ -13,10 +13,10 @@ import {
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
+import { showFailureToast, showToast } from "@/actions/toastActions";
 
 import API from "@/utils/axiosInstance";
 import { setLastUpdatedTime } from "./headerActions";
-import { showFailureToast } from "@/actions/toastActions";
 
 const getCloneDeep = async () => (await import("lodash/cloneDeep")).default;
 
@@ -67,7 +67,11 @@ export const fetchOCPJobsData =
 
       dispatch(setLastUpdatedTime());
     } catch (error) {
-      dispatch(showFailureToast());
+      if (error?.response?.detail?.message) {
+        dispatch(showToast(error?.response?.detail?.message));
+      } else {
+        dispatch(showFailureToast);
+      }
     }
 
     dispatch({ type: TYPES.COMPLETED });
