@@ -112,7 +112,9 @@ def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[in
     elif offset >= constants.MAX_PAGE:
         raise HTTPException(
             status.HTTP_400_BAD_REQUEST,
-            {"message": f"offset {offset} is too big (>= {constants.MAX_PAGE})"},
+            {
+                "message": f"Offset {offset} is too big (>= {constants.MAX_PAGE}).Adjust the date range and try again"
+            },
         )
     return offset, size
 

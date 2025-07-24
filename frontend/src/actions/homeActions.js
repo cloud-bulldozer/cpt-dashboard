@@ -67,8 +67,10 @@ export const fetchOCPJobsData =
 
       dispatch(setLastUpdatedTime());
     } catch (error) {
-      if (error?.response?.detail?.message) {
-        dispatch(showToast(error?.response?.detail?.message));
+      if (error?.response?.data?.detail?.message) {
+        dispatch(
+          showToast("danger", "Error", error?.response?.data?.detail?.message)
+        );
       } else {
         dispatch(showFailureToast);
       }
