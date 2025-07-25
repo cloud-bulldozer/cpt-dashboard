@@ -17,7 +17,6 @@ import {
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
-import { showFailureToast } from "./toastActions";
 
 export const fetchOCPJobs = () => async (dispatch) => {
   try {
@@ -58,7 +57,11 @@ export const fetchOCPJobs = () => async (dispatch) => {
 
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -228,7 +231,11 @@ export const fetchGraphData =
         }
       }
     } catch (error) {
-      dispatch(showFailureToast());
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
@@ -272,6 +279,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setOCPCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };

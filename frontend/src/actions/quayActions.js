@@ -61,7 +61,11 @@ export const fetchQuayJobsData = () => async (dispatch) => {
 
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -282,6 +286,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setQuayCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };
