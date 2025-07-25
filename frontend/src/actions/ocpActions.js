@@ -13,7 +13,6 @@ import {
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
-import { showFailureToast, showToast } from "./toastActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
@@ -58,13 +57,11 @@ export const fetchOCPJobs = () => async (dispatch) => {
 
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    if (error?.response?.data?.detail?.message) {
-      dispatch(
-        showToast("danger", "Error", error?.response?.data?.detail?.message)
-      );
-    } else {
-      dispatch(showFailureToast);
-    }
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -234,7 +231,11 @@ export const fetchGraphData =
         }
       }
     } catch (error) {
-      dispatch(showFailureToast());
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
@@ -278,6 +279,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setOCPCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };

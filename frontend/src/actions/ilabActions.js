@@ -6,7 +6,6 @@ import {
   START_PAGE,
 } from "@/assets/constants/paginationConstants";
 import { appendDateFilter, appendQueryString } from "@/utils/helper";
-import { showFailureToast, showToast } from "./toastActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
@@ -66,13 +65,7 @@ export const fetchIlabJobs =
         dispatch(tableReCalcValues());
       }
     } catch (error) {
-      if (error?.response?.data?.detail?.message) {
-        dispatch(
-          showToast("danger", "Error", error?.response?.data?.detail?.message)
-        );
-      } else {
-        dispatch(showFailureToast);
-      }
+      console.error(error);
     }
     dispatch({ type: TYPES.COMPLETED });
   };
@@ -354,7 +347,6 @@ export const fetchIlabFilters = () => async (dispatch, getState) => {
     }
   } catch (error) {
     console.error(error);
-    dispatch(showFailureToast());
   }
 };
 
@@ -384,7 +376,6 @@ export const fetchMetricsInfo = (uid) => async (dispatch, getState) => {
     }
   } catch (error) {
     console.error(error);
-    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -413,7 +404,6 @@ export const fetchPeriods = (uid) => async (dispatch, getState) => {
         error?.response?.data
       )}`
     );
-    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -538,7 +528,6 @@ export const fetchSummaryData =
           error?.response?.data
         )}`
       );
-      dispatch(showFailureToast());
     }
     dispatch({ type: TYPES.SET_ILAB_SUMMARY_COMPLETE });
   };
@@ -570,7 +559,6 @@ export const handleSummaryData = (uids) => async (dispatch, getState) => {
     );
   } catch (error) {
     console.error(`ERROR: ${JSON.stringify(error)}`);
-    dispatch(showFailureToast());
   }
 };
 
@@ -644,7 +632,6 @@ export const fetchGraphData = (uid) => async (dispatch, getState) => {
         error?.response?.data
       )}`
     );
-    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
@@ -678,7 +665,6 @@ export const handleMultiGraph = (uids) => async (dispatch, getState) => {
         error?.response?.data
       )}`
     );
-    dispatch(showFailureToast());
   }
 };
 
@@ -756,7 +742,6 @@ export const fetchMultiGraphData = (uids) => async (dispatch, getState) => {
         error?.response?.data
       )}`
     );
-    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
 };

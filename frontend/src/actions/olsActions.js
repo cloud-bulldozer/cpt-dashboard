@@ -13,7 +13,6 @@ import {
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
-import { showFailureToast, showToast } from "@/actions/toastActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
@@ -61,13 +60,11 @@ export const fetchOLSJobsData = () => async (dispatch) => {
 
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    if (error?.response?.data?.detail?.message) {
-      dispatch(
-        showToast("danger", "Error", error?.response?.data?.detail?.message)
-      );
-    } else {
-      dispatch(showFailureToast);
-    }
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -258,7 +255,11 @@ export const fetchGraphData = (uuid) => async (dispatch, getState) => {
       }
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
@@ -286,6 +287,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setOLSCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };

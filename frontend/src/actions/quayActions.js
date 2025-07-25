@@ -13,11 +13,11 @@ import {
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
-import { showFailureToast, showToast } from "@/actions/toastActions";
 
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
+import { showFailureToast } from "@/actions/toastActions";
 
 export const fetchQuayJobsData = () => async (dispatch) => {
   try {
@@ -61,13 +61,11 @@ export const fetchQuayJobsData = () => async (dispatch) => {
 
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    if (error?.response?.data?.detail?.message) {
-      dispatch(
-        showToast("danger", "Error", error?.response?.data?.detail?.message)
-      );
-    } else {
-      dispatch(showFailureToast);
-    }
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -288,6 +286,10 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setQuayCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };

@@ -13,7 +13,6 @@ import {
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
-import { showFailureToast, showToast } from "@/actions/toastActions";
 
 import API from "@/utils/axiosInstance";
 import { setLastUpdatedTime } from "./headerActions";
@@ -67,13 +66,11 @@ export const fetchOCPJobsData =
 
       dispatch(setLastUpdatedTime());
     } catch (error) {
-      if (error?.response?.data?.detail?.message) {
-        dispatch(
-          showToast("danger", "Error", error?.response?.data?.detail?.message)
-        );
-      } else {
-        dispatch(showFailureToast);
-      }
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data
+        )}`
+      );
     }
 
     dispatch({ type: TYPES.COMPLETED });
@@ -275,7 +272,6 @@ export const buildFilterData = () => async (dispatch, getState) => {
     dispatch(setCPTCatFilters(defaultCategory));
   } catch (error) {
     console.error("Error fetching filter data:", error);
-    dispatch(showFailureToast());
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -287,6 +283,10 @@ export const fetchDataConcurrently = () => async (dispatch) => {
       dispatch(fetchOCPJobsData()),
     ]);
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(
+      `ERROR (${error?.response?.status}): ${JSON.stringify(
+        error?.response?.data
+      )}`
+    );
   }
 };
