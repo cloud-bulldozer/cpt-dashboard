@@ -100,15 +100,23 @@ def build_sort_terms(sort_string: str) -> list[dict[str, str]]:
 
 def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[int, int]:
     if offset and not size:
-        raise HTTPException(400, f"offset {offset} specified without size")
+        raise HTTPException(
+            status.HTTP_400_BAD_REQUEST,
+            {"message": f"offset {offset} specified without size"},
+        )
     elif not offset and not size:
         size = constants.MAX_PAGE
         offset = 0
     elif not offset:
         offset = 0
     elif offset >= constants.MAX_PAGE:
+        message = (
+            f"Offset {offset} is too big (>= {constants.MAX_PAGE}). "
+            "Narrow the date range or select more specific filtering"
+        )
         raise HTTPException(
-            400, f"offset {offset} is too big (>= {constants.MAX_PAGE})"
+            status.HTTP_400_BAD_REQUEST,
+            {"message": message},
         )
     return offset, size
 
@@ -178,7 +186,7 @@ def construct_query(filter_dict):
                 ]
 
             if len(values) > 1:
-                or_clause = " OR ".join([f'{k}="{value}"' for value in values])
+                or_clause = " OR ".join(f'{k}="{value}"' for value in values)
                 query_parts.append(or_clause)
             else:
                 query_parts.append(f'{k}="{values[0]}"')

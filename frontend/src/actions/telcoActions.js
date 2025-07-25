@@ -1,5 +1,5 @@
-import * as TYPES from "@/actions/types.js";
 import * as API_ROUTES from "@/utils/apiConstants";
+import * as TYPES from "@/actions/types.js";
 
 import {
   INITAL_OFFSET,
@@ -14,7 +14,6 @@ import {
   getSelectedFilter,
 } from "./commonActions";
 
-import { showFailureToast } from "@/actions/toastActions";
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
@@ -60,7 +59,7 @@ export const fetchTelcoJobsData = () => async (dispatch) => {
     }
     dispatch(setLastUpdatedTime());
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(error);
   }
   dispatch({ type: TYPES.COMPLETED });
 };
@@ -246,7 +245,9 @@ export const fetchGraphData =
         if (response.status === 200) {
           let result;
           if (
-            ["oslat","cyclictest","deployment","cpu_util"].includes(benchmark)
+            ["oslat", "cyclictest", "deployment", "cpu_util"].includes(
+              benchmark
+            )
           ) {
             const benchmarkData = response.data[benchmark];
             result = Object.keys(response.data[benchmark]).map((key) => [
@@ -267,7 +268,7 @@ export const fetchGraphData =
         }
       }
     } catch (error) {
-      dispatch(showFailureToast());
+      console.error(error);
     }
     dispatch({ type: TYPES.GRAPH_COMPLETED });
   };
@@ -294,6 +295,6 @@ export const buildFilterData = () => async (dispatch, getState) => {
       dispatch(setTelcoCatFilters(activeFilter));
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    console.error(error);
   }
 };
