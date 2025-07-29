@@ -43,6 +43,9 @@ watchgod = "^0.7"
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 
+[tool.black]
+line-length = 88
+
 [tool.isort]
 profile = "black"                 # black-compatible (e.g., trailing comma)
 known_first_party = ["app"]       # separate our headers into a section
