@@ -17,7 +17,7 @@ podman run --rm \
   -v "${FRONTEND}/coverage:/app/coverage" \
   --name="${CYPRESS}" \
   localhost/cypress \
-  run cypress:run
+  run cypress:run:ci
 
 # TODO: no screenshots to upload until e2e tests are remediated
 # podman cp ${CYPRESS}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
