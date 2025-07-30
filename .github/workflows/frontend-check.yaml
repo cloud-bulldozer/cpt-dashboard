@@ -54,5 +54,5 @@ jobs:
         if: always()
         with:
           name: cypress-coverage-report
-          path: frontend/coverage/
+          path: frontend/coverage
 
