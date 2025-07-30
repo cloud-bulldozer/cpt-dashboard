@@ -15,16 +15,6 @@ jobs:
       - name: run unit tests
         run: podman run --rm -it e2e-frontend run test:unit
 
-  component-tests:
-    runs-on: ubuntu-latest
-    steps:
-      - name: checkout project
-        uses: actions/checkout@v4
-      - name: build tests image
-        run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
-      - name: run component tests
-        run: podman run --rm -it e2e-frontend run cypress:cp
-
   test-and-coverage:
     name: Test and Generate Coverage
     runs-on: ubuntu-latest
@@ -46,8 +36,13 @@ jobs:
 
       - name: Install dependencies
         run: npm ci
-      - name: Run Cypress tests and generate coverage
-        run: npm run cypress:run:ci
+        
+      - name: Make e2e script executable
+        run: chmod +x tests/e2e.sh
+
+      - name: Run End-to-End Tests via script
+        run: ./tests/e2e.sh
+
       - name: Upload Cypress coverage report
         uses: actions/upload-artifact@v4        
         if: always()
