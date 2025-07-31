@@ -1,13 +1,23 @@
 import { defineConfig, loadEnv } from "vite";
+
+import istanbul from "vite-plugin-istanbul";
 import path from "path";
 import react from "@vitejs/plugin-react";
 // https://vitejs.dev/config/
 
 export default ({ mode }) => {
-  const env = loadEnv(mode, process.cwd(), "VITE_")
+  const env = loadEnv(mode, process.cwd(), "VITE_");
 
   return defineConfig({
-    plugins: [react()],
+    plugins: [
+      react(),
+      istanbul({
+        include: "src/**/*",
+        exclude: ["node_modules", "cypress", "test", "dist"],
+        extension: [".js", ".ts", ".vue", ".jsx", ".tsx"],
+        cypress: true,
+      }),
+    ],
     esbuild: {
       jsxFactory: "React.createElement",
       jsxFragment: "React.Fragment",
@@ -28,17 +38,15 @@ export default ({ mode }) => {
           changeOrigin: true,
           secure: false,
           rewrite: (path) => path.replace(/^\/api/, "/api"),
-        }
-      }
+        },
+      },
     },
     test: {
       includeSource: ["src/**/*.{js}"],
     },
     defined: {
       // allows bundler eliminate dead code
-      "import.meta.vistest": "defined"
-    }
+      "import.meta.vistest": "defined",
+    },
   });
-}
-
-
+};

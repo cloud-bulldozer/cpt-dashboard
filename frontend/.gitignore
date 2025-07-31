@@ -36,3 +36,5 @@ dist-ssr
 
 # end-to-end artifacts
 cypress/screenshots/*
+.nyc_output/
+coverage/
