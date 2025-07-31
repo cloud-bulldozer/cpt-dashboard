@@ -13,28 +13,8 @@ jobs:
       - name: build tests image
         run: podman build -t e2e-frontend -f frontend/e2e_frontend.containerfile ./frontend
       - name: run unit tests
-        run: podman run --rm -it e2e-frontend run test:unit
-
-  
-  # e2e-tests:
-  #   runs-on: ubuntu-latest
-  #   env:
-  #     POD_NAME: e2e
-  #   steps:
-  #     - name: checkout
-  #       uses: actions/checkout@v4
-  #     # - name: enable podman socket to facilitate podman compose
-  #     #   run: systemctl --user enable --now podman.socket
-  #     - name: run frontend e2e tests
-  #       run: ./frontend/tests/e2e.sh
-  #     # TODO: add back when the e2e tests capture screenshots
-  #     # - name: save cypress test screenshots
-  #     #   uses: actions/upload-artifact@v4
-  #     #   with:
-  #     #     name: e2e-images
-  #     #     if-no-files-found: error
-  #     #     path: ./frontend/cypress/screenshots/ocp.cy.js
-
+        run: podman run --rm -it e2e-frontend run test:unit  
+        
   e2e-tests:
     runs-on: ubuntu-latest
     defaults:
