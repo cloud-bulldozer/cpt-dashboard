@@ -10,7 +10,14 @@ CYPRESS="${POD_NAME}-cypress"
 CONTAINERS+=( "${CYPRESS}" )
 
 podman build -f ${FRONTEND}/e2e_frontend.containerfile --tag cypress "${FRONTEND}"
-podman run ${POD} --name="${CYPRESS}" localhost/cypress
+
+mkdir -p "${FRONTEND}/coverage"
+
+ 
+podman run ${POD} \
+    -v "${FRONTEND}/coverage:/usr/src/cpt-dashboard/coverage" \
+    --name="${CYPRESS}" \
+    localhost/cypress
 
 # TODO: no screenshots to upload until e2e tests are remediated
 # podman cp ${CYPRESS}:/usr/src/cpt-dashboard/cypress/screenshots ${FRONTEND}/cypress/screenshots
