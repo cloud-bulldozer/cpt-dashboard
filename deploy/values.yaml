@@ -17,6 +17,7 @@ frontend:
     repository: quay.io/cloud-bulldozer/frontend
     tag: latest
   resources: {}
+  securityContext: {}
 
 backend:
   image:

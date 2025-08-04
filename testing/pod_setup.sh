@@ -77,7 +77,7 @@ podman run ${POD} --name="${POD_NAME}-init" -v "${CPT_CONFIG}:/backend/ocpperf.t
 if [[ "${DEVEL}" -ne 1 || "${FRONTDEVEL}" -eq 1 ]]
 then
     echo "Starting backend container"
-    podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/opt/backend/ocpperf.toml:Z" localhost/backend
+    podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" localhost/backend
 fi
 if [[ "${DEVEL}" -ne 1 && "${FRONTDEVEL}" -ne 1 ]]
 then
