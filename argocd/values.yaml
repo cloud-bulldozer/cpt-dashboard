@@ -1,0 +1,13 @@
+argocd:
+  namespace: openshift-gitops
+cluster: "apps.ocp4.intlab.redhat.com"
+dashboard:
+  enabled: true
+  name: dashboard
+  namespace: dashboard
+  tag: prod
+dashboard_dev:
+  enabled: true
+  name: dashboard-dev
+  namespace: dashboard-dev
+  tag: latest
