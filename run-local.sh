@@ -1,0 +1,72 @@
+#!/bin/bash
+#
+# Run the backend and frontend locally in a mode where saving changes will
+# immediately update the running instances. This is useful for active
+# development.
+#
+# Usage:
+#   ./run-local.sh
+#
+# Need:
+# - Users will need to update the backend/ocpperf.toml file to meet their needs.
+#
+# TBD:
+# - Add a way to automatically configure the functional test OpenSearch database
+#   snapshots with the appropriate ocpperf.toml file, which may be useful for
+#   testing.
+#
+# Assisted-by: Cursor AI
+TOP=$(git rev-parse --show-toplevel)
+BACKEND=${TOP}/backend
+FRONTEND=${TOP}/frontend
+CPT_CONFIG=${CPT_CONFIG:-"${BACKEND}/ocpperf.toml"}
+if [ ! -f "${CPT_CONFIG}" ]; then
+    echo "Error: ${CPT_CONFIG} not found" >&2
+    echo "Please update the backend/ocpperf.toml file to meet your needs." >&2
+    exit 1
+fi
+
+# start the backend
+(
+    cd "${BACKEND}"
+    poetry install
+    poetry run scripts/start-reload.sh
+) &
+backend_pid=$!
+
+# start the frontend
+(
+    cd "${FRONTEND}"
+    npm install
+    npm run dev
+) &
+frontend_pid=$!
+
+# Killing the subshells won't kill all child processes, so grab their process
+# group IDs and use those instead. They're likely in the same PGID; but check
+# both to be sure.
+b_pgid=$(ps -o pgid= -p ${backend_pid})
+f_pgid=$(ps -o pgid= -p ${frontend_pid})
+
+# Remove the leading space from "ps -o" output
+backend_pgid=${b_pgid# }
+frontend_pgid=${f_pgid# }
+
+to_kill="-${backend_pgid}"
+if [[ ${frontend_pgid} -ne ${backend_pgid} ]]; then
+    to_kill="${to_kill} -${frontend_pgid}"
+fi
+
+# Let frontend and backend start up and write their output before we finish,
+# or our helpful note will be lost.
+sleep 4
+
+echo "CPT Backend is running in the background at http://localhost:8000"
+echo "CPT Frontend is running in the background at http://localhost:3000"
+echo ""
+echo "To terminate, run:"
+echo "  kill -- ${to_kill}"
+echo ""
+echo "HINT: capture this in an environment variable for later:"
+echo "  export KILL_CMD=\"kill -- ${to_kill}\""
+echo "and then you can terminate with \$KILL_CMD"
