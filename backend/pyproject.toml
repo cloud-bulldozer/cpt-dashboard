@@ -37,6 +37,9 @@ uvloop = "^0.21.0"
 vyper-config = "1.0.0"
 
 [tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+flake8 = "^6.1.0"
+isort = "^3.13.5"
 watchgod = "^0.7"
 
 [tool.pytest.ini_options]

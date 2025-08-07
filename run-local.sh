@@ -26,18 +26,36 @@ if [ ! -f "${CPT_CONFIG}" ]; then
     exit 1
 fi
 
-# start the backend
+# Make sure all dependencies are installed.
+echo "Installing backend dependencies..."
+temp_file=$(mktemp)
 (
     cd "${BACKEND}"
     poetry install
+    echo "Installing frontend dependencies..."
+    cd "${FRONTEND}"
+    npm install
+) > "${temp_file}" 2>&1
+
+if [ $? -ne 0 ]; then
+    echo "Error: failed to install dependencies" >&2
+    cat "${temp_file}" >&2
+    rm "${temp_file}"
+    exit 1
+fi
+
+# start the backend
+echo "Starting backend..."
+(
+    cd ${BACKEND}
     poetry run scripts/start-reload.sh
 ) &
 backend_pid=$!
 
 # start the frontend
+echo "Starting frontend..."
 (
-    cd "${FRONTEND}"
-    npm install
+    cd ${FRONTEND}
     npm run dev
 ) &
 frontend_pid=$!
@@ -59,8 +77,33 @@ fi
 
 # Let frontend and backend start up and write their output before we finish,
 # or our helpful note will be lost.
-sleep 4
+waiting=0
+while ! curl -s http://localhost:8000/ > /dev/null 2>&1; do
+    if [ ${waiting} -eq 0 ]; then
+        echo "Waiting for backend to start..."
+    fi
+    sleep 1
+    waiting=$((waiting + 1))
+    if [ ${waiting} -gt 10 ]; then
+        echo "Error: backend didn't start in time" >&2
+        exit 1
+    fi
+done
+waiting=0
+while ! curl -s http://localhost:3000/ > /dev/null 2>&1; do
+    if [ ${waiting} -eq 0 ]; then
+        echo "Waiting for frontend to start..."
+    fi
+    sleep 1
+    waiting=$((waiting + 1))
+    if [ ${waiting} -gt 10 ]; then
+        echo "Error: frontend didn't start in time" >&2
+        exit 1
+    fi
+done
 
+echo ""
+echo "--------------------------------"
 echo "CPT Backend is running in the background at http://localhost:8000"
 echo "CPT Frontend is running in the background at http://localhost:3000"
 echo ""
@@ -70,3 +113,4 @@ echo ""
 echo "HINT: capture this in an environment variable for later:"
 echo "  export KILL_CMD=\"kill -- ${to_kill}\""
 echo "and then you can terminate with \$KILL_CMD"
+echo ""
