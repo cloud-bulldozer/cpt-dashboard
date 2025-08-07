@@ -27,12 +27,11 @@ if [ ! -f "${CPT_CONFIG}" ]; then
 fi
 
 # Make sure all dependencies are installed.
-echo "Installing backend dependencies..."
+echo "Installing dependencies..."
 temp_file=$(mktemp)
 (
     cd "${BACKEND}"
     poetry install
-    echo "Installing frontend dependencies..."
     cd "${FRONTEND}"
     npm install
 ) > "${temp_file}" 2>&1
