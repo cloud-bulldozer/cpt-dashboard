@@ -34,9 +34,10 @@ class TestSplunkServiceInit:
     def test_init_with_default_params(self):
         """Test initialization with default parameters"""
         # Mock the config and splunk client to avoid actual connections
-        with patch("app.config.get_config") as mock_get_config, patch(
-            "app.services.splunk.client.connect"
-        ) as mock_connect:
+        with (
+            patch("app.config.get_config") as mock_get_config,
+            patch("app.services.splunk.client.connect") as mock_connect,
+        ):
 
             # Setup mock config
             mock_config = Mock()
@@ -64,9 +65,10 @@ class TestSplunkServiceInit:
 
     def test_init_with_custom_index(self):
         """Test initialization with custom index parameter"""
-        with patch("app.config.get_config") as mock_get_config, patch(
-            "app.services.splunk.client.connect"
-        ) as mock_connect:
+        with (
+            patch("app.config.get_config") as mock_get_config,
+            patch("app.services.splunk.client.connect") as mock_connect,
+        ):
 
             # Setup mock config
             mock_config = Mock()
@@ -91,9 +93,11 @@ class TestSplunkServiceInit:
 
     def test_init_connection_error(self):
         """Test initialization when connection fails"""
-        with patch("app.config.get_config") as mock_get_config, patch(
-            "app.services.splunk.client.connect"
-        ) as mock_connect, patch("builtins.print") as mock_print:
+        with (
+            patch("app.config.get_config") as mock_get_config,
+            patch("app.services.splunk.client.connect") as mock_connect,
+            patch("builtins.print") as mock_print,
+        ):
 
             # Setup mock config
             mock_config = Mock()
@@ -123,8 +127,9 @@ class TestSplunkServiceBuildSearchQuery:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -268,8 +273,9 @@ class TestSplunkServiceStreamResults:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -337,8 +343,9 @@ class TestSplunkServiceQueryDataProcessing:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -427,8 +434,9 @@ class TestSplunkServiceFilterPostQueryBuilding:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -542,8 +550,9 @@ class TestSplunkServiceQuery:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -555,9 +564,10 @@ class TestSplunkServiceQuery:
         original_query = query_dict.copy()
 
         # Mock the external dependencies
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+        ):
 
             # Mock empty results
             mock_to_thread.return_value = None
@@ -577,9 +587,10 @@ class TestSplunkServiceQuery:
         """Test query with default parameters"""
         query_dict = {}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+        ):
 
             mock_to_thread.return_value = None
             mock_stream.return_value = iter([])
@@ -595,11 +606,11 @@ class TestSplunkServiceQuery:
         """Test that the search query is built correctly"""
         query_dict = {"earliest_time": "2023-01-01"}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream, patch.object(
-            self.service, "build_search_query"
-        ) as mock_build_query:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+            patch.object(self.service, "build_search_query") as mock_build_query,
+        ):
 
             mock_to_thread.return_value = None
             mock_stream.return_value = iter([])
@@ -621,11 +632,11 @@ class TestSplunkServiceQuery:
         """Test that oneshot is called with correct parameters"""
         query_dict = {"earliest_time": "2023-01-01"}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream, patch.object(
-            self.service, "build_search_query"
-        ) as mock_build_query:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+            patch.object(self.service, "build_search_query") as mock_build_query,
+        ):
 
             mock_to_thread.return_value = "mock_results"
             mock_stream.return_value = iter([])
@@ -645,9 +656,10 @@ class TestSplunkServiceQuery:
         """Test query with empty results from Splunk"""
         query_dict = {}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+        ):
 
             # Mock empty results (None or falsy)
             mock_to_thread.return_value = None
@@ -692,8 +704,11 @@ class TestSplunkServiceQuery:
             for record in mock_records:
                 yield record
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results", side_effect=mock_stream_results
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(
+                self.service, "_stream_results", side_effect=mock_stream_results
+            ),
         ):
 
             mock_to_thread.return_value = "mock_results"
@@ -741,9 +756,13 @@ class TestSplunkServiceQuery:
             for record in mock_records:
                 yield record
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results", side_effect=mock_stream_results
-        ), patch("builtins.print") as mock_print:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(
+                self.service, "_stream_results", side_effect=mock_stream_results
+            ),
+            patch("builtins.print") as mock_print,
+        ):
 
             mock_to_thread.return_value = "mock_results"
 
@@ -778,8 +797,11 @@ class TestSplunkServiceQuery:
             for record in mock_records:
                 yield record
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results", side_effect=mock_stream_results
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(
+                self.service, "_stream_results", side_effect=mock_stream_results
+            ),
         ):
 
             mock_to_thread.return_value = "mock_results"
@@ -807,8 +829,11 @@ class TestSplunkServiceQuery:
             return
             yield  # unreachable
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results", side_effect=mock_stream_results
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(
+                self.service, "_stream_results", side_effect=mock_stream_results
+            ),
         ):
 
             mock_to_thread.return_value = "mock_results"
@@ -825,9 +850,10 @@ class TestSplunkServiceQuery:
         """Test query when oneshot raises an exception"""
         query_dict = {}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch(
-            "builtins.print"
-        ) as mock_print:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch("builtins.print") as mock_print,
+        ):
 
             mock_to_thread.side_effect = Exception("Splunk connection error")
 
@@ -846,9 +872,10 @@ class TestSplunkServiceQuery:
         """Test query when inner exception occurs (asyncio.to_thread fails)"""
         query_dict = {}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch(
-            "builtins.print"
-        ) as mock_print:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch("builtins.print") as mock_print,
+        ):
 
             # Mock exception in the inner try block (asyncio.to_thread fails)
             mock_to_thread.side_effect = Exception("Splunk connection error")
@@ -869,9 +896,10 @@ class TestSplunkServiceQuery:
         query_dict = {}
 
         # Mock the semaphore to raise an exception when entering context
-        with patch.object(SEMAPHORE, "__aenter__") as mock_aenter, patch(
-            "builtins.print"
-        ) as mock_print:
+        with (
+            patch.object(SEMAPHORE, "__aenter__") as mock_aenter,
+            patch("builtins.print") as mock_print,
+        ):
 
             mock_aenter.side_effect = Exception("Semaphore acquisition failed")
 
@@ -892,9 +920,10 @@ class TestSplunkServiceQuery:
         """Test query when build_search_query raises exception before outer try block"""
         query_dict = {}
 
-        with patch.object(
-            self.service, "build_search_query"
-        ) as mock_build_query, patch("builtins.print") as mock_print:
+        with (
+            patch.object(self.service, "build_search_query") as mock_build_query,
+            patch("builtins.print") as mock_print,
+        ):
 
             # build_search_query is called before the outer try block
             mock_build_query.side_effect = Exception("Query building failed")
@@ -912,9 +941,11 @@ class TestSplunkServiceQuery:
         query_dict = {}
 
         # Mock successful entry but failing exit
-        with patch.object(SEMAPHORE, "release") as mock_release, patch(
-            "asyncio.to_thread"
-        ) as mock_to_thread, patch("builtins.print") as mock_print:
+        with (
+            patch.object(SEMAPHORE, "release") as mock_release,
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch("builtins.print") as mock_print,
+        ):
 
             mock_to_thread.return_value = None  # Empty results
             mock_release.side_effect = Exception("Semaphore release failed")
@@ -945,9 +976,11 @@ class TestSplunkServiceQuery:
             semaphore_acquired = True
             return await original_acquire()
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ), patch.object(SEMAPHORE, "acquire", side_effect=mock_acquire):
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results"),
+            patch.object(SEMAPHORE, "acquire", side_effect=mock_acquire),
+        ):
 
             mock_to_thread.return_value = None
 
@@ -961,9 +994,10 @@ class TestSplunkServiceQuery:
         """Test query with various parameter types"""
         query_dict = {"test": "value"}
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results"
-        ) as mock_stream:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(self.service, "_stream_results") as mock_stream,
+        ):
 
             mock_to_thread.return_value = None
             mock_stream.return_value = iter([])
@@ -992,8 +1026,11 @@ class TestSplunkServiceQuery:
             for record in mock_records:
                 yield record
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            self.service, "_stream_results", side_effect=mock_stream_results
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(
+                self.service, "_stream_results", side_effect=mock_stream_results
+            ),
         ):
 
             mock_to_thread.return_value = "mock_results"
@@ -1011,8 +1048,9 @@ class TestSplunkServiceFilterPost:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 
@@ -1189,9 +1227,10 @@ class TestSplunkServiceFilterPost:
         mock_results_reader = Mock()
         mock_results_reader.read.return_value = '{"invalid": json}'  # Malformed JSON
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch(
-            "builtins.print"
-        ) as mock_print:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch("builtins.print") as mock_print,
+        ):
             mock_to_thread.return_value = mock_results_reader
 
             result = await self.service.filterPost(query_dict)
@@ -1212,9 +1251,10 @@ class TestSplunkServiceFilterPost:
             "latest_time": "2023-01-02T00:00:00",
         }
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch(
-            "builtins.print"
-        ) as mock_print:
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch("builtins.print") as mock_print,
+        ):
             mock_to_thread.side_effect = Exception("Splunk connection error")
 
             result = await self.service.filterPost(query_dict)
@@ -1247,8 +1287,9 @@ class TestSplunkServiceFilterPost:
         mock_results_reader = Mock()
         mock_results_reader.read.return_value = '{"results": []}'
 
-        with patch("asyncio.to_thread") as mock_to_thread, patch.object(
-            SEMAPHORE, "acquire", side_effect=mock_acquire
+        with (
+            patch("asyncio.to_thread") as mock_to_thread,
+            patch.object(SEMAPHORE, "acquire", side_effect=mock_acquire),
         ):
             mock_to_thread.return_value = mock_results_reader
 
@@ -1326,8 +1367,9 @@ class TestSplunkServiceClose:
 
     def setup_method(self):
         """Setup a mock SplunkService instance for testing"""
-        with patch("app.config.get_config"), patch(
-            "app.services.splunk.client.connect"
+        with (
+            patch("app.config.get_config"),
+            patch("app.services.splunk.client.connect"),
         ):
             self.service = SplunkService(configpath="test", index="test_index")
 

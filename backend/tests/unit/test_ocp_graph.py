@@ -483,11 +483,14 @@ class TestGraphEndpoint:
 
         mock_elastic_service.post.side_effect = mock_post_side_effect
 
-        with patch(
-            "app.api.v1.endpoints.ocp.graph.ElasticService",
-            return_value=mock_elastic_service,
-        ), patch(
-            "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+        with (
+            patch(
+                "app.api.v1.endpoints.ocp.graph.ElasticService",
+                return_value=mock_elastic_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+            ),
         ):
             response = client.get(
                 "/api/v1/ocp/graph/550e8400-e29b-41d4-a716-446655440000"
@@ -523,11 +526,14 @@ class TestGraphEndpoint:
 
         mock_elastic_service.post.side_effect = mock_post_side_effect
 
-        with patch(
-            "app.api.v1.endpoints.ocp.graph.ElasticService",
-            return_value=mock_elastic_service,
-        ), patch(
-            "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+        with (
+            patch(
+                "app.api.v1.endpoints.ocp.graph.ElasticService",
+                return_value=mock_elastic_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+            ),
         ):
             response = client.get(
                 "/api/v1/ocp/graph/550e8400-e29b-41d4-a716-446655440000"
@@ -555,11 +561,14 @@ class TestGraphEndpoint:
 
         mock_elastic_service.post.side_effect = mock_post_side_effect
 
-        with patch(
-            "app.api.v1.endpoints.ocp.graph.ElasticService",
-            return_value=mock_elastic_service,
-        ), patch(
-            "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+        with (
+            patch(
+                "app.api.v1.endpoints.ocp.graph.ElasticService",
+                return_value=mock_elastic_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+            ),
         ):
             response = client.get(
                 "/api/v1/ocp/graph/550e8400-e29b-41d4-a716-446655440000"
@@ -617,11 +626,14 @@ class TestGraphEndpoint:
 
         mock_elastic_service.post.side_effect = mock_post_side_effect
 
-        with patch(
-            "app.api.v1.endpoints.ocp.graph.ElasticService",
-            return_value=mock_elastic_service,
-        ), patch(
-            "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+        with (
+            patch(
+                "app.api.v1.endpoints.ocp.graph.ElasticService",
+                return_value=mock_elastic_service,
+            ),
+            patch(
+                "app.api.v1.endpoints.ocp.graph.getMetadata", return_value=sample_meta
+            ),
         ):
             response = client.get(
                 "/api/v1/ocp/graph/550e8400-e29b-41d4-a716-446655440000"
