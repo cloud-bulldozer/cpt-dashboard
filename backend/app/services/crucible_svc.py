@@ -726,7 +726,9 @@ class CrucibleService:
         self.auth = (self.user, self.password) if self.user or self.password else None
         self.url = self.cfg.get(configpath + ".url")
         self.versions = set()
-        self.elastic = AsyncElasticsearch(self.url, http_auth=self.auth)
+        self.elastic = AsyncElasticsearch(
+            self.url, http_auth=self.auth, verify_certs=False
+        )
         self.logger.info("Initializing CDM service to %s", self.url)
 
     async def detect_versions(self):
