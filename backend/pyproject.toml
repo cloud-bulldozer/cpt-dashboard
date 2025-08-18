@@ -1,6 +1,6 @@
 [project]
 name = "openshift_perfscale_api"
-requires-python = "^3.9"
+requires-python = ">=3.9,<3.10"
 dynamic = ["dependencies"]
 version = "0.1.1"
 description = "Python transformer of OpenShift performance and scale test results"
@@ -23,7 +23,7 @@ numpy = "1.26.4"
 orjson = "^3.5.3"
 pandas = "1.2.4"
 pydantic = "2.10.5"
-python = "^3.9"
+python = ">=3.9,<3.10"
 python-keycloak = "^3.12.0"
 pytest = "^8.3.5"
 pytest-asyncio = "^0.24"
@@ -37,6 +37,9 @@ uvloop = "^0.21.0"
 vyper-config = "1.0.0"
 
 [tool.poetry.group.dev.dependencies]
+black = "^24.4.2"
+flake8 = "^7.3.0"
+isort = "^6.0.1"
 watchgod = "^0.7"
 
 [tool.pytest.ini_options]
