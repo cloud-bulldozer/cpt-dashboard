@@ -2,9 +2,9 @@ FROM quay.io/centos/centos:stream9
 
 # 0) Configure Poetry and environment for OpenShift non-root execution
 ENV POETRY_VIRTUALENVS_CREATE=false \
-    HOME=/opt/backend \
-    XDG_CONFIG_HOME=/opt/backend/.config \
-    XDG_CACHE_HOME=/opt/backend/.cache
+    HOME=/backend \
+    XDG_CONFIG_HOME=/backend/.config \
+    XDG_CACHE_HOME=/backend/.cache
 
 # 1) Install system deps + Poetry globally (root)
 #    Installing Poetry globally ensures the binary is on /usr/local/bin

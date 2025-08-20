@@ -1,0 +1,40 @@
+{{ if .Values.dashboard.enabled }}
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: {{ .Values.dashboard.name }}
+  namespace: {{ .Values.argocd.namespace }}
+spec:
+  destination:
+    namespace: {{ .Values.dashboard.namespace }}
+    server: https://kubernetes.default.svc
+  source:
+    path: deploy
+    repoURL: https://github.com/cloud-bulldozer/cpt-dashboard.git
+    targetRevision: HEAD
+    helm:
+      releaseName: {{ .Values.dashboard.name }}
+      parameters:
+      - name: "fullnameOverride"
+        value: {{ .Values.dashboard.name }}
+      - name: "ingress.hostName"
+        value: {{ .Values.dashboard.name }}
+      - name: "ingress.baseDomain"
+        value: {{ .Values.cluster }}
+      - name: "frontend.image.tag"
+        value: {{ .Values.dashboard.tag }}
+      - name: "backend.image.tag"
+        value: {{ .Values.dashboard.tag }}
+  sources: []
+  project: default
+  syncPolicy:
+    managedNamespaceMetadata:
+      labels:
+        argocd.argoproj.io/managed-by: openshift-gitops
+    automated:
+      prune: true
+      selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - Replace=true
+{{ end }}
