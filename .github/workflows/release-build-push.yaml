@@ -17,7 +17,12 @@ jobs:
         fetch-depth: 10
     - uses: actions/setup-python@v4
       with:
-        python-version: "3.11"
+        python-version: "3.9"
+    - uses: Gr1N/setup-poetry@v9
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install
 
     - name: Build Frontend Image
       id: build-front
@@ -40,7 +45,9 @@ jobs:
         password: ${{ secrets.QUAY_TOKEN }}
 
     - name: Generate version file
-      run: ./backend/scripts/version.py
+      run: |
+        cd backend
+        poetry run scripts/version.py
 
     - name: Build Backend Image
       id: build-back

@@ -12,6 +12,8 @@ import subprocess
 import sys
 from typing import Optional
 
+import tomlkit
+
 
 def do(cmd: list[str]) -> list[str]:
     result = subprocess.run(cmd, text=True, capture_output=True)
@@ -32,7 +34,9 @@ def getone(cmd: list[str], if_none: Optional[str] = None) -> str:
 def main():
     top = Path(getone(["git", "rev-parse", "--show-toplevel"]))
     backend = top / "backend"
-    version = (backend / "VERSION").read_text().strip()
+    with (backend / "pyproject.toml").open() as tml:
+        config = tomlkit.load(tml)
+    version = config["project"]["version"]
     sha = getone(["git", "rev-parse", "--short", "HEAD"])
     branch = getone(["git", "branch", "--show-current"], if_none="CI")
     display = f"v{version}-{sha}"
@@ -53,8 +57,4 @@ def main():
 
 
 if __name__ == "__main__":
-    try:
-        sys.exit(main())
-    except Exception as exc:
-        print(f"Failed with {str(exc)!r}", file=sys.stderr)
-        sys.exit(1)
+    sys.exit(main())

@@ -21,8 +21,15 @@ jobs:
       run:
         working-directory: ./frontend
     steps:
-      - name: checkout project
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.9"
+      - uses: Gr1N/setup-poetry@v9
+      - name: Install dependencies
+        run: |
+          cd ../backend
+          poetry install
       - name: build tests image
         run: podman build -t cypress -f e2e_frontend.containerfile .
       - name: Make e2e script executable
@@ -35,4 +42,3 @@ jobs:
         with:
           name: cypress-coverage-report
           path: frontend/coverage
-
