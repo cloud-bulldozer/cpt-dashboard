@@ -28,7 +28,7 @@ jobs:
       - uses: Gr1N/setup-poetry@v9
       - name: Install dependencies
         run: |
-          cd backend
+          cd ../backend
           poetry install
       - name: build tests image
         run: podman build -t cypress -f e2e_frontend.containerfile .
