@@ -48,6 +48,7 @@ async def getData(
     es = ElasticService(configpath=configpath)
     response = await es.post(
         query=query,
+        size=size,
         start_date=start_datetime,
         end_date=end_datetime,
         timestamp_field="timestamp",

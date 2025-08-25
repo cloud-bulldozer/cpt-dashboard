@@ -43,7 +43,7 @@ const ILab = () => {
     start_date,
     end_date,
     selectedFilters,
-    totalItems,
+    totalJobs,
     comparisonSwitch,
     page,
     perPage,
@@ -163,7 +163,7 @@ const ILab = () => {
             </Tbody>
           </Table>
           <RenderPagination
-            items={totalItems}
+            items={totalJobs}
             page={page}
             perPage={perPage}
             type={"ilab"}
