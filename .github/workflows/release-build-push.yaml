@@ -55,6 +55,8 @@ jobs:
       with:
         image: backend
         context: backend
+        build-args: |
+          CA_CERT_PATH=${{ secrets.CA_CERT_PATH}}
         tags: prod ${{ github.sha }}
         containerfiles: |
           ./backend/backend.containerfile
