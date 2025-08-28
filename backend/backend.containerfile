@@ -1,11 +1,18 @@
 FROM quay.io/centos/centos:stream10
 
+ARG CA_CERT_PATH=/dev/null
+
 # 0) Configure Poetry and environment for OpenShift non-root execution
 ENV POETRY_VIRTUALENVS_CREATE=false \
     HOME=/backend \
     XDG_CONFIG_HOME=/backend/.config \
     XDG_CACHE_HOME=/backend/.cache
-    
+
+# Add Red Hat CA certificates
+ADD ${CA_CERT_PATH} /etc/pki/ca-trust/source/anchors/
+
+RUN update-ca-trust
+
 # 1) Install system deps + Poetry globally (root)
 #    Installing Poetry globally ensures the binary is on /usr/local/bin
 #    and therefore available in both OpenShift (random UID) and Podman (root) environments
