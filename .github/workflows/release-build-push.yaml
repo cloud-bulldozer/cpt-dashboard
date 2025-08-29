@@ -59,7 +59,7 @@ jobs:
           CA_CERT_PATH=${{ secrets.CA_CERT_PATH}}
         tags: prod ${{ github.sha }}
         containerfiles: |
-          ./backend/backend.containerfile
+          ./backend/backend.containerfile.in
 
     - name: Push backend image to quay.io
       id: push-back-to-quay

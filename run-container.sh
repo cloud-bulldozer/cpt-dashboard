@@ -33,7 +33,7 @@ fi
 
 echo "Creating version"
 ( cd ${BACKEND}; poetry install ; poetry run scripts/version.py )
-podman build -f backend.containerfile --build-arg CA_CERT_PATH="${CA_CERT_PATH}" --tag backend "${BACKEND}"
+podman build -f backend.containerfile.in --build-arg CA_CERT_PATH="${CA_CERT_PATH}" --tag backend "${BACKEND}"
 echo "Starting backend container"
 podman run -d --name="backend" -p 127.0.0.1:8000:8000 -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" localhost/backend
 CONTAINERS=( "backend" )
