@@ -39,11 +39,9 @@ class ElasticService:
             esUser = config.get(path + ".username")
             esPass = config.get(path + ".password")
         if esUser:
-            es = AsyncElasticsearch(
-                url, use_ssl=False, verify_certs=False, http_auth=(esUser, esPass)
-            )
+            es = AsyncElasticsearch(url, use_ssl=False, http_auth=(esUser, esPass))
         else:
-            es = AsyncElasticsearch(url, verify_certs=False)
+            es = AsyncElasticsearch(url)
         return es, indice, index_prefix
 
     async def post(
