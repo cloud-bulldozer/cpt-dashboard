@@ -3,24 +3,59 @@ from vyper import Vyper
 
 from app.services.crucible_svc import CrucibleService
 from tests.unit.fake_elastic import FakeAsyncElasticsearch
+from tests.unit.fake_splunk import FakeSplunkService
 
 
 @pytest.fixture
 def fake_config(monkeypatch):
     """Provide a fake configuration"""
-
     vyper = Vyper(config_name="ocpperf")
     vyper.set("TEST.url", "http://elastic.example.com:9200")
+    vyper.set("TEST.indice", "cdmv9dev-hce")  # Created for test_hce.py
+    vyper.set(
+        "telco.config.job_url", "https://jenkins.telco.example.com/job/telco-tests"
+    )  # Created for test_telco.py
     monkeypatch.setattr("app.config.get_config", lambda: vyper)
 
 
 @pytest.fixture
 def fake_elastic(monkeypatch, fake_config):
-    """Replace the actual elastic client with a fake"""
-
+    """Replace the actual elastic clients with fakes for both crucible and commons testing"""
+    fake_elastic = FakeAsyncElasticsearch("http://elastic.example.com:9200")
     monkeypatch.setattr(
-        "app.services.crucible_svc.AsyncElasticsearch", FakeAsyncElasticsearch
+        "app.services.crucible_svc.AsyncElasticsearch",
+        lambda *args, **kwargs: fake_elastic,
     )
+    monkeypatch.setattr(
+        "app.api.v1.commons.hce.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+    monkeypatch.setattr(
+        "app.api.v1.commons.ocm.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+    monkeypatch.setattr(
+        "app.api.v1.commons.ols.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+    monkeypatch.setattr(
+        "app.api.v1.commons.ocp.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+    monkeypatch.setattr(
+        "app.api.v1.commons.quay.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+    monkeypatch.setattr(
+        "app.api.v1.commons.utils.ElasticService", lambda *args, **kwargs: fake_elastic
+    )
+
+    return fake_elastic
+
+
+@pytest.fixture
+def fake_splunk(monkeypatch, fake_config):
+    """Replace the actual SplunkService with fake for telco testing"""
+    fake_splunk = FakeSplunkService("TEST")
+    monkeypatch.setattr(
+        "app.api.v1.commons.telco.SplunkService", lambda configpath: fake_splunk
+    )
+    return fake_splunk
 
 
 @pytest.fixture
