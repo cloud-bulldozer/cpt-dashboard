@@ -62,7 +62,7 @@ echo "Creating pod ${POD_NAME}"
 podman pod create --name=${POD_NAME} ${PUBLISH}
 
 echo "Creating version"
-${BACKEND}/scripts/version.py
+( cd ${BACKEND}; poetry run scripts/version.py )
 podman build -f backend.containerfile --tag backend "${BACKEND}"
 podman build -f frontend.containerfile --tag frontend "${FRONTEND}"
 podman build -f ${TESTING}/functional.containerfile --tag functional "${BRANCH}"
@@ -77,7 +77,7 @@ podman run ${POD} --name="${POD_NAME}-init" -v "${CPT_CONFIG}:/backend/ocpperf.t
 if [[ "${DEVEL}" -ne 1 || "${FRONTDEVEL}" -eq 1 ]]
 then
     echo "Starting backend container"
-    podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/opt/backend/ocpperf.toml:Z" localhost/backend
+    podman run -d ${POD} --name="${POD_NAME}-back" -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" localhost/backend
 fi
 if [[ "${DEVEL}" -ne 1 && "${FRONTDEVEL}" -ne 1 ]]
 then

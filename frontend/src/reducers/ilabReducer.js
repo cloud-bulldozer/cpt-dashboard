@@ -10,7 +10,6 @@ const initialState = {
   multiGraphData: [],
   isSummaryLoading: false,
   summaryData: [],
-  totalItems: 0,
   tableColumns: [
     { name: "Benchmark", value: "benchmark" },
     { name: "Start Date", value: "begin_date" },
@@ -48,6 +47,7 @@ const initialState = {
   metadataItem: {},
   subCategoryOptions: [],
   typeFilterOptions: [],
+  totalJobs: 0,
 };
 const ILabReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
@@ -66,7 +66,7 @@ const ILabReducer = (state = initialState, action = {}) => {
     case TYPES.SET_ILAB_TOTAL_ITEMS:
       return {
         ...state,
-        totalItems: payload,
+        totalJobs: payload,
       };
     case TYPES.SET_ILAB_OFFSET:
       return { ...state, offset: payload };

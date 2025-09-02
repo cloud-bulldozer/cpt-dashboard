@@ -2174,6 +2174,18 @@ files = [
 ]
 
 [[package]]
+name = "tomlkit"
+version = "0.13.3"
+description = "Style preserving TOML library"
+optional = false
+python-versions = ">=3.8"
+groups = ["main"]
+files = [
+    {file = "tomlkit-0.13.3-py3-none-any.whl", hash = "sha256:c89c649d79ee40629a9fda55f8ace8c6a1b42deb912b2a8fd8d942ddadb606b0"},
+    {file = "tomlkit-0.13.3.tar.gz", hash = "sha256:430cf247ee57df2b94ee3fbe588e71d362a941ebb545dec29b53961d61add2a1"},
+]
+
+[[package]]
 name = "tox"
 version = "4.25.0"
 description = "tox is a generic virtualenv management and test command line tool"
@@ -2628,4 +2640,4 @@ propcache = ">=0.2.1"
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.9,<3.10"
-content-hash = "3652bbf33feaae574dfd87563b35b51bbb18ba002a0538069f80f52a7ea1b1f2"
+content-hash = "d19ed5a01b36a99f4767a2669481bd2b736a99c64e2128fe3089e4376ee2001f"
