@@ -39,16 +39,16 @@ class FakeSplunkService(SplunkService):
     providing canned responses for SplunkService methods used in telco.py:
     - query(): Used by telco.getData()
     - filterPost(): Used by telco.getFilterData()
-    
+
     Usage:
         fake_splunk = FakeSplunkService()
-        
+
         # For getData() tests
         fake_splunk.set_query_response(data_list=[...], total=100)
-        
+
         # For getFilterData() tests
         fake_splunk.set_filter_response(data_list=[...], summary={...}, total=50)
-        
+
         # For error testing:
         fake_splunk.set_query_response(error=Exception("Connection failed"))
     """
