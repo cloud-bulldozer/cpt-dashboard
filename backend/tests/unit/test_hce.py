@@ -16,7 +16,7 @@ class TestGetData:
     """Test cases for hce.getData function"""
 
     @pytest.mark.asyncio
-    async def test_get_hce_results(self, fake_elastic):
+    async def test_get_hce_results(self, fake_elastic_service):
         """Test getData returns HCE test results properly formatted."""
         # Raw source data from Elasticsearch
         raw_hce_data = [
@@ -38,7 +38,7 @@ class TestGetData:
         expected_result = {"data": pd.DataFrame(raw_hce_data).fillna(""), "total": 2}
 
         # Set up mock response using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_hce_data, total=2
         )
 
@@ -61,7 +61,7 @@ class TestGetData:
         )
 
     @pytest.mark.asyncio
-    async def test_get_hce_empty_results(self, fake_elastic):
+    async def test_get_hce_empty_results(self, fake_elastic_service):
         """Test getData handles empty HCE results gracefully."""
         # Empty raw data from Elasticsearch
         raw_hce_data = []
@@ -70,7 +70,9 @@ class TestGetData:
         expected_result = {"data": pd.DataFrame(raw_hce_data).fillna(""), "total": 0}
 
         # Set up mock response for empty results using set_post_response
-        fake_elastic.set_post_response(response_type="post", data_list=[], total=0)
+        fake_elastic_service.set_post_response(
+            response_type="post", data_list=[], total=0
+        )
 
         # Call the function
         result = await hce.getData(
@@ -91,7 +93,7 @@ class TestGetData:
         )
 
     @pytest.mark.asyncio
-    async def test_get_hce_nan_group_handling(self, fake_elastic):
+    async def test_get_hce_nan_group_handling(self, fake_elastic_service):
         """Test getData properly handles null group values in HCE data."""
         # Raw data with null group from Elasticsearch
         raw_hce_data = [{"test": "orphaned_test", "group": None, "result": "pass"}]
@@ -105,7 +107,7 @@ class TestGetData:
         }
 
         # Set up mock response with null group using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_hce_data, total=1
         )
 
@@ -132,7 +134,7 @@ class TestGetFilterData:
     """Test cases for hce.getFilterData function"""
 
     @pytest.mark.asyncio
-    async def test_get_hce_filter_aggregations(self, fake_elastic):
+    async def test_get_hce_filter_aggregations(self, fake_elastic_service):
         """Test getFilterData returns proper HCE filter aggregations."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -150,7 +152,7 @@ class TestGetFilterData:
         expected_result = {"total": 0, "filterData": raw_aggregations, "summary": {}}
 
         # Set up mock response for filterPost using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             total=0,
             filter_data=raw_aggregations,
@@ -172,7 +174,7 @@ class TestGetFilterData:
         assert result["summary"] == expected_result["summary"]
 
     @pytest.mark.asyncio
-    async def test_get_hce_filter_no_filter(self, fake_elastic):
+    async def test_get_hce_filter_no_filter(self, fake_elastic_service):
         """Test getFilterData works without filters for HCE data."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -186,7 +188,7 @@ class TestGetFilterData:
         expected_result = {"total": 0, "filterData": raw_aggregations, "summary": {}}
 
         # Set up mock response for filterPost using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             total=0,
             filter_data=raw_aggregations,
@@ -212,10 +214,10 @@ class TestHCEErrorHandling:
     """Test cases for error handling in HCE functions"""
 
     @pytest.mark.asyncio
-    async def test_hce_index_not_found(self, fake_elastic):
+    async def test_hce_index_not_found(self, fake_elastic_service):
         """Test HCE functions handle missing Elasticsearch index."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", error=Exception("Index not found")
         )
 
@@ -231,10 +233,10 @@ class TestHCEErrorHandling:
             )
 
     @pytest.mark.asyncio
-    async def test_hce_filter_index_not_found(self, fake_elastic):
+    async def test_hce_filter_index_not_found(self, fake_elastic_service):
         """Test getFilterData handles missing Elasticsearch index."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", error=Exception("Index not found")
         )
 

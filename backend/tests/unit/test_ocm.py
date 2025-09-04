@@ -16,7 +16,7 @@ class TestGetData:
     """Test cases for ocm.getData function"""
 
     @pytest.mark.asyncio
-    async def test_get_ocm_results(self, fake_elastic):
+    async def test_get_ocm_results(self, fake_elastic_service):
         """Test getData returns OCM cluster results properly formatted."""
         # Raw source data from Elasticsearch
         raw_ocm_data = [
@@ -51,7 +51,7 @@ class TestGetData:
         }
 
         # Set up mock response using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_ocm_data, total=2
         )
 
@@ -83,13 +83,15 @@ class TestGetData:
         )
 
     @pytest.mark.asyncio
-    async def test_get_ocm_empty_results(self, fake_elastic):
+    async def test_get_ocm_empty_results(self, fake_elastic_service):
         """Test getData handles empty OCM results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0}
 
         # Set up mock response for empty results
-        fake_elastic.set_post_response(response_type="post", data_list=[], total=0)
+        fake_elastic_service.set_post_response(
+            response_type="post", data_list=[], total=0
+        )
 
         # Call the function
         result = await ocm.getData(
@@ -107,7 +109,7 @@ class TestGetData:
         assert result["total"] == expected_result["total"]
 
     @pytest.mark.asyncio
-    async def test_get_ocm_missing_columns(self, fake_elastic):
+    async def test_get_ocm_missing_columns(self, fake_elastic_service):
         """Test getData properly handles missing buildUrl and ciSystem columns."""
         # Raw data without buildUrl and ciSystem columns
         raw_ocm_data = [
@@ -130,7 +132,7 @@ class TestGetData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_ocm_data, total=1
         )
 
@@ -170,7 +172,7 @@ class TestGetFilterData:
     """Test cases for ocm.getFilterData function"""
 
     @pytest.mark.asyncio
-    async def test_get_ocm_filter_aggregations(self, fake_elastic):
+    async def test_get_ocm_filter_aggregations(self, fake_elastic_service):
         """Test getFilterData returns proper OCM filter aggregations."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -191,7 +193,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response for filterPost
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             total=0,
             filter_data=raw_aggregations,
@@ -212,7 +214,7 @@ class TestGetFilterData:
         assert result["summary"] == expected_result["summary"]
 
     @pytest.mark.asyncio
-    async def test_get_ocm_filter_no_filter(self, fake_elastic):
+    async def test_get_ocm_filter_no_filter(self, fake_elastic_service):
         """Test getFilterData works without filters for OCM data."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -227,7 +229,7 @@ class TestGetFilterData:
         expected_result = {"filterData": raw_aggregations, "summary": {}}
 
         # Set up mock response for filterPost
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             total=0,
             filter_data=raw_aggregations,
@@ -325,10 +327,10 @@ class TestOCMErrorHandling:
     """Test cases for error handling in OCM functions"""
 
     @pytest.mark.asyncio
-    async def test_ocm_index_not_found(self, fake_elastic):
+    async def test_ocm_index_not_found(self, fake_elastic_service):
         """Test OCM functions handle missing Elasticsearch index."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", error=Exception("Index not found")
         )
 
@@ -344,10 +346,10 @@ class TestOCMErrorHandling:
             )
 
     @pytest.mark.asyncio
-    async def test_ocm_filter_index_not_found(self, fake_elastic):
+    async def test_ocm_filter_index_not_found(self, fake_elastic_service):
         """Test getFilterData handles missing Elasticsearch index."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", error=Exception("Index not found")
         )
 

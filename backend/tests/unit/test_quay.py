@@ -16,7 +16,7 @@ class TestGetData:
     """Test cases for quay.getData function"""
 
     @pytest.mark.asyncio
-    async def test_get_quay_results(self, fake_elastic):
+    async def test_get_quay_results(self, fake_elastic_service):
         """Test getData returns Quay container registry results properly formatted."""
         # Raw source data from Elasticsearch
         raw_quay_data = [
@@ -79,7 +79,7 @@ class TestGetData:
         }
 
         # Set up mock response using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_quay_data, total=2
         )
 
@@ -143,13 +143,15 @@ class TestGetData:
         assert result["data"]["hitSize"].tolist() == expected_result["hit_sizes"]
 
     @pytest.mark.asyncio
-    async def test_get_quay_empty_results(self, fake_elastic):
+    async def test_get_quay_empty_results(self, fake_elastic_service):
         """Test getData handles empty Quay results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0, "data": pd.DataFrame()}
 
         # Set up mock response for empty data
-        fake_elastic.set_post_response(response_type="post", data_list=[], total=0)
+        fake_elastic_service.set_post_response(
+            response_type="post", data_list=[], total=0
+        )
 
         # Call the function
         result = await quay.getData(
@@ -167,7 +169,7 @@ class TestGetData:
         assert len(result["data"]) == 0
 
     @pytest.mark.asyncio
-    async def test_get_quay_filtered_platforms(self, fake_elastic):
+    async def test_get_quay_filtered_platforms(self, fake_elastic_service):
         """Test getData filters out jobs with empty platforms."""
         # Raw data with some empty platforms (should be filtered out)
         raw_quay_data = [
@@ -215,7 +217,7 @@ class TestGetData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_quay_data, total=2
         )
 
@@ -238,7 +240,7 @@ class TestGetData:
         )
 
     @pytest.mark.asyncio
-    async def test_get_quay_complex_processing(self, fake_elastic):
+    async def test_get_quay_complex_processing(self, fake_elastic_service):
         """Test getData with complex Quay-specific data processing scenarios."""
         # Complex data testing various processing scenarios
         raw_quay_data = [
@@ -298,7 +300,7 @@ class TestGetData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_quay_data, total=2
         )
 
@@ -347,7 +349,7 @@ class TestGetFilterData:
     """Test cases for quay.getFilterData function"""
 
     @pytest.mark.asyncio
-    async def test_get_quay_filter_aggregations(self, fake_elastic):
+    async def test_get_quay_filter_aggregations(self, fake_elastic_service):
         """Test getFilterData returns proper Quay filter aggregations."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -409,7 +411,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response using set_post_response for filterPost
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             summary=raw_summary,
@@ -443,7 +445,7 @@ class TestGetFilterData:
         assert filter_dict["clusterType"] == raw_aggregations["clusterType"]
 
     @pytest.mark.asyncio
-    async def test_get_quay_filter_with_no_filter(self, fake_elastic):
+    async def test_get_quay_filter_with_no_filter(self, fake_elastic_service):
         """Test getFilterData works correctly with no filter parameter."""
         # Raw aggregation data from Elasticsearch focusing on Quay-specific fields
         raw_aggregations = {
@@ -481,7 +483,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             total=70,
@@ -508,13 +510,13 @@ class TestGetFilterData:
         assert set(image_ops_keys) == set(expected_result["image_ops_range"])
 
     @pytest.mark.asyncio
-    async def test_get_quay_filter_empty_results(self, fake_elastic):
+    async def test_get_quay_filter_empty_results(self, fake_elastic_service):
         """Test getFilterData handles empty Quay filter results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0, "filterData": [], "summary": {}}
 
         # Set up mock response for empty data
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", filter_data=[], total=0
         )
 
@@ -533,7 +535,9 @@ class TestGetFilterData:
         assert len(result["filterData"]) == 0
 
     @pytest.mark.asyncio
-    async def test_get_quay_filter_comprehensive_aggregations(self, fake_elastic):
+    async def test_get_quay_filter_comprehensive_aggregations(
+        self, fake_elastic_service
+    ):
         """Test getFilterData with comprehensive Quay field aggregations."""
         # Comprehensive aggregation data covering all QUAY_FIELD_CONSTANT_DICT fields
         raw_aggregations = {
@@ -637,7 +641,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             summary=raw_summary,
@@ -677,10 +681,10 @@ class TestQuayErrorHandling:
     """Test cases for error handling in Quay functions"""
 
     @pytest.mark.asyncio
-    async def test_quay_index_not_found(self, fake_elastic):
+    async def test_quay_index_not_found(self, fake_elastic_service):
         """Test Quay functions handle missing Elasticsearch index."""
         # Set up the service to raise an exception for getData
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", error=Exception("Index not found")
         )
 
@@ -697,10 +701,10 @@ class TestQuayErrorHandling:
             )
 
     @pytest.mark.asyncio
-    async def test_quay_elasticsearch_connection_error(self, fake_elastic):
+    async def test_quay_elasticsearch_connection_error(self, fake_elastic_service):
         """Test Quay functions handle Elasticsearch connection errors."""
         # Set up the service to raise a connection exception for getFilterData
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", error=Exception("Connection timeout")
         )
 

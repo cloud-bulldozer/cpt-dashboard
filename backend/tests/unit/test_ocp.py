@@ -16,7 +16,7 @@ class TestGetData:
     """Test cases for ocp.getData function"""
 
     @pytest.mark.asyncio
-    async def test_get_ocp_results(self, fake_elastic):
+    async def test_get_ocp_results(self, fake_elastic_service):
         """Test getData returns OCP cluster results properly formatted."""
         # Raw source data from Elasticsearch
         raw_ocp_data = [
@@ -89,7 +89,7 @@ class TestGetData:
         }
 
         # Set up mock response using set_post_response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_ocp_data, total=2
         )
 
@@ -148,13 +148,15 @@ class TestGetData:
         )  # Second item should be N/A
 
     @pytest.mark.asyncio
-    async def test_get_ocp_empty_results(self, fake_elastic):
+    async def test_get_ocp_empty_results(self, fake_elastic_service):
         """Test getData handles empty OCP results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0}
 
         # Set up mock response for empty results
-        fake_elastic.set_post_response(response_type="post", data_list=[], total=0)
+        fake_elastic_service.set_post_response(
+            response_type="post", data_list=[], total=0
+        )
 
         # Call the function
         result = await ocp.getData(
@@ -174,7 +176,7 @@ class TestGetData:
         assert len(result["data"]) == 0
 
     @pytest.mark.asyncio
-    async def test_get_ocp_filtered_platforms(self, fake_elastic):
+    async def test_get_ocp_filtered_platforms(self, fake_elastic_service):
         """Test getData filters out jobs with empty platforms."""
         # Raw data with some empty platforms (should be filtered out)
         raw_ocp_data = [
@@ -230,7 +232,7 @@ class TestGetData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=raw_ocp_data, total=2
         )
 
@@ -259,7 +261,7 @@ class TestGetFilterData:
     """Test cases for ocp.getFilterData function"""
 
     @pytest.mark.asyncio
-    async def test_get_ocp_filter_data(self, fake_elastic):
+    async def test_get_ocp_filter_data(self, fake_elastic_service):
         """Test getFilterData returns proper OCP filter aggregations."""
         # Raw aggregation data from Elasticsearch (formatted as list for filterData)
         raw_filter_data = [
@@ -297,7 +299,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response for filterPost
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             total=225,
             filter_data=raw_filter_data,
@@ -338,13 +340,13 @@ class TestGetFilterData:
         assert set(rehearse_obj["value"]) == set(expected_result["rehearse_values"])
 
     @pytest.mark.asyncio
-    async def test_get_ocp_filter_data_empty(self, fake_elastic):
+    async def test_get_ocp_filter_data_empty(self, fake_elastic_service):
         """Test getFilterData handles empty results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0, "filterData": [], "summary": {}}
 
         # Set up mock response for empty results
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", total=0, filter_data=[], summary={}
         )
 
@@ -469,10 +471,10 @@ class TestOCPErrorHandling:
     """Test cases for error handling in OCP functions"""
 
     @pytest.mark.asyncio
-    async def test_get_data_elasticsearch_error(self, fake_elastic):
+    async def test_get_data_elasticsearch_error(self, fake_elastic_service):
         """Test getData propagates Elasticsearch connection errors."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             "post", error=Exception("Elasticsearch unavailable")
         )
 
@@ -489,10 +491,12 @@ class TestOCPErrorHandling:
             )
 
     @pytest.mark.asyncio
-    async def test_get_filter_data_elasticsearch_error(self, fake_elastic):
+    async def test_get_filter_data_elasticsearch_error(self, fake_elastic_service):
         """Test getFilterData propagates Elasticsearch connection errors."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response("filterPost", error=Exception("Index not found"))
+        fake_elastic_service.set_post_response(
+            "filterPost", error=Exception("Index not found")
+        )
 
         # Verify exception is raised
         with pytest.raises(Exception, match="Index not found"):

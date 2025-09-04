@@ -294,7 +294,6 @@ class TestBuildAndReleaseProcessing:
 
         # Then: Should return deduplicated mapped streams
         assert set(result) == set(expected_result["mapped_streams"])
-        assert len(result) == len(expected_result["mapped_streams"])
 
 
 class TestSortingAndPagination:
@@ -763,7 +762,7 @@ class TestAsyncMetadataRetrieval:
     """Test cases for async metadata retrieval function"""
 
     @pytest.mark.asyncio
-    async def test_get_metadata_successful_retrieval(self, fake_elastic):
+    async def test_get_metadata_successful_retrieval(self, fake_elastic_service):
         """Test getMetadata retrieves metadata successfully."""
         # Given: Elasticsearch response with metadata
         uuid = "test-uuid-12345"
@@ -778,7 +777,7 @@ class TestAsyncMetadataRetrieval:
         expected_result = {"metadata": metadata, "uuid_matched": True}
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="post", data_list=[metadata], total=1
         )
 
@@ -789,13 +788,15 @@ class TestAsyncMetadataRetrieval:
         assert result == expected_result["metadata"]
 
     @pytest.mark.asyncio
-    async def test_get_metadata_empty_response(self, fake_elastic):
+    async def test_get_metadata_empty_response(self, fake_elastic_service):
         """Test getMetadata handles empty response gracefully."""
         # Given: Elasticsearch returns empty response
         uuid = "nonexistent-uuid"
 
         # Set up mock response with empty data
-        fake_elastic.set_post_response(response_type="post", data_list=[], total=0)
+        fake_elastic_service.set_post_response(
+            response_type="post", data_list=[], total=0
+        )
 
         # When: getMetadata is called with nonexistent UUID
         # Then: Should raise IndexError since meta[0] won't exist

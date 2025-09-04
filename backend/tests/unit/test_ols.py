@@ -15,7 +15,7 @@ class TestGetFilterData:
     """Test cases for ols.getFilterData function"""
 
     @pytest.mark.asyncio
-    async def test_get_ols_filter_aggregations(self, fake_elastic):
+    async def test_get_ols_filter_aggregations(self, fake_elastic_service):
         """Test getFilterData returns proper OLS filter aggregations."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -63,7 +63,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response using set_post_response for filterPost
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             summary=raw_summary,
@@ -95,7 +95,7 @@ class TestGetFilterData:
         assert filter_dict["jobStatus"] == raw_aggregations["jobStatus"]
 
     @pytest.mark.asyncio
-    async def test_get_ols_filter_with_no_filter(self, fake_elastic):
+    async def test_get_ols_filter_with_no_filter(self, fake_elastic_service):
         """Test getFilterData works correctly with no filter parameter."""
         # Raw aggregation data from Elasticsearch
         raw_aggregations = {
@@ -120,7 +120,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             total=25,
@@ -144,13 +144,13 @@ class TestGetFilterData:
         assert filter_dict["olsTestWorkers"] == raw_aggregations["olsTestWorkers"]
 
     @pytest.mark.asyncio
-    async def test_get_ols_filter_empty_results(self, fake_elastic):
+    async def test_get_ols_filter_empty_results(self, fake_elastic_service):
         """Test getFilterData handles empty OLS filter results gracefully."""
         # Expected result for empty data
         expected_result = {"total": 0, "filterData": [], "summary": {}}
 
         # Set up mock response for empty data
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", filter_data=[], total=0
         )
 
@@ -169,7 +169,7 @@ class TestGetFilterData:
         assert len(result["filterData"]) == 0
 
     @pytest.mark.asyncio
-    async def test_get_ols_filter_complex_aggregations(self, fake_elastic):
+    async def test_get_ols_filter_complex_aggregations(self, fake_elastic_service):
         """Test getFilterData with complex OLS field aggregations."""
         # Complex aggregation data covering all OLS fields
         raw_aggregations = {
@@ -240,7 +240,7 @@ class TestGetFilterData:
         }
 
         # Set up mock response
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost",
             filter_data=list(raw_aggregations.items()),
             summary=raw_summary,
@@ -279,10 +279,10 @@ class TestOLSErrorHandling:
     """Test cases for error handling in OLS functions"""
 
     @pytest.mark.asyncio
-    async def test_ols_index_not_found(self, fake_elastic):
+    async def test_ols_index_not_found(self, fake_elastic_service):
         """Test OLS functions handle missing Elasticsearch index."""
         # Set up the service to raise an exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", error=Exception("Index not found")
         )
 
@@ -296,10 +296,10 @@ class TestOLSErrorHandling:
             )
 
     @pytest.mark.asyncio
-    async def test_ols_elasticsearch_connection_error(self, fake_elastic):
+    async def test_ols_elasticsearch_connection_error(self, fake_elastic_service):
         """Test OLS functions handle Elasticsearch connection errors."""
         # Set up the service to raise a connection exception
-        fake_elastic.set_post_response(
+        fake_elastic_service.set_post_response(
             response_type="filterPost", error=Exception("Connection timeout")
         )
 
