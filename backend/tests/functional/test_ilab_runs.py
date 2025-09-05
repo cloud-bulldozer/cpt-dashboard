@@ -180,16 +180,22 @@ class TestIlabRuns:
         if start:
             first = start
             stime = datetime.fromtimestamp(RUNS[start].start / 1000, timezone.utc)
-            sdate = f"{stime:%Y-%m-%dT%H:%M:%S}"
+            sdate = stime.isoformat()
         if end:
             last = end
             etime = datetime.fromtimestamp(RUNS[end].start / 1000, tz=timezone.utc)
-            edate = f"{etime:%Y-%m-%dT%H:%M:%S}"
+            edate = f"{etime:%Y-%m-%dT%H:%M:%S.%f%z}"
         response = requests.get(
             f"{server}/api/v1/ilab/runs", {"start_date": sdate, "end_date": edate}
         )
         result = response.json()
-        ids = {r.id for r in RUNS[first:last]}
+        ids = {r.id for r in RUNS[first : last + 1]}
+        for r in result["results"]:
+            date = datetime.fromisoformat(r["begin_date"])
+            if sdate:
+                assert date >= stime, f"{r['id']}: {date} >= {sdate}"
+            if edate:
+                assert date <= etime, f"{r['id']}: {date} <= {edate}"
         assert result["total"] == len(ids)
         assert {r["id"] for r in result["results"]} == ids
 

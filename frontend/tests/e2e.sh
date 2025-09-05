@@ -15,7 +15,7 @@ mkdir -p "${FRONTEND}/coverage"
 
  
 podman run ${POD} \
-    -v "${FRONTEND}/coverage:/usr/src/cpt-dashboard/coverage" \
+    -v "${FRONTEND}/coverage:/usr/src/cpt-dashboard/coverage:Z" \
     --name="${CYPRESS}" \
     localhost/cypress
 

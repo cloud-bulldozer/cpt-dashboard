@@ -1,8 +1,8 @@
 from datetime import datetime, timezone
 import json
 
-from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException
+from opensearchpy import AsyncOpenSearch
 import pytest
 
 import app.config
@@ -832,7 +832,7 @@ class TestCrucible:
 
         assert fake_crucible
         assert isinstance(fake_crucible, CrucibleService)
-        assert isinstance(fake_crucible.elastic, AsyncElasticsearch)
+        assert isinstance(fake_crucible.elastic, AsyncOpenSearch)
         assert app.config.get_config().get("TEST.url") == fake_crucible.url
         elastic = fake_crucible.elastic
         await fake_crucible.close()

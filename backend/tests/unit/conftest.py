@@ -19,7 +19,7 @@ def fake_elastic(monkeypatch, fake_config):
     """Replace the actual elastic client with a fake"""
 
     monkeypatch.setattr(
-        "app.services.crucible_svc.AsyncElasticsearch", FakeAsyncElasticsearch
+        "app.services.crucible_svc.AsyncOpenSearch", FakeAsyncElasticsearch
     )
 
 

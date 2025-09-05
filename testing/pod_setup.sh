@@ -62,7 +62,7 @@ echo "Creating pod ${POD_NAME}"
 podman pod create --name=${POD_NAME} ${PUBLISH}
 
 echo "Creating version"
-( cd ${BACKEND}; poetry run scripts/version.py )
+( cd ${BACKEND}; poetry install; poetry run scripts/version.py )
 podman build -f backend.containerfile --tag backend "${BACKEND}"
 podman build -f frontend.containerfile --tag frontend "${FRONTEND}"
 podman build -f ${TESTING}/functional.containerfile --tag functional "${BRANCH}"
@@ -73,7 +73,7 @@ CONTAINERS=( "${POD_NAME}-front" "${POD_NAME}-back" \
         "${POD_NAME}-opensearch-ilab" "${POD_NAME}-opensearch-ocp" "${POD_NAME}-init" )
 COMPONENT=ocp "${TESTING}"/opensearch.sh
 COMPONENT=ilab OPENSEARCH_PORT=9500 "${TESTING}"/opensearch.sh
-podman run ${POD} --name="${POD_NAME}-init" -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" --entrypoint /backend/db_seed.py localhost/functional
+podman run ${POD} --name="${POD_NAME}-init" -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" --workdir /backend --entrypoint '["poetry", "run", "/backend/db_seed.py"]' localhost/functional
 if [[ "${DEVEL}" -ne 1 || "${FRONTDEVEL}" -eq 1 ]]
 then
     echo "Starting backend container"
