@@ -2,8 +2,8 @@ import bisect
 from datetime import datetime, timedelta
 import traceback
 
-from elasticsearch import AsyncElasticsearch
 from fastapi.encoders import jsonable_encoder
+from opensearchpy import AsyncOpenSearch
 
 from app import config
 import app.api.v1.commons.constants as constants
@@ -39,11 +39,11 @@ class ElasticService:
             esUser = config.get(path + ".username")
             esPass = config.get(path + ".password")
         if esUser:
-            es = AsyncElasticsearch(
+            es = AsyncOpenSearch(
                 url, use_ssl=False, verify_certs=False, http_auth=(esUser, esPass)
             )
         else:
-            es = AsyncElasticsearch(url, verify_certs=False)
+            es = AsyncOpenSearch(url, verify_certs=False)
         return es, indice, index_prefix
 
     async def post(

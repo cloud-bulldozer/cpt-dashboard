@@ -103,7 +103,7 @@ def mock_config_no_auth(mock_config):
 class TestElasticService:
     """Test class for ElasticService"""
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     def test_init_with_internal(self, mock_es, mock_config_full):
         """Test ElasticService initialization with internal elasticsearch"""
 
@@ -116,7 +116,7 @@ class TestElasticService:
         assert service.prev_index == "internal-index"
         assert service.prev_index_prefix == "internal-"
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     def test_init_without_internal(self, mock_es, mock_config_no_internal):
         """Test ElasticService initialization without internal elasticsearch"""
 
@@ -125,7 +125,7 @@ class TestElasticService:
         assert service.new_es is not None
         assert service.prev_es is None
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     def test_initialize_es_with_auth(self, mock_es, mock_config_full):
         """Test initialize_es method with authentication"""
 
@@ -143,7 +143,7 @@ class TestElasticService:
         assert indice == "test-index"
         assert prefix == "test-"
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     def test_initialize_es_without_auth(self, mock_es, mock_config_no_auth):
         """Test initialize_es method without authentication"""
 
@@ -156,7 +156,7 @@ class TestElasticService:
         assert indice == "custom-index"
         assert prefix == ""
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     @patch("app.services.search.jsonable_encoder")
     async def test_post_aggregation_query(
         self, mock_encoder, mock_es, mock_config_full
@@ -179,7 +179,7 @@ class TestElasticService:
             index="internal-internal-index*", body={"query": "test"}, size=0
         )
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     @patch("app.services.search.datetime")
     async def test_post_with_timestamp_field(
         self, mock_datetime, mock_es, mock_config_full
@@ -220,7 +220,7 @@ class TestElasticService:
         assert "data" in result
         assert "total" in result
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     async def test_post_without_timestamp_field(self, mock_es, mock_config_no_internal):
         """Test post method without timestamp field"""
 
@@ -439,7 +439,7 @@ class TestElasticService:
         assert "platform" in result
         assert result["platform"]["buckets"][0]["key"] == "aws"
 
-    @patch("app.services.search.AsyncElasticsearch")
+    @patch("app.services.search.AsyncOpenSearch")
     async def test_close(self, mock_es, mock_config_full):
         """Test close method"""
 
