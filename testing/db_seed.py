@@ -4,8 +4,8 @@ import sys
 import time
 
 from typing import Optional
-from elasticsearch import Elasticsearch
-from elasticsearch.exceptions import TransportError, ConnectionError
+from opensearchpy import OpenSearch
+from opensearchpy.exceptions import TransportError, ConnectionError
 from vyper import v
 
 
@@ -32,7 +32,7 @@ class Restore:
         self.url = v.get(config_path + ".url")
         self.user = v.get(config_path + ".username")
         self.pwd = v.get(config_path + ".password")
-        self.client = Elasticsearch(
+        self.client = OpenSearch(
             self.url,
             basic_auth=(self.user, self.pwd) if self.user else None,
             verify_certs=False,

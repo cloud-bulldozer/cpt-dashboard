@@ -20,8 +20,8 @@ from typing import Any, Callable, Iterator, Optional, Tuple, Union
 
 from dateutil import rrule
 from dateutil.relativedelta import relativedelta
-from elasticsearch import AsyncElasticsearch
 from fastapi import HTTPException, status
+from opensearchpy import AsyncOpenSearch
 from pydantic import BaseModel
 
 from app import config
@@ -726,7 +726,7 @@ class CrucibleService:
         self.auth = (self.user, self.password) if self.user or self.password else None
         self.url = self.cfg.get(configpath + ".url")
         self.versions = set()
-        self.elastic = AsyncElasticsearch(
+        self.elastic = AsyncOpenSearch(
             self.url, http_auth=self.auth, verify_certs=False
         )
         self.logger.info("Initializing CDM service to %s", self.url)

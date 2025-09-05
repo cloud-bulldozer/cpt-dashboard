@@ -24,7 +24,7 @@ def fake_elastic(monkeypatch, fake_config):
     """Replace the actual elastic client with a fake"""
     fake_elastic = FakeAsyncElasticsearch("http://elastic.example.com:9200")
     monkeypatch.setattr(
-        "app.services.crucible_svc.AsyncElasticsearch",
+        "app.services.crucible_svc.AsyncOpenSearch",
         lambda *args, **kwargs: fake_elastic,
     )
     return fake_elastic
@@ -36,7 +36,7 @@ def fake_elastic_service(monkeypatch, fake_config):
     fake_elastic_service = FakeElasticService("TEST")
     for path in ("hce", "ocm", "ols", "ocp", "quay", "utils"):
         monkeypatch.setattr(
-            f"app.api.v1.commons.{path}.ElasticService",
+            f"app.api.v1.commons.{path}.AsyncOpenSearch",
             lambda *args, **kwargs: fake_elastic_service,
         )
     return fake_elastic_service

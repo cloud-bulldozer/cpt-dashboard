@@ -2,7 +2,7 @@ from collections import defaultdict
 from dataclasses import dataclass
 from typing import Any, Optional, Union
 
-from elasticsearch import AsyncElasticsearch
+from opensearchpy import AsyncOpenSearch
 
 
 @dataclass
@@ -26,7 +26,7 @@ class Request:
         return iok and bok and dok and pok and hok and kok
 
 
-class FakeAsyncElasticsearch(AsyncElasticsearch):
+class FakeAsyncElasticsearch(AsyncOpenSearch):
     hosts: Union[str, list[str]]
     args: dict[str, Any]
     closed: bool
@@ -114,7 +114,7 @@ class FakeAsyncElasticsearch(AsyncElasticsearch):
         for c in range(repeat):
             self.data[index].append(response)
 
-    # Faked AsyncElasticsearch methods
+    # Faked AsyncOpenSearch methods
     async def close(self):
         self.closed = True
 
