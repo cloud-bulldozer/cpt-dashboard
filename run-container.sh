@@ -26,14 +26,16 @@ cleanup () {
     fi
 }
 
-if [[ -z "${CA_CERT_PATH}" ]]; then
-    echo "CA_CERT_PATH is not set to a valid CA certificate path"
-    exit 1
+if [ -z "${CA_CERT_PATH}" ]; then
+    echo "CA_CERT_PATH is not set"
+    arg=""
+else
+    arg="--build-arg CA_CERT_PATH=${CA_CERT_PATH}"
 fi
 
 echo "Creating version"
 ( cd ${BACKEND}; poetry install ; poetry run scripts/version.py )
-podman build -f backend.containerfile.in --build-arg CA_CERT_PATH="${CA_CERT_PATH}" --tag backend "${BACKEND}"
+podman build -f backend.containerfile ${arg} --tag backend "${BACKEND}"
 echo "Starting backend container"
 podman run -d --name="backend" -p 127.0.0.1:8000:8000 -v "${CPT_CONFIG}:/backend/ocpperf.toml:Z" localhost/backend
 CONTAINERS=( "backend" )
