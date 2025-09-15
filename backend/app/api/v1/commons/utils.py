@@ -124,7 +124,7 @@ def normalize_pagination(offset: Optional[int], size: Optional[int]) -> tuple[in
 def buildAggregateQuery(constant_dict):
     aggregate = {}
     for x, y in constant_dict.items():
-        obj = {x: {"terms": {"field": y}}}
+        obj = {x: {"terms": {"field": y, "size": constants.AGG_BUCKET_SIZE}}}
         aggregate.update(obj)
     return aggregate
 
