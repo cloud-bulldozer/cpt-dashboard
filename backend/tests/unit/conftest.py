@@ -34,30 +34,11 @@ def fake_elastic(monkeypatch, fake_config):
 def fake_elastic_service(monkeypatch, fake_config):
     """Replace the actual ElasticService with fake for commons testing"""
     fake_elastic_service = FakeElasticService("TEST")
-    monkeypatch.setattr(
-        "app.api.v1.commons.hce.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
-    monkeypatch.setattr(
-        "app.api.v1.commons.ocm.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
-    monkeypatch.setattr(
-        "app.api.v1.commons.ols.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
-    monkeypatch.setattr(
-        "app.api.v1.commons.ocp.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
-    monkeypatch.setattr(
-        "app.api.v1.commons.quay.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
-    monkeypatch.setattr(
-        "app.api.v1.commons.utils.ElasticService",
-        lambda *args, **kwargs: fake_elastic_service,
-    )
+    for path in ("hce", "ocm", "ols", "ocp", "quay", "utils"):
+        monkeypatch.setattr(
+            f"app.api.v1.commons.{path}.ElasticService",
+            lambda *args, **kwargs: fake_elastic_service,
+        )
     return fake_elastic_service
 
 

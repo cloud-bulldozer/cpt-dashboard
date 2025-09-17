@@ -778,7 +778,7 @@ class TestAsyncMetadataRetrieval:
 
         # Set up mock response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=[metadata], total=1
+            response_type="post", data_list=[metadata]
         )
 
         # When: getMetadata is called
@@ -794,9 +794,7 @@ class TestAsyncMetadataRetrieval:
         uuid = "nonexistent-uuid"
 
         # Set up mock response with empty data
-        fake_elastic_service.set_post_response(
-            response_type="post", data_list=[], total=0
-        )
+        fake_elastic_service.set_post_response(response_type="post", data_list=[])
 
         # When: getMetadata is called with nonexistent UUID
         # Then: Should raise IndexError since meta[0] won't exist

@@ -52,7 +52,7 @@ class TestGetData:
 
         # Set up mock response using set_post_response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_ocm_data, total=2
+            response_type="post", data_list=raw_ocm_data
         )
 
         # Call the function
@@ -89,9 +89,7 @@ class TestGetData:
         expected_result = {"total": 0}
 
         # Set up mock response for empty results
-        fake_elastic_service.set_post_response(
-            response_type="post", data_list=[], total=0
-        )
+        fake_elastic_service.set_post_response(response_type="post", data_list=[])
 
         # Call the function
         result = await ocm.getData(
@@ -133,7 +131,7 @@ class TestGetData:
 
         # Set up mock response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_ocm_data, total=1
+            response_type="post", data_list=raw_ocm_data
         )
 
         # Call the function

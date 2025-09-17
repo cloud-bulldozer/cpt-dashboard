@@ -27,10 +27,10 @@ class FakeElasticService(ElasticService):
         self,
         response_type: str,
         data_list: Optional[list[dict[str, Any]]] = None,
-        total: int = 0,
         filter_data: Optional[list[dict[str, Any]]] = None,
         summary: Optional[dict[str, Any]] = None,
         upstream_list: Optional[list[str]] = None,
+        total: Optional[int] = None,
         repeat: int = 1,
         error: Optional[Exception] = None,
     ):
@@ -38,11 +38,11 @@ class FakeElasticService(ElasticService):
 
         Args:
             response_type: "post" for getData responses, "filterPost" for getFilterData responses
-            data_list: list of source data objects (for post responses)
-            total: total count
+            data_list: list of source data objects (for post responses, total auto-calculated from length)
             filter_data: filter aggregation data (for filterPost responses)
             summary: summary data (for filterPost responses)
             upstream_list: list of upstream job names (for filterPost responses)
+            total: total count (for filterPost responses only, auto-calculated for post responses)
             repeat: how many times to return this response
             error: Exception to raise instead of returning response data
         """
@@ -65,9 +65,13 @@ class FakeElasticService(ElasticService):
             if data_list:
                 for d in data_list:
                     hits.append({"_source": d})
-            response = {"data": hits, "total": total}
+            # Auto-calculate total from data_list length
+            calculated_total = len(data_list or [])
+            response = {"data": hits, "total": calculated_total}
         elif response_type == "filterPost":
             # Format for getFilterData responses
+            if total is None:
+                raise ValueError("total parameter is required for filterPost responses")
             response = {
                 "total": total,
                 "filterData": filter_data or [],
@@ -101,7 +105,15 @@ class FakeElasticService(ElasticService):
         """Mock the ElasticService.post method"""
         if self.post_error:
             raise self.post_error
-        return self.data.get("commons_post", [{"data": [], "total": 0}]).pop(0)
+
+        # Check if a response has been registered
+        if "commons_post" in self.data and len(self.data["commons_post"]) > 0:
+            return self.data["commons_post"].pop(0)
+
+        # Raise exception if no response registered - indicates broken test
+        raise Exception(
+            "No mock data was defined for ElasticService.post() - call set_post_response() first"
+        )
 
     async def filterPost(
         self,
@@ -116,9 +128,18 @@ class FakeElasticService(ElasticService):
         """Mock the ElasticService.filterPost method"""
         if self.filterPost_error:
             raise self.filterPost_error
-        return self.data.get(
-            "commons_filterPost", [{"total": 0, "filterData": [], "summary": {}}]
-        ).pop(0)
+
+        # Check if a response has been registered
+        if (
+            "commons_filterPost" in self.data
+            and len(self.data["commons_filterPost"]) > 0
+        ):
+            return self.data["commons_filterPost"].pop(0)
+
+        # Raise exception if no response registered - indicates broken test
+        raise Exception(
+            "No mock data was defined for ElasticService.filterPost() - call set_post_response() first"
+        )
 
     async def close(self):
         """Mock the ElasticService.close method - no-op for testing"""

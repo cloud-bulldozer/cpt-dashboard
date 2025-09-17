@@ -80,7 +80,7 @@ class TestGetData:
 
         # Set up mock response using set_post_response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_quay_data, total=2
+            response_type="post", data_list=raw_quay_data
         )
 
         # Call the function
@@ -149,9 +149,7 @@ class TestGetData:
         expected_result = {"total": 0, "data": pd.DataFrame()}
 
         # Set up mock response for empty data
-        fake_elastic_service.set_post_response(
-            response_type="post", data_list=[], total=0
-        )
+        fake_elastic_service.set_post_response(response_type="post", data_list=[])
 
         # Call the function
         result = await quay.getData(
@@ -218,7 +216,7 @@ class TestGetData:
 
         # Set up mock response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_quay_data, total=2
+            response_type="post", data_list=raw_quay_data
         )
 
         # Call the function
@@ -301,7 +299,7 @@ class TestGetData:
 
         # Set up mock response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_quay_data, total=2
+            response_type="post", data_list=raw_quay_data
         )
 
         # Call the function

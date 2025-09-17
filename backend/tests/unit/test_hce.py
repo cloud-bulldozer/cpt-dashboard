@@ -39,7 +39,7 @@ class TestGetData:
 
         # Set up mock response using set_post_response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_hce_data, total=2
+            response_type="post", data_list=raw_hce_data
         )
 
         # Call the function
@@ -70,9 +70,7 @@ class TestGetData:
         expected_result = {"data": pd.DataFrame(raw_hce_data).fillna(""), "total": 0}
 
         # Set up mock response for empty results using set_post_response
-        fake_elastic_service.set_post_response(
-            response_type="post", data_list=[], total=0
-        )
+        fake_elastic_service.set_post_response(response_type="post", data_list=[])
 
         # Call the function
         result = await hce.getData(
@@ -108,7 +106,7 @@ class TestGetData:
 
         # Set up mock response with null group using set_post_response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_hce_data, total=1
+            response_type="post", data_list=raw_hce_data
         )
 
         # Call the function

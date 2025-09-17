@@ -90,7 +90,7 @@ class TestGetData:
 
         # Set up mock response using set_post_response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_ocp_data, total=2
+            response_type="post", data_list=raw_ocp_data
         )
 
         # Call the function
@@ -154,9 +154,7 @@ class TestGetData:
         expected_result = {"total": 0}
 
         # Set up mock response for empty results
-        fake_elastic_service.set_post_response(
-            response_type="post", data_list=[], total=0
-        )
+        fake_elastic_service.set_post_response(response_type="post", data_list=[])
 
         # Call the function
         result = await ocp.getData(
@@ -233,7 +231,7 @@ class TestGetData:
 
         # Set up mock response
         fake_elastic_service.set_post_response(
-            response_type="post", data_list=raw_ocp_data, total=2
+            response_type="post", data_list=raw_ocp_data
         )
 
         # Call the function
@@ -475,7 +473,7 @@ class TestOCPErrorHandling:
         """Test getData propagates Elasticsearch connection errors."""
         # Set up the service to raise an exception
         fake_elastic_service.set_post_response(
-            "post", error=Exception("Elasticsearch unavailable")
+            response_type="post", error=Exception("Elasticsearch unavailable")
         )
 
         # Verify exception is raised
@@ -495,7 +493,7 @@ class TestOCPErrorHandling:
         """Test getFilterData propagates Elasticsearch connection errors."""
         # Set up the service to raise an exception
         fake_elastic_service.set_post_response(
-            "filterPost", error=Exception("Index not found")
+            response_type="filterPost", error=Exception("Index not found")
         )
 
         # Verify exception is raised
