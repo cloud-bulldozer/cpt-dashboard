@@ -36,7 +36,7 @@ def fake_elastic_service(monkeypatch, fake_config):
     fake_elastic_service = FakeElasticService("TEST")
     for path in ("hce", "ocm", "ols", "ocp", "quay", "utils"):
         monkeypatch.setattr(
-            f"app.api.v1.commons.{path}.AsyncOpenSearch",
+            f"app.api.v1.commons.{path}.ElasticService",
             lambda *args, **kwargs: fake_elastic_service,
         )
     return fake_elastic_service
