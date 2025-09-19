@@ -423,9 +423,9 @@ class TestQueryConstruction:
 
         expected_result = {
             "aggregate_structure": {
-                "platform": {"terms": {"field": "platform.keyword"}},
-                "benchmark": {"terms": {"field": "benchmark.keyword"}},
-                "jobStatus": {"terms": {"field": "jobStatus.keyword"}},
+                "platform": {"terms": {"field": "platform.keyword", "size": 1000}},
+                "benchmark": {"terms": {"field": "benchmark.keyword", "size": 1000}},
+                "jobStatus": {"terms": {"field": "jobStatus.keyword", "size": 1000}},
             },
             "correct_structure": True,
         }

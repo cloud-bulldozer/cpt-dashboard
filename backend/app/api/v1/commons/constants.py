@@ -29,6 +29,7 @@ FIELDS = (
     "formal",
     "ciSystem",
 )
+AGG_BUCKET_SIZE = 1000
 MAX_PAGE = 10000
 OCP_SHORT_VER_LEN = 6
 

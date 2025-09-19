@@ -3,6 +3,7 @@ import pprint
 from fastapi import APIRouter
 import pandas as pd
 
+from app.api.v1.commons.constants import AGG_BUCKET_SIZE
 from app.api.v1.commons.utils import getMetadata
 from app.services.search import ElasticService
 
@@ -381,11 +382,11 @@ async def getBurnerCPUResults(uuids: list, namespace: str, index: str):
         "size": 0,
         "aggs": {
             "time": {
-                "terms": {"field": "uuid.keyword"},
+                "terms": {"field": "uuid.keyword", "size": AGG_BUCKET_SIZE},
                 "aggs": {"time": {"avg": {"field": "timestamp"}}},
             },
             "uuid": {
-                "terms": {"field": "uuid.keyword"},
+                "terms": {"field": "uuid.keyword", "size": AGG_BUCKET_SIZE},
                 "aggs": {"cpu": {"avg": {"field": "value"}}},
             },
         },
