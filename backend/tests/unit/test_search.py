@@ -135,9 +135,7 @@ class TestElasticService:
         )
 
         mock_es.assert_called_with(
-            "http://localhost:9200",
-            use_ssl=False,
-            http_auth=("testuser", "testpass"),
+            "http://localhost:9200", http_auth=("testuser", "testpass")
         )
         assert indice == "test-index"
         assert prefix == "test-"
