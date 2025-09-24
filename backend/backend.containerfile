@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream9
+FROM quay.io/centos/centos:stream10
 
 # 0) Configure Poetry and environment for OpenShift non-root execution
 ENV POETRY_VIRTUALENVS_CREATE=false \
@@ -29,13 +29,16 @@ RUN mkdir -p ${HOME} ${HOME}/.config/pypoetry ${HOME}/.cache/pypoetry && \
 
 WORKDIR ${HOME}
 
-# 3) Copy manifest files & install Python deps via export
+# 3) Copy manifest files & install Python deps
 COPY pyproject.toml poetry.lock version.json ./
-RUN poetry install --no-root --no-interaction --no-ansi && \
-    # Ensure generated cache and config files are group-writable
-    # for both OpenShift (random UID in GID=0) and Podman (root) 
-    # environments
-    chmod -R g+rwX ${HOME}/.cache/pypoetry ${HOME}/.config/pypoetry
+
+# Add verbose output for debugging the GitHub Action build failure
+# (Just in case that helps...)
+RUN poetry install -vvv --no-root --no-interaction --no-ansi
+# Ensure generated cache and config files are group-writable
+# for both OpenShift (random UID in GID=0) and Podman (root) 
+# environments
+RUN chmod -R g+rwX ${HOME}/.cache/pypoetry ${HOME}/.config/pypoetry
 
 COPY app/     ./app
 COPY scripts/ ./scripts
