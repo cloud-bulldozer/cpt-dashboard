@@ -908,7 +908,7 @@ class TestTelcoErrorHandling:
                 # This test demonstrates the bug exists (UnboundLocalError)
                 with pytest.raises(
                     UnboundLocalError,
-                    match="local variable 'jenkins_url' referenced before assignment",
+                    match="local variable 'jenkins_url'",
                 ):
                     result = await telco.getData(
                         start_datetime=date(2024, 1, 1),
