@@ -62,8 +62,8 @@ echo "Creating pod ${POD_NAME}"
 podman pod create --name=${POD_NAME} ${PUBLISH}
 
 echo "Creating version"
-( cd ${BACKEND}; poetry install; poetry run scripts/version.py )
-podman build -f backend.containerfile --tag backend "${BACKEND}"
+( cd ${BACKEND}; poetry install; poetry install; poetry run scripts/version.py )
+podman build -f backend.containerfile --build-arg CA_CERT_PATH="" --tag backend "${BACKEND}"
 podman build -f frontend.containerfile --tag frontend "${FRONTEND}"
 podman build -f ${TESTING}/functional.containerfile --tag functional "${BRANCH}"
 

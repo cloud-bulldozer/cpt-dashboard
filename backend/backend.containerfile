@@ -5,7 +5,15 @@ ENV POETRY_VIRTUALENVS_CREATE=false \
     HOME=/backend \
     XDG_CONFIG_HOME=/backend/.config \
     XDG_CACHE_HOME=/backend/.cache
-    
+
+# We just want a "safe" file we can always copy with innocuous content if no
+# CA is specified.
+ARG CA_CERT_PATH=""
+
+# Add a CA certificate to the container trust store
+ADD ${CA_CERT_PATH} /etc/pki/ca-trust/source/anchors/
+RUN update-ca-trust
+
 # 1) Install system deps + Poetry globally (root)
 #    Installing Poetry globally ensures the binary is on /usr/local/bin
 #    and therefore available in both OpenShift (random UID) and Podman (root) environments
@@ -21,13 +29,16 @@ RUN mkdir -p ${HOME} ${HOME}/.config/pypoetry ${HOME}/.cache/pypoetry && \
 
 WORKDIR ${HOME}
 
-# 3) Copy manifest files & install Python deps via export
+# 3) Copy manifest files & install Python deps
 COPY pyproject.toml poetry.lock version.json ./
-RUN poetry install --no-root --no-interaction --no-ansi && \
-    # Ensure generated cache and config files are group-writable
-    # for both OpenShift (random UID in GID=0) and Podman (root) 
-    # environments
-    chmod -R g+rwX ${HOME}/.cache/pypoetry ${HOME}/.config/pypoetry
+
+# Add verbose output for debugging the GitHub Action build failure
+# (Just in case that helps...)
+RUN poetry install -vvv --no-root --no-interaction --no-ansi
+# Ensure generated cache and config files are group-writable
+# for both OpenShift (random UID in GID=0) and Podman (root) 
+# environments
+RUN chmod -R g+rwX ${HOME}/.cache/pypoetry ${HOME}/.config/pypoetry
 
 COPY app/     ./app
 COPY scripts/ ./scripts
