@@ -6,14 +6,6 @@ ENV POETRY_VIRTUALENVS_CREATE=false \
     XDG_CONFIG_HOME=/backend/.config \
     XDG_CACHE_HOME=/backend/.cache
 
-# We just want a "safe" file we can always copy with innocuous content if no
-# CA is specified.
-ARG CA_CERT_PATH=""
-
-# Add a CA certificate to the container trust store
-ADD ${CA_CERT_PATH} /etc/pki/ca-trust/source/anchors/
-RUN update-ca-trust
-
 # 1) Install system deps + Poetry globally (root)
 #    Installing Poetry globally ensures the binary is on /usr/local/bin
 #    and therefore available in both OpenShift (random UID) and Podman (root) environments

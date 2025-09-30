@@ -22,7 +22,7 @@ FRONTEND=${TOP}/frontend
 CPT_CONFIG=${CPT_CONFIG:-"${BACKEND}/ocpperf.toml"}
 if [ ! -f "${CPT_CONFIG}" ]; then
     echo "Error: ${CPT_CONFIG} not found" >&2
-    echo "Please update the backend/ocpperf.toml file to meet your needs." >&2
+    echo "Please update the ${CPT_CONFIG} file to meet your needs." >&2
     exit 1
 fi
 
