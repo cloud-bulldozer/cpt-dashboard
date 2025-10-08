@@ -8,7 +8,7 @@ from app.api.v1.endpoints.horreum import horreum
 from app.api.v1.endpoints.ilab import ilab
 from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.ocm import ocmJobs
-from app.api.v1.endpoints.ocp import graph, ocpJobs, results
+from app.api.v1.endpoints.ocp import graph, ocpJobs, results, kpi
 from app.api.v1.endpoints.ols import olsGraphs, olsJobs
 from app.api.v1.endpoints.quay import quayGraphs, quayJobs
 from app.api.v1.endpoints.telco import telcoGraphs, telcoJobs
@@ -19,6 +19,7 @@ router = APIRouter()
 router.include_router(ocpJobs.router, tags=["ocp"])
 router.include_router(results.router, tags=["ocp"])
 router.include_router(graph.router, tags=["ocp.graphs"])
+router.include_router(kpi.router, tags=["ocp.kpi"])
 
 # CPT endpoints
 router.include_router(cptJobs.router, tags=["cpt"])
