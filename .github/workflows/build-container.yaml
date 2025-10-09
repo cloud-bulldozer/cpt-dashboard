@@ -42,10 +42,13 @@ jobs:
 
     - name: Build Backend Image
       id: build-back
-      uses: redhat-actions/buildah-build@v2
-      with:
-        image: backend
-        context: backend
-        tags: latest ${{ github.sha }}
-        containerfiles: |
-          ./backend/backend.containerfile
+      run: |
+        cd backend
+        podman build -t backend:${{ github.sha }} -t backend:latest -f backend.containerfile .
+      # uses: redhat-actions/buildah-build@v2
+      # with:
+      #   image: backend
+      #   context: backend
+      #   tags: latest ${{ github.sha }}
+      #   containerfiles: |
+      #     ./backend/backend.containerfile
