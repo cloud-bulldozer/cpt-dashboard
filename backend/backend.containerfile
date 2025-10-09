@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream10
+FROM quay.io/centos/centos:stream9
 
 # 0) Configure Poetry and environment for OpenShift non-root execution
 ENV POETRY_VIRTUALENVS_CREATE=false \
@@ -6,11 +6,18 @@ ENV POETRY_VIRTUALENVS_CREATE=false \
     XDG_CONFIG_HOME=/backend/.config \
     XDG_CACHE_HOME=/backend/.cache
 
+RUN dnf update -y
+RUN dnf install -y 'dnf-command(config-manager)'
+RUN dnf config-manager --set-enabled crb
+RUN dnf install -y epel-release epel-next-release
+RUN dnf install -y python3.12 python3.12-devel python3.12-pip gcc gcc-c++
+
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && ln -sf /usr/bin/pip3.12 /usr/bin/pip3
+
 # 1) Install system deps + Poetry globally (root)
 #    Installing Poetry globally ensures the binary is on /usr/local/bin
 #    and therefore available in both OpenShift (random UID) and Podman (root) environments
-RUN dnf install -y python3-pip gcc python3-devel gcc-c++ && \
-    pip3 install --no-cache-dir poetry && \
+RUN pip3 install --no-cache-dir poetry && \
     dnf clean all
 
 # 2) Prepare writable dirs
