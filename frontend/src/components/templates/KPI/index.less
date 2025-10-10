@@ -1,0 +1,100 @@
+.kpi-table {
+  .pf-c-table {
+    .pf-c-table__expandable-row-content {
+      padding: 0;
+    }
+    
+    // Indentation for hierarchical structure
+    tr[data-level="1"] td:nth-child(2) {
+      padding-left: 2rem;
+    }
+    
+    tr[data-level="2"] td:nth-child(2) {
+      padding-left: 4rem;
+    }
+  }
+
+  // Date filter styling
+  #kpi-date-filter-toolbar {
+    background-color: #f5f5f5;
+    border-bottom: 1px solid #d2d2d2;
+    margin-bottom: 1rem;
+    
+    .date-filter {
+      align-items: center;
+      
+      .to-text {
+        margin: 0 0.5rem;
+        font-weight: 500;
+      }
+      
+      .pf-c-toolbar__item {
+        margin-right: 1rem;
+        
+        &:last-child {
+          margin-right: 0;
+        }
+      }
+    }
+  }
+}
+
+.kpi-expanded-content {
+  .pf-c-card {
+    margin-bottom: 1rem;
+  }
+  
+  .stats-section {
+    .pf-c-description-list {
+      margin-bottom: 1rem;
+    }
+  }
+  
+  .chart-section {
+    min-height: 300px;
+    
+    .no-data-placeholder {
+      height: 300px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background-color: #f5f5f5;
+      border: 1px dashed #ccc;
+      border-radius: 4px;
+      color: #666;
+      font-style: italic;
+    }
+  }
+  
+  .values-list {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #e5e5e5;
+    border-radius: 4px;
+    padding: 0.5rem;
+    background-color: #fafafa;
+    
+    .value-item {
+      margin-bottom: 0.25rem;
+      font-size: 0.875rem;
+      
+      .value {
+        font-weight: bold;
+      }
+      
+      .timestamp {
+        color: #666;
+        margin-left: 0.5rem;
+      }
+    }
+  }
+}
+
+.loader {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 200px;
+  font-size: 1.1rem;
+  color: #666;
+}

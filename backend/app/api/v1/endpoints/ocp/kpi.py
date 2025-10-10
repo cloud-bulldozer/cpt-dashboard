@@ -90,7 +90,7 @@ BENCHMARK_INDEX: dict[str, Benchmark | None] = {
     "olm": Benchmark(
         index="ripsaw-kube-burner",
         filter={
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
+            "metricName.keyword": "nodeLatencyQuantilesMeasurement",
             "quantileName.keyword": "Ready",
         },
     ),
@@ -164,6 +164,9 @@ class KPI:
     product: str
     version: list[str]
     benchmarks: list[str]
+    start_date: str | None
+    end_date: str | None
+    date_filter: dict[str, Any] | None
     service: ElasticService
     cache: Cache
 
@@ -187,9 +190,31 @@ class KPI:
         self.product = product
         self.version = self.break_list(version)
         self.benchmarks = self.break_list(benchmarks)
+        self.start_date = None
+        self.end_date = None
+        self.date_filter = None
         self.service = ElasticService(configpath)
         print(f"opening service on {configpath}")
         self.cache = Cache()
+
+    def set_date_filter(self, start_date: str | None, end_date: str | None):
+        if start_date or end_date:
+            self.end_date = end_date
+            self.date_filter = None
+            range = {"format": "yyyy-MM-dd"}
+            if start_date:
+                range["gte"] = start_date
+            if end_date:
+                range["lte"] = end_date
+            self.date_filter = {
+                "range": {
+                    "timestamp": range,
+                }
+            }
+            print(f"date_filter: {self.date_filter}")
+        else:
+            self.date_filter = None
+            print("no date_filter")
 
     async def close(self):
         print("closing")
@@ -213,10 +238,15 @@ class KPI:
             return self.cache.version_map
 
         start = time.time()
+        filters = [{"term": {"jobStatus.keyword": "success"}}]
+        if self.date_filter:
+            filters.append(self.date_filter)
+
+        print(f"filters: {filters}")
 
         query = {
             "size": 0,
-            "query": {"query_string": {"query": ('jobStatus: "success"')}},
+            "query": {"bool": {"filter": filters}},
             "aggs": {
                 "versions": {
                     "terms": {
@@ -232,7 +262,7 @@ class KPI:
             v = version["key"]
             versions[v[:4]].add(v)
 
-        print(f"discovered versions: {time.time()-start:3f} seconds")
+        print(f"discovered {len(versions)} versions: {time.time()-start:3f} seconds")
         self.cache.version_map = {k: sorted(v) for k, v in versions.items()}
         return self.cache.version_map
 
@@ -245,13 +275,19 @@ class KPI:
         Returns:
             A list of benchmarks and the configurations for which they were run.
         """
+        filters = [
+            {"term": {"jobStatus.keyword": "success"}},
+        ]
+        if self.date_filter:
+            filters.append(self.date_filter)
 
         query = {
             "size": 0,
             "query": {
-                "query_string": {
-                    "query": (f'jobStatus: "success" AND ocpVersion: {version}*')
-                }
+                "bool": {
+                    "filter": filters,
+                    "must": [{"query_string": {"query": f"ocpVersion:{version}*"}}],
+                },
             },
             "aggs": {
                 "configurations": {
@@ -279,7 +315,7 @@ class KPI:
                             },
                             {"platform": {"terms": {"field": "platform.keyword"}}},
                         ],
-                        "size": 10000,
+                        "size": AGG_BUCKET_SIZE,
                     },
                     "aggs": {
                         "benchmarks": {
@@ -441,9 +477,11 @@ class KPI:
                     idx = self.get_index(benchmark)
                     if not idx or idx != "ripsaw-kube-burner":
                         continue
-                    for i_count, uuids in job_iterations.items():
+                    for iter, uuids in job_iterations.items():
                         # print(f"KPI {i_count}: len(uuids) UUIDS")
                         filters = [{"terms": {"uuid.keyword": uuids}}]
+                        if self.date_filter:
+                            filters.append(self.date_filter)
                         filter = self.get_filter(benchmark)
                         if filter:
                             filters.extend(
@@ -464,20 +502,32 @@ class KPI:
                                 },
                             },
                         )
-                        values = [
-                            {
-                                "uuid": v["_source"]["uuid"],
-                                "timestamp": v["_source"]["timestamp"],
-                                "value": v["_source"]["P99"],
-                            }
-                            for v in response["hits"]["hits"]
-                        ]
+                        x = []
+                        y = []
+                        values = []
+                        for hit in response["hits"]["hits"]:
+                            v = hit["_source"]
+                            values.append(
+                                {
+                                    "uuid": v["uuid"],
+                                    "timestamp": v["timestamp"],
+                                    "value": v["P99"],
+                                }
+                            )
+                            x.append(v["timestamp"])
+                            y.append(int(v["P99"]))
                         stats = response["aggregations"]["stats"]
-                        stats = response["aggregations"]["stats"]
-                        metrics[ver][benchmark][str(config)][i_count] = {
+                        metrics[ver][benchmark][str(config)][iter] = {
                             "values": values,
+                            "graph": {
+                                "x": x,
+                                "y": y,
+                                "name": f"{ver} {benchmark} {config} {iter:d}",
+                                "type": "scatter",
+                                "mode": "lines+markers",
+                                "orientation": "v",
+                            },
                             "stats": {
-                                "count": stats["count"],
                                 "min": stats["min"],
                                 "max": stats["max"],
                                 "avg": stats["avg"],
@@ -500,18 +550,26 @@ async def kpi_svc():
 
 
 @router.get("/api/v1/ocp/kpi/versions")
-async def versions(kpi: Annotated[KPI, Depends(kpi_svc)]) -> dict[str, list[str]]:
+async def versions(
+    kpi: Annotated[KPI, Depends(kpi_svc)],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> dict[str, list[str]]:
     """Return a list of OCP versions that have been tested.
 
     Args:
         kpi: An ElasticService instance and KPI cache structure
     """
+    kpi.set_date_filter(start_date, end_date)
     return await kpi.get_versions()
 
 
 @router.get("/api/v1/ocp/kpi/benchmarks")
 async def benchmarks(
-    kpi: Annotated[KPI, Depends(kpi_svc)], versions: Optional[str] = None
+    kpi: Annotated[KPI, Depends(kpi_svc)],
+    versions: Optional[str] = None,
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
 ) -> dict[str, Any]:
     """Return KPI data for a given OCP version.
 
@@ -523,6 +581,7 @@ async def benchmarks(
         A hierarchical aggregation of KPI data for benchmark results for the
         given OCP version.
     """
+    kpi.set_date_filter(start_date, end_date)
     returns = {}
     vees = (
         (await kpi.get_versions()).keys() if versions is None else versions.split(",")
@@ -534,13 +593,23 @@ async def benchmarks(
 
 
 @router.get("/api/v1/ocp/kpi/breakdown")
-async def foggy(kpi: Annotated[KPI, Depends(kpi_svc)]) -> dict[str, Any]:
+async def foggy(
+    kpi: Annotated[KPI, Depends(kpi_svc)],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> dict[str, Any]:
     """Identify metric data indices for each benchmark."""
+    kpi.set_date_filter(start_date, end_date)
     return await kpi.get_iterations()
 
 
 @router.get("/api/v1/ocp/kpi")
-async def kpi(kpi: Annotated[KPI, Depends(kpi_svc)]) -> dict[str, Any]:
+async def kpi(
+    kpi: Annotated[KPI, Depends(kpi_svc)],
+    start_date: Optional[str] = None,
+    end_date: Optional[str] = None,
+) -> dict[str, Any]:
+    kpi.set_date_filter(start_date, end_date)
     """Identify metric data indices for each benchmark."""
     return await kpi.metric_aggregation()
 

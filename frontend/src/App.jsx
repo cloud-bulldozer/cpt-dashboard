@@ -6,6 +6,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 
 import Home from "./components/templates/Home";
 import ILab from "./components/templates/ILab";
+import KPITab from "./components/templates/KPI";
 import MainLayout from "./containers/MainLayout";
 import OCPTab from "./components/templates/OCP";
 import OLSTab from "./components/templates/OLS";
@@ -24,6 +25,7 @@ function App() {
         <Routes>
           <Route element={<MainLayout />}>
             <Route index element={<Home />} />
+            <Route path={APP_ROUTES.OCP_KPI} element={<KPITab />} />
             <Route path={APP_ROUTES.HOME} element={<Home />} />
             <Route path={APP_ROUTES.OCP} element={<OCPTab />} />
             <Route path={APP_ROUTES.TELCO} element={<Telco />} />

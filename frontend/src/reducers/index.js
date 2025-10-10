@@ -1,6 +1,7 @@
 import HeaderReducer from "./headerReducer";
 import HomeReducer from "./homeReducer";
 import ILabReducer from "./ilabReducer";
+import KPIReducer from "./kpiReducer";
 import LoadingReducer from "./loadingReducer";
 import OCPReducer from "./ocpReducer";
 import OLSReducer from "./olsReducer";
@@ -16,6 +17,7 @@ export default combineReducers({
   sidemenu: SideMenuReducer,
   cpt: HomeReducer,
   ocp: OCPReducer,
+  kpi: KPIReducer,
   ols: OLSReducer,
   quay: QuayReducer,
   telco: TelcoReducer,
