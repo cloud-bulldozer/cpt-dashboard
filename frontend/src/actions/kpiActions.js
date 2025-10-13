@@ -25,8 +25,8 @@ export const fetchKPIData = (beginDate, endDate) => async (dispatch) => {
   } catch (error) {
     console.error(
       `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
+        error?.response?.data,
+      )}`,
     );
   }
   dispatch({ type: TYPES.SET_OCP_KPI_COMPLETED });

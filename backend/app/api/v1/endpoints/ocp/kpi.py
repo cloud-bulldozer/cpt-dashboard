@@ -1,13 +1,12 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
-import platform
 import time
 from typing import Annotated, Any, Optional
 
-from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
 from fastapi import APIRouter, Depends
-from app.services.search import ElasticService
 
+from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
+from app.services.search import ElasticService
 
 router = APIRouter()
 
@@ -612,75 +611,3 @@ async def kpi(
     kpi.set_date_filter(start_date, end_date)
     """Identify metric data indices for each benchmark."""
     return await kpi.metric_aggregation()
-
-
-async def search_metrics() -> dict[str, Any]:
-    """Try to locate job UUIDs in the various prefixed indices.
-
-    This ties each benchmark name to the set of kube-burner job names and
-    metric names collected for each. (These are aggregated across OCP
-    versions.)
-    """
-    vees = sorted((await get_versions()).keys())
-    es = ElasticService(configpath="ocp.elasticsearch")
-
-    benchmark_metrics = defaultdict(lambda: defaultdict(set))
-    for ver in vees:
-        bees = await get_benchmarks(ver)
-        for benchmark, configurations in bees["benchmark_configurations"].items():
-            uuids = []
-            for config in configurations:
-                uuids.extend(config["uuids"])
-            uuids.sort()
-            aggs = None
-            idx = get_index(benchmark)
-            if not idx:
-                continue
-            idx = "ospst-" + idx + "*"
-            if idx.startswith("ospst-ripsaw-kube-burner"):
-                aggs = {
-                    "metricName": {
-                        "terms": {
-                            "field": "metricName.keyword",
-                            "size": 10000,
-                        },
-                        "aggs": {
-                            "jobName": {
-                                "terms": {"field": "jobName.keyword", "size": 10000}
-                            },
-                            "jobIterations": {
-                                "terms": {
-                                    "field": "jobConfig.jobIterations",
-                                    "size": 10000,
-                                },
-                            },
-                        },
-                    },
-                }
-            query = {
-                "query": {"bool": {"filter": [{"terms": {"uuid.keyword": uuids}}]}},
-            }
-            if aggs:
-                query["aggs"] = aggs
-            response = await es.prev_es.search(
-                index=idx,
-                body=query,
-                size=0,
-            )
-            if aggs:
-                for metricname in response["aggregations"]["metricName"]["buckets"]:
-                    try:
-                        for jobiteration in metricname["jobIterations"]["buckets"]:
-                            benchmark_metrics[benchmark][metricname["key"]].add(
-                                jobiteration["key"]
-                            )
-                    except Exception as e:
-                        print(
-                            f"Exception in get_metrics: {e}:\n{metricname} ({sorted(metricname.keys())})"
-                        )
-                        raise
-    await es.close()
-    benchmark_report = {
-        b: {j: sorted(v) for j, v in vs.items()} for b, vs in benchmark_metrics.items()
-    }
-    return benchmark_report

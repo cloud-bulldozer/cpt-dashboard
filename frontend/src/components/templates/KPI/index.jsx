@@ -1,6 +1,6 @@
 import "./index.less";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useDispatch, useSelector } from "react-redux";
 
 import KPIDateFilter from "./KPIDateFilter";
@@ -12,23 +12,38 @@ function KPITab() {
 
   const kpiState = useSelector((state) => state.kpi || {});
   const { kpiData, isLoading, startDate, endDate } = kpiState;
-  const fromSideMenu = useSelector((state) => state.sidemenu?.fromSideMenu || false);
+  const fromSideMenu = useSelector(
+    (state) => state.sidemenu?.fromSideMenu || false,
+  );
 
   // Dynamically import actions to avoid potential circular dependencies
-  const fetchKPIData = async (beginDate, endDate) => {
-    const { fetchKPIData: fetchData } = await import("@/actions/kpiActions");
-    dispatch(fetchData(beginDate, endDate));
-  };
+  const fetchKPIData = useCallback(
+    async (beginDate, endDate) => {
+      const { fetchKPIData: fetchData } = await import("@/actions/kpiActions");
+      dispatch(fetchData(beginDate, endDate));
+    },
+    [dispatch],
+  );
 
-  const setKPIDateFilter = async (startDate, endDate) => {
-    const { setKPIDateFilter: setFilter } = await import("@/actions/kpiActions");
-    dispatch(setFilter(startDate, endDate));
-  };
+  const setKPIDateFilter = useCallback(
+    async (startDate, endDate) => {
+      const { setKPIDateFilter: setFilter } = await import(
+        "@/actions/kpiActions"
+      );
+      dispatch(setFilter(startDate, endDate));
+    },
+    [dispatch],
+  );
 
-  const setFromSideMenuFlag = async (flag) => {
-    const { setFromSideMenuFlag: setFlag } = await import("@/actions/sideMenuActions");
-    dispatch(setFlag(flag));
-  };
+  const setFromSideMenuFlag = useCallback(
+    async (flag) => {
+      const { setFromSideMenuFlag: setFlag } = await import(
+        "@/actions/sideMenuActions"
+      );
+      dispatch(setFlag(flag));
+    },
+    [dispatch],
+  );
 
   useEffect(() => {
     if (!fromSideMenu && !kpiData && !hasFetchedRef.current) {
@@ -38,7 +53,14 @@ function KPITab() {
     if (fromSideMenu) {
       setFromSideMenuFlag(false);
     }
-  }, [fromSideMenu, kpiData, startDate, endDate]);
+  }, [
+    fromSideMenu,
+    kpiData,
+    startDate,
+    endDate,
+    fetchKPIData,
+    setFromSideMenuFlag,
+  ]);
 
   const handleDateFilterApply = (newStartDate, newEndDate) => {
     setKPIDateFilter(newStartDate, newEndDate);

@@ -14,23 +14,29 @@ import { formatDate } from "@/utils/helper";
 
 const KPIDateFilter = ({ startDate, endDate, onDateChange, onApply }) => {
   const [localStartDate, setLocalStartDate] = useState(
-    startDate ? new Date(startDate) : null
+    startDate ? new Date(startDate) : null,
   );
   const [localEndDate, setLocalEndDate] = useState(
-    endDate ? new Date(endDate) : null
+    endDate ? new Date(endDate) : null,
   );
 
   const handleStartDateChange = (date) => {
     setLocalStartDate(date);
     if (onDateChange) {
-      onDateChange(date ? formatDate(date) : null, localEndDate ? formatDate(localEndDate) : null);
+      onDateChange(
+        date ? formatDate(date) : null,
+        localEndDate ? formatDate(localEndDate) : null,
+      );
     }
   };
 
   const handleEndDateChange = (date) => {
     setLocalEndDate(date);
     if (onDateChange) {
-      onDateChange(localStartDate ? formatDate(localStartDate) : null, date ? formatDate(date) : null);
+      onDateChange(
+        localStartDate ? formatDate(localStartDate) : null,
+        date ? formatDate(date) : null,
+      );
     }
   };
 
@@ -38,7 +44,7 @@ const KPIDateFilter = ({ startDate, endDate, onDateChange, onApply }) => {
     if (onApply) {
       onApply(
         localStartDate ? formatDate(localStartDate) : null,
-        localEndDate ? formatDate(localEndDate) : null
+        localEndDate ? formatDate(localEndDate) : null,
       );
     }
   };
@@ -57,9 +63,7 @@ const KPIDateFilter = ({ startDate, endDate, onDateChange, onApply }) => {
   return (
     <Toolbar id="kpi-date-filter-toolbar" ouiaId="kpi_date_filter">
       <ToolbarContent className="date-filter">
-        <ToolbarItem variant="label">
-          Date Range:
-        </ToolbarItem>
+        <ToolbarItem variant="label">Date Range:</ToolbarItem>
         <ToolbarItem>
           <DatePicker
             onChange={handleStartDateChange}
