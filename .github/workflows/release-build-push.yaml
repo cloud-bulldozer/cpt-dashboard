@@ -51,13 +51,9 @@ jobs:
 
     - name: Build Backend Image
       id: build-back
-      uses: redhat-actions/buildah-build@v2
-      with:
-        image: backend
-        context: backend
-        tags: prod ${{ github.sha }}
-        containerfiles: |
-          ./backend/backend.containerfile
+      run: |
+        cd backend
+        podman build -t backend:${{ github.sha }} -t backend:prod -f backend.containerfile .
 
     - name: Push backend image to quay.io
       id: push-back-to-quay
