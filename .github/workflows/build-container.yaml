@@ -1,0 +1,47 @@
+name: Container Build
+# Identical to build-push.yaml; but executed on pull requests
+# where the quay secret is not available, to test that we can
+# build the containers using the `redhat-actions/buildah-build`
+# action.
+on:
+  pull_request:
+
+jobs:
+  build:
+    name: Build container images
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+      with:
+        # Fetch enough commit info to feed version generator
+        fetch-depth: 10
+    - uses: actions/setup-python@v4
+      with:
+        python-version: "3.12"
+    - uses: Gr1N/setup-poetry@v9
+    - name: Install dependencies
+      run: |
+        cd backend
+        poetry install
+
+    - name: Build Frontend Image
+      id: build-front
+      uses: redhat-actions/buildah-build@v2
+      with:
+        image: frontend
+        context: frontend
+        tags: latest ${{ github.sha }}
+        containerfiles: |
+          ./frontend/frontend.containerfile
+
+    - name: Generate version file
+      run: |
+        cd backend
+        poetry run scripts/version.py
+
+    - name: Build Backend Image
+      id: build-back
+      run: |
+        cd backend
+        podman build -t backend:${{ github.sha }} -t backend:latest -f backend.containerfile .

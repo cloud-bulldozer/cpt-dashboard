@@ -1,4 +1,4 @@
-FROM quay.io/centos/centos:stream10
+FROM quay.io/centos/centos:stream9
 
 ENV PATH=/root/.local/bin:$PATH \
     LANG=C.UTF-8 \
@@ -16,9 +16,15 @@ WORKDIR /backend
 RUN mkdir -p ${HOME} ${HOME}/.config/pypoetry ${HOME}/.cache/pypoetry && \
     chmod -R g+rwX ${HOME}
 
-RUN dnf install -y pip gcc python3-devel gcc-c++
+RUN dnf update -y
+RUN dnf install -y 'dnf-command(config-manager)'
+RUN dnf config-manager --set-enabled crb
+RUN dnf install -y epel-release epel-next-release
+RUN dnf install -y python3.12 python3.12-devel python3.12-pip gcc gcc-c++
 
-RUN pip install --user poetry
+RUN ln -sf /usr/bin/python3.12 /usr/bin/python3 && ln -sf /usr/bin/pip3.12 /usr/bin/pip3
+
+RUN pip3 install --user poetry
 
 # 3) Copy manifest files & install Python deps via export
 COPY backend/pyproject.toml backend/poetry.lock backend/version.json ./
