@@ -57,8 +57,8 @@ jobs:
       id: push-back-to-quay
       uses: redhat-actions/push-to-registry@v2
       with:
-        image: ${{ steps.build-back.outputs.image }}
-        tags: ${{ steps.build-back.outputs.tags }}
+        image: backend
+        tags: latest ${{ github.sha }}
         registry: quay.io/cloud-bulldozer
         username: ${{ secrets.QUAY_USER }}
         password: ${{ secrets.QUAY_TOKEN }}
