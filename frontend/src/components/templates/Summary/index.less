@@ -3,6 +3,37 @@
 // human and AI assistant, with no manual edits.
 //
 // Assisted-by: Cursor + claude-4-sonnet
+
+// Readiness indicator styles
+.readiness-indicator {
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  display: inline-block;
+
+  &.ready {
+    background-color: #28a745;
+    color: white;
+  }
+
+  &.warning {
+    background-color: #ffc107;
+    color: black;
+  }
+
+  &.not-ready {
+    background-color: #dc3545;
+    color: white;
+  }
+
+  &.unknown {
+    background-color: #6c757d;
+    color: white;
+  }
+}
+
 .summary-table {
   .pf-c-table.pf-c-table {
     .pf-c-table__expandable-row-content {

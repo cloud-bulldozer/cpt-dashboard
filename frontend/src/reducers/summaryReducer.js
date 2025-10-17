@@ -10,7 +10,7 @@ import * as TYPES from "@/actions/types";
 const initialState = {
   products: [],
   versions: {}, // { productName: { simpleVersion: [detailedVersions...] } }
-  benchmarks: {}, // { "product-version": { benchmarkName: { config: { iteration: count } } } }
+  benchmarks: {}, // { "product-version": { benchmarkName: { configurations: {...}, readiness: "..." } } }
   summaryData: {}, // { "product-version-benchmark-config-iteration": data }
   isLoading: false,
   startDate: null,
@@ -39,13 +39,11 @@ const summaryReducer = (state = initialState, action) => {
       };
     case TYPES.SET_SUMMARY_BENCHMARKS:
       const benchmarkKey = `${action.payload.product}-${action.payload.version}`;
-      const versionBenchmarks =
-        action.payload.benchmarks[action.payload.version] || {};
       return {
         ...state,
         benchmarks: {
           ...state.benchmarks,
-          [benchmarkKey]: versionBenchmarks,
+          [benchmarkKey]: action.payload.benchmarks,
         },
       };
     case TYPES.SET_SUMMARY_DATA:

@@ -157,8 +157,6 @@ class OcpSummary(SummarySearch):
         if self.date_filter:
             filters.append(self.date_filter)
 
-        print(f"filters: {filters}")
-
         query = {
             "size": 0,
             "query": {"bool": {"filter": filters}},
@@ -404,6 +402,50 @@ class OcpSummary(SummarySearch):
         }
         return configs
 
+    async def metric_evaluation(self, metric: dict[str, Any]) -> str:
+        """Evaluate a metric sample for the primary "readiness" KPI.
+
+        This adds a "readiness" indicator to the metric sample, based on
+        defined thresholds.
+
+        This is a dummy implementation based on trivial and arbitrary rules.
+        The benchmark is "not ready" if:
+
+        * If the final value is below the average value, the metric is "not
+          ready".
+
+        The metric can also be "warning" state if:
+
+        * If the standard deviation exceeds half the average value, the metric
+          is "warning".
+
+        Args:
+            metric: A dictionary containing the metric sample.
+
+        Returns:
+            "ready", "warning", or "not ready"
+        """
+        if metric["values"][-1]["value"] < metric["stats"]["avg"]:
+            return "not ready"
+        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
+            return "warning"
+        return "ready"
+
+    def is_ready(self, readiness: set[str]) -> str:
+        """Determine if the set of readiness indicators is "ready".
+
+        Args:
+            readiness: A set of readiness indicators.
+
+        Returns:
+            "ready", "warning", or "not ready"
+        """
+        return (
+            "not ready"
+            if "not ready" in readiness
+            else "warning" if "warning" in readiness else "ready"
+        )
+
     async def metric_aggregation(
         self,
         versions: Optional[str] = None,
@@ -427,13 +469,20 @@ class OcpSummary(SummarySearch):
 
         iterations = await self.get_iterations(versions, benchmarks)
         breakdown = iterations["benchmarks"]
-        metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
+        version_samples = defaultdict()
+        product_readiness = set()
         for ver, benchmarks in breakdown.items():
+            version_readiness = set()
+            benchmark_samples = defaultdict()
             for benchmark, configs in benchmarks.items():
+                benchmark_readiness = set()
+                config_samples = defaultdict()
                 for config, job_iterations in configs.items():
                     idx = self.get_index(benchmark)
                     if not idx or idx != "ripsaw-kube-burner":
                         continue
+                    config_readiness = set()
+                    iteration_samples = defaultdict()
                     for iter, uuids in job_iterations.items():
                         # print(f"KPI {i_count}: len(uuids) UUIDS")
                         filters = [{"terms": {"uuid.keyword": uuids}}]
@@ -478,7 +527,7 @@ class OcpSummary(SummarySearch):
                             x.append(v["timestamp"])
                             y.append(int(v["P99"]))
                         stats = response["aggregations"]["stats"]
-                        metrics[ver][benchmark][str(config)][iter] = {
+                        sample = {
                             "values": values,
                             "graph": {
                                 "x": x,
@@ -495,5 +544,28 @@ class OcpSummary(SummarySearch):
                                 "std_dev": stats["std_deviation"],
                             },
                         }
+                        readiness = await self.metric_evaluation(sample)
+                        config_readiness.add(readiness)
+                        sample["readiness"] = readiness
+                        iteration_samples[iter] = sample
+                    config_samples[config] = {
+                        "iterations": iteration_samples,
+                        "readiness": self.is_ready(config_readiness),
+                    }
+                benchmark_readiness.update(config_readiness)
+                benchmark_samples[benchmark] = {
+                    "configurations": config_samples,
+                    "readiness": self.is_ready(benchmark_readiness),
+                }
+            version_readiness.update(benchmark_readiness)
+            version_samples[ver] = {
+                "benchmarks": benchmark_samples,
+                "readiness": self.is_ready(version_readiness),
+            }
+        product_readiness.update(version_readiness)
         print(f"benchmark KPI report: {time.time()-start:.3f} seconds")
-        return {"metrics": metrics, "config_key": iterations["config_key"]}
+        return {
+            "config_key": iterations["config_key"],
+            "versions": version_samples,
+            "readiness": self.is_ready(product_readiness),
+        }

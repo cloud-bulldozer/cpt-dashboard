@@ -27,6 +27,46 @@ import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import PlotGraph from "@/components/atoms/PlotGraph";
 
+// Readiness indicator component
+const ReadinessIndicator = ({ status }) => {
+  const getIndicatorStyle = (status) => {
+    switch (status) {
+      case "ready":
+        return { backgroundColor: "#28a745", color: "white" };
+      case "warning":
+        return { backgroundColor: "#ffc107", color: "black" };
+      case "not ready":
+        return { backgroundColor: "#dc3545", color: "white" };
+      default:
+        return { backgroundColor: "#6c757d", color: "white" };
+    }
+  };
+
+  if (!status) return null;
+
+  return (
+    <span
+      className="readiness-indicator"
+      style={{
+        ...getIndicatorStyle(status),
+        padding: "0.25rem 0.5rem",
+        borderRadius: "4px",
+        fontSize: "0.75rem",
+        fontWeight: "600",
+        textTransform: "uppercase",
+        display: "inline-block",
+        marginLeft: "0.5rem",
+      }}
+    >
+      {status}
+    </span>
+  );
+};
+
+ReadinessIndicator.propTypes = {
+  status: PropTypes.string,
+};
+
 const SummaryBenchmarkExpandedRow = ({
   product,
   version,
@@ -47,10 +87,14 @@ const SummaryBenchmarkExpandedRow = ({
 
   // Get available iterations for the selected configuration
   const getAvailableIterations = () => {
-    if (!selectedConfig || !benchmarkData.configData?.[selectedConfig]) {
+    if (!selectedConfig || !benchmarkData.configurationsObj?.[selectedConfig]) {
       return [];
     }
-    return Object.keys(benchmarkData.configData[selectedConfig]);
+    // The benchmarks API returns iteration counts directly as keys in the config object
+    // The iterations are NOT nested under an "iterations" key in this API
+    const configObj = benchmarkData.configurationsObj[selectedConfig];
+    // Return iteration keys directly from the config object
+    return Object.keys(configObj);
   };
 
   const availableIterations = getAvailableIterations();
@@ -111,9 +155,9 @@ const SummaryBenchmarkExpandedRow = ({
     setSelectedConfig(value);
     setIsConfigSelectOpen(false);
     // Reset iteration selection when config changes
-    const newIterations = benchmarkData.configData?.[value]
-      ? Object.keys(benchmarkData.configData[value])
-      : [];
+    const configObj = benchmarkData.configurationsObj?.[value];
+    // Iterations are directly in the config object, not nested under "iterations"
+    const newIterations = configObj ? Object.keys(configObj) : [];
     if (newIterations.length > 0) {
       const sortedIterations = newIterations.sort(
         (a, b) => Number(a) - Number(b),
@@ -179,45 +223,69 @@ const SummaryBenchmarkExpandedRow = ({
       `Selected config: ${selectedConfig}, iteration: ${selectedIteration}`,
     );
 
-    // Navigate the API response structure: product -> metrics -> version -> benchmark -> config -> iteration
+    // Navigate the new API response structure: product -> versions -> version -> benchmarks -> benchmark -> configurations -> config -> iterations -> iteration
     const productData = currentSummaryData[product];
     if (!productData) {
       console.log(`No data found for product: ${product}`);
       return null;
     }
 
-    const metricsData = productData.metrics;
-    if (!metricsData) {
-      console.log(`No metrics data found in product data`);
+    const versionsData = productData.versions;
+    if (!versionsData) {
+      console.log(`No versions data found in product data`);
       return null;
     }
 
-    const versionData = metricsData[version];
+    const versionData = versionsData[version];
     if (!versionData) {
       console.log(`No data found for version: ${version}`);
       return null;
     }
 
-    const benchmarkData = versionData[benchmark];
+    const benchmarksData = versionData.benchmarks;
+    if (!benchmarksData) {
+      console.log(`No benchmarks data found for version: ${version}`);
+      return null;
+    }
+
+    const benchmarkData = benchmarksData[benchmark];
     if (!benchmarkData) {
       console.log(`No data found for benchmark: ${benchmark}`);
       return null;
     }
 
-    const configData = benchmarkData[selectedConfig];
+    const configurationsData = benchmarkData.configurations;
+    if (!configurationsData) {
+      console.log(`No configurations data found for benchmark: ${benchmark}`);
+      return null;
+    }
+
+    const configData = configurationsData[selectedConfig];
     if (!configData) {
       console.log(`No data found for config: ${selectedConfig}`);
       return null;
     }
 
-    const iterationData = configData[selectedIteration];
+    const iterationsData = configData.iterations;
+    if (!iterationsData) {
+      console.log(`No iterations data found for config: ${selectedConfig}`);
+      return null;
+    }
+
+    const iterationData = iterationsData[selectedIteration];
     if (!iterationData) {
       console.log(`No data found for iteration: ${selectedIteration}`);
       return null;
     }
 
     console.log(`Found iteration data:`, iterationData);
-    return iterationData;
+
+    // Return both the iteration data and readiness information
+    return {
+      ...iterationData,
+      configReadiness: configData.readiness,
+      iterationReadiness: iterationData.readiness,
+    };
   };
 
   const selectedData = getSelectedData();
@@ -290,10 +358,9 @@ const SummaryBenchmarkExpandedRow = ({
                         {availableIterations
                           .sort((a, b) => Number(a) - Number(b))
                           .map((iteration) => {
-                            const count =
-                              benchmarkData.configData?.[selectedConfig]?.[
-                                iteration
-                              ] || 0;
+                            // Get run count from the benchmarks API structure (just a count value)
+                            const configObj = benchmarkData.configurationsObj?.[selectedConfig];
+                            const count = configObj?.[iteration] || 0;
                             return (
                               <SelectOption key={iteration} value={iteration}>
                                 {iteration} iterations ({count} runs)
@@ -342,13 +409,21 @@ const SummaryBenchmarkExpandedRow = ({
                   }}
                 >
                   <strong>Selected Configuration:</strong> {selectedConfig}
+                  {selectedData?.configReadiness && (
+                    <ReadinessIndicator status={selectedData.configReadiness} />
+                  )}
                   <br />
                   <strong>Selected Iterations:</strong> {selectedIteration}{" "}
                   iterations (
-                  {benchmarkData.configData?.[selectedConfig]?.[
-                    selectedIteration
-                  ] || 0}{" "}
+                  {(() => {
+                    const configObj = benchmarkData.configurationsObj?.[selectedConfig];
+                    // The benchmarks API returns just a count value, not a full iteration object
+                    return configObj?.[selectedIteration] || 0;
+                  })()}{" "}
                   runs available)
+                  {selectedData?.iterationReadiness && (
+                    <ReadinessIndicator status={selectedData.iterationReadiness} />
+                  )}
                 </div>
               )}
 
@@ -445,8 +520,8 @@ const SummaryBenchmarkExpandedRow = ({
                         Performance Chart
                       </Title>
                       {selectedData.graph &&
-                      selectedData.graph.x &&
-                      selectedData.graph.x.length > 0 ? (
+                        selectedData.graph.x &&
+                        selectedData.graph.x.length > 0 ? (
                         <PlotGraph data={[selectedData.graph]} />
                       ) : (
                         <div className="no-data-placeholder">

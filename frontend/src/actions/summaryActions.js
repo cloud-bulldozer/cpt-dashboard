@@ -28,8 +28,8 @@ export const fetchSummaryProducts = () => async (dispatch) => {
   } catch (error) {
     console.error(
       `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data,
-      )}`,
+        error?.response?.data
+      )}`
     );
   }
   dispatch({ type: TYPES.SET_SUMMARY_COMPLETED });
@@ -56,8 +56,8 @@ export const fetchSummaryVersions =
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data,
-        )}`,
+          error?.response?.data
+        )}`
       );
     }
   };
@@ -76,20 +76,27 @@ export const fetchSummaryBenchmarks =
       if (response.status === 200) {
         console.log(
           `Benchmarks API response for ${product}-${version}:`,
-          response.data,
+          response.data
         );
-        const benchmarksData = response.data[product]?.benchmarks || {};
-        console.log(`Extracted benchmarks data:`, benchmarksData);
+        // Extract benchmarks for the specific version from the nested structure
+        const productData = response.data[product] || {};
+        const benchmarksData = productData.benchmarks || {};
+        // Get the version-specific benchmarks
+        const versionBenchmarks = benchmarksData[version] || {};
+        console.log(
+          `Extracted benchmarks data for ${version}:`,
+          versionBenchmarks
+        );
         dispatch({
           type: TYPES.SET_SUMMARY_BENCHMARKS,
-          payload: { product, version, benchmarks: benchmarksData },
+          payload: { product, version, benchmarks: versionBenchmarks },
         });
       }
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data,
-        )}`,
+          error?.response?.data
+        )}`
       );
     }
   };
@@ -112,7 +119,7 @@ export const fetchSummaryData =
       if (response.status === 200) {
         console.log(
           `Summary data API response for ${product}-${version}-${benchmark}-${config}-${iteration}:`,
-          response.data,
+          response.data
         );
         dispatch({
           type: TYPES.SET_SUMMARY_DATA,
@@ -129,8 +136,8 @@ export const fetchSummaryData =
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data,
-        )}`,
+          error?.response?.data
+        )}`
       );
     }
   };

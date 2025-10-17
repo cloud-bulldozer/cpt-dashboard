@@ -12,6 +12,45 @@ import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import SummaryBenchmarkExpandedRow from "./SummaryBenchmarkExpandedRow";
 
+// Readiness indicator component
+const ReadinessIndicator = ({ status }) => {
+  const getIndicatorStyle = (status) => {
+    switch (status) {
+      case "ready":
+        return { backgroundColor: "#28a745", color: "white" };
+      case "warning":
+        return { backgroundColor: "#ffc107", color: "black" };
+      case "not ready":
+        return { backgroundColor: "#dc3545", color: "white" };
+      default:
+        return { backgroundColor: "#6c757d", color: "white" };
+    }
+  };
+
+  if (!status) return null;
+
+  return (
+    <span
+      className="readiness-indicator"
+      style={{
+        ...getIndicatorStyle(status),
+        padding: "0.25rem 0.5rem",
+        borderRadius: "4px",
+        fontSize: "0.75rem",
+        fontWeight: "600",
+        textTransform: "uppercase",
+        display: "inline-block",
+      }}
+    >
+      {status}
+    </span>
+  );
+};
+
+ReadinessIndicator.propTypes = {
+  status: PropTypes.string,
+};
+
 const SummaryTable = () => {
   const dispatch = useDispatch();
   const summaryState = useSelector((state) => state.summary || {});
@@ -177,15 +216,6 @@ const SummaryTable = () => {
                   style={{ paddingLeft: "2rem", fontWeight: 500 }}
                 >
                   {version}
-                  <span
-                    style={{
-                      color: "#666",
-                      fontSize: "0.875rem",
-                      marginLeft: "0.5rem",
-                    }}
-                  >
-                    ({versions[product][version]?.length || 0} builds)
-                  </span>
                 </Td>
                 <Td dataLabel="Benchmarks">
                   {benchmarks[versionKey]
@@ -217,11 +247,28 @@ const SummaryTable = () => {
             if (isVersionExpanded(product, version) && benchmarks[versionKey]) {
               Object.entries(benchmarks[versionKey])
                 .sort(([a], [b]) => a.localeCompare(b))
-                .forEach(([benchmarkName, configData]) => {
+                .forEach(([benchmarkName, benchmarkObj]) => {
                   const benchmarkKey = `${product}-${version}-${benchmarkName}`;
 
-                  // Extract configurations from the nested structure
-                  const configurations = Object.keys(configData);
+                  // Extract configurations - the benchmarkObj contains config keys directly
+                  // but may also have readiness and configurations fields
+                  let configurationsObj = {};
+                  let benchmarkReadiness = null;
+
+                  // Check if this has the new structure with separate configurations key
+                  if (benchmarkObj.configurations) {
+                    configurationsObj = benchmarkObj.configurations;
+                    benchmarkReadiness = benchmarkObj.readiness;
+                  } else {
+                    // Old structure: configurations are directly in benchmarkObj
+                    // Filter out any non-configuration fields (like readiness)
+                    configurationsObj = Object.fromEntries(
+                      Object.entries(benchmarkObj).filter(([key]) => key !== 'readiness')
+                    );
+                    benchmarkReadiness = benchmarkObj.readiness;
+                  }
+
+                  const configurations = Object.keys(configurationsObj);
 
                   rows.push(
                     <Tr
@@ -261,7 +308,9 @@ const SummaryTable = () => {
                       <Td dataLabel="Configurations">
                         {configurations.length} configs
                       </Td>
-                      <Td dataLabel="Status">—</Td>
+                      <Td dataLabel="Status">
+                        <ReadinessIndicator status={benchmarkReadiness} />
+                      </Td>
                     </Tr>,
                   );
 
@@ -275,7 +324,7 @@ const SummaryTable = () => {
                         benchmark={benchmarkName}
                         benchmarkData={{
                           configs: configurations,
-                          configData: configData,
+                          configurationsObj: configurationsObj,
                         }}
                       />,
                     );
