@@ -27,7 +27,9 @@ function SummaryTab() {
 
   // Dynamically import actions to avoid potential circular dependencies
   const fetchSummaryProducts = useCallback(async () => {
-    const { fetchSummaryProducts: fetchProducts } = await import("@/actions/summaryActions");
+    const { fetchSummaryProducts: fetchProducts } = await import(
+      "@/actions/summaryActions"
+    );
     dispatch(fetchProducts());
   }, [dispatch]);
 
@@ -53,9 +55,9 @@ function SummaryTab() {
 
   // Parse URL parameters on component mount
   useEffect(() => {
-    const urlStartDate = searchParams.get('start_date');
-    const urlEndDate = searchParams.get('end_date');
-    
+    const urlStartDate = searchParams.get("start_date");
+    const urlEndDate = searchParams.get("end_date");
+
     // If URL has date parameters but Redux doesn't, set them in Redux
     if ((urlStartDate || urlEndDate) && (!startDate || !endDate)) {
       setSummaryDateFilter(urlStartDate, urlEndDate);
@@ -70,28 +72,23 @@ function SummaryTab() {
     if (fromSideMenu) {
       setFromSideMenuFlag(false);
     }
-  }, [
-    fromSideMenu,
-    products,
-    fetchSummaryProducts,
-    setFromSideMenuFlag,
-  ]);
+  }, [fromSideMenu, products, fetchSummaryProducts, setFromSideMenuFlag]);
 
   const handleDateFilterApply = (newStartDate, newEndDate) => {
     // Update Redux state
     setSummaryDateFilter(newStartDate, newEndDate);
-    
+
     // Update URL parameters
     const newSearchParams = new URLSearchParams(searchParams);
     if (newStartDate) {
-      newSearchParams.set('start_date', newStartDate);
+      newSearchParams.set("start_date", newStartDate);
     } else {
-      newSearchParams.delete('start_date');
+      newSearchParams.delete("start_date");
     }
     if (newEndDate) {
-      newSearchParams.set('end_date', newEndDate);
+      newSearchParams.set("end_date", newEndDate);
     } else {
-      newSearchParams.delete('end_date');
+      newSearchParams.delete("end_date");
     }
     setSearchParams(newSearchParams);
   };

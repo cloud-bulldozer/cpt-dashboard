@@ -1,5 +1,4 @@
 from abc import abstractmethod
-from dataclasses import dataclass, field
 from typing import Any, Optional
 
 """Information about product release KPIs.
@@ -63,15 +62,7 @@ class Summary:
     @abstractmethod
     async def close(self):
         """Close the summary service."""
-        raise
-
-    def get_index(self, benchmark: str) -> str | None:
-        b = BENCHMARK_INDEX.get(benchmark)
-        return b.index if b else None
-
-    def get_filter(self, benchmark: str) -> dict[str, str] | None:
-        b = BENCHMARK_INDEX.get(benchmark)
-        return b.filter if b else None
+        raise NotImplementedError("Not implemented")
 
     @abstractmethod
     async def get_versions(self) -> dict[str, list[str]]:
@@ -86,10 +77,12 @@ class Summary:
 
     @abstractmethod
     async def get_benchmarks(self, version: str) -> dict[str, Any]:
-        """Return a list of benchmarks run for a given OCP version.
+        """Return a list of benchmarks run for a given product version.
+
+        This must be implemented by the subclass.
 
         Args:
-            version: The OCP version to get benchmarks for.
+            version: The product version to get benchmarks for.
 
         Returns:
             A list of benchmarks and the configurations for which each is run.
@@ -101,25 +94,22 @@ class Summary:
         self,
         versions: Optional[str] = None,
     ) -> dict[str, Any]:
-        """Break down our benchmark configuration data by job iterations.
+        """Break down our benchmark configuration data.
 
-        We can only compare benchmark metrics across the same configuration and
-        job iteration count. While the configuration data is in the job
-        documents, the job iteration count is recorded within a special
-        "jobConfiguration" metric.
+        This must be implemented by the subclass.
 
-        This function identifies the set of job iterations for each benchmark
-        configuration.
-
-        TODO: this should allow targeting a specific OCP version, benchmark,
-        and configuration. (Although I've yet to figure out how to compactly
-        represent the configuration tuple in a query parameter.)
+        This function identifies the set of jobs that can be compared based on
+        identical configuration and iteration count.
         """
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    async def get_configs(self, versions: Optional[str] = None, benchmarks: Optional[str] = None) -> dict[str, Any]:
-        """Return report the number of job iterations for each benchmark configuration.
+    async def get_configs(
+        self, versions: Optional[str] = None, benchmarks: Optional[str] = None
+    ) -> dict[str, Any]:
+        """Return report the configurations for which each benchmar was run.
+
+        This must be implemented by the subclass.
 
         Args:
             versions: The OCP versions to get configurations for.
@@ -128,11 +118,25 @@ class Summary:
         raise NotImplementedError("Not implemented")
 
     @abstractmethod
-    async def metric_aggregation(self) -> dict[str, Any]:
+    async def metric_aggregation(
+        self,
+        versions: Optional[str] = None,
+        benchmarks: Optional[str] = None,
+        configs: Optional[str] = None,
+    ) -> dict[str, Any]:
         """Report aggregated metrics for each benchmark configuration.
 
-        We can only compare benchmark metrics across the same configuration and job
-        iteration count. While the configuration data is in the job documents, the
-        job iteration count is recorded within a special "jobConfiguration" metric.
+        For each selected version, benchmark, configuration, report on the
+        primary "readiness" KPI. The results include a list of individual
+        timestamped values, a statistical summary, and a Plotly-formatted
+        graph of the individual runs.
+
+        This must be implemented by a subclass.
+
+        Args:
+            versions: Select only the named versions (comma-separated list)
+            benchmarks: Select only the named benchmarks (comma-separated list)
+            configs: Select only the named configurations (comma-separated list)
+
         """
         raise NotImplementedError("Not implemented")

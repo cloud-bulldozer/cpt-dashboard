@@ -28,105 +28,119 @@ export const fetchSummaryProducts = () => async (dispatch) => {
   } catch (error) {
     console.error(
       `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
+        error?.response?.data,
+      )}`,
     );
   }
   dispatch({ type: TYPES.SET_SUMMARY_COMPLETED });
 };
 
-export const fetchSummaryVersions = (product, startDate, endDate) => async (dispatch) => {
-  try {
-    // Don't set global loading for individual operations
-    const params = { products: product };
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    
-    const response = await API.get(API_ROUTES.SUMMARY_VERSIONS_API_V1, { params });
+export const fetchSummaryVersions =
+  (product, startDate, endDate) => async (dispatch) => {
+    try {
+      // Don't set global loading for individual operations
+      const params = { products: product };
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
 
-    if (response.status === 200) {
-      dispatch({
-        type: TYPES.SET_SUMMARY_VERSIONS,
-        payload: { product, versions: response.data[product] || {} },
+      const response = await API.get(API_ROUTES.SUMMARY_VERSIONS_API_V1, {
+        params,
       });
+
+      if (response.status === 200) {
+        dispatch({
+          type: TYPES.SET_SUMMARY_VERSIONS,
+          payload: { product, versions: response.data[product] || {} },
+        });
+      }
+    } catch (error) {
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data,
+        )}`,
+      );
     }
-  } catch (error) {
-    console.error(
-      `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
-    );
-  }
-};
+  };
 
-export const fetchSummaryBenchmarks = (product, version, startDate, endDate) => async (dispatch) => {
-  try {
-    // Don't set global loading for individual operations
-    const params = { products: product, versions: version };
-    if (startDate) params.start_date = startDate;
-    if (endDate) params.end_date = endDate;
-    const response = await API.get(API_ROUTES.SUMMARY_BENCHMARKS_API_V1, { params });
-
-    if (response.status === 200) {
-      console.log(`Benchmarks API response for ${product}-${version}:`, response.data);
-      const benchmarksData = response.data[product]?.benchmarks || {};
-      console.log(`Extracted benchmarks data:`, benchmarksData);
-      dispatch({
-        type: TYPES.SET_SUMMARY_BENCHMARKS,
-        payload: { product, version, benchmarks: benchmarksData },
+export const fetchSummaryBenchmarks =
+  (product, version, startDate, endDate) => async (dispatch) => {
+    try {
+      // Don't set global loading for individual operations
+      const params = { products: product, versions: version };
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
+      const response = await API.get(API_ROUTES.SUMMARY_BENCHMARKS_API_V1, {
+        params,
       });
+
+      if (response.status === 200) {
+        console.log(
+          `Benchmarks API response for ${product}-${version}:`,
+          response.data,
+        );
+        const benchmarksData = response.data[product]?.benchmarks || {};
+        console.log(`Extracted benchmarks data:`, benchmarksData);
+        dispatch({
+          type: TYPES.SET_SUMMARY_BENCHMARKS,
+          payload: { product, version, benchmarks: benchmarksData },
+        });
+      }
+    } catch (error) {
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data,
+        )}`,
+      );
     }
-  } catch (error) {
-    console.error(
-      `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
-    );
-  }
-};
+  };
 
-export const fetchSummaryData = (product, version, benchmark, config, iteration, beginDate, endDate) => async (dispatch) => {
-  try {
-    // Don't set global loading for individual operations
-    const params = { 
-      products: product, 
-      versions: version, 
-      benchmarks: benchmark 
-    };
-    if (beginDate) params.begin_date = beginDate;
-    if (endDate) params.end_date = endDate;
+export const fetchSummaryData =
+  (product, version, benchmark, config, iteration, startDate, endDate) =>
+  async (dispatch) => {
+    try {
+      // Don't set global loading for individual operations
+      const params = {
+        products: product,
+        versions: version,
+        benchmarks: benchmark,
+      };
+      if (startDate) params.start_date = startDate;
+      if (endDate) params.end_date = endDate;
 
-    const response = await API.get(API_ROUTES.SUMMARY_API_V1, { params });
+      const response = await API.get(API_ROUTES.SUMMARY_API_V1, { params });
 
-    if (response.status === 200) {
-      console.log(`Summary data API response for ${product}-${version}-${benchmark}-${config}-${iteration}:`, response.data);
-      dispatch({
-        type: TYPES.SET_SUMMARY_DATA,
-        payload: { 
-          product, 
-          version, 
-          benchmark,
-          config,
-          iteration,
-          data: response.data 
-        },
-      });
+      if (response.status === 200) {
+        console.log(
+          `Summary data API response for ${product}-${version}-${benchmark}-${config}-${iteration}:`,
+          response.data,
+        );
+        dispatch({
+          type: TYPES.SET_SUMMARY_DATA,
+          payload: {
+            product,
+            version,
+            benchmark,
+            config,
+            iteration,
+            data: response.data,
+          },
+        });
+      }
+    } catch (error) {
+      console.error(
+        `ERROR (${error?.response?.status}): ${JSON.stringify(
+          error?.response?.data,
+        )}`,
+      );
     }
-  } catch (error) {
-    console.error(
-      `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
-    );
-  }
-};
+  };
 
 export const setSummaryDateFilter = (startDate, endDate) => (dispatch) => {
   // Clear cached data when date filter changes
   dispatch({
     type: TYPES.CLEAR_SUMMARY_CACHED_DATA,
   });
-  
+
   dispatch({
     type: TYPES.SET_SUMMARY_DATE_FILTER,
     payload: {

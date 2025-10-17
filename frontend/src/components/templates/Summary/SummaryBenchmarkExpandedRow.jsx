@@ -27,7 +27,12 @@ import { useDispatch, useSelector } from "react-redux";
 import PropTypes from "prop-types";
 import PlotGraph from "@/components/atoms/PlotGraph";
 
-const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkData }) => {
+const SummaryBenchmarkExpandedRow = ({
+  product,
+  version,
+  benchmark,
+  benchmarkData,
+}) => {
   const dispatch = useDispatch();
   const summaryState = useSelector((state) => state.summary || {});
   const { summaryData, startDate, endDate } = summaryState;
@@ -52,7 +57,9 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
 
   // Set default iteration if not selected
   if (!selectedIteration && availableIterations.length > 0) {
-    const sortedIterations = availableIterations.sort((a, b) => Number(a) - Number(b));
+    const sortedIterations = availableIterations.sort(
+      (a, b) => Number(a) - Number(b),
+    );
     setSelectedIteration(sortedIterations[0]);
   }
 
@@ -61,15 +68,38 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
   const currentSummaryData = summaryData[dataKey];
 
   // Dynamically import actions
-  const fetchSummaryData = useCallback(async (product, version, benchmark, config, iteration, beginDate, endDate) => {
-    setIsLoadingData(true);
-    try {
-      const { fetchSummaryData: fetchData } = await import("@/actions/summaryActions");
-      await dispatch(fetchData(product, version, benchmark, config, iteration, beginDate, endDate));
-    } finally {
-      setIsLoadingData(false);
-    }
-  }, [dispatch]);
+  const fetchSummaryData = useCallback(
+    async (
+      product,
+      version,
+      benchmark,
+      config,
+      iteration,
+      startDate,
+      endDate,
+    ) => {
+      setIsLoadingData(true);
+      try {
+        const { fetchSummaryData: fetchData } = await import(
+          "@/actions/summaryActions"
+        );
+        await dispatch(
+          fetchData(
+            product,
+            version,
+            benchmark,
+            config,
+            iteration,
+            startDate,
+            endDate,
+          ),
+        );
+      } finally {
+        setIsLoadingData(false);
+      }
+    },
+    [dispatch],
+  );
 
   const formatStatValue = (value) => {
     if (value === null || value === undefined) return "N/A";
@@ -81,9 +111,13 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
     setSelectedConfig(value);
     setIsConfigSelectOpen(false);
     // Reset iteration selection when config changes
-    const newIterations = benchmarkData.configData?.[value] ? Object.keys(benchmarkData.configData[value]) : [];
+    const newIterations = benchmarkData.configData?.[value]
+      ? Object.keys(benchmarkData.configData[value])
+      : [];
     if (newIterations.length > 0) {
-      const sortedIterations = newIterations.sort((a, b) => Number(a) - Number(b));
+      const sortedIterations = newIterations.sort(
+        (a, b) => Number(a) - Number(b),
+      );
       setSelectedIteration(sortedIterations[0]);
     } else {
       setSelectedIteration("");
@@ -98,7 +132,15 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
   // Fetch data when component mounts or selections change
   const handleFetchData = () => {
     if (selectedConfig && selectedIteration) {
-      fetchSummaryData(product, version, benchmark, selectedConfig, selectedIteration, startDate, endDate);
+      fetchSummaryData(
+        product,
+        version,
+        benchmark,
+        selectedConfig,
+        selectedIteration,
+        startDate,
+        endDate,
+      );
     }
   };
 
@@ -133,8 +175,10 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
     }
 
     console.log(`Looking for data in currentSummaryData:`, currentSummaryData);
-    console.log(`Selected config: ${selectedConfig}, iteration: ${selectedIteration}`);
-    
+    console.log(
+      `Selected config: ${selectedConfig}, iteration: ${selectedIteration}`,
+    );
+
     // Navigate the API response structure: product -> metrics -> version -> benchmark -> config -> iteration
     const productData = currentSummaryData[product];
     if (!productData) {
@@ -243,14 +287,19 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
                       toggle={iterationToggle}
                     >
                       <SelectList>
-                        {availableIterations.sort((a, b) => Number(a) - Number(b)).map((iteration) => {
-                          const count = benchmarkData.configData?.[selectedConfig]?.[iteration] || 0;
-                          return (
-                            <SelectOption key={iteration} value={iteration}>
-                              {iteration} iterations ({count} runs)
-                            </SelectOption>
-                          );
-                        })}
+                        {availableIterations
+                          .sort((a, b) => Number(a) - Number(b))
+                          .map((iteration) => {
+                            const count =
+                              benchmarkData.configData?.[selectedConfig]?.[
+                                iteration
+                              ] || 0;
+                            return (
+                              <SelectOption key={iteration} value={iteration}>
+                                {iteration} iterations ({count} runs)
+                              </SelectOption>
+                            );
+                          })}
                       </SelectList>
                     </Select>
                   </GridItem>
@@ -267,8 +316,14 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
                   <button
                     className="pf-c-button pf-m-primary"
                     onClick={handleFetchData}
-                    disabled={!selectedConfig || !selectedIteration || isLoadingData}
-                    style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+                    disabled={
+                      !selectedConfig || !selectedIteration || isLoadingData
+                    }
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "0.5rem",
+                    }}
                   >
                     {isLoadingData && <Spinner size="sm" />}
                     {isLoadingData ? "Loading..." : "Load Data"}
@@ -277,10 +332,23 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
               </Grid>
 
               {selectedConfig && selectedIteration && (
-                <div style={{ marginBottom: "1rem", padding: "0.75rem", backgroundColor: "#f8f9fa", borderRadius: "4px", border: "1px solid #e9ecef" }}>
-                  <strong>Selected Configuration:</strong> {selectedConfig}<br/>
-                  <strong>Selected Iterations:</strong> {selectedIteration} iterations 
-                  ({benchmarkData.configData?.[selectedConfig]?.[selectedIteration] || 0} runs available)
+                <div
+                  style={{
+                    marginBottom: "1rem",
+                    padding: "0.75rem",
+                    backgroundColor: "#f8f9fa",
+                    borderRadius: "4px",
+                    border: "1px solid #e9ecef",
+                  }}
+                >
+                  <strong>Selected Configuration:</strong> {selectedConfig}
+                  <br />
+                  <strong>Selected Iterations:</strong> {selectedIteration}{" "}
+                  iterations (
+                  {benchmarkData.configData?.[selectedConfig]?.[
+                    selectedIteration
+                  ] || 0}{" "}
+                  runs available)
                 </div>
               )}
 
@@ -316,7 +384,9 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
                           </DescriptionListDescription>
                         </DescriptionListGroup>
                         <DescriptionListGroup>
-                          <DescriptionListTerm>Std Deviation</DescriptionListTerm>
+                          <DescriptionListTerm>
+                            Std Deviation
+                          </DescriptionListTerm>
                           <DescriptionListDescription>
                             {formatStatValue(selectedData.stats?.std_dev)}
                           </DescriptionListDescription>
@@ -324,41 +394,43 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
                       </DescriptionList>
 
                       {/* Values List */}
-                      {selectedData.values && selectedData.values.length > 0 && (
-                        <>
-                          <Title
-                            headingLevel="h6"
-                            size="sm"
-                            style={{
-                              marginTop: "1rem",
-                              marginBottom: "0.5rem",
-                            }}
-                          >
-                            Individual Values ({selectedData.values.length} runs)
-                          </Title>
-                          <div className="values-list">
-                            {selectedData.values.map((valueData, index) => (
-                              <div
-                                key={`${valueData.uuid || 'no-uuid'}-${index}`}
-                                className="value-item"
-                              >
-                                <span className="value">
-                                  {valueData.value?.toLocaleString()}
-                                </span>
-                                {valueData.timestamp && (
-                                  <span className="timestamp">
-                                    (
-                                    {new Date(
-                                      valueData.timestamp,
-                                    ).toLocaleString()}
-                                    )
+                      {selectedData.values &&
+                        selectedData.values.length > 0 && (
+                          <>
+                            <Title
+                              headingLevel="h6"
+                              size="sm"
+                              style={{
+                                marginTop: "1rem",
+                                marginBottom: "0.5rem",
+                              }}
+                            >
+                              Individual Values ({selectedData.values.length}{" "}
+                              runs)
+                            </Title>
+                            <div className="values-list">
+                              {selectedData.values.map((valueData, index) => (
+                                <div
+                                  key={`${valueData.uuid || "no-uuid"}-${index}`}
+                                  className="value-item"
+                                >
+                                  <span className="value">
+                                    {valueData.value?.toLocaleString()}
                                   </span>
-                                )}
-                              </div>
-                            ))}
-                          </div>
-                        </>
-                      )}
+                                  {valueData.timestamp && (
+                                    <span className="timestamp">
+                                      (
+                                      {new Date(
+                                        valueData.timestamp,
+                                      ).toLocaleString()}
+                                      )
+                                    </span>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                          </>
+                        )}
                     </div>
                   </GridItem>
 
@@ -386,15 +458,28 @@ const SummaryBenchmarkExpandedRow = ({ product, version, benchmark, benchmarkDat
                 </Grid>
               )}
 
-              {!selectedData && selectedConfig && selectedIteration && !isLoadingData && (
-                <div style={{ textAlign: "center", padding: "2rem" }}>
-                  <p>Click "Load Data" to fetch metrics for the selected configuration.</p>
-                </div>
-              )}
+              {!selectedData &&
+                selectedConfig &&
+                selectedIteration &&
+                !isLoadingData && (
+                  <div style={{ textAlign: "center", padding: "2rem" }}>
+                    <p>
+                      Click "Load Data" to fetch metrics for the selected
+                      configuration.
+                    </p>
+                  </div>
+                )}
 
               {isLoadingData && !selectedData && (
                 <div style={{ textAlign: "center", padding: "2rem" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "0.5rem" }}>
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      gap: "0.5rem",
+                    }}
+                  >
                     <Spinner size="md" />
                     <p>Fetching metrics data...</p>
                   </div>

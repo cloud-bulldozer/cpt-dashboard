@@ -1,26 +1,12 @@
 from collections import defaultdict
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 import time
-from typing import Annotated, Any, Optional
-
-from app.api.v1.endpoints.summary.summary import Summary
-from app.api.v1.endpoints.summary.summary_search import SummarySearch
-from fastapi import APIRouter, Depends
+from typing import Any, Optional
 
 from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
-from app.services.search import ElasticService
-from vyper import v
+from app.api.v1.endpoints.summary.summary_search import SummarySearch
 
-"""Information about OCP release KPIs.
-
-Each product version has a set of benchmarks that have been run for various
-system configurations. This data is recovered from the job index and used to
-access average and historical data for a product version to help assess
-product release readiness.
-
-NOTE: Other factors directly affecting release health include the health of the
-CI system, and any open Jira stories or bugs. Those factors aren't handled by
-this code.
+"""OCP implementation of Summary class
 
 AI assistance: Cursor is extremely helpful in generating suggesting code
 snippets along the way. While most of this code is hand generated as the
@@ -152,29 +138,6 @@ class Fingerprint:
 
 class OcpSummary(SummarySearch):
 
-    def set_date_filter(self, start_date: str | None, end_date: str | None):
-        if start_date or end_date:
-            self.end_date = end_date
-            self.date_filter = None
-            range = {"format": "yyyy-MM-dd"}
-            if start_date:
-                range["gte"] = start_date
-            if end_date:
-                range["lte"] = end_date
-            self.date_filter = {
-                "range": {
-                    "timestamp": range,
-                }
-            }
-            print(f"date_filter: {self.date_filter}")
-        else:
-            self.date_filter = None
-            print("no date_filter")
-
-    async def close(self):
-        print("closing")
-        await self.service.close()
-
     def get_index(self, benchmark: str) -> str | None:
         b = BENCHMARK_INDEX.get(benchmark)
         return b.index if b else None
@@ -218,13 +181,13 @@ class OcpSummary(SummarySearch):
         return {k: sorted(v) for k, v in versions.items()}
 
     async def get_benchmarks(self, version: str) -> dict[str, Any]:
-        """Return a list of benchmarks run for a given OCP version.
+        """Return a list of benchmarks run for a given product version.
 
         Args:
-            version: The OCP version to get benchmarks for.
+            version: The product version to get benchmarks for.
 
         Returns:
-            A list of benchmarks and the configurations for which they were run.
+            A list of benchmarks and the configurations for which each is run.
         """
         filters = [
             {"term": {"jobStatus.keyword": "success"}},
@@ -313,15 +276,14 @@ class OcpSummary(SummarySearch):
     async def get_iteration_variants(
         self, index: str, uuids: list[str]
     ) -> dict[str, list[str]]:
+        filters = [
+            {"terms": {"uuid.keyword": uuids}},
+            {"term": {"metricName.keyword": "jobSummary"}},
+        ]
+        if self.date_filter:
+            filters.append(self.date_filter)
         query = {
-            "query": {
-                "bool": {
-                    "filter": [
-                        {"terms": {"uuid.keyword": uuids}},
-                        # {"term": {"metricName.keyword": "jobSummary"}},
-                    ]
-                }
-            },
+            "query": {"bool": {"filter": filters}},
             "aggs": {
                 "jobIterations": {
                     "terms": {
@@ -355,16 +317,17 @@ class OcpSummary(SummarySearch):
     ) -> dict[str, Any]:
         """Break down our benchmark configuration data by job iterations.
 
-        We can only compare benchmark metrics across the same configuration and job
-        iteration count. While the configuration data is in the job documents, the
-        job iteration count is recorded within a special "jobConfiguration" metric.
+        We can only compare benchmark metrics across the same configuration and
+        job iteration count. While the configuration data is in the job
+        documents, the job iteration count is recorded within a special
+        "jobConfiguration" metric.
 
-        This function identifies the set of job iterations for each benchmark
-        configuration.
+        This function identifies the set of jobs that can be compared based on
+        identical configuration and iteration count.
 
-        TODO: this should allow targeting a specific OCP version, benchmark, and
-        configuration. (Although I've yet to figure out how to compactly represent
-        the configuration tuple in a query parameter.)
+        TODO: this should allow targeting a specific OCP configuration.
+        (Although I've yet to figure out how to compactly represent the
+        configuration tuple in a query parameter.)
         """
         start = time.time()
 
@@ -417,14 +380,16 @@ class OcpSummary(SummarySearch):
     async def get_configs(
         self, versions: Optional[str] = None, benchmarks: Optional[str] = None
     ) -> dict[str, Any]:
-        """Return report the number of job iterations for each benchmark configuration.
+        """Return report the number of job iterations for each benchmark
+        configuration.
 
         Args:
             versions: The OCP versions to get configurations for.
             benchmarks: The benchmarks to get configurations for.
 
         Returns:
-            A report of the number of job iterations for each benchmark configuration.
+            A report of the number of job iterations for each benchmark
+            configuration.
         """
         data = await self.get_iterations(versions, benchmarks)
         configs = {
@@ -447,9 +412,16 @@ class OcpSummary(SummarySearch):
     ) -> dict[str, Any]:
         """Report aggregated metrics for each benchmark configuration.
 
-        We can only compare benchmark metrics across the same configuration and job
-        iteration count. While the configuration data is in the job documents, the
-        job iteration count is recorded within a special "jobConfiguration" metric.
+        For each selected version, benchmark, configuration, report on the
+        primary "readiness" KPI. The results include a list of individual
+        timestamped values, a statistical summary, and a Plotly-formatted
+        graph of the individual runs.
+
+        Args:
+            versions: Select only the named versions (comma-separated list)
+            benchmarks: Select only the named benchmarks (comma-separated list)
+            configs: Select only the named configurations (comma-separated list)
+
         """
         start = time.time()
 

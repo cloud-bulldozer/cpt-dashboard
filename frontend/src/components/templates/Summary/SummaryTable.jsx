@@ -24,34 +24,44 @@ const SummaryTable = () => {
   const [loadingBenchmarks, setLoadingBenchmarks] = useState(new Set());
 
   // Dynamically import actions
-  const fetchSummaryVersions = useCallback(async (product) => {
-    setLoadingVersions(prev => new Set(prev).add(product));
-    try {
-      const { fetchSummaryVersions: fetchVersions } = await import("@/actions/summaryActions");
-      await dispatch(fetchVersions(product, startDate, endDate));
-    } finally {
-      setLoadingVersions(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(product);
-        return newSet;
-      });
-    }
-  }, [dispatch, startDate, endDate]);
+  const fetchSummaryVersions = useCallback(
+    async (product) => {
+      setLoadingVersions((prev) => new Set(prev).add(product));
+      try {
+        const { fetchSummaryVersions: fetchVersions } = await import(
+          "@/actions/summaryActions"
+        );
+        await dispatch(fetchVersions(product, startDate, endDate));
+      } finally {
+        setLoadingVersions((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(product);
+          return newSet;
+        });
+      }
+    },
+    [dispatch, startDate, endDate],
+  );
 
-  const fetchSummaryBenchmarks = useCallback(async (product, version) => {
-    const key = `${product}-${version}`;
-    setLoadingBenchmarks(prev => new Set(prev).add(key));
-    try {
-      const { fetchSummaryBenchmarks: fetchBenchmarks } = await import("@/actions/summaryActions");
-      await dispatch(fetchBenchmarks(product, version, startDate, endDate));
-    } finally {
-      setLoadingBenchmarks(prev => {
-        const newSet = new Set(prev);
-        newSet.delete(key);
-        return newSet;
-      });
-    }
-  }, [dispatch, startDate, endDate]);
+  const fetchSummaryBenchmarks = useCallback(
+    async (product, version) => {
+      const key = `${product}-${version}`;
+      setLoadingBenchmarks((prev) => new Set(prev).add(key));
+      try {
+        const { fetchSummaryBenchmarks: fetchBenchmarks } = await import(
+          "@/actions/summaryActions"
+        );
+        await dispatch(fetchBenchmarks(product, version, startDate, endDate));
+      } finally {
+        setLoadingBenchmarks((prev) => {
+          const newSet = new Set(prev);
+          newSet.delete(key);
+          return newSet;
+        });
+      }
+    },
+    [dispatch, startDate, endDate],
+  );
 
   const toggleProductExpansion = (product) => {
     const newExpanded = new Set(expandedProducts);
@@ -105,7 +115,11 @@ const SummaryTable = () => {
     products.forEach((product) => {
       // Product row
       rows.push(
-        <Tr key={product} data-level="0" style={{ backgroundColor: '#ffffff', fontWeight: 600 }}>
+        <Tr
+          key={product}
+          data-level="0"
+          style={{ backgroundColor: "#ffffff", fontWeight: 600 }}
+        >
           <Td
             expand={{
               rowIndex: product,
@@ -115,11 +129,15 @@ const SummaryTable = () => {
           />
           <Td dataLabel="Product">{product}</Td>
           <Td dataLabel="Versions">
-            {versions[product] ? Object.keys(versions[product]).length : "Not loaded"}
+            {versions[product]
+              ? Object.keys(versions[product]).length
+              : "Not loaded"}
           </Td>
           <Td dataLabel="Status">
             {loadingVersions.has(product) ? (
-              <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
+              <span
+                style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}
+              >
                 <Spinner size="sm" />
                 Loading versions...
               </span>
@@ -134,84 +152,137 @@ const SummaryTable = () => {
 
       // Version rows (when product is expanded)
       if (isProductExpanded(product) && versions[product]) {
-        Object.keys(versions[product]).sort().forEach((version) => {
-          const versionKey = `${product}-${version}`;
-          rows.push(
-            <Tr key={versionKey} data-level="1" style={{ backgroundColor: '#f0f8ff', borderLeft: '3px solid #007bff' }}>
-              <Td
-                expand={{
-                  rowIndex: versionKey,
-                  isExpanded: isVersionExpanded(product, version),
-                  onToggle: () => toggleVersionExpansion(product, version),
+        Object.keys(versions[product])
+          .sort()
+          .forEach((version) => {
+            const versionKey = `${product}-${version}`;
+            rows.push(
+              <Tr
+                key={versionKey}
+                data-level="1"
+                style={{
+                  backgroundColor: "#f0f8ff",
+                  borderLeft: "3px solid #007bff",
                 }}
-              />
-              <Td dataLabel="Version" style={{ paddingLeft: '2rem', fontWeight: 500 }}>
-                {version} 
-                <span style={{ color: "#666", fontSize: "0.875rem", marginLeft: "0.5rem" }}>
-                  ({versions[product][version]?.length || 0} builds)
-                </span>
-              </Td>
-              <Td dataLabel="Benchmarks">
-                {benchmarks[versionKey] 
-                  ? Object.keys(benchmarks[versionKey]).length 
-                  : "Not loaded"}
-              </Td>
-              <Td dataLabel="Status">
-                {loadingBenchmarks.has(versionKey) ? (
-                  <span style={{ display: "flex", alignItems: "center", gap: "0.5rem" }}>
-                    <Spinner size="sm" />
-                    Loading benchmarks...
+              >
+                <Td
+                  expand={{
+                    rowIndex: versionKey,
+                    isExpanded: isVersionExpanded(product, version),
+                    onToggle: () => toggleVersionExpansion(product, version),
+                  }}
+                />
+                <Td
+                  dataLabel="Version"
+                  style={{ paddingLeft: "2rem", fontWeight: 500 }}
+                >
+                  {version}
+                  <span
+                    style={{
+                      color: "#666",
+                      fontSize: "0.875rem",
+                      marginLeft: "0.5rem",
+                    }}
+                  >
+                    ({versions[product][version]?.length || 0} builds)
                   </span>
-                ) : benchmarks[versionKey] ? (
-                  "Ready"
-                ) : (
-                  "Not loaded"
-                )}
-              </Td>
-            </Tr>,
-          );
+                </Td>
+                <Td dataLabel="Benchmarks">
+                  {benchmarks[versionKey]
+                    ? Object.keys(benchmarks[versionKey]).length
+                    : "Not loaded"}
+                </Td>
+                <Td dataLabel="Status">
+                  {loadingBenchmarks.has(versionKey) ? (
+                    <span
+                      style={{
+                        display: "flex",
+                        alignItems: "center",
+                        gap: "0.5rem",
+                      }}
+                    >
+                      <Spinner size="sm" />
+                      Loading benchmarks...
+                    </span>
+                  ) : benchmarks[versionKey] ? (
+                    "Ready"
+                  ) : (
+                    "Not loaded"
+                  )}
+                </Td>
+              </Tr>,
+            );
 
-          // Benchmark rows (when version is expanded)
-          if (isVersionExpanded(product, version) && benchmarks[versionKey]) {
-            Object.entries(benchmarks[versionKey]).sort(([a], [b]) => a.localeCompare(b)).forEach(([benchmarkName, configData]) => {
-              const benchmarkKey = `${product}-${version}-${benchmarkName}`;
-              
-              // Extract configurations from the nested structure
-              const configurations = Object.keys(configData);
+            // Benchmark rows (when version is expanded)
+            if (isVersionExpanded(product, version) && benchmarks[versionKey]) {
+              Object.entries(benchmarks[versionKey])
+                .sort(([a], [b]) => a.localeCompare(b))
+                .forEach(([benchmarkName, configData]) => {
+                  const benchmarkKey = `${product}-${version}-${benchmarkName}`;
 
-              rows.push(
-                <Tr key={benchmarkKey} data-level="2" style={{ backgroundColor: '#f8f9fa', borderLeft: '3px solid #6c757d' }}>
-                  <Td
-                    expand={{
-                      rowIndex: benchmarkKey,
-                      isExpanded: isBenchmarkExpanded(product, version, benchmarkName),
-                      onToggle: () => toggleBenchmarkExpansion(product, version, benchmarkName),
-                    }}
-                  />
-                  <Td dataLabel="Benchmark" style={{ paddingLeft: '4rem', fontWeight: 400, fontStyle: 'italic' }}>{benchmarkName}</Td>
-                  <Td dataLabel="Configurations">{configurations.length} configs</Td>
-                  <Td dataLabel="Status">—</Td>
-                </Tr>,
-              );
+                  // Extract configurations from the nested structure
+                  const configurations = Object.keys(configData);
 
-              // Expanded benchmark row with dropdowns
-              if (isBenchmarkExpanded(product, version, benchmarkName)) {
-                rows.push(
-                  <SummaryBenchmarkExpandedRow
-                    key={`${benchmarkKey}-expanded`}
-                    product={product}
-                    version={version}
-                    benchmark={benchmarkName}
-                    benchmarkData={{
-                      configs: configurations,
-                      configData: configData
-                    }}
-                  />,
-                );
-              }
-            });
-          }
-        });
+                  rows.push(
+                    <Tr
+                      key={benchmarkKey}
+                      data-level="2"
+                      style={{
+                        backgroundColor: "#f8f9fa",
+                        borderLeft: "3px solid #6c757d",
+                      }}
+                    >
+                      <Td
+                        expand={{
+                          rowIndex: benchmarkKey,
+                          isExpanded: isBenchmarkExpanded(
+                            product,
+                            version,
+                            benchmarkName,
+                          ),
+                          onToggle: () =>
+                            toggleBenchmarkExpansion(
+                              product,
+                              version,
+                              benchmarkName,
+                            ),
+                        }}
+                      />
+                      <Td
+                        dataLabel="Benchmark"
+                        style={{
+                          paddingLeft: "4rem",
+                          fontWeight: 400,
+                          fontStyle: "italic",
+                        }}
+                      >
+                        {benchmarkName}
+                      </Td>
+                      <Td dataLabel="Configurations">
+                        {configurations.length} configs
+                      </Td>
+                      <Td dataLabel="Status">—</Td>
+                    </Tr>,
+                  );
+
+                  // Expanded benchmark row with dropdowns
+                  if (isBenchmarkExpanded(product, version, benchmarkName)) {
+                    rows.push(
+                      <SummaryBenchmarkExpandedRow
+                        key={`${benchmarkKey}-expanded`}
+                        product={product}
+                        version={version}
+                        benchmark={benchmarkName}
+                        benchmarkData={{
+                          configs: configurations,
+                          configData: configData,
+                        }}
+                      />,
+                    );
+                  }
+                });
+            }
+          });
       }
     });
 

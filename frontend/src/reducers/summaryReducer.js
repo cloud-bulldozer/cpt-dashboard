@@ -39,7 +39,8 @@ const summaryReducer = (state = initialState, action) => {
       };
     case TYPES.SET_SUMMARY_BENCHMARKS:
       const benchmarkKey = `${action.payload.product}-${action.payload.version}`;
-      const versionBenchmarks = action.payload.benchmarks[action.payload.version] || {};
+      const versionBenchmarks =
+        action.payload.benchmarks[action.payload.version] || {};
       return {
         ...state,
         benchmarks: {

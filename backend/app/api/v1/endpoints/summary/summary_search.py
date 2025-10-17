@@ -1,22 +1,13 @@
 from abc import abstractmethod
-from dataclasses import dataclass, field
-from typing import Annotated, Any, Optional
+from typing import Any
 
 from app.api.v1.endpoints.summary.summary import Summary
-from fastapi import APIRouter, Depends
-
 from app.services.search import ElasticService
 
-"""Information about product release KPIs.
+"""KPI summary information using ElasticService.
 
-Each product version has a set of benchmarks that have been run for various
-system configurations. This data is recovered from the job index and used to
-access average and historical data for a product version to help assess
-product release readiness.
-
-NOTE: Other factors directly affecting release health include the health of the
-CI system, and any open Jira stories or bugs. Those factors aren't handled by
-this code.
+This is a subclass of the Summary class targeted to products using the
+ElasticService class to access OpenSearch data.
 
 AI assistance: Cursor is extremely helpful in generating suggesting code
 snippets along the way. While most of this code is hand generated as the
@@ -38,6 +29,7 @@ class SummarySearch(Summary):
         configpath: str = "ocp.elasticsearch",
     ):
         super().__init__(product, configpath)
+        print(f"opening ElasticService ({configpath})")
         self.service = ElasticService(configpath)
         self.date_filter = None
 
@@ -55,13 +47,11 @@ class SummarySearch(Summary):
                     "timestamp": range,
                 }
             }
-            print(f"date_filter: {self.date_filter}")
         else:
             self.date_filter = None
-            print("no date_filter")
 
     @abstractmethod
     async def close(self):
         """Close the summary service."""
         print(f"closing {type(self.service).__name__}")
-        self.service.close()
+        await self.service.close()
