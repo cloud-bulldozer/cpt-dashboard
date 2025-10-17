@@ -183,6 +183,9 @@ class ElasticService:
                     )
                     return {"data": unique_data, "total": totalVal}
                 else:
+                    new_index = self.new_index_prefix + (
+                        self.new_index if indice is None else indice
+                    )
                     if start_date and end_date:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][
                             "gte"

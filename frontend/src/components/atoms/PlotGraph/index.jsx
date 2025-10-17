@@ -13,5 +13,5 @@ const PlotGraph = (props) => {
 export default PlotGraph;
 
 PlotGraph.propTypes = {
-  data: PropTypes.arr,
+  data: PropTypes.array,
 };

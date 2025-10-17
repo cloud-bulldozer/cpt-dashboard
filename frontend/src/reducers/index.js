@@ -1,12 +1,12 @@
 import HeaderReducer from "./headerReducer";
 import HomeReducer from "./homeReducer";
 import ILabReducer from "./ilabReducer";
-import KPIReducer from "./kpiReducer";
 import LoadingReducer from "./loadingReducer";
 import OCPReducer from "./ocpReducer";
 import OLSReducer from "./olsReducer";
 import QuayReducer from "./quayReducer";
 import SideMenuReducer from "./sideMenuReducer";
+import SummaryReducer from "./summaryReducer";
 import TelcoReducer from "./telcoReducer";
 import ToastReducer from "./toastReducer";
 import { combineReducers } from "redux";
@@ -17,10 +17,10 @@ export default combineReducers({
   sidemenu: SideMenuReducer,
   cpt: HomeReducer,
   ocp: OCPReducer,
-  kpi: KPIReducer,
   ols: OLSReducer,
   quay: QuayReducer,
   telco: TelcoReducer,
   header: HeaderReducer,
   ilab: ILabReducer,
+  summary: SummaryReducer,
 });

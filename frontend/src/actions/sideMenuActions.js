@@ -21,8 +21,8 @@ export const setFromSideMenuFlag = (fromSideMenu) => ({
 
 export const maintainQueryString =
   (toPage, type, navigate) => (dispatch, getState) => {
-    // KPI tab doesn't have filters, so just navigate directly
-    if (type === "kpi") {
+    // Summary tab doesn't have filters, so just navigate directly
+    if (type === "summary") {
       navigate({
         pathname: toPage,
       });

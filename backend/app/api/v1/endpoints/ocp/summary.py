@@ -3,12 +3,13 @@ from dataclasses import dataclass, field
 import time
 from typing import Annotated, Any, Optional
 
+from app.api.v1.endpoints.summary.summary import Summary
+from app.api.v1.endpoints.summary.summary_search import SummarySearch
 from fastapi import APIRouter, Depends
 
 from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
 from app.services.search import ElasticService
-
-router = APIRouter()
+from vyper import v
 
 """Information about OCP release KPIs.
 
@@ -103,7 +104,7 @@ BENCHMARK_INDEX: dict[str, Benchmark | None] = {
         index="ripsaw-kube-burner",
         filter={
             "metricName.keyword": "vmiLatencyQuantilesMeasurement",
-            "quantileName.keyword": "VMReady",
+            "quantileName.keyword": "VMIRunning",
         },
     ),
     "virt-udn-density": None,
@@ -149,52 +150,7 @@ class Fingerprint:
         }
 
 
-@dataclass
-class Cache:
-    """short_version: list[long_version]"""
-
-    version_map: dict[str, list[str]] = field(default_factory=dict)
-
-    """ version: {benchmark: {configuration: list[tuple], uuids: list[uuid]}} """
-    benchmark_map: dict[str, dict[str, Any]] = field(default_factory=dict)
-
-
-class KPI:
-    product: str
-    version: list[str]
-    benchmarks: list[str]
-    start_date: str | None
-    end_date: str | None
-    date_filter: dict[str, Any] | None
-    service: ElasticService
-    cache: Cache
-
-    @staticmethod
-    def break_list(value: str | list[str] | None) -> list[str]:
-        all = []
-        if isinstance(value, str):
-            all.extend(value.split(","))
-        elif isinstance(value, list):
-            for v in value:
-                all.extend(v.split(","))
-        return all
-
-    def __init__(
-        self,
-        product: str,
-        configpath: str = "ocp.elasticsearch",
-        version: str | list[str] | None = None,
-        benchmarks: list[str] | None = None,
-    ):
-        self.product = product
-        self.version = self.break_list(version)
-        self.benchmarks = self.break_list(benchmarks)
-        self.start_date = None
-        self.end_date = None
-        self.date_filter = None
-        self.service = ElasticService(configpath)
-        print(f"opening service on {configpath}")
-        self.cache = Cache()
+class OcpSummary(SummarySearch):
 
     def set_date_filter(self, start_date: str | None, end_date: str | None):
         if start_date or end_date:
@@ -233,9 +189,6 @@ class KPI:
         Returns:
             The full version strings for each "short version" (e.g. "4.19").
         """
-        if self.cache.version_map:
-            return self.cache.version_map
-
         start = time.time()
         filters = [{"term": {"jobStatus.keyword": "success"}}]
         if self.date_filter:
@@ -262,8 +215,7 @@ class KPI:
             versions[v[:4]].add(v)
 
         print(f"discovered {len(versions)} versions: {time.time()-start:3f} seconds")
-        self.cache.version_map = {k: sorted(v) for k, v in versions.items()}
-        return self.cache.version_map
+        return {k: sorted(v) for k, v in versions.items()}
 
     async def get_benchmarks(self, version: str) -> dict[str, Any]:
         """Return a list of benchmarks run for a given OCP version.
@@ -279,7 +231,7 @@ class KPI:
         ]
         if self.date_filter:
             filters.append(self.date_filter)
-
+        print("get_benchmarks", version)
         query = {
             "size": 0,
             "query": {
@@ -336,8 +288,6 @@ class KPI:
             },
         }
         start = time.time()
-        if self.cache.benchmark_map and version in self.cache.benchmark_map:
-            return self.cache.benchmark_map[version]
         response = await self.service.post(query=query, size=0)
         benchmarks = set()
         by_benchmark = defaultdict(list)
@@ -355,14 +305,53 @@ class KPI:
                     }
                 )
                 benchmarks.add(b)
-        self.cache.benchmark_map[version] = dict(by_benchmark)
         print(
             f"discovered {version} benchmark hierarchy: {time.time()-start:3f} seconds"
         )
-        return self.cache.benchmark_map[version]
+        return dict(by_benchmark)
+
+    async def get_iteration_variants(
+        self, index: str, uuids: list[str]
+    ) -> dict[str, list[str]]:
+        query = {
+            "query": {
+                "bool": {
+                    "filter": [
+                        {"terms": {"uuid.keyword": uuids}},
+                        # {"term": {"metricName.keyword": "jobSummary"}},
+                    ]
+                }
+            },
+            "aggs": {
+                "jobIterations": {
+                    "terms": {
+                        "field": "jobConfig.jobIterations",
+                        "size": 10000,
+                    },
+                    "aggs": {
+                        "uuids": {
+                            "terms": {
+                                "field": "uuid.keyword",
+                                "size": 10000,
+                            }
+                        }
+                    },
+                },
+            },
+        }
+
+        response = await self.service.post(indice=index, query=query, size=0)
+        variants = defaultdict(list)
+        for iterations in response["aggregations"]["jobIterations"]["buckets"]:
+            us = sorted([u["key"] for u in iterations["uuids"]["buckets"]])
+            variants[iterations["key"]].extend(us)
+        return variants
 
     async def get_iterations(
         self,
+        versions: Optional[str] = None,
+        benchmarks: Optional[str] = None,
+        configs: Optional[str] = None,
     ) -> dict[str, Any]:
         """Break down our benchmark configuration data by job iterations.
 
@@ -379,8 +368,13 @@ class KPI:
         """
         start = time.time()
 
-        vees = sorted((await self.get_versions()).keys())
-        # print(f"Discovered {vees}")
+        vees = sorted(
+            (await self.get_versions()).keys()
+            if not versions
+            else self.break_list(versions)
+        )
+
+        benches = self.break_list(benchmarks) if benchmarks else None
 
         benchmark_metrics = defaultdict(
             lambda: defaultdict(lambda: defaultdict(lambda: defaultdict(list)))
@@ -389,7 +383,9 @@ class KPI:
         for ver in vees:
             bees = await self.get_benchmarks(ver)
             for benchmark, configurations in bees.items():
-                # print(f"get_iterations {ver}: {benchmark}")
+                if benches and benchmark not in benches:
+                    continue
+
                 # get the index -- and, for now, we only know what to make of
                 # kube-burner benchmarks.
                 idx = self.get_index(benchmark)
@@ -398,54 +394,14 @@ class KPI:
 
                 for config in configurations:
                     uuids = sorted(config["uuids"])
-                    # print(f"get_iterations {ver}/{benchmark}: {config}: {len(uuids)}")
-                    query = {
-                        "query": {
-                            "bool": {"filter": [{"terms": {"uuid.keyword": uuids}}]}
-                        },
-                        "aggs": {
-                            "jobIterations": {
-                                "terms": {
-                                    "field": "jobConfig.jobIterations",
-                                    "size": 10000,
-                                },
-                                "aggs": {
-                                    "uuids": {
-                                        "terms": {
-                                            "field": "uuid.keyword",
-                                            "size": 10000,
-                                        }
-                                    }
-                                },
-                            },
-                        },
-                    }
-
-                    response = await self.service.post(
-                        indice=idx,
-                        query=query,
-                        size=0,
-                    )
-                    aggregate_uuids = []
-                    for iterations in response["aggregations"]["jobIterations"][
-                        "buckets"
-                    ]:
-                        try:
-                            us = [u["key"] for u in iterations["uuids"]["buckets"]]
-                            aggregate_uuids.extend(us)
-                            ck = str(config["configuration"])
-                            config_key[ck] = config["configuration"].json()
-                            benchmark_metrics[ver][benchmark][ck][
-                                iterations["key"]
-                            ].extend(us)
-                        except Exception as e:
-                            print(
-                                f"Exception in get_metrics: {e}:\n{benchmark}: {iterations}"
-                            )
-                            raise
+                    ck = str(config["configuration"])
+                    config_key[ck] = config["configuration"].json()
+                    variants = await self.get_iteration_variants(idx, uuids)
+                    for iter, uuids in variants.items():
+                        benchmark_metrics[ver][benchmark][ck][iter].extend(uuids)
         benchmark_report = {
             "config_key": config_key,
-            "iterations": {
+            "benchmarks": {
                 v: {
                     b: {
                         c: {j: sorted(u) for j, u in vs.items()} for c, vs in cf.items()
@@ -458,7 +414,37 @@ class KPI:
         print(f"benchmark iterations: {time.time()-start:.3f} seconds")
         return benchmark_report
 
-    async def metric_aggregation(self) -> dict[str, Any]:
+    async def get_configs(
+        self, versions: Optional[str] = None, benchmarks: Optional[str] = None
+    ) -> dict[str, Any]:
+        """Return report the number of job iterations for each benchmark configuration.
+
+        Args:
+            versions: The OCP versions to get configurations for.
+            benchmarks: The benchmarks to get configurations for.
+
+        Returns:
+            A report of the number of job iterations for each benchmark configuration.
+        """
+        data = await self.get_iterations(versions, benchmarks)
+        configs = {
+            "config_key": data["config_key"],
+            "benchmarks": {
+                v: {
+                    b: {c: {j: len(u) for j, u in vs.items()} for c, vs in cf.items()}
+                    for b, cf in d.items()
+                }
+                for v, d in data["benchmarks"].items()
+            },
+        }
+        return configs
+
+    async def metric_aggregation(
+        self,
+        versions: Optional[str] = None,
+        benchmarks: Optional[str] = None,
+        configs: Optional[str] = None,
+    ) -> dict[str, Any]:
         """Report aggregated metrics for each benchmark configuration.
 
         We can only compare benchmark metrics across the same configuration and job
@@ -467,8 +453,8 @@ class KPI:
         """
         start = time.time()
 
-        iterations = await self.get_iterations()
-        breakdown = iterations["iterations"]
+        iterations = await self.get_iterations(versions, benchmarks)
+        breakdown = iterations["benchmarks"]
         metrics = defaultdict(lambda: defaultdict(lambda: defaultdict(dict)))
         for ver, benchmarks in breakdown.items():
             for benchmark, configs in benchmarks.items():
@@ -486,6 +472,8 @@ class KPI:
                             filters.extend(
                                 [{"term": {k: v}} for k, v in filter.items()]
                             )
+                        if benchmark == "virt-density":
+                            print(f"filters: {filters}")
                         response = await self.service.post(
                             indice=idx,
                             size=MAX_PAGE,
@@ -504,6 +492,8 @@ class KPI:
                         x = []
                         y = []
                         values = []
+                        if benchmark == "virt-density":
+                            print(f"response: {response}")
                         for hit in response["hits"]["hits"]:
                             v = hit["_source"]
                             values.append(
@@ -535,79 +525,3 @@ class KPI:
                         }
         print(f"benchmark KPI report: {time.time()-start:.3f} seconds")
         return {"metrics": metrics, "config_key": iterations["config_key"]}
-
-
-async def kpi_svc():
-    """FastAPI Dependency to open & close ElasticService connections"""
-    kpi = None
-    try:
-        kpi = KPI("ocp")
-        yield kpi
-    finally:
-        if kpi:
-            await kpi.close()
-
-
-@router.get("/api/v1/ocp/kpi/versions")
-async def versions(
-    kpi: Annotated[KPI, Depends(kpi_svc)],
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> dict[str, list[str]]:
-    """Return a list of OCP versions that have been tested.
-
-    Args:
-        kpi: An ElasticService instance and KPI cache structure
-    """
-    kpi.set_date_filter(start_date, end_date)
-    return await kpi.get_versions()
-
-
-@router.get("/api/v1/ocp/kpi/benchmarks")
-async def benchmarks(
-    kpi: Annotated[KPI, Depends(kpi_svc)],
-    versions: Optional[str] = None,
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> dict[str, Any]:
-    """Return KPI data for a given OCP version.
-
-    Args:
-        kpi: An ElasticService instance and KPI cache structure
-        version: The OCP version to get KPI data for.
-
-    Returns:
-        A hierarchical aggregation of KPI data for benchmark results for the
-        given OCP version.
-    """
-    kpi.set_date_filter(start_date, end_date)
-    returns = {}
-    vees = (
-        (await kpi.get_versions()).keys() if versions is None else versions.split(",")
-    )
-    for v in vees:
-        benchmarks = await kpi.get_benchmarks(v)
-        returns[v] = benchmarks
-    return returns
-
-
-@router.get("/api/v1/ocp/kpi/breakdown")
-async def foggy(
-    kpi: Annotated[KPI, Depends(kpi_svc)],
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> dict[str, Any]:
-    """Identify metric data indices for each benchmark."""
-    kpi.set_date_filter(start_date, end_date)
-    return await kpi.get_iterations()
-
-
-@router.get("/api/v1/ocp/kpi")
-async def kpi(
-    kpi: Annotated[KPI, Depends(kpi_svc)],
-    start_date: Optional[str] = None,
-    end_date: Optional[str] = None,
-) -> dict[str, Any]:
-    kpi.set_date_filter(start_date, end_date)
-    """Identify metric data indices for each benchmark."""
-    return await kpi.metric_aggregation()

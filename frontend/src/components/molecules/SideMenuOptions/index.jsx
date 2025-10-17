@@ -13,10 +13,10 @@ import { useEffect } from "react";
 
 const sideMenuOptions = [
   {
-    id: CONSTANTS.OCP_KPI_NAV,
-    key: "ocp-kpi",
+    id: CONSTANTS.SUMMARY_NAV,
+    key: "summary",
     displayName: "Summary",
-    type: "kpi",
+    type: "summary",
   },
   {
     id: CONSTANTS.HOME_NAV,

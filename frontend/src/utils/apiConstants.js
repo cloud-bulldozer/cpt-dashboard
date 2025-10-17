@@ -5,7 +5,11 @@ export const AGG_VERSION_API = "/api/version";
 export const OCP_JOBS_API_V1 = "/api/v1/ocp/jobs";
 export const OCP_GRAPH_API_V1 = "/api/v1/ocp/graph";
 export const OCP_FILTERS_API_V1 = "/api/v1/ocp/filters";
-export const OCP_KPI_API_V1 = "/api/v1/ocp/kpi";
+
+export const SUMMARY_PRODUCTS_API_V1 = "/api/v1/summary/products";
+export const SUMMARY_VERSIONS_API_V1 = "/api/v1/summary/versions";
+export const SUMMARY_BENCHMARKS_API_V1 = "/api/v1/summary/benchmarks";
+export const SUMMARY_API_V1 = "/api/v1/summary";
 
 export const CPT_JOBS_API_V1 = "/api/v1/cpt/jobs";
 export const CPT_FILTERS_API_V1 = "/api/v1/cpt/filters";
