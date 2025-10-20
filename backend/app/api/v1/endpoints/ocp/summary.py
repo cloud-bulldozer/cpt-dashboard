@@ -552,17 +552,17 @@ class OcpSummary(SummarySearch):
                         "iterations": iteration_samples,
                         "readiness": self.is_ready(config_readiness),
                     }
-                benchmark_readiness.update(config_readiness)
+                    benchmark_readiness.update(config_readiness)
                 benchmark_samples[benchmark] = {
                     "configurations": config_samples,
                     "readiness": self.is_ready(benchmark_readiness),
                 }
-            version_readiness.update(benchmark_readiness)
+                version_readiness.update(benchmark_readiness)
             version_samples[ver] = {
                 "benchmarks": benchmark_samples,
                 "readiness": self.is_ready(version_readiness),
             }
-        product_readiness.update(version_readiness)
+            product_readiness.update(version_readiness)
         print(f"benchmark KPI report: {time.time()-start:.3f} seconds")
         return {
             "config_key": iterations["config_key"],
