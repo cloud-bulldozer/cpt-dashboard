@@ -263,7 +263,9 @@ const SummaryTable = () => {
                     // Old structure: configurations are directly in benchmarkObj
                     // Filter out any non-configuration fields (like readiness)
                     configurationsObj = Object.fromEntries(
-                      Object.entries(benchmarkObj).filter(([key]) => key !== 'readiness')
+                      Object.entries(benchmarkObj).filter(
+                        ([key]) => key !== "readiness",
+                      ),
                     );
                     benchmarkReadiness = benchmarkObj.readiness;
                   }

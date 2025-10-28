@@ -1,4 +1,5 @@
 from abc import abstractmethod
+from dataclasses import asdict, dataclass, fields
 from typing import Any, Optional
 
 """Information about product release KPIs.
@@ -20,6 +21,47 @@ coding tasks.
 
 Assisted-by: Cursor + claude-4-sonnet
 """
+
+
+@dataclass
+class BaseFingerprint:
+
+    @classmethod
+    def parse(cls, node: dict[str, str]):
+        return cls(**node)
+
+    def key(self):
+        items = (
+            (f.metadata.get("str", f.name) + "=" + str(getattr(self, f.name)))
+            for f in fields(self)
+        )
+        k = ":".join(items)
+        return k
+
+    def json(self) -> dict[str, Any]:
+        return asdict(self)
+
+    @classmethod
+    def filter(cls):
+        f = [
+            {"term": {"field": f.name + (".keyword" if f.metadata.get("key") else "")}}
+            for f in fields(cls)
+        ]
+        return f
+
+    @classmethod
+    def composite(cls):
+        f = [
+            {
+                f.name: {
+                    "terms": {
+                        "field": f.name + (".keyword" if f.metadata.get("key") else "")
+                    }
+                }
+            }
+            for f in fields(cls)
+        ]
+        return f
 
 
 class Summary:
@@ -140,3 +182,31 @@ class Summary:
 
         """
         raise NotImplementedError("Not implemented")
+
+
+class BenchmarkBase:
+    summary: Summary
+    benchmark: str
+
+    def __init__(self, summary: Summary, benchmark: str):
+        self.benchmark = benchmark
+        self.summary = summary
+
+    @abstractmethod
+    async def get_iteration_variants(
+        self, index: str, uuids: list[str]
+    ) -> dict[str, list[str]]:
+        """Get the iteration variants for a list of UUIDs."""
+        raise NotImplementedError("Subclasses must implement this method")
+
+    @abstractmethod
+    async def process(
+        self, version: str, config: str, iter: Any, uuids: list[str]
+    ) -> dict[str, Any]:
+        """Process a list of UUIDs."""
+        raise NotImplementedError("Subclasses must implement this method")
+
+    @abstractmethod
+    async def evaluate(self, metric: dict[str, Any]) -> str:
+        """Evaluate a sample."""
+        raise NotImplementedError("Subclasses must implement this method")

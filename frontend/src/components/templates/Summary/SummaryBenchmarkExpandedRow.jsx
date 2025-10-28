@@ -114,17 +114,10 @@ const SummaryBenchmarkExpandedRow = ({
 
   // Dynamically import actions
   const fetchSummaryData = useCallback(
-    async (
-      product,
-      version,
-      benchmark,
-      startDate,
-      endDate,
-    ) => {
+    async (product, version, benchmark, startDate, endDate) => {
       if (hasFetchedData || currentSummaryData) {
         return; // Don't fetch if we already have data
       }
-      
       setIsLoadingData(true);
       try {
         const { fetchSummaryData: fetchData } = await import(
@@ -155,7 +148,16 @@ const SummaryBenchmarkExpandedRow = ({
     if (!hasFetchedData && !currentSummaryData) {
       fetchSummaryData(product, version, benchmark, startDate, endDate);
     }
-  }, [hasFetchedData, currentSummaryData, fetchSummaryData, product, version, benchmark, startDate, endDate]);
+  }, [
+    hasFetchedData,
+    currentSummaryData,
+    fetchSummaryData,
+    product,
+    version,
+    benchmark,
+    startDate,
+    endDate,
+  ]);
 
   const formatStatValue = (value) => {
     if (value === null || value === undefined) return "N/A";
@@ -372,7 +374,8 @@ const SummaryBenchmarkExpandedRow = ({
                           .sort((a, b) => Number(a) - Number(b))
                           .map((iteration) => {
                             // Get run count from the benchmarks API structure (just a count value)
-                            const configObj = benchmarkData.configurationsObj?.[selectedConfig];
+                            const configObj =
+                              benchmarkData.configurationsObj?.[selectedConfig];
                             const count = configObj?.[iteration] || 0;
                             return (
                               <SelectOption key={iteration} value={iteration}>
@@ -418,17 +421,24 @@ const SummaryBenchmarkExpandedRow = ({
                   {selectedData?.configReadiness && (
                     <ReadinessIndicator status={selectedData.configReadiness} />
                   )}
-                  <br />
-                  <strong>Selected Iterations:</strong> {selectedIteration}{" "}
-                  iterations (
-                  {(() => {
-                    const configObj = benchmarkData.configurationsObj?.[selectedConfig];
-                    // The benchmarks API returns just a count value, not a full iteration object
-                    return configObj?.[selectedIteration] || 0;
-                  })()}{" "}
-                  runs available)
+                  {selectedIteration !== "n/a" && (
+                    <>
+                      <br />
+                      <strong>Selected Iterations:</strong> {selectedIteration}{" "}
+                      iterations (
+                      {(() => {
+                        const configObj =
+                          benchmarkData.configurationsObj?.[selectedConfig];
+                        // The benchmarks API returns just a count value, not a full iteration object
+                        return configObj?.[selectedIteration] || 0;
+                      })()}{" "}
+                      runs available)
+                    </>
+                  )}
                   {selectedData?.iterationReadiness && (
-                    <ReadinessIndicator status={selectedData.iterationReadiness} />
+                    <ReadinessIndicator
+                      status={selectedData.iterationReadiness}
+                    />
                   )}
                 </div>
               )}
@@ -443,7 +453,7 @@ const SummaryBenchmarkExpandedRow = ({
                         size="sm"
                         style={{ marginBottom: "0.5rem" }}
                       >
-                        Statistics ({selectedIteration} iterations)
+                        Statistics
                       </Title>
                       <DescriptionList isHorizontal>
                         <DescriptionListGroup>
@@ -525,10 +535,14 @@ const SummaryBenchmarkExpandedRow = ({
                       >
                         Performance Chart
                       </Title>
-                      {selectedData.graph &&
-                        selectedData.graph.x &&
-                        selectedData.graph.x.length > 0 ? (
-                        <PlotGraph data={[selectedData.graph]} />
+                      {selectedData.graph ? (
+                        <PlotGraph
+                          data={
+                            Array.isArray(selectedData.graph)
+                              ? selectedData.graph
+                              : [selectedData.graph]
+                          }
+                        />
                       ) : (
                         <div className="no-data-placeholder">
                           No chart data available

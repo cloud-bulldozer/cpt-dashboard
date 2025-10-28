@@ -14,7 +14,7 @@ import {
   ToolbarItem,
   Button,
 } from "@patternfly/react-core";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import DatePicker from "react-date-picker";
 import PropTypes from "prop-types";
 import { formatDate } from "@/utils/helper";
@@ -26,6 +26,23 @@ const SummaryDateFilter = ({ startDate, endDate, onDateChange, onApply }) => {
   const [localEndDate, setLocalEndDate] = useState(
     endDate ? new Date(endDate) : null,
   );
+
+  // Update local state when props change (e.g., from URL parameters)
+  useEffect(() => {
+    if (startDate) {
+      setLocalStartDate(new Date(startDate));
+    } else {
+      setLocalStartDate(null);
+    }
+  }, [startDate]);
+
+  useEffect(() => {
+    if (endDate) {
+      setLocalEndDate(new Date(endDate));
+    } else {
+      setLocalEndDate(null);
+    }
+  }, [endDate]);
 
   const handleStartDateChange = (date) => {
     setLocalStartDate(date);

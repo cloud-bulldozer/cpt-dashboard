@@ -4,15 +4,14 @@ import time
 from typing import Any, Optional
 
 from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
-from app.api.v1.endpoints.summary.summary import BenchmarkBase
+from app.api.v1.endpoints.ocp.summary import Benchmark, BenchmarkBase
 from app.api.v1.endpoints.summary.summary_search import (
-    Benchmark,
     PerfCiFingerprint,
     SearchBenchmark,
     SummarySearch,
 )
 
-"""OCP implementation of Summary class
+"""Quay implementation of Summary class
 
 AI assistance: Cursor is extremely helpful in generating suggesting code
 snippets along the way. While most of this code is hand generated as the
@@ -24,93 +23,33 @@ Assisted-by: Cursor + claude-4-sonnet
 """
 
 
+# TODO: Quay has metric data in two separate indices for their one
+# benchmark. Can we make `index` handle a list?
 BENCHMARK_INDEX: dict[str, Benchmark | None] = {
-    "amadeus-mgob-usecase": None,
-    "amadeus-usecase": None,
-    "cluster-density": Benchmark(
-        index="ripsaw-kube-burner",
-        filter={
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
+    "quay-load-test": Benchmark(
+        index="quay-push-pull",
     ),
-    "cluster-density-v2": Benchmark(
-        index="ripsaw-kube-burner",
-        filter={
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
-    ),
-    "concurrent-builds": None,
-    "crd-scale": None,
-    "custom": None,
-    "index": None,
-    "ingress-perf": Benchmark("ingress-performance"),
-    "k8s-netperf": Benchmark("k8s-netperf"),
-    "kueue-operator-jobs": None,
-    "kueue-operator-jobs-shared": None,
-    "kueue-operator-pods": Benchmark(
-        index="ripsaw-kube-burner",
-        filter={
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
-    ),
-    "large-networkpolicy-egress": None,
-    "network-policy": None,
-    "networkpolicy-case1": None,
-    "networkpolicy-case2": None,
-    "networkpolicy-case-amadeus-mgob": None,
-    "node-density": None,
-    "node-density-cni": None,
-    "node-density-cni-networkpolicy": None,
-    "node-density-heavy": None,
-    "olm": Benchmark(
-        index="ripsaw-kube-burner",
-        filter={
-            "metricName.keyword": "nodeLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
-    ),
-    "ols-load-generator": None,
-    "ovn-live-migration": None,
-    "rds-core": None,
-    "router-perf": None,
-    "udn-density-l3-pods": None,
-    "udn-density-pods": None,
-    "virt-density": Benchmark(
-        index="ripsaw-kube-burner",
-        filter={
-            "metricName.keyword": "vmiLatencyQuantilesMeasurement",
-            "quantileName.keyword": "VMIRunning",
-        },
-    ),
-    "virt-udn-density": None,
-    "web-burner-cluster-density": None,
-    "web-burner-init": None,
-    "web-burner-node-density": None,
-    "workers-scale": None,
 }
 
 
-@dataclass
-class OcpFingerprint(PerfCiFingerprint):
-    platform: str = field(metadata={"str": "p", "key": True})
+@dataclass(kw_only=True)
+class QuayFingerprint(PerfCiFingerprint):
+    hitSize: int = field(metadata={"str": "hs"})
+    concurrency: int = field(metadata={"str": "c"})
+    imagePushPulls: int = field(metadata={"str": "img"})
 
 
-class OcpSummary(SummarySearch):
+class QuaySummary(SummarySearch):
 
-    def __init__(self, product: str, configpath: str = "ocp.elasticsearch"):
+    def __init__(self, product: str, configpath: str = "quay.elasticsearch"):
         super().__init__(product, configpath, BENCHMARK_INDEX)
 
     def create_helper(self, benchmark: str) -> "BenchmarkBase":
         match self.get_index(benchmark):
-            case "ripsaw-kube-burner":
-                helper = KubeBurnerBenchmark(self, benchmark)
-            case "k8s-netperf":
-                helper = K8sNetperfBenchmark(self, benchmark)
-            case "ingress-performance":
-                helper = IngressPerfBenchmark(self, benchmark)
+            case "quay-push-pull":
+                helper = PushPullBenchmark(self, benchmark)
+            case "quay-vegeta-results":
+                helper = VegetaBenchmark(self, benchmark)
             case _:
                 raise ValueError(f"Unsupported benchmark: {benchmark}")
         return helper
@@ -173,7 +112,7 @@ class OcpSummary(SummarySearch):
             "aggs": {
                 "configurations": {
                     "composite": {
-                        "sources": OcpFingerprint.composite(),
+                        "sources": QuayFingerprint.composite(),
                         "size": AGG_BUCKET_SIZE,
                     },
                     "aggs": {
@@ -208,7 +147,7 @@ class OcpSummary(SummarySearch):
             for b, u in bees.items():
                 by_benchmark[b].append(
                     {
-                        "configuration": OcpFingerprint.parse(config["key"]),
+                        "configuration": QuayFingerprint.parse(config["key"]),
                         "uuids": list(u),
                     }
                 )
@@ -412,44 +351,17 @@ class OcpSummary(SummarySearch):
         }
 
 
-class KubeBurnerBenchmark(SearchBenchmark):
+class PushPullBenchmark(SearchBenchmark):
 
     async def get_iteration_variants(
         self, index: str, uuids: list[str]
     ) -> dict[str, list[str]]:
-        summary = self.summary
-        filters = [
-            {"terms": {"uuid.keyword": uuids}},
-            {"term": {"metricName.keyword": "jobSummary"}},
-        ]
-        if summary.date_filter:
-            filters.append(summary.date_filter)
-        query = {
-            "query": {"bool": {"filter": filters}},
-            "aggs": {
-                "jobIterations": {
-                    "terms": {
-                        "field": "jobConfig.jobIterations",
-                        "size": 10000,
-                    },
-                    "aggs": {
-                        "uuids": {
-                            "terms": {
-                                "field": "uuid.keyword",
-                                "size": 10000,
-                            }
-                        }
-                    },
-                },
-            },
-        }
+        """Report non-configuration discriminations.
 
-        response = await summary.service.post(indice=index, query=query, size=0)
-        variants = defaultdict(list)
-        for iterations in response["aggregations"]["jobIterations"]["buckets"]:
-            us = sorted([u["key"] for u in iterations["uuids"]["buckets"]])
-            variants[iterations["key"]].extend(us)
-        return variants
+        We don't disriminate below the "config" level for Quay, so we pass
+        through all configuration UUIDs.
+        """
+        return {"n/a": uuids}
 
     async def process(
         self, version: str, config: str, variant: Any, uuids: list[str]
@@ -463,15 +375,33 @@ class KubeBurnerBenchmark(SearchBenchmark):
             filters.extend([{"term": {k: v}} for k, v in filter.items()])
         response = await summary.service.post(
             indice=self.index,
-            size=MAX_PAGE,
+            size=0,
             query={
                 "query": {"bool": {"filter": filters}},
-                "sort": [{"timestamp": {"order": "asc"}}],
+                "sort": [{"start_time": {"order": "asc"}}],
                 "aggs": {
                     "stats": {
                         "extended_stats": {
-                            "field": "P99",
+                            "field": "elapsed_time",
                         }
+                    },
+                    "by_uuid": {
+                        "terms": {
+                            "field": "uuid.keyword",
+                            "size": MAX_PAGE,
+                        },
+                        "aggs": {
+                            "start_time": {
+                                "min": {
+                                    "field": "start_time",
+                                }
+                            },
+                            "average": {
+                                "avg": {
+                                    "field": "elapsed_time",
+                                }
+                            },
+                        },
                     },
                 },
             },
@@ -479,17 +409,24 @@ class KubeBurnerBenchmark(SearchBenchmark):
         x = []
         y = []
         values = []
-        for hit in response["hits"]["hits"]:
-            v = hit["_source"]
+        for hit in response["aggregations"]["by_uuid"]["buckets"]:
+            uuid = hit["key"]
+            average = hit["average"]["value"]
+            start = hit["start_time"]["value"]
             values.append(
                 {
-                    "uuid": v["uuid"],
-                    "timestamp": v["timestamp"],
-                    "value": v["P99"],
+                    "uuid": uuid,
+                    "timestamp": start,
+                    "value": average,
                 }
             )
-            x.append(v["timestamp"])
-            y.append(int(v["P99"]))
+        if len(values) < 1:
+            print(f"no metrics found for {version} {self.benchmark} {config}: {uuids}")
+        values.sort(key=lambda x: x["timestamp"])
+        for value in values:
+            x.append(value["timestamp"])
+            y.append(value["value"])
+
         stats = response["aggregations"]["stats"]
         sample = {
             "values": values,
@@ -543,152 +480,7 @@ class KubeBurnerBenchmark(SearchBenchmark):
         return "ready"
 
 
-class K8sNetperfBenchmark(SearchBenchmark):
-
-    async def get_iteration_variants(
-        self, index: str, uuids: list[str]
-    ) -> dict[str, list[str]]:
-        """This benchmark doesn't have separate iteration counts to track."""
-        return {"n/a": uuids}
-
-    async def process(
-        self, version: str, config: str, variant: Any, uuids: list[str]
-    ) -> dict[str, Any]:
-        summary = self.summary
-        filters = [{"terms": {"uuid.keyword": uuids}}]
-        if summary.date_filter:
-            filters.append(summary.date_filter)
-        filter = summary.get_filter(self.benchmark)
-        if filter:
-            filters.extend([{"term": {k: v}} for k, v in filter.items()])
-        response = await summary.service.post(
-            indice=self.index,
-            size=0,
-            query={
-                "query": {"bool": {"filter": filters}},
-                "sort": [{"timestamp": {"order": "asc"}}],
-                "aggs": {
-                    "stats": {
-                        "extended_stats": {
-                            "field": "throughput",
-                        }
-                    },
-                    "uuid": {
-                        "terms": {
-                            "field": "uuid.keyword",
-                            "size": AGG_BUCKET_SIZE,
-                        },
-                        "aggs": {
-                            "profile": {
-                                "terms": {
-                                    "field": "profile.keyword",
-                                    "size": AGG_BUCKET_SIZE,
-                                },
-                                "aggs": {
-                                    "messageSize": {
-                                        "terms": {
-                                            "field": "messageSize",
-                                            "size": AGG_BUCKET_SIZE,
-                                        },
-                                        "aggs": {
-                                            "timestamp": {
-                                                "terms": {
-                                                    "field": "timestamp",
-                                                    "size": AGG_BUCKET_SIZE,
-                                                },
-                                                "aggs": {
-                                                    "throughput": {
-                                                        "avg": {
-                                                            "field": "throughput",
-                                                        }
-                                                    },
-                                                },
-                                            }
-                                        },
-                                    }
-                                },
-                            },
-                        },
-                    },
-                },
-            },
-        )
-        x: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-        y: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-        values: dict[str, dict[str, list[dict[str, str | int]]]] = defaultdict(
-            lambda: defaultdict(list)
-        )
-        graphs: dict[str, dict[str, dict[str, Any]]] = defaultdict(
-            lambda: defaultdict(dict)
-        )
-        for uagg in response["aggregations"]["uuid"]["buckets"]:
-            uuid = uagg["key"]
-            for t in uagg["profile"]["buckets"]:
-                profile = t["key"]
-                for m in t["messageSize"]["buckets"]:
-                    key = f"{profile}-{m['key']}"
-                    for t in m["timestamp"]["buckets"]:
-                        values[uuid][key].append(
-                            {
-                                "uuid": uuid,
-                                "timestamp": t["key_as_string"],
-                                "value": t["throughput"]["value"],
-                            }
-                        )
-            for key, v in values[uuid].items():
-                v.sort(key=lambda v: v["timestamp"])
-                for point in v:
-                    x[uuid][key].append(point["timestamp"])
-                    y[uuid][key].append(point["value"])
-                    graphs[uuid][key] = {
-                        "x": x[uuid][key],
-                        "y": y[uuid][key],
-                        "name": key,
-                        "type": "scatter",
-                        "mode": "lines+markers",
-                        "orientation": "v",
-                    }
-        stats = response["aggregations"]["stats"]
-        sample = {
-            "values": values[uuid],
-            "graph": list(graphs[uuid].values()),
-            "stats": {
-                "min": stats["min"],
-                "max": stats["max"],
-                "avg": stats["avg"],
-                "count": stats["count"],
-                "std_dev": stats["std_deviation"],
-            },
-        }
-        return sample
-
-    async def evaluate(self, metric: dict[str, Any]) -> str:
-        """Evaluate a metric sample for the primary "readiness" KPI.
-
-        This adds a "readiness" indicator to the metric sample, based on
-        defined thresholds.
-
-        This is a dummy implementation based on trivial and arbitrary rules.
-        The benchmark is "not ready" if:
-
-        * If the final value is below the average value, the metric is "not
-          ready".
-
-        The metric can also be "warning" state if:
-
-        * If the standard deviation exceeds half the average value, the metric
-          is "warning".
-
-        Args:
-            metric: A dictionary containing the metric sample.
-
-        Returns:
-            "ready", "warning", or "not ready"
-        """
-        return "warning"
-
-
-class IngressPerfBenchmark(SearchBenchmark):
+class VegetaBenchmark(SearchBenchmark):
 
     async def get_iteration_variants(
         self, index: str, uuids: list[str]

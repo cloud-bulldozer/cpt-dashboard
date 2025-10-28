@@ -1,10 +1,12 @@
 import asyncio
 from dataclasses import dataclass
+import traceback
 from typing import Annotated, Any, Callable, Optional
 
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.endpoints.ocp.summary import OcpSummary
+from app.api.v1.endpoints.quay.summary import QuaySummary
 from app.api.v1.endpoints.summary.summary import Summary
 
 router = APIRouter()
@@ -45,6 +47,7 @@ class ProductResults:
 
 PRODUCTS = {
     "ocp": Product(OcpSummary, "ocp.elasticsearch"),
+    "quay": Product(QuaySummary, "quay.elasticsearch"),
 }
 
 
@@ -95,8 +98,8 @@ async def collect(
         end_date: The end date to filter the versions by
     """
     results = {}
-    for p in Summary.break_list(products):
-        try:
+    try:
+        for p in Summary.break_list(products):
             c = context[p]
             summary = c.instance
             m = getattr(summary, method)
@@ -105,11 +108,12 @@ async def collect(
             print(f"collect {method}: {start_date} - {end_date}")
             summary.set_date_filter(start_date, end_date)
             results[p] = m(**kwargs)
-        except Exception as e:
-            print(f"Error collecting {p} {method}: {e}")
-    ret = {}
-    for name, result in results.items():
-        ret[name] = await result
+        ret = {}
+        for name, result in results.items():
+            ret[name] = await result
+    except Exception as e:
+        print(f"Error collecting {p} {method}: {e}")
+        print(traceback.format_exc())
     return ret
 
 
@@ -149,6 +153,7 @@ async def configs(
     benchmarks: Optional[str] = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
+    uuids: Optional[bool] = False,
 ) -> dict[str, Any]:
     """Return a list of benchmarks that have been tested
 
@@ -170,6 +175,7 @@ async def configs(
         end_date=end_date,
         versions=versions,
         benchmarks=benchmarks,
+        uuids=uuids,
     )
 
 

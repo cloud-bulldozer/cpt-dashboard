@@ -28,8 +28,8 @@ export const fetchSummaryProducts = () => async (dispatch) => {
   } catch (error) {
     console.error(
       `ERROR (${error?.response?.status}): ${JSON.stringify(
-        error?.response?.data
-      )}`
+        error?.response?.data,
+      )}`,
     );
   }
   dispatch({ type: TYPES.SET_SUMMARY_COMPLETED });
@@ -56,8 +56,8 @@ export const fetchSummaryVersions =
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data
-        )}`
+          error?.response?.data,
+        )}`,
       );
     }
   };
@@ -76,7 +76,7 @@ export const fetchSummaryBenchmarks =
       if (response.status === 200) {
         console.log(
           `Benchmarks API response for ${product}-${version}:`,
-          response.data
+          response.data,
         );
         // Extract benchmarks for the specific version from the nested structure
         const productData = response.data[product] || {};
@@ -85,7 +85,7 @@ export const fetchSummaryBenchmarks =
         const versionBenchmarks = benchmarksData[version] || {};
         console.log(
           `Extracted benchmarks data for ${version}:`,
-          versionBenchmarks
+          versionBenchmarks,
         );
         dispatch({
           type: TYPES.SET_SUMMARY_BENCHMARKS,
@@ -95,8 +95,8 @@ export const fetchSummaryBenchmarks =
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data
-        )}`
+          error?.response?.data,
+        )}`,
       );
     }
   };
@@ -119,7 +119,7 @@ export const fetchSummaryData =
       if (response.status === 200) {
         console.log(
           `Summary data API response for ${product}-${version}-${benchmark}:`,
-          response.data
+          response.data,
         );
         dispatch({
           type: TYPES.SET_SUMMARY_DATA,
@@ -134,8 +134,8 @@ export const fetchSummaryData =
     } catch (error) {
       console.error(
         `ERROR (${error?.response?.status}): ${JSON.stringify(
-          error?.response?.data
-        )}`
+          error?.response?.data,
+        )}`,
       );
     }
   };
