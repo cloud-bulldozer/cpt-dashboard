@@ -54,21 +54,31 @@ class ElasticService:
         timestamp_field=None,
     ):
         """Runs a query and returns the results"""
-        if size == 0:
-            """Handles aggregation queries logic"""
+        if "aggs" in query or size == 0:
+            """Handles aggregation queries logic
+
+            The traditional usage convention is that aggregation queries were
+            used only when no hits were expected (size == 0).
+
+            However, OpenSearch supports using aggregation queries with hits
+            also returned, and this can be useful, but can't be handled under
+            the traditional usage convention which returns only "data" and
+            "total", so we funnel that through here and return the full
+            OpenSearch response.
+            """
             if self.prev_es:
-                self.prev_index = self.prev_index_prefix + (
+                prev_index = self.prev_index_prefix + (
                     self.prev_index if indice is None else indice
                 )
                 return await self.prev_es.search(
-                    index=self.prev_index + "*", body=jsonable_encoder(query), size=size
+                    index=prev_index + "*", body=query, size=size
                 )
             else:
-                self.new_index = self.new_index_prefix + (
+                new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
                 return await self.new_es.search(
-                    index=self.new_index + "*", body=jsonable_encoder(query), size=size
+                    index=new_index + "*", body=query, size=size
                 )
         else:
             """Handles queries that require data from ES docs"""
@@ -78,7 +88,7 @@ class ElasticService:
                 We handle queries from both new and archive instances
                 """
                 if self.prev_es:
-                    self.prev_index = self.prev_index_prefix + (
+                    prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
                     )
                     today = datetime.today().date()
@@ -100,7 +110,7 @@ class ElasticService:
                             ] = str(start_date)
                         if start_date is None:
                             response = await self.prev_es.search(
-                                index=self.prev_index + "*",
+                                index=prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
                                 request_timeout=50,
@@ -111,7 +121,7 @@ class ElasticService:
                             }
                         else:
                             response = await self.prev_es.search(
-                                index=self.prev_index + "*",
+                                index=prev_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
                                 request_timeout=50,
@@ -121,7 +131,7 @@ class ElasticService:
                                 "total": response["hits"]["total"]["value"],
                             }
                 if self.prev_es and self.new_es:
-                    self.new_index = self.new_index_prefix + (
+                    new_index = self.new_index_prefix + (
                         self.new_index if indice is None else indice
                     )
                     today = datetime.today().date()
@@ -143,7 +153,7 @@ class ElasticService:
                             ] = str(end_date)
                         if end_date is None:
                             response = await self.new_es.search(
-                                index=self.new_index + "*",
+                                index=new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
                                 request_timeout=50,
@@ -154,7 +164,7 @@ class ElasticService:
                             }
                         else:
                             response = await self.new_es.search(
-                                index=self.new_index + "*",
+                                index=new_index + "*",
                                 body=jsonable_encoder(query),
                                 size=size,
                                 request_timeout=50,
@@ -173,6 +183,9 @@ class ElasticService:
                     )
                     return {"data": unique_data, "total": totalVal}
                 else:
+                    new_index = self.new_index_prefix + (
+                        self.new_index if indice is None else indice
+                    )
                     if start_date and end_date:
                         query["query"]["bool"]["filter"]["range"][timestamp_field][
                             "gte"
@@ -181,7 +194,7 @@ class ElasticService:
                             "lte"
                         ] = str(end_date)
                         response = await self.new_es.search(
-                            index=self.new_index + "*",
+                            index=new_index + "*",
                             body=jsonable_encoder(query),
                             size=size,
                             request_timeout=50,
@@ -194,11 +207,11 @@ class ElasticService:
                 """Handles queries that do not have a timestamp field"""
                 previous_results = {}
                 if self.prev_es:
-                    self.prev_index = self.prev_index_prefix + (
+                    prev_index = self.prev_index_prefix + (
                         self.prev_index if indice is None else indice
                     )
                     response = await self.prev_es.search(
-                        index=self.prev_index + "*",
+                        index=prev_index + "*",
                         body=jsonable_encoder(query),
                         size=size,
                         request_timeout=50,
@@ -207,11 +220,11 @@ class ElasticService:
                         "data": response["hits"]["hits"],
                         "total": response["hits"]["total"]["value"],
                     }
-                self.new_index = self.new_index_prefix + (
+                new_index = self.new_index_prefix + (
                     self.new_index if indice is None else indice
                 )
                 response = await self.new_es.search(
-                    index=self.new_index + "*",
+                    index=new_index + "*",
                     body=jsonable_encoder(query),
                     size=size,
                     request_timeout=50,

@@ -6,6 +6,7 @@ import OCPReducer from "./ocpReducer";
 import OLSReducer from "./olsReducer";
 import QuayReducer from "./quayReducer";
 import SideMenuReducer from "./sideMenuReducer";
+import SummaryReducer from "./summaryReducer";
 import TelcoReducer from "./telcoReducer";
 import ToastReducer from "./toastReducer";
 import { combineReducers } from "redux";
@@ -21,4 +22,5 @@ export default combineReducers({
   telco: TelcoReducer,
   header: HeaderReducer,
   ilab: ILabReducer,
+  summary: SummaryReducer,
 });

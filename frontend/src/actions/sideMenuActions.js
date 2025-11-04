@@ -21,6 +21,14 @@ export const setFromSideMenuFlag = (fromSideMenu) => ({
 
 export const maintainQueryString =
   (toPage, type, navigate) => (dispatch, getState) => {
+    // Summary tab doesn't have filters, so just navigate directly
+    if (type === "summary") {
+      navigate({
+        pathname: toPage,
+      });
+      return;
+    }
+    
     const { appliedFilters, start_date, end_date } = getState()[type];
     appendQueryString(
       { ...appliedFilters, start_date, end_date },

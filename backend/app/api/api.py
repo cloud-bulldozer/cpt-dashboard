@@ -11,6 +11,7 @@ from app.api.v1.endpoints.ocm import ocmJobs
 from app.api.v1.endpoints.ocp import graph, ocpJobs, results
 from app.api.v1.endpoints.ols import olsGraphs, olsJobs
 from app.api.v1.endpoints.quay import quayGraphs, quayJobs
+from app.api.v1.endpoints.summary import summary_api
 from app.api.v1.endpoints.telco import telcoGraphs, telcoJobs
 
 router = APIRouter()
@@ -46,6 +47,9 @@ router.include_router(ocmJobs.router, tags=["ocm"])
 
 # InstructLab endpoint
 router.include_router(router=ilab.router, tags=["ilab"])
+
+# Summary endpoint
+router.include_router(summary_api.router, tags=["summary"])
 
 
 @router.get(

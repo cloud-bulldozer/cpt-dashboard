@@ -13,6 +13,12 @@ import { useEffect } from "react";
 
 const sideMenuOptions = [
   {
+    id: CONSTANTS.SUMMARY_NAV,
+    key: "summary",
+    displayName: "Summary",
+    type: "summary",
+  },
+  {
     id: CONSTANTS.HOME_NAV,
     key: "home",
     displayName: "Home",
