@@ -72,7 +72,7 @@ class SummarySearch(Summary):
     def get_helper(self, benchmark: str) -> "BenchmarkBase":
         helper = self.benchmark_helper.get(benchmark)
         if not helper:
-            print(f"creating helper for benchmark: {benchmark}")
+            print(f"creating helper for benchmark {benchmark}")
             helper = self.create_helper(benchmark)
             self.benchmark_helper[benchmark] = helper
         return helper

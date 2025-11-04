@@ -1,5 +1,6 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 import time
 from typing import Any, Optional
 
@@ -412,7 +413,10 @@ class PushPullBenchmark(SearchBenchmark):
         for hit in response["aggregations"]["by_uuid"]["buckets"]:
             uuid = hit["key"]
             average = hit["average"]["value"]
-            start = hit["start_time"]["value"]
+
+            # The "min" aggregation returns the timestamp in milliseconds as
+            # a floating point number.
+            start = datetime.fromtimestamp(hit["start_time"]["value"] / 1000.0)
             values.append(
                 {
                     "uuid": uuid,

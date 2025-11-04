@@ -271,12 +271,12 @@ class OcpSummary(SummarySearch):
                     try:
                         klass = self.get_helper(benchmark)
                     except ValueError as e:
-                        print(f"Benchmark {benchmark} variants not supported: {e}")
+                        print(f"No {ver} {benchmark} {ck} variants: {e}")
                         benchmark_metrics[ver][benchmark][ck] = {}
                         continue
                     variants = await klass.get_iteration_variants(idx, uuids)
                     if not variants:
-                        print(f"Benchmark {benchmark} variants not found")
+                        print(f"No {ver} {benchmark} {ck} variants found")
                         benchmark_metrics[ver][benchmark][ck] = {}
                         continue
                     for iter, uuids in variants.items():
@@ -516,7 +516,12 @@ class KubeBurnerBenchmark(SearchBenchmark):
         This adds a "readiness" indicator to the metric sample, based on
         defined thresholds.
 
+        *** WARNING ***
+
         This is a dummy implementation based on trivial and arbitrary rules.
+
+        *** END WARNING ***
+
         The benchmark is "not ready" if:
 
         * If the final value is below the average value, the metric is "not
@@ -533,7 +538,7 @@ class KubeBurnerBenchmark(SearchBenchmark):
         Returns:
             "ready", "warning", or "not ready"
         """
-        if len(metric["values"]) < 1:
+        if len(metric["values"]) < 2:
             print(f"{self.benchmark} evaluating empty metric")
             return "warning"
         if metric["values"][-1]["value"] < metric["stats"]["avg"]:
@@ -613,45 +618,46 @@ class K8sNetperfBenchmark(SearchBenchmark):
                 },
             },
         )
-        x: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-        y: dict[str, dict[str, list[str]]] = defaultdict(lambda: defaultdict(list))
-        values: dict[str, dict[str, list[dict[str, str | int]]]] = defaultdict(
-            lambda: defaultdict(list)
-        )
-        graphs: dict[str, dict[str, dict[str, Any]]] = defaultdict(
-            lambda: defaultdict(dict)
+        values = defaultdict(list)
+        graphs = []
+        print(
+            f"{self.benchmark} {version} {config} {variant} {len(uuids)} uuids ({len(response['aggregations']['uuid']['buckets'])} uuids)"
         )
         for uagg in response["aggregations"]["uuid"]["buckets"]:
             uuid = uagg["key"]
             for t in uagg["profile"]["buckets"]:
                 profile = t["key"]
                 for m in t["messageSize"]["buckets"]:
-                    key = f"{profile}-{m['key']}"
+                    key = f"{profile}-{m['key']:d}"
                     for t in m["timestamp"]["buckets"]:
-                        values[uuid][key].append(
+                        values[key].append(
                             {
                                 "uuid": uuid,
                                 "timestamp": t["key_as_string"],
                                 "value": t["throughput"]["value"],
                             }
                         )
-            for key, v in values[uuid].items():
-                v.sort(key=lambda v: v["timestamp"])
-                for point in v:
-                    x[uuid][key].append(point["timestamp"])
-                    y[uuid][key].append(point["value"])
-                    graphs[uuid][key] = {
-                        "x": x[uuid][key],
-                        "y": y[uuid][key],
-                        "name": key,
-                        "type": "scatter",
-                        "mode": "lines+markers",
-                        "orientation": "v",
-                    }
+        for key, v in values.items():
+            v.sort(key=lambda v: v["timestamp"])
+            x = []
+            y = []
+            for point in v:
+                x.append(point["timestamp"])
+                y.append(point["value"])
+            graphs.append(
+                {
+                    "x": x,
+                    "y": y,
+                    "name": key,
+                    "type": "scatter",
+                    "mode": "lines+markers",
+                    "orientation": "v",
+                }
+            )
         stats = response["aggregations"]["stats"]
         sample = {
-            "values": values[uuid],
-            "graph": list(graphs[uuid].values()),
+            "values": values,
+            "graph": graphs,
             "stats": {
                 "min": stats["min"],
                 "max": stats["max"],
@@ -668,7 +674,12 @@ class K8sNetperfBenchmark(SearchBenchmark):
         This adds a "readiness" indicator to the metric sample, based on
         defined thresholds.
 
+        *** WARNING ***
+
         This is a dummy implementation based on trivial and arbitrary rules.
+
+        *** END WARNING ***
+
         The benchmark is "not ready" if:
 
         * If the final value is below the average value, the metric is "not
@@ -685,7 +696,16 @@ class K8sNetperfBenchmark(SearchBenchmark):
         Returns:
             "ready", "warning", or "not ready"
         """
-        return "warning"
+        warning = 0
+        not_ready = 0
+        for key, value in metric["values"].items():
+            if len(value) < 2:
+                warning += 1
+            elif value[-1]["value"] < metric["stats"]["avg"]:
+                not_ready += 1
+        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
+            warning += 1
+        return "not ready" if not_ready > 0 else "warning" if warning > 0 else "ready"
 
 
 class IngressPerfBenchmark(SearchBenchmark):
@@ -723,4 +743,14 @@ class IngressPerfBenchmark(SearchBenchmark):
         Returns:
             "ready", "warning", or "not ready"
         """
-        return "warning"
+        if not metric:
+            print(f"{self.benchmark} evaluating empty metric")
+            return "warning"
+        if len(metric["values"]) < 2:
+            print(f"{self.benchmark} evaluating empty metric")
+            return "warning"
+        if metric["values"][-1]["value"] < metric["stats"]["avg"]:
+            return "not ready"
+        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
+            return "warning"
+        return "ready"

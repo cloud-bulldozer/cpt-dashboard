@@ -59,10 +59,10 @@ def create(product: str) -> "Summary":
     raise NotImplementedError("Not implemented")
 
 
-async def summary_svc(products: str) -> dict[str, ProductContext]:
+async def summary_svc(products: str | None = None) -> dict[str, ProductContext]:
     """FastAPI Dependency to open & close ElasticService connections"""
     summaries: dict[str, ProductContext] = {}
-    ps = Summary.break_list(products)
+    ps = Summary.break_list(products) if products else list(PRODUCTS.keys())
     try:
         summaries = {
             product: ProductContext(product, create(product)) for product in ps
@@ -81,7 +81,7 @@ async def summary_svc(products: str) -> dict[str, ProductContext]:
 
 
 async def collect(
-    products: str,
+    products: str | None,
     context: list[ProductContext],
     method: str,
     start_date: Optional[str] = None,
@@ -99,7 +99,7 @@ async def collect(
     """
     results = {}
     try:
-        for p in Summary.break_list(products):
+        for p in Summary.break_list(products) if products else PRODUCTS.keys():
             c = context[p]
             summary = c.instance
             m = getattr(summary, method)
@@ -125,8 +125,8 @@ async def products() -> list[str]:
 
 @router.get("/api/v1/summary/versions")
 async def versions(
-    summaries: Annotated[Summary, Depends(summary_svc)],
-    products: str,
+    summaries: Annotated[dict[str, ProductContext], Depends(summary_svc)],
+    products: str | None = None,
     start_date: Optional[str] = None,
     end_date: Optional[str] = None,
 ) -> dict[str, dict[str, list[str]]]:
@@ -148,7 +148,7 @@ async def versions(
 @router.get("/api/v1/summary/benchmarks")
 async def configs(
     summaries: Annotated[Summary, Depends(summary_svc)],
-    products: str,
+    products: str | None,
     versions: Optional[str] = None,
     benchmarks: Optional[str] = None,
     start_date: Optional[str] = None,
@@ -182,7 +182,7 @@ async def configs(
 @router.get("/api/v1/summary")
 async def summary(
     summaries: Annotated[Summary, Depends(summary_svc)],
-    products: str,
+    products: str | None,
     versions: Optional[str] = None,
     benchmarks: Optional[str] = None,
     configs: Optional[str] = None,
