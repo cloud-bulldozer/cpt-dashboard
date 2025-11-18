@@ -27,8 +27,8 @@ if [ ! -f "${CPT_CONFIG}" ]; then
 fi
 
 # Make sure all dependencies are installed.
-echo "Installing dependencies..."
 temp_file=$(mktemp)
+echo "Installing dependencies... (${temp_file})"
 (
     cd "${BACKEND}"
     poetry install

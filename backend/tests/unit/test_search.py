@@ -175,7 +175,7 @@ class TestElasticService:
 
         assert result == mock_response
         mock_es_instance.search.assert_called_once_with(
-            index="internal-internal-index*", body={"query": "test"}, size=0
+            index="internal-internal-index*", body=query, size=0
         )
 
     @patch("app.services.search.AsyncOpenSearch")
