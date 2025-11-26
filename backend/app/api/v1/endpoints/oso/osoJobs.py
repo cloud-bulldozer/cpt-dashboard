@@ -6,10 +6,7 @@ from fastapi.param_functions import Query
 
 from app.api.v1.commons.utils import normalize_pagination
 
-from ...commons.example_responses import (
-    ocp_200_response,
-    response_422,
-)
+from ...commons.example_responses import ocp_200_response, response_422
 from ...commons.oso import getData
 
 router = APIRouter()
@@ -81,5 +78,3 @@ async def jobs(
 
     jsonstring = json.dumps(response)
     return jsonstring
-
-
