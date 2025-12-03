@@ -28,12 +28,21 @@ const TableCell = (props) => {
 
 const StatusCell = (props) => {
   const { item, col } = props;
-  return item[col.value]?.toLowerCase() === "success" ? (
-    <Label color="green" icon={<CheckCircleIcon data-ouia-component-id="check_circle_icon"/>}>
+  return item[col.value]?.toLowerCase() === "success" ||
+    item[col.value]?.toLowerCase() === "pass" ? (
+    <Label
+      color="green"
+      icon={<CheckCircleIcon data-ouia-component-id="check_circle_icon" />}
+    >
       Success
     </Label>
   ) : (
-    <Label color="red" icon={<ExclamationCircleIcon data-ouia-component-id="exclamation_circle_icon"/>}>
+    <Label
+      color="red"
+      icon={
+        <ExclamationCircleIcon data-ouia-component-id="exclamation_circle_icon" />
+      }
+    >
       Failure
     </Label>
   );
@@ -45,7 +54,9 @@ const BuildURLCell = (props) => (
     component="a"
     href={props.item[props.col.value]}
     target="_blank"
-    icon={<ExternalLinkSquareAltIcon data-ouia-component-id="external_link_square_icon"/>}
+    icon={
+      <ExternalLinkSquareAltIcon data-ouia-component-id="external_link_square_icon" />
+    }
     iconPosition="end"
   >
     Job

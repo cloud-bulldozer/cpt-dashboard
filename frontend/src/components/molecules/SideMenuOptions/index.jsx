@@ -48,6 +48,12 @@ const sideMenuOptions = [
     displayName: "ILAB",
     type: "ilab",
   },
+  {
+    id: CONSTANTS.RHOSO_NAV,
+    key: "oso",
+    displayName: "RHOSO",
+    type: "oso",
+  },
 ];
 
 const MenuOptions = () => {

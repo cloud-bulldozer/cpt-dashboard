@@ -9,6 +9,7 @@ import SideMenuReducer from "./sideMenuReducer";
 import TelcoReducer from "./telcoReducer";
 import ToastReducer from "./toastReducer";
 import { combineReducers } from "redux";
+import OSOReducer from "./openstackReducer";
 
 export default combineReducers({
   loading: LoadingReducer,
@@ -21,4 +22,5 @@ export default combineReducers({
   telco: TelcoReducer,
   header: HeaderReducer,
   ilab: ILabReducer,
+  oso: OSOReducer
 });

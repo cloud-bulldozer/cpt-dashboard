@@ -10,6 +10,7 @@ from app.api.v1.endpoints.jira import jira
 from app.api.v1.endpoints.ocm import ocmJobs
 from app.api.v1.endpoints.ocp import graph, ocpJobs, results
 from app.api.v1.endpoints.ols import olsGraphs, olsJobs
+from app.api.v1.endpoints.oso import osoJobs
 from app.api.v1.endpoints.quay import quayGraphs, quayJobs
 from app.api.v1.endpoints.summary import summary_api
 from app.api.v1.endpoints.telco import telcoGraphs, telcoJobs
@@ -50,6 +51,9 @@ router.include_router(router=ilab.router, tags=["ilab"])
 
 # Summary endpoint
 router.include_router(summary_api.router, tags=["summary"])
+
+# OSO endpoint
+router.include_router(osoJobs.router, tags=["oso"])
 
 
 @router.get(

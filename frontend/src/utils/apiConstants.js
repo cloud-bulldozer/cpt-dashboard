@@ -23,3 +23,5 @@ export const QUAY_FILTERS_API_V1 = "/api/v1/quay/filters";
 export const ILABS_JOBS_API_V1 = "/api/v1/ilab/runs";
 export const ILAB_GRAPH_API_V1 = "/api/v1/ilab/runs/";
 export const ILAB_FILTERS_API_V1 = "/api/v1/ilab/runs/filters";
+
+export const OSO_JOBS_API_V1 = "/api/v1/oso/jobs";

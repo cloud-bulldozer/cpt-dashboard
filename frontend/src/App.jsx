@@ -13,6 +13,7 @@ import Quay from "./components/templates/Quay";
 import Telco from "./components/templates/Telco";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
+import OSO from "./components/templates/Openstack";
 
 function App() {
   const dispatch = useDispatch();
@@ -30,6 +31,7 @@ function App() {
             <Route path={APP_ROUTES.OLS} element={<OLSTab />} />
             <Route path={APP_ROUTES.QUAY} element={<Quay />} />
             <Route path={APP_ROUTES.ILAB} element={<ILab />} />
+            <Route path={APP_ROUTES.RHOSO} element={<OSO />} />
           </Route>
         </Routes>
       </BrowserRouter>
