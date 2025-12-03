@@ -7,6 +7,7 @@ import {
   fetchOSOJobs,
   setSelectedFilter,
   buildFilterData,
+  setTableColumns,
 } from "@/actions/openstackActions.js";
 import { useNavigate } from "react-router-dom";
 
@@ -67,7 +68,7 @@ const OSOTab = () => {
     dispatch(setSelectedFilter(category, value, isFromMetrics));
   };
   const setColumns = (value, isAdding) => {
-    // dispatch(setTableColumns(value, isAdding));
+    dispatch(setTableColumns(value, isAdding));
   };
   return (
     <>

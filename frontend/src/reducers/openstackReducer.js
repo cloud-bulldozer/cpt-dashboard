@@ -99,6 +99,8 @@ const OSOReducer = (state = initialState, action = {}) => {
       return { ...state, appliedFilters: payload };
     case TYPES.SET_SELECTED_OSO_FILTERS:
       return { ...state, selectedFilters: payload };
+    case TYPES.SET_OSO_COLUMNS:
+      return { ...state, tableColumns: payload };
     default:
       return state;
   }

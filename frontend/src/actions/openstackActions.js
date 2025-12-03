@@ -65,6 +65,22 @@ export const fetchOSOJobs = () => async (dispatch) => {
   }
   dispatch({ type: TYPES.COMPLETED });
 };
+export const setTableColumns = (key, isAdding) => (dispatch, getState) => {
+  let tableColumns = [...getState().oso.tableColumns];
+  const tableFilters = getState().oso.tableFilters;
+
+  if (isAdding) {
+    const filterObj = tableFilters.find((item) => item.value === key);
+    tableColumns.push(filterObj);
+  } else {
+    tableColumns = tableColumns.filter((item) => item.value !== key);
+  }
+
+  dispatch({
+    type: TYPES.SET_OSO_COLUMNS,
+    payload: tableColumns,
+  });
+};
 
 export const tableReCalcValues = () => (dispatch, getState) => {
   const { page, perPage } = getState().oso;
