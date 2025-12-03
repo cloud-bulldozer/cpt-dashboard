@@ -155,6 +155,15 @@ OCM_FIELD_CONSTANT_DICT = {
     "ciSystem": "ciSystem.keyword",
 }
 
+OSO_FIELD_CONSTANT_DICT = {
+    "ciSystem": "ciSystem.keyword",
+    "benchmark": "benchmark.keyword",
+    "networkType": "networkType.keyword",
+    "jobStatus": "jobStatus.keyword",
+    "ocpVersion": "ocpVersion.keyword",
+    "build": "ocpVersion.keyword",
+}
+
 JOB_STATUS_MAP = {
     "pass": "success",
     "fail": "failure",
