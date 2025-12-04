@@ -3,11 +3,7 @@ from typing import Any, Optional
 
 import pytest
 
-from app.api.v1.endpoints.summary.summary import (
-    BaseFingerprint,
-    BenchmarkBase,
-    Summary,
-)
+from app.api.v1.endpoints.summary.summary import BaseFingerprint, BenchmarkBase, Summary
 
 """Unit tests for the summary module base classes.
 
@@ -95,13 +91,10 @@ class ConcreteSummary(Summary):
 class ConcreteBenchmark(BenchmarkBase):
     """Concrete implementation of BenchmarkBase for testing."""
 
-    async def get_iteration_variants(
-        self, index: str, uuids: list[str]
-    ) -> dict[str, Any]:
+    async def get_iteration_variants(self, uuids: list[str]) -> dict[str, Any]:
         """Implement abstract method."""
         return {
             "variants": ["variant1", "variant2"],
-            "index": index,
             "uuid_count": len(uuids),
         }
 
@@ -700,20 +693,18 @@ class TestBenchmarkBaseConcreteImplementation:
     @pytest.mark.asyncio
     async def test_get_iteration_variants_returns_variant_data(self):
         """Test get_iteration_variants returns variant information."""
-        # Given: A benchmark instance with index and uuids
+        # Given: A benchmark instance with uuids
         summary = ConcreteSummary("ocp")
         benchmark = ConcreteBenchmark(summary, "cluster-density")
-        index = "ocp-results"
         uuids = ["uuid1", "uuid2", "uuid3"]
 
         expected_result = {
             "variants": ["variant1", "variant2"],
-            "index": "ocp-results",
             "uuid_count": 3,
         }
 
         # When: get_iteration_variants is called
-        result = await benchmark.get_iteration_variants(index, uuids)
+        result = await benchmark.get_iteration_variants(uuids)
 
         # Then: Should return variant data
         assert result == expected_result
@@ -725,17 +716,15 @@ class TestBenchmarkBaseConcreteImplementation:
         # Given: A benchmark instance with empty uuids
         summary = ConcreteSummary("ocp")
         benchmark = ConcreteBenchmark(summary, "node-density")
-        index = "ocp-results"
         uuids = []
 
         expected_result = {
             "variants": ["variant1", "variant2"],
-            "index": "ocp-results",
             "uuid_count": 0,
         }
 
         # When: get_iteration_variants is called
-        result = await benchmark.get_iteration_variants(index, uuids)
+        result = await benchmark.get_iteration_variants(uuids)
 
         # Then: Should handle empty list
         assert result == expected_result
@@ -1064,15 +1053,15 @@ class TestAbstractMethodNotImplementedErrors:
         # Given: A subclass that calls parent's abstract method
 
         class PartialBenchmark(ConcreteBenchmark):
-            async def get_iteration_variants(self, index: str, uuids: list[str]):
-                return await BenchmarkBase.get_iteration_variants(self, index, uuids)
+            async def get_iteration_variants(self, uuids: list[str]):
+                return await BenchmarkBase.get_iteration_variants(self, uuids)
 
         summary = ConcreteSummary("ocp")
         benchmark = PartialBenchmark(summary, "cluster-density")
 
         # When/Then: Should raise NotImplementedError
         with pytest.raises(NotImplementedError) as exc_info:
-            await benchmark.get_iteration_variants("index", ["uuid1"])
+            await benchmark.get_iteration_variants(["uuid1"])
 
         assert "Subclasses must implement this method" in str(exc_info.value)
 

@@ -9,6 +9,9 @@ system configurations. This data is recovered from the job index and used to
 access average and historical data for a product version to help assess
 product release readiness.
 
+TODO: This class and its subclasses (OCP and Quay) are prototypes to explore
+and demonstrate a possible approach to exposing product CPT readiness data.
+
 NOTE: Other factors directly affecting release health include the health of the
 CI system, and any open Jira stories or bugs. Those factors aren't handled by
 this code.
@@ -69,12 +72,10 @@ class Summary(ABC):
 
     product: str
     configpath: str
-    version: list[str]
-    benchmarks: list[str]
     start_date: str | None
     end_date: str | None
     date_filter: dict[str, Any] | None
-    service: Any = None
+    service: Any
 
     @staticmethod
     def break_list(value: str | list[str] | None) -> list[str]:
@@ -195,9 +196,7 @@ class BenchmarkBase(ABC):
         self.summary = summary
 
     @abstractmethod
-    async def get_iteration_variants(
-        self, index: str, uuids: list[str]
-    ) -> dict[str, list[str]]:
+    async def get_iteration_variants(self, uuids: list[str]) -> dict[str, list[str]]:
         """Get the iteration variants for a list of UUIDs."""
         raise NotImplementedError("Subclasses must implement this method")
 

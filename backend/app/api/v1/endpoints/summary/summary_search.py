@@ -21,18 +21,6 @@ Assisted-by: Cursor + claude-4-sonnet
 
 
 @dataclass
-class Benchmark:
-    """Map each benchmark to an index and ElasticService filter.
-
-    TODO: Some benchmarks have multiple indices, e.g. quay-load-test. We need
-    to handle this case.
-    """
-
-    index: str
-    filter: dict[str, str] | None = None
-
-
-@dataclass
 class PerfCiFingerprint(BaseFingerprint):
     """Extend the BaseFingerprint class with OCP-specific fields."""
 
@@ -47,14 +35,14 @@ class SummarySearch(Summary):
 
     service: ElasticService = None
     date_filter: dict[str, Any] | None
-    benchmarks: dict[str, Benchmark]
-    benchmark_helper: dict[str, "BenchmarkBase"]
+    benchmarks: dict[str, BenchmarkBase]
+    benchmark_helper: dict[str, BenchmarkBase]
 
     def __init__(
         self,
         product: str,
         configpath: str = "ocp.elasticsearch",
-        benchmarks: dict[str, Benchmark] | None = None,
+        benchmarks: dict[str, BenchmarkBase] | None = None,
     ):
         super().__init__(product, configpath)
         print(f"opening ElasticService ({configpath})")
@@ -62,16 +50,6 @@ class SummarySearch(Summary):
         self.date_filter = None
         self.benchmarks = benchmarks or {}
         self.benchmark_helper = {}
-
-    def get_index(self, benchmark: str) -> str | None:
-        """Get the index associated with a benchmark."""
-        b = self.benchmarks.get(benchmark)
-        return b.index if b else None
-
-    def get_filter(self, benchmark: str) -> dict[str, str] | None:
-        """Get the filter associated with a benchmark."""
-        b = self.benchmarks.get(benchmark)
-        return b.filter if b else None
 
     def get_helper(self, benchmark: str) -> "BenchmarkBase":
         """Get a benchmark helper class instance for a benchmark."""
@@ -82,10 +60,11 @@ class SummarySearch(Summary):
             self.benchmark_helper[benchmark] = helper
         return helper
 
-    @abstractmethod
     def create_helper(self, benchmark: str) -> "BenchmarkBase":
-        """Create an instance of the helper class for a benchmark."""
-        raise NotImplementedError("Subclasses must implement this method")
+        helper = self.benchmarks.get(benchmark)
+        if not helper:
+            raise ValueError(f"Unsupported benchmark: {benchmark}")
+        return helper(self, benchmark)
 
     def set_date_filter(self, start_date: str | None, end_date: str | None):
         """Create a date filter dict for a given start and end date."""
@@ -115,11 +94,6 @@ class SummarySearch(Summary):
 class SearchBenchmark(BenchmarkBase):
     """BenchmarkBase subclass for benchmarks using ElasticService."""
 
-    summary: Summary
-    benchmark: str
-    index: str | None = None
-
     def __init__(self, summary: Summary, benchmark: str):
         """Initialize the SearchBenchmark instance."""
         super().__init__(summary, benchmark)
-        self.index = summary.get_index(benchmark)

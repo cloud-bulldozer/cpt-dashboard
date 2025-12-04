@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
-from dataclasses import dataclass
 import sys
 import time
-
+from dataclasses import dataclass
 from typing import Optional
+
 from opensearchpy import OpenSearch
-from opensearchpy.exceptions import TransportError, ConnectionError
+from opensearchpy.exceptions import ConnectionError, TransportError
 from vyper import v
 
 

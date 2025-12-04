@@ -6,6 +6,7 @@ from typing import Annotated, Any, Callable, Optional
 from fastapi import APIRouter, Depends, HTTPException
 
 from app.api.v1.endpoints.ocp.summary import OcpSummary
+from app.api.v1.endpoints.quay.summary import QuaySummary
 from app.api.v1.endpoints.summary.summary import Summary
 
 router = APIRouter()
@@ -46,6 +47,7 @@ class ProductResults:
 
 PRODUCTS = {
     "ocp": Product(OcpSummary, "ocp.elasticsearch"),
+    "quay": Product(QuaySummary, "quay.elasticsearch"),
 }
 
 
@@ -96,8 +98,8 @@ async def collect(
         end_date: The end date to filter the versions by
     """
     results = {}
-    try:
-        for p in Summary.break_list(products) if products else PRODUCTS.keys():
+    for p in Summary.break_list(products) if products else PRODUCTS.keys():
+        try:
             c = context[p]
             summary = c.instance
             m = getattr(summary, method)
@@ -106,12 +108,16 @@ async def collect(
             print(f"collect {method}: {start_date} - {end_date}")
             summary.set_date_filter(start_date, end_date)
             results[p] = m(**kwargs)
-        ret = {}
-        for name, result in results.items():
+        except Exception as e:
+            print(f"Error collecting {p} {method}: {e}")
+            print(traceback.format_exc())
+    ret = {}
+    for name, result in results.items():
+        try:
             ret[name] = await result
-    except Exception as e:
-        print(f"Error collecting {p} {method}: {e}")
-        print(traceback.format_exc())
+        except Exception as e:
+            print(f"Error awaiting {name} {method}: {e}")
+            print(traceback.format_exc())
     return ret
 
 

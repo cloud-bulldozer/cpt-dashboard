@@ -3,14 +3,13 @@ from unittest.mock import AsyncMock
 import pytest
 
 from app.api.v1.endpoints.ocp.summary import (
-    BENCHMARK_INDEX,
+    BENCHMARK_MAPPER,
     IngressPerfBenchmark,
     K8sNetperfBenchmark,
     KubeBurnerBenchmark,
     OcpFingerprint,
     OcpSummary,
 )
-from app.api.v1.endpoints.summary.summary_search import Benchmark
 
 """Unit tests for the OCP summary module.
 
@@ -47,19 +46,19 @@ def mock_ocp_summary(mock_elastic_service, monkeypatch):
     return summary
 
 
-class TestBenchmarkIndex:
-    """Test cases for BENCHMARK_INDEX constant."""
+class TestBenchmarkMapper:
+    """Test cases for BENCHMARK_MAPPER constant."""
 
-    def test_benchmark_index_structure(self):
-        """Test that BENCHMARK_INDEX has expected structure."""
-        # Given: The BENCHMARK_INDEX constant
+    def test_benchmark_mapper_structure(self):
+        """Test that BENCHMARK_MAPPER has expected structure."""
+        # Given: The BENCHMARK_MAPPER constant
         # When: Checking its structure
         # Then: It should be a dictionary with string keys
-        assert isinstance(BENCHMARK_INDEX, dict)
-        assert all(isinstance(k, str) for k in BENCHMARK_INDEX.keys())
+        assert isinstance(BENCHMARK_MAPPER, dict)
+        assert all(isinstance(k, str) for k in BENCHMARK_MAPPER.keys())
 
-    def test_benchmark_index_contains_expected_benchmarks(self):
-        """Test that BENCHMARK_INDEX contains known benchmarks."""
+    def test_benchmark_mapper_contains_expected_benchmarks(self):
+        """Test that BENCHMARK_MAPPER contains known benchmarks."""
         # Given: Known benchmark names
         known_benchmarks = [
             "cluster-density",
@@ -70,45 +69,38 @@ class TestBenchmarkIndex:
             "olm",
         ]
 
-        # When: Checking if they exist in BENCHMARK_INDEX
+        # When: Checking if they exist in BENCHMARK_MAPPER
         # Then: All known benchmarks should be present
         for benchmark in known_benchmarks:
-            assert benchmark in BENCHMARK_INDEX
+            assert benchmark in BENCHMARK_MAPPER
 
-    def test_benchmark_index_cluster_density(self):
+    def test_benchmark_mapper_cluster_density(self):
         """Test cluster-density benchmark configuration."""
         # Given: The cluster-density benchmark
-        benchmark = BENCHMARK_INDEX["cluster-density"]
+        benchmark_class = BENCHMARK_MAPPER["cluster-density"]
 
         # When: Checking its properties
-        # Then: It should have correct index and filter
-        assert isinstance(benchmark, Benchmark)
-        assert benchmark.index == "ripsaw-kube-burner"
-        assert benchmark.filter == {
+        # Then: It should be the KubeBurnerBenchmark class
+        assert benchmark_class == KubeBurnerBenchmark
+        assert hasattr(benchmark_class, "INDEX")
+        assert benchmark_class.INDEX == "ripsaw-kube-burner"
+        assert hasattr(benchmark_class, "FILTER")
+        assert "cluster-density" in benchmark_class.FILTER
+        assert benchmark_class.FILTER["cluster-density"] == {
             "metricName.keyword": "podLatencyQuantilesMeasurement",
             "quantileName.keyword": "Ready",
         }
 
-    def test_benchmark_index_k8s_netperf(self):
+    def test_benchmark_mapper_k8s_netperf(self):
         """Test k8s-netperf benchmark configuration."""
         # Given: The k8s-netperf benchmark
-        benchmark = BENCHMARK_INDEX["k8s-netperf"]
+        benchmark_class = BENCHMARK_MAPPER["k8s-netperf"]
 
         # When: Checking its properties
-        # Then: It should have correct index with no filter
-        assert isinstance(benchmark, Benchmark)
-        assert benchmark.index == "k8s-netperf"
-        assert benchmark.filter is None
-
-    def test_benchmark_index_none_values(self):
-        """Test that some benchmarks have None values."""
-        # Given: Benchmarks that should not have configurations
-        none_benchmarks = ["custom", "index", "node-density", "concurrent-builds"]
-
-        # When: Checking their values
-        # Then: They should be None
-        for benchmark in none_benchmarks:
-            assert BENCHMARK_INDEX[benchmark] is None
+        # Then: It should be the K8sNetperfBenchmark class
+        assert benchmark_class == K8sNetperfBenchmark
+        assert hasattr(benchmark_class, "INDEX")
+        assert benchmark_class.INDEX == "k8s-netperf"
 
 
 class TestOcpFingerprint:
@@ -156,7 +148,7 @@ class TestOcpSummary:
         assert summary.product == "ocp"
         assert summary.configpath == "ocp.elasticsearch"
         assert summary.service is not None
-        assert summary.benchmarks == BENCHMARK_INDEX
+        assert summary.benchmarks == BENCHMARK_MAPPER
 
     def test_create_helper_kube_burner(self, mock_ocp_summary):
         """Test create_helper returns KubeBurnerBenchmark for ripsaw-kube-burner."""
@@ -1037,7 +1029,7 @@ class TestOcpSummary:
             helper = original_create_helper(benchmark)
 
             # Mock the get_iteration_variants method to return empty dict
-            async def empty_variants(index, uuids):
+            async def empty_variants(uuids):
                 return {}
 
             helper.get_iteration_variants = empty_variants
@@ -1103,7 +1095,7 @@ class TestKubeBurnerBenchmark:
 
         # When: Getting iteration variants
         variants = await kube_burner_benchmark.get_iteration_variants(
-            "ripsaw-kube-burner", ["uuid-1", "uuid-2", "uuid-3"]
+            ["uuid-1", "uuid-2", "uuid-3"]
         )
 
         # Then: Should return variants grouped by iteration count
@@ -1125,9 +1117,7 @@ class TestKubeBurnerBenchmark:
         }
 
         # When: Getting iteration variants
-        await kube_burner_benchmark.get_iteration_variants(
-            "ripsaw-kube-burner", ["uuid-1"]
-        )
+        await kube_burner_benchmark.get_iteration_variants(["uuid-1"])
 
         # Then: Date filter should be in query
         call_kwargs = mock_elastic_service.post.call_args.kwargs
@@ -1297,9 +1287,7 @@ class TestK8sNetperfBenchmark:
         uuids = ["uuid-1", "uuid-2"]
 
         # When: Getting iteration variants
-        variants = await k8s_netperf_benchmark.get_iteration_variants(
-            "k8s-netperf", uuids
-        )
+        variants = await k8s_netperf_benchmark.get_iteration_variants(uuids)
 
         # Then: Should return n/a with original uuids
         assert "n/a" in variants
@@ -1560,9 +1548,7 @@ class TestIngressPerfBenchmark:
         uuids = ["uuid-1", "uuid-2"]
 
         # When: Getting iteration variants
-        variants = await ingress_perf_benchmark.get_iteration_variants(
-            "ingress-performance", uuids
-        )
+        variants = await ingress_perf_benchmark.get_iteration_variants(uuids)
 
         # Then: Should return n/a with original uuids
         assert "n/a" in variants

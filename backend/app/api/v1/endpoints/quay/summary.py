@@ -1,17 +1,18 @@
 from collections import defaultdict
 from dataclasses import dataclass, field
+from datetime import datetime
 import time
 from typing import Any, Optional
 
 from app.api.v1.commons.constants import AGG_BUCKET_SIZE, MAX_PAGE
-from app.api.v1.endpoints.summary.summary import BenchmarkBase
 from app.api.v1.endpoints.summary.summary_search import (
+    BenchmarkBase,
     PerfCiFingerprint,
     SearchBenchmark,
     SummarySearch,
 )
 
-"""OCP implementation of Summary class
+"""Quay implementation of Summary class
 
 AI assistance: Cursor is extremely helpful in generating suggesting code
 snippets along the way. While most of this code is hand generated as the
@@ -23,168 +24,83 @@ Assisted-by: Cursor + claude-4-sonnet
 """
 
 
-class KubeBurnerBenchmark(SearchBenchmark):
-    INDEX = "ripsaw-kube-burner"
-    FILTER: dict[str, dict[str, str] | None] = {
-        "cluster-density": {
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
+class QuayLoadTestBenchmark(SearchBenchmark):
+    INDEX: dict[str, dict[str, Any]] = {
+        "quay-push-pull": {
+            "stats": {
+                "extended_stats": {
+                    "field": "elapsed_time",
+                }
+            },
+            "by_uuid": {
+                "terms": {
+                    "field": "uuid.keyword",
+                    "size": MAX_PAGE,
+                },
+                "aggs": {
+                    "start_time": {
+                        "min": {
+                            "field": "start_time",
+                        }
+                    },
+                    "average": {
+                        "avg": {
+                            "field": "elapsed_time",
+                        }
+                    },
+                },
+            },
         },
-        "cluster-density-v2": {
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
+        "quay-vegeta-results": {
+            "stats": {
+                "extended_stats": {
+                    "field": "req_latency",
+                }
+            },
+            "by_uuid": {
+                "terms": {
+                    "field": "uuid.keyword",
+                    "size": MAX_PAGE,
+                },
+                "aggs": {
+                    "timestamp": {"min": {"field": "timestamp"}},
+                    "average": {"avg": {"field": "req_latency"}},
+                    # TODO: The Quay graph module graphs the status code
+                    # average counts. These could be graphed and/or used in our
+                    # "evaluate" function, but for now I'm just using the
+                    # average latency.
+                    "status_codes.0": {"avg": {"field": "status_codes.0"}},
+                    "status_codes.200": {"avg": {"field": "status_codes.200"}},
+                    "status_codes.201": {"avg": {"field": "status_codes.201"}},
+                    "status_codes.204": {"avg": {"field": "status_codes.204"}},
+                    "status_codes.400": {"avg": {"field": "status_codes.400"}},
+                    "status_codes.401": {"avg": {"field": "status_codes.401"}},
+                    "status_codes.403": {"avg": {"field": "status_codes.403"}},
+                    "status_codes.404": {"avg": {"field": "status_codes.404"}},
+                    "status_codes.405": {"avg": {"field": "status_codes.405"}},
+                    "status_codes.408": {"avg": {"field": "status_codes.408"}},
+                    "status_codes.500": {"avg": {"field": "status_codes.500"}},
+                    "status_codes.502": {"avg": {"field": "status_codes.502"}},
+                    "status_codes.503": {"avg": {"field": "status_codes.503"}},
+                    "status_codes.504": {"avg": {"field": "status_codes.504"}},
+                },
+            },
         },
-        "kueue-operator-pods": {
-            "metricName.keyword": "podLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
-        "olm": {
-            "metricName.keyword": "nodeLatencyQuantilesMeasurement",
-            "quantileName.keyword": "Ready",
-        },
-        "virt-density": {
-            "metricName.keyword": "vmiLatencyQuantilesMeasurement",
-            "quantileName.keyword": "VMIRunning",
-        },
+    }
+    TIMESTAMP_FIELD = {
+        "quay-push-pull": "start_time",
+        "quay-vegeta-results": "timestamp",
     }
 
     async def get_iteration_variants(self, uuids: list[str]) -> dict[str, list[str]]:
-        summary = self.summary
-        filters = [
-            {"terms": {"uuid.keyword": uuids}},
-            {"term": {"metricName.keyword": "jobSummary"}},
-        ]
-        if summary.date_filter:
-            filters.append(summary.date_filter)
-        query = {
-            "query": {"bool": {"filter": filters}},
-            "aggs": {
-                "jobIterations": {
-                    "terms": {
-                        "field": "jobConfig.jobIterations",
-                        "size": 10000,
-                    },
-                    "aggs": {
-                        "uuids": {
-                            "terms": {
-                                "field": "uuid.keyword",
-                                "size": 10000,
-                            }
-                        }
-                    },
-                },
-            },
-        }
+        """Report non-configuration discriminations.
 
-        response = await summary.service.post(indice=self.INDEX, query=query, size=0)
-        variants = defaultdict(list)
-        for iterations in response["aggregations"]["jobIterations"]["buckets"]:
-            us = sorted([u["key"] for u in iterations["uuids"]["buckets"]])
-            variants[iterations["key"]].extend(us)
-        return variants
+        We don't disriminate below the "config" level for Quay, so we pass
+        through all configuration UUIDs.
 
-    async def process(
-        self, version: str, config: str, variant: Any, uuids: list[str]
-    ) -> dict[str, Any]:
-        summary = self.summary
-        filters = [{"terms": {"uuid.keyword": uuids}}]
-        if summary.date_filter:
-            filters.append(summary.date_filter)
-        f = self.FILTER.get(self.benchmark)
-        if f:
-            filters.extend([{"term": {k: v}} for k, v in f.items()])
-        response = await summary.service.post(
-            indice=self.INDEX,
-            size=MAX_PAGE,
-            query={
-                "query": {"bool": {"filter": filters}},
-                "sort": [{"timestamp": {"order": "asc"}}],
-                "aggs": {
-                    "stats": {
-                        "extended_stats": {
-                            "field": "P99",
-                        }
-                    },
-                },
-            },
-        )
-        x = []
-        y = []
-        values = []
-        for hit in response["hits"]["hits"]:
-            v = hit["_source"]
-            values.append(
-                {
-                    "uuid": v["uuid"],
-                    "timestamp": v["timestamp"],
-                    "value": v["P99"],
-                }
-            )
-            x.append(v["timestamp"])
-            y.append(int(v["P99"]))
-        stats = response["aggregations"]["stats"]
-        sample = {
-            "values": values,
-            "graph": {
-                "x": x,
-                "y": y,
-                "name": f"{version} {self.benchmark} {config} {variant}",
-                "type": "scatter",
-                "mode": "lines+markers",
-                "orientation": "v",
-            },
-            "stats": {
-                "min": stats["min"],
-                "max": stats["max"],
-                "avg": stats["avg"],
-                "std_dev": stats["std_deviation"],
-            },
-        }
-        return sample
-
-    async def evaluate(self, metric: dict[str, Any]) -> str:
-        """Evaluate a metric sample for the primary "readiness" KPI.
-
-        This adds a "readiness" indicator to the metric sample, based on
-        defined thresholds.
-
-        *** WARNING ***
-
-        This is a dummy implementation based on trivial and arbitrary rules.
-
-        *** END WARNING ***
-
-        The benchmark is "not ready" if:
-
-        * If the final value is below the average value, the metric is "not
-          ready".
-
-        The metric can also be "warning" state if:
-
-        * If the standard deviation exceeds half the average value, the metric
-          is "warning".
-
-        Args:
-            metric: A dictionary containing the metric sample.
-
-        Returns:
-            "ready", "warning", or "not ready"
+        TODO: This is ugly. One alternative would be to roll "iterations" into
+        the "config" level.
         """
-        if len(metric["values"]) < 2:
-            print(f"{self.benchmark} evaluating empty metric")
-            return "warning"
-        if metric["values"][-1]["value"] < metric["stats"]["avg"]:
-            return "not ready"
-        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
-            return "warning"
-        return "ready"
-
-
-class K8sNetperfBenchmark(SearchBenchmark):
-    INDEX = "k8s-netperf"
-
-    async def get_iteration_variants(self, uuids: list[str]) -> dict[str, list[str]]:
-        """This benchmark doesn't have separate iteration counts to track."""
         return {"n/a": uuids}
 
     async def process(
@@ -194,158 +110,82 @@ class K8sNetperfBenchmark(SearchBenchmark):
         filters = [{"terms": {"uuid.keyword": uuids}}]
         if summary.date_filter:
             filters.append(summary.date_filter)
-        response = await summary.service.post(
-            indice=self.INDEX,
-            size=0,
-            query={
-                "query": {"bool": {"filter": filters}},
-                "sort": [{"timestamp": {"order": "asc"}}],
-                "aggs": {
-                    "stats": {
-                        "extended_stats": {
-                            "field": "throughput",
-                        }
-                    },
-                    "uuid": {
-                        "terms": {
-                            "field": "uuid.keyword",
-                            "size": AGG_BUCKET_SIZE,
-                        },
-                        "aggs": {
-                            "profile": {
-                                "terms": {
-                                    "field": "profile.keyword",
-                                    "size": AGG_BUCKET_SIZE,
-                                },
-                                "aggs": {
-                                    "messageSize": {
-                                        "terms": {
-                                            "field": "messageSize",
-                                            "size": AGG_BUCKET_SIZE,
-                                        },
-                                        "aggs": {
-                                            "timestamp": {
-                                                "terms": {
-                                                    "field": "timestamp",
-                                                    "size": AGG_BUCKET_SIZE,
-                                                },
-                                                "aggs": {
-                                                    "throughput": {
-                                                        "avg": {
-                                                            "field": "throughput",
-                                                        }
-                                                    },
-                                                },
-                                            }
-                                        },
-                                    }
-                                },
-                            },
-                        },
-                    },
+        responses = {
+            index: summary.service.post(
+                indice=index,
+                size=0,
+                query={
+                    "query": {"bool": {"filter": filters}},
+                    "sort": [{self.TIMESTAMP_FIELD[index]: {"order": "asc"}}],
+                    "aggs": aggs,
                 },
-            },
-        )
+            )
+            for index, aggs in self.INDEX.items()
+        }
+        by_uuid = defaultdict(lambda: defaultdict())
+        stats = defaultdict()
+        for index, task in responses.items():
+            response = await task
+            stats[index] = response["aggregations"]["stats"]
+            for hit in response["aggregations"]["by_uuid"]["buckets"]:
+                by_uuid[index][hit["key"]] = hit
         values = defaultdict(list)
         graphs = []
-        print(
-            f"{self.benchmark} {version} {config} {variant} {len(uuids)} uuids ({len(response['aggregations']['uuid']['buckets'])} uuids)"
-        )
-        for uagg in response["aggregations"]["uuid"]["buckets"]:
-            uuid = uagg["key"]
-            for t in uagg["profile"]["buckets"]:
-                profile = t["key"]
-                for m in t["messageSize"]["buckets"]:
-                    key = f"{profile}-{m['key']:d}"
-                    for t in m["timestamp"]["buckets"]:
-                        values[key].append(
-                            {
-                                "uuid": uuid,
-                                "timestamp": t["key_as_string"],
-                                "value": t["throughput"]["value"],
-                            }
-                        )
-        for key, v in values.items():
-            v.sort(key=lambda v: v["timestamp"])
+        for index, buckets in by_uuid.items():
+            for uuid, hit in buckets.items():
+                if not hit:
+                    print(
+                        f"no {index} metrics found for {version} {self.benchmark} {config}: {uuid}"
+                    )
+                    continue
+                average = hit["average"]["value"]
+
+                # The "min" aggregation returns the timestamp in milliseconds as
+                # a floating point number.
+                start = datetime.fromtimestamp(
+                    hit[self.TIMESTAMP_FIELD[index]]["value"] / 1000.0
+                )
+                values[index].append(
+                    {
+                        "uuid": uuid,
+                        "timestamp": start,
+                        "value": average,
+                    }
+                )
+            if len(values[index]) < 1:
+                print(
+                    f"no metrics found for {version} {self.benchmark} {config}: {uuids}"
+                )
+            values[index].sort(key=lambda x: x["timestamp"])
             x = []
             y = []
-            for point in v:
-                x.append(point["timestamp"])
-                y.append(point["value"])
+            for value in values[index]:
+                x.append(value["timestamp"])
+                y.append(value["value"])
             graphs.append(
                 {
                     "x": x,
                     "y": y,
-                    "name": key,
+                    "name": f"{version} {self.benchmark} {config} {variant}",
                     "type": "scatter",
                     "mode": "lines+markers",
                     "orientation": "v",
                 }
             )
-        stats = response["aggregations"]["stats"]
-        sample = {
-            "values": values,
+
+        return {
+            "values": {k: v for k, v in values.items()},
             "graph": graphs,
             "stats": {
-                "min": stats["min"],
-                "max": stats["max"],
-                "avg": stats["avg"],
-                "count": stats["count"],
-                "std_dev": stats["std_deviation"],
+                k: {
+                    "min": v["min"],
+                    "max": v["max"],
+                    "avg": v["avg"],
+                    "std_dev": v["std_deviation"],
+                }
+                for k, v in stats.items()
             },
         }
-        return sample
-
-    async def evaluate(self, metric: dict[str, Any]) -> str:
-        """Evaluate a metric sample for the primary "readiness" KPI.
-
-        This adds a "readiness" indicator to the metric sample, based on
-        defined thresholds.
-
-        *** WARNING ***
-
-        This is a dummy implementation based on trivial and arbitrary rules.
-
-        *** END WARNING ***
-
-        The benchmark is "not ready" if:
-
-        * If the final value is below the average value, the metric is "not
-          ready".
-
-        The metric can also be "warning" state if:
-
-        * If the standard deviation exceeds half the average value, the metric
-          is "warning".
-
-        Args:
-            metric: A dictionary containing the metric sample.
-
-        Returns:
-            "ready", "warning", or "not ready"
-        """
-        warning = 0
-        not_ready = 0
-        for key, value in metric["values"].items():
-            if len(value) < 2:
-                warning += 1
-            elif value[-1]["value"] < metric["stats"]["avg"]:
-                not_ready += 1
-        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
-            warning += 1
-        return "not ready" if not_ready > 0 else "warning" if warning > 0 else "ready"
-
-
-class IngressPerfBenchmark(SearchBenchmark):
-    INDEX = "ingress-performance"
-
-    async def get_iteration_variants(self, uuids: list[str]) -> dict[str, list[str]]:
-        return {"n/a": uuids}
-
-    async def process(
-        self, version: str, config: str, iter: int, uuids: list[str]
-    ) -> dict[str, Any]:
-        return {}
 
     async def evaluate(self, metric: dict[str, Any]) -> str:
         """Evaluate a metric sample for the primary "readiness" KPI.
@@ -370,60 +210,36 @@ class IngressPerfBenchmark(SearchBenchmark):
         Returns:
             "ready", "warning", or "not ready"
         """
-        if not metric:
-            print(f"{self.benchmark} evaluating empty metric")
-            return "warning"
-        if len(metric["values"]) < 2:
-            print(f"{self.benchmark} evaluating empty metric")
-            return "warning"
-        if metric["values"][-1]["value"] < metric["stats"]["avg"]:
-            return "not ready"
-        if metric["stats"]["std_dev"] > metric["stats"]["avg"] / 2:
-            return "warning"
+        for index, sample in metric["values"].items():
+            stats = metric["stats"][index]
+            if len(sample) < 1:
+                print(f"{self.benchmark} evaluating empty metric {index}")
+                return "warning"
+            print(
+                f"evaluate {index} {type(sample).__name__}({len(sample)}) {sample[-1]} -- {stats}"
+            )
+            if sample[-1]["value"] < stats["avg"]:
+                return "not ready"
+            if stats["std_dev"] > stats["avg"] / 2:
+                return "warning"
         return "ready"
 
 
 BENCHMARK_MAPPER: dict[str, BenchmarkBase] = {
-    "cluster-density": KubeBurnerBenchmark,
-    "cluster-density-v2": KubeBurnerBenchmark,
-    "ingress-perf": IngressPerfBenchmark,
-    "k8s-netperf": K8sNetperfBenchmark,
-    "kueue-operator-pods": KubeBurnerBenchmark,
-    "olm": KubeBurnerBenchmark,
-    "virt-density": KubeBurnerBenchmark,
+    "quay-load-test": QuayLoadTestBenchmark,
 }
 
-# There are other benchmarks currently seen in the OCP jobs index. I was unable
-# to find any metrics for these benchmarks, so they are not included in the
-# BENCHMARK_MAPPER constant or in the overall prototype summary implementation.
-# (Specifically, the job UUID values associated with these benchmarks are not
-# present in any other OpenSearch index I could find.)
-#
-#     node-density
-#     node-density-cni
-#     node-density-cni-networkpolicy
-#     node-density-heavy
-#     ols-load-generator
-#     ovn-live-migration
-#     rds-core
-#     router-perf
-#     udn-density-l3-pods
-#     udn-density-pods
-#     virt-udn-density
-#     web-burner-cluster-density"
-#     web-burner-init
-#     web-burner-node-density
-#     workers-scale
+
+@dataclass(kw_only=True)
+class QuayFingerprint(PerfCiFingerprint):
+    hitSize: int = field(metadata={"str": "hs"})
+    concurrency: int = field(metadata={"str": "c"})
+    imagePushPulls: int = field(metadata={"str": "img"})
 
 
-@dataclass
-class OcpFingerprint(PerfCiFingerprint):
-    platform: str = field(metadata={"str": "p", "key": True})
+class QuaySummary(SummarySearch):
 
-
-class OcpSummary(SummarySearch):
-
-    def __init__(self, product: str, configpath: str = "ocp.elasticsearch"):
+    def __init__(self, product: str, configpath: str = "quay.elasticsearch"):
         super().__init__(product, configpath, BENCHMARK_MAPPER)
 
     async def close(self):
@@ -488,7 +304,7 @@ class OcpSummary(SummarySearch):
             "aggs": {
                 "configurations": {
                     "composite": {
-                        "sources": OcpFingerprint.composite(),
+                        "sources": QuayFingerprint.composite(),
                         "size": AGG_BUCKET_SIZE,
                     },
                     "aggs": {
@@ -523,7 +339,7 @@ class OcpSummary(SummarySearch):
             for b, u in bees.items():
                 by_benchmark[b].append(
                     {
-                        "configuration": OcpFingerprint.parse(config["key"]),
+                        "configuration": QuayFingerprint.parse(config["key"]),
                         "uuids": list(u),
                     }
                 )
@@ -586,7 +402,7 @@ class OcpSummary(SummarySearch):
                     config_key[ck] = config["configuration"].json()
                     variants = await klass.get_iteration_variants(uuids)
                     if not variants:
-                        print(f"No {ver} {benchmark} {ck} variants found")
+                        print(f"Benchmark {benchmark} variants not found")
                         benchmark_metrics[ver][benchmark][ck] = {}
                         continue
                     for iter, uuids in variants.items():
