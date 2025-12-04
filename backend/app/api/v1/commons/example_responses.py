@@ -85,6 +85,60 @@ ocp_response_example = {
     ],
 }
 
+oso_response_example = {
+    "startDate": "2023-09-20",
+    "endDate": "2023-09-20",
+    "results": [
+        {
+            "ciSystem": "PROW",
+            "uuid": "CPT-e3865b03-ce78-454a-becb-b79aeb806a6b",
+            "platform": "AWS",
+            "benchmark": "cluster-density-v2",
+            "masterNodesCount": 3,
+            "workerNodesCount": 252,
+            "infraNodesCount": 3,
+            "masterNodesType": "m6a.8xlarge",
+            "workerNodesType": "m5.2xlarge",
+            "infraNodesType": "r5.4xlarge",
+            "totalNodesCount": 258,
+            "clusterName": "ci-op-4n0msnvp-7904a-s5sv8",
+            "ocpVersion": "4.14.0-0.nightly-2023-09-15-233408",
+            "networkType": "OVNKubernetes",
+            "buildTag": "1704299395064795136",
+            "jobStatus": "success",
+            "buildUrl": "https://example.com/1704299395064795136",
+            "executionDate": "2023-09-20T02:14:07Z",
+            "jobDuration": "5261",
+            "startDate": "2023-09-20T02:14:07Z",
+            "endDate": "2023-09-20T03:41:48Z",
+            "timestamp": "2023-09-20T02:14:07Z",
+        },
+        {
+            "ciSystem": "PROW",
+            "uuid": "CPT-0d58dddf-721a-4952-985e-046bc17ee3cc",
+            "benchmark": "node-density",
+            "masterNodesCount": 3,
+            "workerNodesCount": 24,
+            "infraNodesCount": 3,
+            "masterNodesType": "e2-standard-4",
+            "workerNodesType": "e2-standard-4",
+            "infraNodesType": "n1-standard-16",
+            "totalNodesCount": 30,
+            "clusterName": "ci-op-x2ic4nsf-8360f-kzbcg",
+            "ocpVersion": "4.13.0-0.nightly-2023-09-12-074803",
+            "networkType": "OVNKubernetes",
+            "buildTag": "1704367060252889088",
+            "jobStatus": "success",
+            "buildUrl": "https://example/1704367060252889088",
+            "executionDate": "2023-09-20T07:19:00Z",
+            "jobDuration": "582",
+            "startDate": "2023-09-20T07:19:00Z",
+            "endDate": "2023-09-20T07:28:42Z",
+            "timestamp": "2023-09-20T07:19:00Z",
+        },
+    ],
+}
+
 quay_response_example = {
     "startDate": "2023-09-20",
     "endDate": "2023-09-20",
@@ -226,6 +280,14 @@ def quay_filter_200_response():
     return response_200(quay_filter_example)
 
 
+def oso_200_response():
+    return response_200(oso_response_example)
+
+
+def oso_filter_200_response():
+    return response_200(oso_filter_example)
+
+
 cpt_response_example = {
     "startDate": "2023-11-18",
     "endDate": "2023-11-23",
@@ -285,3 +347,14 @@ quay_filter_example = {
 
 def cpt_200_response():
     return response_200(cpt_response_example)
+
+
+oso_filter_example = {
+    "filterData": [
+        {"key": "jobStatus", "value": ["success", "failure"]},
+        {"key": "workerNodesCount", "value": [24, 6, 9, 3, 120, 249, 252, 25, 4, 240]},
+        {"key": "jobType", "value": ["pull-request", "periodic"]},
+        {"key": "networkType", "value": ["OVNKubernetes", "OpenShiftSDN"]},
+    ],
+    "summary": {"total": 259, "success": 254, "failure": 5},
+}

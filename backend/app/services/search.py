@@ -309,7 +309,7 @@ class ElasticService:
                         str(value)[: constants.OCP_SHORT_VER_LEN] for value in values
                     ]
                     values = list(set(short_versions))
-                elif key == "result":
+                elif key == "result" or key == "jobStatus":
                     values = list(
                         set(
                             [
@@ -496,6 +496,7 @@ class ElasticService:
                     query["query"]["bool"]["filter"]["range"][timestamp_field][
                         "lte"
                     ] = str(end_datetime)
+
                     response = await self.new_es.search(
                         index=self.new_index + "*",
                         body=jsonable_encoder(query),
