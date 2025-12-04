@@ -40,6 +40,13 @@ import {
   setTelcoCatFilters,
   setTelcoOtherSummaryFilter,
 } from "./telcoActions";
+import {
+  setOSOCatFilters,
+  setOSOAppliedFilters,
+  removeOSOAppliedFilters,
+  applyOSODateFilter,
+  setOSOOtherSummaryFilter,
+} from "./openstackActions";
 
 import store from "@/store/store";
 
@@ -53,6 +60,7 @@ export const setCatFilters = (category, currType) => {
     telco: setTelcoCatFilters,
     ols: setOLSCatFilters,
     ilab: setIlabCatFilters,
+    oso: setOSOCatFilters,
   };
   dispatch(actions[currType](category));
 };
@@ -65,6 +73,7 @@ export const setAppliedFilters = (navigation, currType) => {
     telco: setTelcoAppliedFilters,
     ols: setOLSAppliedFilters,
     ilab: setIlabAppliedFilters,
+    oso: setOSOAppliedFilters,
   };
   dispatch(actions[currType](navigation));
 };
@@ -77,6 +86,7 @@ export const removeAppliedFilters = (key, value, navigation, currType) => {
     telco: removeTelcoAppliedFilters,
     ols: removeOLSAppliedFilters,
     ilab: removeIlabAppliedFilters,
+    oso: removeOSOAppliedFilters,
   };
   dispatch(actions[currType](key, value, navigation));
 };
@@ -89,6 +99,7 @@ export const setDateFilter = (date, key, navigation, currType) => {
     telco: applyTelcoDateFilter,
     ols: applyOLSDateFilter,
     ilab: applyIlabDateFilter,
+    oso: applyOSODateFilter,
   };
   dispatch(actions[currType](date, key, navigation));
 };
@@ -101,6 +112,7 @@ export const setOtherSummaryFilter = (currType) => {
     telco: setTelcoOtherSummaryFilter,
     ols: setOLSOtherSummaryFilter,
     ilab: setIlabOtherSummaryFilter,
+    oso: setOSOOtherSummaryFilter,
   };
   dispatch(actions[currType]());
 };

@@ -25,3 +25,4 @@ export const ILAB_GRAPH_API_V1 = "/api/v1/ilab/runs/";
 export const ILAB_FILTERS_API_V1 = "/api/v1/ilab/runs/filters";
 
 export const OSO_JOBS_API_V1 = "/api/v1/oso/jobs";
+export const OSO_FILTERS_API_V1 = "/api/v1/oso/filters";
