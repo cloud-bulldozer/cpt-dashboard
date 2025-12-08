@@ -5,7 +5,6 @@ import pytest
 
 from app.api.v1.endpoints.summary.summary import BenchmarkBase
 from app.api.v1.endpoints.summary.summary_search import (
-    Benchmark,
     PerfCiFingerprint,
     SearchBenchmark,
     SummarySearch,
@@ -20,7 +19,7 @@ test abstract methods and achieve full coverage.
 
 Follows established patterns from other unit tests with Given-When-Then structure.
 
-Generated-by: Cursor
+Generated-by: Cursor / claude-4-5-sonnet
 """
 
 
@@ -77,13 +76,10 @@ class ConcreteSummarySearch(SummarySearch):
 class ConcreteSearchBenchmark(SearchBenchmark):
     """Concrete implementation of SearchBenchmark for testing."""
 
-    async def get_iteration_variants(
-        self, index: str, uuids: list[str]
-    ) -> dict[str, list[str]]:
+    async def get_iteration_variants(self, uuids: list[str]) -> dict[str, list[str]]:
         """Implement abstract method."""
         return {
             "variants": ["variant1", "variant2"],
-            "index": index,
             "uuid_count": len(uuids),
         }
 
@@ -107,64 +103,100 @@ class ConcreteSearchBenchmark(SearchBenchmark):
         return "low"
 
 
-class TestBenchmarkDataclass:
-    """Test cases for Benchmark dataclass functionality."""
+class TestBenchmarkMapping:
+    """Test cases for benchmark mapping functionality."""
 
-    def test_benchmark_with_index_only(self):
-        """Test Benchmark initialization with only index."""
-        # Given: A benchmark with only an index
-        index = "cdmv9dev-cluster-density"
+    def test_benchmark_helper_with_index(self):
+        """Test benchmark helper class has INDEX attribute."""
+        # Given: A benchmark helper class
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
 
-        # When: Creating a Benchmark instance
-        result = Benchmark(index=index)
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
 
-        # Then: Should create instance with index and None filter
-        assert result.index == index
-        assert result.filter is None
+            async def get_iteration_variants(self, uuids):
+                return {}
 
-    def test_benchmark_with_index_and_filter(self):
-        """Test Benchmark initialization with index and filter."""
-        # Given: A benchmark with index and filter
-        index = "cdmv9dev-quay"
-        filter_dict = {"benchmark": "quay-load-test"}
+            async def process(self, version, config, iter, uuids):
+                return {}
 
-        # When: Creating a Benchmark instance
-        result = Benchmark(index=index, filter=filter_dict)
+            async def evaluate(self, metric):
+                return "ready"
 
-        # Then: Should create instance with both index and filter
-        assert result.index == index
-        assert result.filter == filter_dict
-        assert result.filter["benchmark"] == "quay-load-test"
+        # When: Checking class attributes
+        # Then: Should have INDEX attribute
+        assert hasattr(MockHelper, "INDEX")
+        assert MockHelper.INDEX == "test-index"
 
-    def test_benchmark_filter_can_be_none(self):
-        """Test Benchmark filter defaults to None."""
-        # Given: A benchmark without filter specified
-        index = "cdmv9dev-test"
+    def test_benchmark_helper_with_filter(self):
+        """Test benchmark helper class has FILTER attribute."""
+        # Given: A benchmark helper with filter
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
 
-        # When: Creating a Benchmark instance without filter
-        result = Benchmark(index=index)
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+            FILTER = {"benchmark": "test-benchmark"}
 
-        # Then: Filter should be None
-        assert result.filter is None
+            async def get_iteration_variants(self, uuids):
+                return {}
 
-    def test_benchmark_with_complex_filter(self):
-        """Test Benchmark with complex filter dictionary."""
-        # Given: A benchmark with complex filter
-        index = "cdmv9dev-ocp"
-        filter_dict = {
-            "benchmark": "cluster-density-ms",
-            "platform": "aws",
-            "workerNodesCount": 120,
-        }
+            async def process(self, version, config, iter, uuids):
+                return {}
 
-        # When: Creating a Benchmark instance
-        result = Benchmark(index=index, filter=filter_dict)
+            async def evaluate(self, metric):
+                return "ready"
 
+        # When: Checking class attributes
+        # Then: Should have FILTER attribute
+        assert hasattr(MockHelper, "FILTER")
+        assert MockHelper.FILTER == {"benchmark": "test-benchmark"}
+
+    def test_benchmark_helper_without_filter(self):
+        """Test benchmark helper class can exist without FILTER."""
+        # Given: A benchmark helper without filter
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
+        # When: Checking for filter attribute
+        # Then: Should not have FILTER or it should be None
+        assert not hasattr(MockHelper, "FILTER") or MockHelper.FILTER is None
+
+    def test_benchmark_helper_with_complex_filter(self):
+        """Test benchmark helper with dict of filters."""
+        # Given: A benchmark helper with complex filter structure
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+            FILTER = {
+                "test-1": {"field1": "value1"},
+                "test-2": {"field2": "value2"},
+            }
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
+        # When: Checking filter structure
         # Then: Should preserve all filter values
-        assert result.index == index
-        assert result.filter["benchmark"] == "cluster-density-ms"
-        assert result.filter["platform"] == "aws"
-        assert result.filter["workerNodesCount"] == 120
+        assert MockHelper.FILTER["test-1"]["field1"] == "value1"
+        assert MockHelper.FILTER["test-2"]["field2"] == "value2"
 
 
 class TestPerfCiFingerprintDataclass:
@@ -297,11 +329,25 @@ class TestSummarySearch:
     def test_summary_search_initialization(self, mock_elastic_service):
         """Test SummarySearch initialization with benchmarks."""
         # Given: Product and benchmarks configuration
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         product = "ocp"
         configpath = "ocp.elasticsearch"
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
-            "node-density": Benchmark(index="cdmv9dev-node-density"),
+            "cluster-density": MockHelper,
+            "node-density": MockHelper,
         }
 
         # When: Creating SummarySearch instance
@@ -331,89 +377,109 @@ class TestSummarySearch:
         assert result.benchmark_helper == {}
 
     @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_get_index_returns_benchmark_index(self, mock_elastic_service):
-        """Test get_index returns correct index for benchmark."""
-        # Given: SummarySearch with benchmarks
+    def test_benchmark_mapper_structure(self, mock_elastic_service):
+        """Test that benchmarks map directly to helper classes."""
+        # Given: SummarySearch with benchmark mappings
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
-            "node-density": Benchmark(index="cdmv9dev-node-density"),
+            "test-benchmark": MockHelper,
         }
-        summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
+        summary = ConcreteSummarySearch(product="test", benchmarks=benchmarks)
 
-        # When: Getting index for benchmark
-        result = summary.get_index("cluster-density")
-
-        # Then: Should return correct index
-        assert result == "cdmv9dev-cluster-density"
+        # When: Checking benchmark mapping
+        # Then: Should map to class directly
+        assert summary.benchmarks["test-benchmark"] == MockHelper
 
     @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_get_index_returns_none_for_unknown_benchmark(self, mock_elastic_service):
-        """Test get_index returns None for unknown benchmark."""
-        # Given: SummarySearch with benchmarks
+    def test_benchmark_class_has_index(self, mock_elastic_service):
+        """Test benchmark classes have INDEX attribute."""
+        # Given: SummarySearch with benchmark that has INDEX
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "test-benchmark": MockHelper,
         }
-        summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
+        summary = ConcreteSummarySearch(product="test", benchmarks=benchmarks)
 
-        # When: Getting index for unknown benchmark
-        result = summary.get_index("unknown-benchmark")
-
-        # Then: Should return None
-        assert result is None
+        # When: Checking INDEX attribute
+        # Then: Should have INDEX
+        assert hasattr(summary.benchmarks["test-benchmark"], "INDEX")
+        assert summary.benchmarks["test-benchmark"].INDEX == "test-index"
 
     @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_get_filter_returns_benchmark_filter(self, mock_elastic_service):
-        """Test get_filter returns correct filter for benchmark."""
-        # Given: SummarySearch with filtered benchmarks
+    def test_benchmark_class_with_filter(self, mock_elastic_service):
+        """Test benchmark classes can have FILTER attribute."""
+        # Given: SummarySearch with benchmark that has FILTER
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+            FILTER = {"benchmark-1": {"field": "value"}}
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "quay-load": Benchmark(
-                index="cdmv9dev-quay", filter={"benchmark": "quay-load-test"}
-            ),
+            "benchmark-1": MockHelper,
         }
-        summary = ConcreteSummarySearch(product="quay", benchmarks=benchmarks)
+        summary = ConcreteSummarySearch(product="test", benchmarks=benchmarks)
 
-        # When: Getting filter for benchmark
-        result = summary.get_filter("quay-load")
-
-        # Then: Should return correct filter
-        assert result == {"benchmark": "quay-load-test"}
-
-    @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_get_filter_returns_none_when_no_filter(self, mock_elastic_service):
-        """Test get_filter returns None when benchmark has no filter."""
-        # Given: SummarySearch with unfiltered benchmark
-        benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
-        }
-        summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
-
-        # When: Getting filter for benchmark without filter
-        result = summary.get_filter("cluster-density")
-
-        # Then: Should return None
-        assert result is None
-
-    @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_get_filter_returns_none_for_unknown_benchmark(self, mock_elastic_service):
-        """Test get_filter returns None for unknown benchmark."""
-        # Given: SummarySearch with benchmarks
-        benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
-        }
-        summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
-
-        # When: Getting filter for unknown benchmark
-        result = summary.get_filter("unknown-benchmark")
-
-        # Then: Should return None
-        assert result is None
+        # When: Checking FILTER attribute
+        # Then: Should have FILTER
+        assert hasattr(summary.benchmarks["benchmark-1"], "FILTER")
+        assert "benchmark-1" in summary.benchmarks["benchmark-1"].FILTER
 
     @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
     def test_get_helper_creates_and_caches_helper(self, mock_elastic_service):
         """Test get_helper creates helper and caches it."""
         # Given: SummarySearch instance
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "cluster-density": MockHelper,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
 
@@ -435,9 +501,35 @@ class TestSummarySearch:
     def test_get_helper_different_benchmarks(self, mock_elastic_service):
         """Test get_helper creates separate helpers for different benchmarks."""
         # Given: SummarySearch with multiple benchmarks
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper1(BenchmarkBase):
+            INDEX = "test-index-1"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
+        class MockHelper2(BenchmarkBase):
+            INDEX = "test-index-2"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
-            "node-density": Benchmark(index="cdmv9dev-node-density"),
+            "cluster-density": MockHelper1,
+            "node-density": MockHelper2,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
 
@@ -539,8 +631,22 @@ class TestSearchBenchmark:
     def test_search_benchmark_initialization(self, mock_elastic_service):
         """Test SearchBenchmark initialization."""
         # Given: Summary with benchmark
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "cluster-density": MockHelper,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
 
@@ -550,29 +656,28 @@ class TestSearchBenchmark:
         # Then: Should initialize with correct values
         assert result.summary == summary
         assert result.benchmark == "cluster-density"
-        assert result.index == "cdmv9dev-cluster-density"
-
-    @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
-    def test_search_benchmark_index_none_for_unknown(self, mock_elastic_service):
-        """Test SearchBenchmark index is None for unknown benchmark."""
-        # Given: Summary without specific benchmark
-        summary = ConcreteSummarySearch(product="ocp", benchmarks={})
-
-        # When: Creating SearchBenchmark for unknown benchmark
-        result = ConcreteSearchBenchmark(summary=summary, benchmark="unknown-benchmark")
-
-        # Then: Should have None index
-        assert result.summary == summary
-        assert result.benchmark == "unknown-benchmark"
-        assert result.index is None
 
     @pytest.mark.asyncio
     @patch("app.api.v1.endpoints.summary.summary_search.ElasticService")
     async def test_search_benchmark_get_iteration_variants(self, mock_elastic_service):
         """Test SearchBenchmark get_iteration_variants abstract method implementation."""
         # Given: SearchBenchmark instance
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "cluster-density": MockHelper,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
         benchmark = ConcreteSearchBenchmark(
@@ -581,11 +686,10 @@ class TestSearchBenchmark:
 
         # When: Calling get_iteration_variants
         result = await benchmark.get_iteration_variants(
-            index="test-index", uuids=["uuid1", "uuid2", "uuid3"]
+            uuids=["uuid1", "uuid2", "uuid3"]
         )
 
         # Then: Should return expected structure
-        assert result["index"] == "test-index"
         assert result["uuid_count"] == 3
         assert "variants" in result
 
@@ -594,8 +698,22 @@ class TestSearchBenchmark:
     async def test_search_benchmark_process(self, mock_elastic_service):
         """Test SearchBenchmark process abstract method implementation."""
         # Given: SearchBenchmark instance
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "cluster-density": MockHelper,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
         benchmark = ConcreteSearchBenchmark(
@@ -621,8 +739,22 @@ class TestSearchBenchmark:
     async def test_search_benchmark_evaluate(self, mock_elastic_service):
         """Test SearchBenchmark evaluate abstract method implementation."""
         # Given: SearchBenchmark instance
+        from app.api.v1.endpoints.summary.summary import BenchmarkBase
+
+        class MockHelper(BenchmarkBase):
+            INDEX = "test-index"
+
+            async def get_iteration_variants(self, uuids):
+                return {}
+
+            async def process(self, version, config, iter, uuids):
+                return {}
+
+            async def evaluate(self, metric):
+                return "ready"
+
         benchmarks = {
-            "cluster-density": Benchmark(index="cdmv9dev-cluster-density"),
+            "cluster-density": MockHelper,
         }
         summary = ConcreteSummarySearch(product="ocp", benchmarks=benchmarks)
         benchmark = ConcreteSearchBenchmark(

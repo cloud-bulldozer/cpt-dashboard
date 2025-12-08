@@ -396,10 +396,13 @@ class TestCollect:
         method = "nonexistent_method"
 
         # When
-        # The collect function has a bug where it doesn't initialize ret before try block
-        # This causes UnboundLocalError when exception occurs early
-        with pytest.raises(UnboundLocalError):
-            await collect(products, context, method)
+        # collect should handle AttributeError gracefully and return empty dict
+        result = await collect(products, context, method)
+
+        # Then
+        # Should return empty dict when method doesn't exist
+        assert isinstance(result, dict)
+        assert len(result) == 0  # No results collected due to error
 
     @pytest.mark.asyncio
     async def test_collect_non_callable_method(self):
@@ -412,10 +415,13 @@ class TestCollect:
         method = "product"  # This is an attribute, not a method
 
         # When
-        # The collect function has a bug where it doesn't initialize ret before try block
-        # This causes UnboundLocalError when exception occurs
-        with pytest.raises(UnboundLocalError):
-            await collect(products, context, method)
+        # collect should handle non-callable methods gracefully and return empty dict
+        result = await collect(products, context, method)
+
+        # Then
+        # Should return empty dict when method is not callable
+        assert isinstance(result, dict)
+        assert len(result) == 0  # No results collected due to ValueError
 
 
 class TestProductsEndpoint:
