@@ -1,4 +1,4 @@
-import { useEffect, useRef, useMemo } from "react";
+import { useEffect, useRef, useMemo, useState, useCallback } from "react";
 import { useInitFiltersFromURL } from "@/utils/hooks/useInitFiltersFromURL";
 import { setFromSideMenuFlag } from "@/actions/sideMenuActions";
 
@@ -70,6 +70,21 @@ const OSOTab = () => {
   const setColumns = (value, isAdding) => {
     dispatch(setTableColumns(value, isAdding));
   };
+  //Row expansion
+  const [expandedRunNames, setExpandedRunNames] = useState([]);
+  const setRunExpanded = (run, isExpanding = true) => {
+    setExpandedRunNames((prevExpanded) => {
+      const otherExpandedRunNames = prevExpanded.filter((r) => r !== run.uuid);
+      return isExpanding
+        ? [...otherExpandedRunNames, run.uuid]
+        : otherExpandedRunNames;
+    });
+  };
+
+  const isRunExpanded = useCallback(
+    (run) => expandedRunNames.includes(run.uuid),
+    [expandedRunNames]
+  );
   return (
     <>
       <MetricsTab
@@ -103,7 +118,9 @@ const OSOTab = () => {
         page={page}
         perPage={perPage}
         totalItems={totalJobs}
-        addExpansion={false}
+        addExpansion={true}
+        isRunExpanded={isRunExpanded}
+        setRunExpanded={setRunExpanded}
         type={"oso"}
         shouldSort={false}
       />

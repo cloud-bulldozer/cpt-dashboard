@@ -54,6 +54,29 @@ const initialState = {
     { name: "endDate", value: [] },
     { name: "build", value: [] },
   ],
+  clusterMetaData: [
+    { name: "Organization", value: "organization" },
+    { name: "Cluster Name", value: "clusterName" },
+    { name: "Network Type", value: "networkType" },
+    { name: "Benchmark Status", value: "jobStatus" },
+    { name: "Job Duration", value: "jobDuration" },
+    { name: "Job Type", value: "jobType" },
+    { name: "Repository", value: "repository" },
+    { name: "OpenStack Compute Nodes", value: "openstackComputeNodes" },
+    { name: "OpenStack Version", value: "openstackVersion" },
+    { name: "Pull Number", value: "pullNumber" },
+  ],
+  nodeKeys: [
+    { name: "Master", value: "masterNodesType" },
+    { name: "Worker", value: "workerNodesType" },
+    { name: "Infra", value: "infraNodesType" },
+    { name: "Workload", value: "benchmark" },
+  ],
+  nodeCount: [
+    { name: "Master", value: "masterNodesCount" },
+    { name: "Worker", value: "workerNodesCount" },
+    { name: "Total", value: "totalNodesCount" },
+  ],
 };
 const OSOReducer = (state = initialState, action = {}) => {
   const { type, payload } = action;
