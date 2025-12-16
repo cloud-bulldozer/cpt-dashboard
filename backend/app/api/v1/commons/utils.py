@@ -223,6 +223,13 @@ def construct_ES_filter_query(filter):
     min_match = 0
     for key, values in filter.items():
         field = key_to_field.get(key, key)
+        if key == "jobStatus" and "others" in values:
+            for status in constants.JOB_STATUS_MAP.keys():
+                must_not_part.append(create_match_phrase(field, status))
+            values.remove("others")
+            if not values:
+                min_match += 1
+                continue
         min_match += 1
         for value in values:
             if key in search_value:
