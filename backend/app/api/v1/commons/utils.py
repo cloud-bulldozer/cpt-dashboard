@@ -224,8 +224,8 @@ def construct_ES_filter_query(filter):
     for key, values in filter.items():
         field = key_to_field.get(key, key)
         if key == "jobStatus" and "others" in values:
-            for status in constants.JOB_STATUS_MAP.keys():
-                must_not_part.append(create_match_phrase(field, status))
+            for job_status in constants.JOB_STATUS_MAP.keys():
+                must_not_part.append(create_match_phrase(field, job_status))
             values.remove("others")
             if not values:
                 min_match += 1
