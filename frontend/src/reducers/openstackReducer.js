@@ -44,7 +44,6 @@ const initialState = {
   summary: {},
   selectedFilters: [
     { name: "ciSystem", value: [] },
-    { name: "benchmark", value: [] },
     { name: "workerNodesCount", value: [] },
     { name: "networkType", value: [] },
     { name: "ocpVersion", value: [] },

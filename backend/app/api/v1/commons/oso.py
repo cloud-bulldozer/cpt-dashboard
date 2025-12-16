@@ -45,8 +45,6 @@ async def getData(
         end_date=end_datetime,
         timestamp_field="timestamp",
     )
-    print("OSO")
-    print(response)
     await es.close()
     tasks = [item["_source"] for item in response["data"]]
     jobs = pd.json_normalize(tasks)
