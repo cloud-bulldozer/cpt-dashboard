@@ -2,9 +2,12 @@
 name = "openshift_perfscale_api"
 requires-python = ">=3.12,<3.13"
 dynamic = ["dependencies"]
-version = "0.2.2"
+version = "0.2.4"
 description = "Aggregator for Performance & Scale CPT data"
-authors = [{name = "mleader", email = "mleader@redhat.com"}]
+authors = [
+    {name = "mleader", email = "mleader@redhat.com"},
+    {name = "David Butenhof", email = "dbutenhof@redhat.com"}
+]
 
 [tool.poetry]
 packages = [
