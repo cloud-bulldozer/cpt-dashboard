@@ -9,7 +9,6 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
-  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -18,6 +17,7 @@ import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
 import { showFailureToast } from "@/actions/toastActions";
+import { OTHERS } from "@/assets/constants/jobStatusConstants";
 
 export const fetchQuayJobsData = () => async (dispatch) => {
   try {
@@ -203,11 +203,9 @@ export const applyQuayDateFilter =
   };
 
 export const setQuayOtherSummaryFilter = () => (dispatch, getState) => {
-  const filterData = [...getState().quay.filterData];
   const summary = getState().quay.summary;
   if (summary?.othersCount !== 0) {
-    const filteredStatus = filterOtherStatus(filterData);
-    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setSelectedFilter("jobStatus", OTHERS, false));
     dispatch(setQuayAppliedFilters());
   }
 };

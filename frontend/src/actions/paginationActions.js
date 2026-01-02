@@ -36,6 +36,13 @@ import {
   setIlabPageOptions,
 } from "./ilabActions";
 
+import {
+  setOSOPage,
+  setOSOPageOptions,
+  fetchOSOJobs,
+  setOSOoffset,
+} from "./openstackActions";
+
 export const setPage = (newPage, currType) => (dispatch) => {
   const actions = {
     cpt: setCPTPage,
@@ -44,6 +51,7 @@ export const setPage = (newPage, currType) => (dispatch) => {
     telco: setTelcoPage,
     ols: setOLSPage,
     ilab: setIlabPage,
+    oso: setOSOPage,
   };
   dispatch(actions[currType](newPage));
 };
@@ -56,6 +64,7 @@ export const setPageOptions = (newPage, newPerPage, currType) => (dispatch) => {
     telco: setTelcoPageOptions,
     ols: setOLSPageOptions,
     ilab: setIlabPageOptions,
+    oso: setOSOPageOptions,
   };
   dispatch(actions[currType](newPage, newPerPage));
 };
@@ -71,6 +80,7 @@ const fetchActions = {
   cpt: fetchOCPJobsData,
   ols: fetchOLSJobsData,
   ilab: fetchIlabJobs,
+  oso: fetchOSOJobs,
 };
 const offsetActions = {
   ocp: setOCPOffset,
@@ -79,6 +89,7 @@ const offsetActions = {
   cpt: setCPTOffset,
   ols: setOLSOffset,
   ilab: setIlabOffset,
+  oso: setOSOoffset,
 };
 
 export const checkTableData = (newPage, currType) => (dispatch, getState) => {

@@ -1,4 +1,5 @@
 import ast
+from collections import defaultdict
 from typing import Optional
 from urllib.parse import parse_qs
 
@@ -196,6 +197,43 @@ def construct_query(filter_dict):
 def create_match_phrase(key, item):
     match_phrase = {"match_phrase": {key: item}}
     return match_phrase
+
+
+def invert_job_status_map():
+    inverted = defaultdict(list)
+    for raw, canonical in constants.JOB_STATUS_MAP.items():
+        inverted[canonical].append(raw)
+    return inverted
+
+
+INVERTED_JOB_STATUS_MAP = invert_job_status_map()
+ALL_KNOWN_JOB_STATUSES = set(constants.JOB_STATUS_MAP.keys())
+
+
+def handle_job_status(values, field, should, must_not):
+    min_match_inc = 0
+
+    # Handle "others"
+    if "others" in values:
+        for job_status in ALL_KNOWN_JOB_STATUSES:
+            must_not.append(create_match_phrase(field, job_status))
+
+        values = [v for v in values if v != "others"]
+
+        if not values:
+            return 1  # only others selected
+
+    # Handle success / failure
+    for value in values:
+        canonical = constants.JOB_STATUS_MAP.get(value, value)
+        expanded = INVERTED_JOB_STATUS_MAP.get(canonical, [])
+
+        for job_status in expanded:
+            should.append(create_match_phrase(field, job_status))
+
+        min_match_inc += 1
+
+    return min_match_inc
 
 
 def construct_ES_filter_query(filter):

@@ -9,7 +9,6 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
-  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -17,6 +16,7 @@ import {
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
+import { OTHERS } from "@/assets/constants/jobStatusConstants";
 
 export const fetchOLSJobsData = () => async (dispatch) => {
   try {
@@ -200,11 +200,9 @@ export const applyOLSDateFilter =
   };
 
 export const setOLSOtherSummaryFilter = () => (dispatch, getState) => {
-  const filterData = [...getState().ols.filterData];
   const summary = getState().ols.summary;
   if (summary?.othersCount !== 0) {
-    const filteredStatus = filterOtherStatus(filterData);
-    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setSelectedFilter("jobStatus", OTHERS, false));
     dispatch(setOLSAppliedFilters());
   }
 };

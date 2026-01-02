@@ -9,7 +9,6 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import {
   calculateSummary,
   deleteAppliedFilters,
-  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
@@ -17,6 +16,7 @@ import {
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
+import { OTHERS } from "@/assets/constants/jobStatusConstants.js";
 
 export const fetchOCPJobs = () => async (dispatch) => {
   try {
@@ -194,11 +194,9 @@ export const setOCPFilterFromURL = (searchParams) => ({
 });
 
 export const setOCPOtherSummaryFilter = () => (dispatch, getState) => {
-  const filterData = [...getState().ocp.filterData];
   const summary = getState().ocp.summary;
   if (summary?.othersCount !== 0) {
-    const filteredStatus = filterOtherStatus(filterData);
-    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setSelectedFilter("jobStatus", OTHERS, false));
     dispatch(setOCPAppliedFilters());
   }
 };

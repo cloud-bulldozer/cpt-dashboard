@@ -173,6 +173,8 @@ JOB_STATUS_MAP = {
     "failed": "failure",
 }
 
+JOB_STATUS_OTHERS = "others"
+
 keys_to_keep = ["product", "testName", "jobStatus", "ciSystem", "releaseStream"]
 
 SPLUNK_SEMAPHORE_COUNT = 5  # Arbitrary concurrency limit in an asyncio semaphore

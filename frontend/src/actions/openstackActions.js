@@ -8,7 +8,6 @@ import {
 } from "@/assets/constants/paginationConstants";
 import {
   deleteAppliedFilters,
-  filterOtherStatus,
   getRequestParams,
   calculateSummary,
   getSelectedFilter,
@@ -17,6 +16,7 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper.js";
 import { setLastUpdatedTime } from "./headerActions";
 
 import { cloneDeep } from "lodash";
+import { OTHERS } from "@/assets/constants/jobStatusConstants.js";
 
 export const fetchOSOJobs = () => async (dispatch) => {
   try {
@@ -114,11 +114,9 @@ export const setOSOSortDir = (direction) => ({
 });
 
 export const setOSOOtherSummaryFilter = () => (dispatch, getState) => {
-  const filterData = [...getState().oso.filterData];
   const summary = getState().oso.summary;
-  if (summary?.othersCount !== 0) {
-    const filteredStatus = filterOtherStatus(filterData);
-    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+  if (summary?.othersCount > 0) {
+    dispatch(setSelectedFilter("jobStatus", OTHERS, false));
     dispatch(setOSOAppliedFilters());
   }
 };

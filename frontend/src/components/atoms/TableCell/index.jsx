@@ -3,11 +3,13 @@ import {
   CheckCircleIcon,
   ExclamationCircleIcon,
   ExternalLinkSquareAltIcon,
+  ExclamationTriangleIcon,
 } from "@patternfly/react-icons";
 import { formatDateTime, uid } from "@/utils/helper.js";
 
 import PropTypes from "prop-types";
 import { Td } from "@patternfly/react-table";
+import { SUCCESS, FAILURE } from "@/assets/constants/jobStatusConstants";
 
 const TableCell = (props) => {
   const { col, item } = props;
@@ -28,15 +30,14 @@ const TableCell = (props) => {
 
 const StatusCell = (props) => {
   const { item, col } = props;
-  return item[col.value]?.toLowerCase() === "success" ||
-    item[col.value]?.toLowerCase() === "pass" ? (
+  return item[col.value]?.toLowerCase() === SUCCESS ? (
     <Label
       color="green"
       icon={<CheckCircleIcon data-ouia-component-id="check_circle_icon" />}
     >
       Success
     </Label>
-  ) : (
+  ) : item[col.value]?.toLowerCase() === FAILURE ? (
     <Label
       color="red"
       icon={
@@ -44,6 +45,15 @@ const StatusCell = (props) => {
       }
     >
       Failure
+    </Label>
+  ) : (
+    <Label
+      color="orange"
+      icon={
+        <ExclamationTriangleIcon data-ouia-component-id="exclamation_triangle_icon" />
+      }
+    >
+      Others
     </Label>
   );
 };

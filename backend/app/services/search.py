@@ -313,7 +313,9 @@ class ElasticService:
                     values = list(
                         set(
                             [
-                                constants.JOB_STATUS_MAP.get(x.lower(), "other")
+                                constants.JOB_STATUS_MAP.get(
+                                    x.lower(), constants.JOB_STATUS_OTHERS
+                                )
                                 for x in values
                             ]
                         )
@@ -342,7 +344,9 @@ class ElasticService:
             buckets = filter.get(key, {}).get("buckets")
             if buckets:
                 for x in buckets:
-                    field = constants.JOB_STATUS_MAP.get(x["key"].lower(), "other")
+                    field = constants.JOB_STATUS_MAP.get(
+                        x["key"].lower(), constants.JOB_STATUS_OTHERS
+                    )
                     summary[field] = summary.get(field, 0) + x.get("doc_count", 0)
                 break
 

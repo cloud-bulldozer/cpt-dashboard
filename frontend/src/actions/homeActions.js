@@ -9,13 +9,13 @@ import { appendDateFilter, appendQueryString } from "@/utils/helper";
 import {
   calculateSummary,
   deleteAppliedFilters,
-  filterOtherStatus,
   getRequestParams,
   getSelectedFilter,
 } from "./commonActions";
 
 import API from "@/utils/axiosInstance";
 import { setLastUpdatedTime } from "./headerActions";
+import { OTHERS } from "@/assets/constants/jobStatusConstants";
 
 const getCloneDeep = async () => (await import("lodash/cloneDeep")).default;
 
@@ -158,11 +158,9 @@ export const setCPTAppliedFilters = (navigate) => (dispatch, getState) => {
 };
 
 export const setCPTOtherSummaryFilter = () => (dispatch, getState) => {
-  const filterData = [...getState().cpt.filterData];
   const summary = getState().cpt.summary;
   if (summary?.othersCount !== 0) {
-    const filteredStatus = filterOtherStatus(filterData);
-    dispatch(setSelectedFilter("jobStatus", filteredStatus, false));
+    dispatch(setSelectedFilter("jobStatus", OTHERS, false));
     dispatch(setCPTAppliedFilters());
   }
 };

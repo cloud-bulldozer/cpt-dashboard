@@ -106,15 +106,3 @@ export const calculateSummary = (countObj) => {
   };
   return summary;
 };
-
-export const filterOtherStatus = (filterData) => {
-  const keyWordArr = ["success", "failure"];
-
-  const statusValues =
-    filterData.find((item) => item.key === "jobStatus").value || [];
-
-  const filteredStatus = statusValues.filter(
-    (status) => !keyWordArr.includes(status)
-  );
-  return filteredStatus;
-};
