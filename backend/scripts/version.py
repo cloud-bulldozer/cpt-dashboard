@@ -12,7 +12,7 @@ import subprocess
 import sys
 from typing import Optional
 
-import tomlkit
+import tomllib
 
 
 def do(cmd: list[str]) -> list[str]:
@@ -34,8 +34,8 @@ def getone(cmd: list[str], if_none: Optional[str] = None) -> str:
 def main():
     top = Path(getone(["git", "rev-parse", "--show-toplevel"]))
     backend = top / "backend"
-    with (backend / "pyproject.toml").open() as tml:
-        config = tomlkit.load(tml)
+    with (backend / "pyproject.toml").open("rb") as tml:
+        config = tomllib.load(tml)
     version = config["project"]["version"]
     sha = getone(["git", "rev-parse", "--short", "HEAD"])
     branch = getone(["git", "branch", "--show-current"], if_none="CI")

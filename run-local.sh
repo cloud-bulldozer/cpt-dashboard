@@ -65,9 +65,9 @@ frontend_pid=$!
 b_pgid=$(ps -o pgid= -p ${backend_pid})
 f_pgid=$(ps -o pgid= -p ${frontend_pid})
 
-# Remove the leading space from "ps -o" output
-backend_pgid=${b_pgid# }
-frontend_pgid=${f_pgid# }
+# Remove spaces from "ps -o" output
+backend_pgid=${b_pgid//[[:space:]]/}
+frontend_pgid=${f_pgid//[[:space:]]/}
 
 to_kill="-${backend_pgid}"
 if [[ ${frontend_pgid} -ne ${backend_pgid} ]]; then

@@ -2,7 +2,7 @@
 name = "openshift_perfscale_api"
 requires-python = ">=3.12,<3.13"
 dynamic = ["dependencies"]
-version = "0.2.4"
+version = "0.3.0"
 description = "Aggregator for Performance & Scale CPT data"
 authors = [
     {name = "mleader", email = "mleader@redhat.com"},
@@ -40,7 +40,6 @@ uvicorn = "^0.34.0"
 uvloop = "^0.21.0"
 virtualenv = ">=20.26.6,<20.33.0" # Poetry doesn't like 20.33.0
 vyper-config = "1.0.0"
-tomlkit = "^0.13.3"
 
 [tool.poetry.group.dev.dependencies]
 black = "^24.4.2"
