@@ -4,8 +4,16 @@ const LinkIcon = (props) => {
 
   return (
     <>
-      <a target={target} href={link}>
-        <img src={src} alt={altText} style={{ height: height, width: width }} />
+      <a target={target} href={link} rel="noopener noreferrer">
+        {src ? (
+          <img
+            src={src}
+            alt={altText}
+            style={{ height: height, width: width }}
+          />
+        ) : (
+          altText
+        )}
       </a>
     </>
   );

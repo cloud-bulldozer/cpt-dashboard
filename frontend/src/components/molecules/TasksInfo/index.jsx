@@ -9,6 +9,7 @@ import {
 import GrafanaLink from "@/components/atoms/GrafanaLink";
 import JenkinsIcon from "@/assets/images/jenkins-icon.svg";
 import LinkIcon from "@/components/atoms/LinkIcon";
+import OsoDashboardLink from "@/components/atoms/osoDashboardLink";
 import Proptypes from "prop-types";
 import ProwIcon from "@/assets/images/prow-icon.png";
 import SplunkLink from "@/components/atoms/SplunkLink";
@@ -61,6 +62,13 @@ const TasksInfo = (props) => {
         )}
         {props.type === "telco" && (
           <SplunkLink config={config} startDate={startDate} endDate={endDate} />
+        )}
+        {props.type === "oso" && (
+          <OsoDashboardLink
+            config={config}
+            startDate={startDate - 10 * 60 * 1000}
+            endDate={endDate - 5 * 60 * 1000}
+          />
         )}
         <LinkIcon
           link={config.buildUrl}
