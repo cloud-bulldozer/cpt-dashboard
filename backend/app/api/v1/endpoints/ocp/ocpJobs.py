@@ -1,7 +1,7 @@
 from datetime import date, datetime, timedelta
 import json
 
-from fastapi import APIRouter, Response
+from fastapi import APIRouter, HTTPException, Response
 from fastapi.param_functions import Query
 
 from app.api.v1.commons.utils import normalize_pagination
@@ -133,3 +133,91 @@ async def filters(
     else:
         json_str = json.dumps(results, indent=4)
         return Response(content=json_str, media_type="application/json")
+
+
+# ============================================================================
+# TEMPORARY TEST ENDPOINTS FOR ERROR HANDLING - REMOVE AFTER TESTING
+# ============================================================================
+
+@router.get("/api/v1/ocp/test-errors/format1")
+async def test_error_format1():
+    """Test endpoint for error format: {"detail": {"message": "..."}}"""
+    raise HTTPException(
+        status_code=400,
+        detail={"message": "This is a test error with message object format"}
+    )
+
+@router.get("/api/v1/ocp/test-errors/format2")
+async def test_error_format2():
+    """Test endpoint for error format: {"detail": {"error": "..."}}"""
+    raise HTTPException(
+        status_code=422,
+        detail={"error": "This is a test error with error object format"}
+    )
+
+@router.get("/api/v1/ocp/test-errors/format3")
+async def test_error_format3():
+    """Test endpoint for error format: {"detail": "..."}"""
+    raise HTTPException(
+        status_code=404,
+        detail="This is a test error with string detail format"
+    )
+
+@router.get("/api/v1/ocp/test-errors/format4")
+async def test_error_format4():
+    """Test endpoint for error format: {"error": "..."}"""
+    return Response(
+        content=json.dumps({"error": "This is a test error with direct error key"}),
+        status_code=500,
+        media_type="application/json"
+    )
+
+@router.get("/api/v1/ocp/test-errors/malformed")
+async def test_error_malformed():
+    """Test endpoint for malformed JSON response"""
+    return Response(
+        content="This is not valid JSON",
+        status_code=503,
+        media_type="text/plain"
+    )
+
+@router.get("/api/v1/ocp/test-errors/network")
+async def test_error_network():
+    """Test endpoint that simulates a network timeout"""
+    import asyncio
+    await asyncio.sleep(30)  # This will likely timeout on the frontend
+    return {"message": "This should timeout"}
+
+@router.get("/api/v1/ocp/test-errors/validation")
+async def test_error_validation():
+    """Test endpoint for FastAPI validation error format: {"detail": [...]}"""
+    return Response(
+        content=json.dumps({
+            "detail": [
+                {
+                    "type": "missing",
+                    "loc": ["query", "start_date"],
+                    "msg": "Field required",
+                    "input": None
+                },
+                {
+                    "type": "value_error",
+                    "loc": ["query", "size"],
+                    "msg": "ensure this value is greater than 0",
+                    "input": -5
+                },
+                {
+                    "type": "type_error",
+                    "loc": ["body", "filter"],
+                    "msg": "str type expected",
+                    "input": 123
+                }
+            ]
+        }),
+        status_code=422,
+        media_type="application/json"
+    )
+
+# ============================================================================
+# END TEMPORARY TEST ENDPOINTS
+# ============================================================================

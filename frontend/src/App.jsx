@@ -11,6 +11,8 @@ import OCPTab from "./components/templates/OCP";
 import OLSTab from "./components/templates/OLS";
 import Quay from "./components/templates/Quay";
 import Telco from "./components/templates/Telco";
+// TEMPORARY - REMOVE AFTER TESTING
+import ErrorTestPage from "./components/templates/ErrorTestPage";
 import { useDispatch } from "react-redux";
 import { useEffect } from "react";
 import OSO from "./components/templates/Openstack";
