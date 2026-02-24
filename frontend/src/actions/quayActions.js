@@ -16,7 +16,6 @@ import {
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
-import { showFailureToast } from "@/actions/toastActions";
 import { OTHERS } from "@/assets/constants/jobStatusConstants";
 
 export const fetchQuayJobsData = () => async (dispatch) => {

@@ -1,16 +1,6 @@
-/**
- * Pure error extraction utilities for API error responses.
- * Used by axios interceptor - extracted for testability.
- */
-
-/**
- * Extract user-friendly error message from various API error response formats.
- * @param {string|object|null} data - Response body (string or parsed JSON)
- * @returns {string|null} Extracted message or null if unparseable
- */
 export const extractErrorMessage = (data) => {
   try {
-    // Case: Plain text response (e.g. FastAPI/Starlette default 500, or text/plain errors)
+    // Handling for plain text response
     if (typeof data === 'string' && data.trim()) {
       const errorText = data.trim();
 
@@ -31,13 +21,12 @@ export const extractErrorMessage = (data) => {
         return 'The request timed out while connecting to external services. Please try again.';
       }
 
-      // For other plain text errors, return as-is
       return errorText;
     }
 
-    // Handle different error response formats
+    // Handling for different error response formats
     if (data && typeof data === 'object') {
-      // Case 1: FastAPI validation errors - {"detail": [{"type": "...", "loc": [...], "msg": "..."}]}
+      // FastAPI validation errors - {"detail": [{"type": "...", "loc": [...], "msg": "..."}]}
       if (data.detail && Array.isArray(data.detail) && data.detail.length > 0) {
         const validationErrors = data.detail.map(error => {
           if (error.msg) {
@@ -55,27 +44,27 @@ export const extractErrorMessage = (data) => {
         return `Multiple validation errors: ${validationErrors.join(', ')}`;
       }
 
-      // Case 2: {"detail": {"message": "..."}}
+      // {"detail": {"message": "..."}}
       if (data.detail && typeof data.detail === 'object' && !Array.isArray(data.detail) && data.detail.message) {
         return data.detail.message;
       }
 
-      // Case 3: {"detail": {"error": "..."}}
+      // {"detail": {"error": "..."}}
       if (data.detail && typeof data.detail === 'object' && !Array.isArray(data.detail) && data.detail.error) {
         return data.detail.error;
       }
 
-      // Case 4: {"detail": "..."} - string detail
+      // {"detail": "..."} - string detail
       if (data.detail && typeof data.detail === 'string') {
         return data.detail;
       }
 
-      // Case 5: {"error": "..."} - direct error key
+      // {"error": "..."} - direct error key
       if (data.error && typeof data.error === 'string') {
         return data.error;
       }
 
-      // Case 6: Try to find any message-like field
+      // Try to find any message-like field
       if (data.message && typeof data.message === 'string') {
         return data.message;
       }
@@ -88,11 +77,6 @@ export const extractErrorMessage = (data) => {
   }
 };
 
-/**
- * Get service context label from API URL for 500 errors.
- * @param {string} url - Request URL path
- * @returns {string|null} Service name or null
- */
 export const getServiceContext = (url) => {
   if (url.includes('/telco/')) {
     return 'Telco Service';

@@ -1,7 +1,4 @@
-// Use empty string in dev to hit Vite proxy (configured via VITE_API_PROXY_TARGET).
-// Set VITE_API_BASE_URL for direct backend URL (e.g. when proxy isn't used).
-export const BASE_URL =
-  import.meta.env.VITE_API_BASE_URL ?? "";
+export const BASE_URL = ""
 
 export const AGG_VERSION_API = "/api/version";
 

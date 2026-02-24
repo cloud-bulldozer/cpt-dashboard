@@ -2,7 +2,6 @@ import * as API_ROUTES from "@/utils/apiConstants";
 import * as TYPES from "./types.js";
 
 import API from "@/utils/axiosInstance";
-import { showFailureToast } from "./toastActions.js";
 
 export const setLastUpdatedTime = () => ({
   type: TYPES.SET_LAST_UPDATED_TIME,
@@ -20,6 +19,7 @@ export const fetchAggregatorVersion = () => async (dispatch) => {
       });
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    // Error handling is now done automatically by axios interceptor
+    console.error('Failed to fetch aggregator version:', error);
   }
 };

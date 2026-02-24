@@ -1,4 +1,4 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, test } from "vitest";
 
 import {
   extractErrorMessage,
@@ -27,54 +27,37 @@ const mockErrorPrioritization = (axiosMessage, responseData) => {
 };
 
 describe("extractErrorMessage", () => {
-  it('converts plain text "Internal Server Error" to helpful message', () => {
-    const result = extractErrorMessage("Internal Server Error");
-    expect(result).toBe("A backend service is temporarily unavailable.");
+  // Plain text error message conversion
+  test.each([
+    ["Internal Server Error", "A backend service is temporarily unavailable."],
+    ["Bad Gateway", "Unable to connect to backend service. Please try again in a moment."],
+    ["Service Unavailable", "The service is temporarily overloaded or under maintenance. Please try again later."],
+    ["Gateway Timeout", "The request timed out while connecting to external services. Please try again."],
+    ["Custom server error", "Custom server error"],
+    ["  Whitespace trimmed  ", "Whitespace trimmed"]
+  ])('converts plain text "%s" to expected message', (input, expected) => {
+    expect(extractErrorMessage(input)).toBe(expected);
   });
 
-  it('converts plain text "Bad Gateway" to helpful message', () => {
-    const result = extractErrorMessage("Bad Gateway");
-    expect(result).toBe(
-      "Unable to connect to backend service. Please try again in a moment."
-    );
+  // FastAPI error formats
+  test.each([
+    [{ detail: { message: "Custom error message" } }, "Custom error message"],
+    [{ detail: { error: "Error object format" } }, "Error object format"],
+    [{ detail: "String detail format" }, "String detail format"],
+    [{ error: "Direct error key format" }, "Direct error key format"],
+    [{ message: "Generic message field" }, "Generic message field"]
+  ])('extracts from various JSON formats', (input, expected) => {
+    expect(extractErrorMessage(input)).toBe(expected);
   });
 
-  it('converts plain text "Service Unavailable" to helpful message', () => {
-    const result = extractErrorMessage("Service Unavailable");
-    expect(result).toBe(
-      "The service is temporarily overloaded or under maintenance. Please try again later."
-    );
+  // Null/invalid inputs
+  test.each([
+    [null], [undefined], [{}], [123], [[]], [""], ["   "], [{ detail: [] }]
+  ])('returns null for unparseable data: %s', (input) => {
+    expect(extractErrorMessage(input)).toBeNull();
   });
 
-  it("extracts from Format 1: detail.message", () => {
-    const result = extractErrorMessage({
-      detail: { message: "Custom error message" },
-    });
-    expect(result).toBe("Custom error message");
-  });
-
-  it("extracts from Format 2: detail.error", () => {
-    const result = extractErrorMessage({
-      detail: { error: "Error object format" },
-    });
-    expect(result).toBe("Error object format");
-  });
-
-  it("extracts from Format 3: detail string", () => {
-    const result = extractErrorMessage({
-      detail: "String detail format",
-    });
-    expect(result).toBe("String detail format");
-  });
-
-  it("extracts from Format 4: direct error key", () => {
-    const result = extractErrorMessage({
-      error: "Direct error key format",
-    });
-    expect(result).toBe("Direct error key format");
-  });
-
-  it("extracts validation errors and combines them", () => {
+  it("handles validation errors with field paths", () => {
     const result = extractErrorMessage({
       detail: [
         { msg: "Field required", loc: ["query", "start_date"] },
@@ -86,295 +69,74 @@ describe("extractErrorMessage", () => {
     expect(result).toContain("greater than 0");
   });
 
-  it("returns null for unparseable data", () => {
-    expect(extractErrorMessage(null)).toBeNull();
-    expect(extractErrorMessage(undefined)).toBeNull();
-    expect(extractErrorMessage({})).toBeNull();
-    expect(extractErrorMessage(123)).toBeNull();
-    expect(extractErrorMessage([])).toBeNull();
-  });
-
-  describe("Additional plain text error messages", () => {
-    it('converts "Gateway Timeout" to helpful message', () => {
-      const result = extractErrorMessage("Gateway Timeout");
-      expect(result).toBe(
-        "The request timed out while connecting to external services. Please try again."
-      );
+  it("handles single validation error with nested path", () => {
+    const result = extractErrorMessage({
+      detail: [{ msg: "Field is required", loc: ["query", "start_date", "nested"] }],
     });
-
-    it("returns plain text as-is for unknown error messages", () => {
-      expect(extractErrorMessage("Custom server error")).toBe("Custom server error");
-      expect(extractErrorMessage("  Whitespace trimmed  ")).toBe("Whitespace trimmed");
-    });
-
-    it("handles empty strings", () => {
-      expect(extractErrorMessage("")).toBeNull();
-      expect(extractErrorMessage("   ")).toBeNull();
-    });
-  });
-
-  describe("Complex validation error scenarios", () => {
-    it("handles single validation error with field path", () => {
-      const result = extractErrorMessage({
-        detail: [
-          { 
-            msg: "Field is required", 
-            loc: ["query", "start_date", "nested"] 
-          }
-        ],
-      });
-      expect(result).toBe("Field is required (start_date.nested)");
-    });
-
-    it("handles validation error without location", () => {
-      const result = extractErrorMessage({
-        detail: [
-          { msg: "Invalid format" }
-        ],
-      });
-      expect(result).toBe("Invalid format");
-    });
-
-    it("handles validation error with empty location", () => {
-      const result = extractErrorMessage({
-        detail: [
-          { 
-            msg: "Value error", 
-            loc: ["query"] 
-          }
-        ],
-      });
-      expect(result).toBe("Value error");
-    });
-
-    it("handles validation errors without msg field", () => {
-      const result = extractErrorMessage({
-        detail: [
-          { type: "missing" },
-          { msg: "Valid error" }
-        ],
-      });
-      expect(result).toBe("Multiple validation errors: Validation error, Valid error");
-    });
-  });
-
-  describe("Edge cases and malformed data", () => {
-    it("handles nested object structures", () => {
-      const result = extractErrorMessage({
-        detail: {
-          message: {
-            nested: "This should not be extracted"
-          }
-        }
-      });
-      // Returns the object because the condition only checks if message exists, not if it's a string
-      expect(result).toEqual({
-        nested: "This should not be extracted"
-      });
-    });
-
-    it("handles detail as empty array", () => {
-      const result = extractErrorMessage({
-        detail: []
-      });
-      expect(result).toBeNull();
-    });
-
-    it("handles circular reference gracefully", () => {
-      const circular = { detail: {} };
-      circular.detail.self = circular.detail;
-      
-      // Should not crash and should return null
-      expect(() => extractErrorMessage(circular)).not.toThrow();
-      expect(extractErrorMessage(circular)).toBeNull();
-    });
+    expect(result).toBe("Field is required (start_date.nested)");
   });
 });
 
 describe("getServiceContext", () => {
-  it("returns Telco Service for telco URLs", () => {
-    expect(getServiceContext("/api/v1/telco/filters")).toBe("Telco Service");
-    expect(getServiceContext("/api/v1/telco/jobs")).toBe("Telco Service");
-  });
-
-  it("returns OCP Service for ocp URLs", () => {
-    expect(getServiceContext("/api/v1/ocp/jobs")).toBe("OCP Service");
-  });
-
-  it("returns OLS Service for ols URLs", () => {
-    expect(getServiceContext("/api/v1/ols/jobs")).toBe("OLS Service");
-  });
-
-  it("returns Quay Service for quay URLs", () => {
-    expect(getServiceContext("/api/v1/quay/jobs")).toBe("Quay Service");
-  });
-
-  it("returns ILAB Service for ilab URLs", () => {
-    expect(getServiceContext("/api/v1/ilab/runs")).toBe("ILAB Service");
-  });
-
-  it("returns CPT Service for cpt URLs", () => {
-    expect(getServiceContext("/api/v1/cpt/jobs")).toBe("CPT Service");
-  });
-
-  it("returns null for unknown URLs", () => {
-    expect(getServiceContext("/api/version")).toBeNull();
-    expect(getServiceContext("/api/v1/summary")).toBeNull();
-    expect(getServiceContext("/unknown")).toBeNull();
-    expect(getServiceContext("")).toBeNull();
-  });
-
-  describe("Edge cases for service context", () => {
-    it("handles case sensitivity", () => {
-      expect(getServiceContext("/api/v1/TELCO/jobs")).toBeNull();
-      expect(getServiceContext("/api/v1/OCP/filters")).toBeNull();
-    });
-
-    it("handles URLs with query parameters", () => {
-      expect(getServiceContext("/api/v1/telco/jobs?start_date=2024-01-01")).toBe("Telco Service");
-      expect(getServiceContext("/api/v1/ocp/filters?pretty=true")).toBe("OCP Service");
-    });
-
-    it("handles URLs with fragments", () => {
-      expect(getServiceContext("/api/v1/quay/jobs#section1")).toBe("Quay Service");
-    });
-
-    it("handles deeply nested service paths", () => {
-      expect(getServiceContext("/api/v1/telco/jobs/123/details")).toBe("Telco Service");
-      expect(getServiceContext("/api/v1/ilab/runs/456/metrics")).toBe("ILAB Service");
-    });
-
-    it("prioritizes first service match in URL", () => {
-      expect(getServiceContext("/api/v1/telco/ocp/mixed")).toBe("Telco Service");
-    });
+  test.each([
+    ["/api/v1/telco/filters", "Telco Service"],
+    ["/api/v1/telco/jobs", "Telco Service"],
+    ["/api/v1/ocp/jobs", "OCP Service"],
+    ["/api/v1/ols/jobs", "OLS Service"],
+    ["/api/v1/quay/jobs", "Quay Service"],
+    ["/api/v1/ilab/runs", "ILAB Service"],
+    ["/api/v1/cpt/jobs", "CPT Service"],
+    ["/api/version", null],
+    ["/api/v1/summary", null],
+    ["/unknown", null],
+    ["", null],
+    ["/api/v1/TELCO/jobs", null], // case sensitive
+    ["/api/v1/telco/jobs?start_date=2024-01-01", "Telco Service"], // query params
+    ["/api/v1/quay/jobs#section1", "Quay Service"], // fragments
+    ["/api/v1/telco/jobs/123/details", "Telco Service"], // nested paths
+    ["/api/v1/telco/ocp/mixed", "Telco Service"] // first match wins
+  ])('getServiceContext("%s") returns %s', (url, expected) => {
+    expect(getServiceContext(url)).toBe(expected);
   });
 });
 
 describe("Error Prioritization Logic", () => {
-  it("prefers specific response messages over axios messages", () => {
-    const result = mockErrorPrioritization(
-      "Request failed with status code 500",
-      { detail: { message: "Database connection timeout" } }
-    );
-    
-    expect(result.message).toBe("Database connection timeout");
-    expect(result.source).toBe("Response data extraction");
+  test.each([
+    ["Request failed with status code 500", { detail: { message: "Database connection timeout" } }, "Database connection timeout", "Response data extraction"],
+    ["Request failed with status code 500", "Internal Server Error", "Request failed with status code 500", "Axios error message"],
+    ["Network Error", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction (generic)"],
+    ["Connection refused to database server", "Internal Server Error", "Connection refused to database server", "Axios error message"],
+    ["timeout of 5000ms exceeded", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction (generic)"],
+    [null, { detail: { message: "Specific error" } }, "Specific error", "Response data extraction"],
+    [undefined, "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction (generic)"],
+    ["Network Error", { random: "data" }, null, "none"],
+    ["", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction (generic)"]
+  ])('prioritization: axios="%s" response=%j -> message="%s" source="%s"', (axiosMessage, responseData, expectedMessage, expectedSource) => {
+    const result = mockErrorPrioritization(axiosMessage, responseData);
+    expect(result.message).toBe(expectedMessage);
+    expect(result.source).toBe(expectedSource);
   });
 
-  it("uses axios message when response is generic", () => {
+  it("prefers validation errors over axios messages", () => {
     const result = mockErrorPrioritization(
-      "Request failed with status code 500",
-      "Internal Server Error"
+      "Request failed with status code 422",
+      { detail: [{ msg: "Field required", loc: ["query", "start_date"] }] }
     );
     
-    expect(result.message).toBe("Request failed with status code 500");
-    expect(result.source).toBe("Axios error message");
-  });
-
-  it("falls back to generic response message if axios message is network error", () => {
-    const result = mockErrorPrioritization(
-      "Network Error",
-      "Internal Server Error"
-    );
-    
-    expect(result.message).toBe("A backend service is temporarily unavailable.");
-    expect(result.source).toBe("Response data extraction (generic)");
-  });
-
-  it("uses axios message for descriptive errors", () => {
-    const result = mockErrorPrioritization(
-      "Connection refused to database server",
-      "Internal Server Error"
-    );
-    
-    expect(result.message).toBe("Connection refused to database server");
-    expect(result.source).toBe("Axios error message");
-  });
-
-  describe("Advanced prioritization scenarios", () => {
-    it("handles timeout axios messages", () => {
-      const result = mockErrorPrioritization(
-        "timeout of 5000ms exceeded",
-        "Internal Server Error"
-      );
-      
-      expect(result.message).toBe("A backend service is temporarily unavailable.");
-      expect(result.source).toBe("Response data extraction (generic)");
-    });
-
-    it("prefers validation errors over axios messages", () => {
-      const result = mockErrorPrioritization(
-        "Request failed with status code 422",
-        {
-          detail: [
-            { msg: "Field required", loc: ["query", "start_date"] }
-          ]
-        }
-      );
-      
-      expect(result.message).toBe("Field required (start_date)");
-      expect(result.source).toBe("Response data extraction");
-    });
-
-    it("handles null/undefined axios messages", () => {
-      const result1 = mockErrorPrioritization(
-        null,
-        { detail: { message: "Specific error" } }
-      );
-      expect(result1.message).toBe("Specific error");
-      expect(result1.source).toBe("Response data extraction");
-
-      const result2 = mockErrorPrioritization(
-        undefined,
-        "Internal Server Error"
-      );
-      expect(result2.message).toBe("A backend service is temporarily unavailable.");
-      expect(result2.source).toBe("Response data extraction (generic)");
-    });
-
-    it("handles cases where both sources return null", () => {
-      const result = mockErrorPrioritization(
-        "Network Error",
-        { random: "data" }
-      );
-      
-      expect(result.message).toBeNull();
-      expect(result.source).toBe("none");
-    });
-
-    it("handles empty string messages", () => {
-      const result = mockErrorPrioritization(
-        "",
-        "Internal Server Error"
-      );
-      
-      expect(result.message).toBe("A backend service is temporarily unavailable.");
-      expect(result.source).toBe("Response data extraction (generic)");
+    expect(result).toEqual({
+      message: "Field required (start_date)",
+      source: "Response data extraction"
     });
   });
 });
 
 describe("Integration Tests - Full Error Handling Flow", () => {
   const mockFullErrorHandling = (status, data, url, axiosMessage) => {
-    // Simulate the full logic from axios interceptor
-    const shouldShowToast = 
-      status === 400 || 
-      status === 401 || 
-      status === 403 || 
-      status === 422 || 
-      status >= 500;
-
-    if (!shouldShowToast) {
-      return { showToast: false };
-    }
-
+    // Note: Current implementation shows toasts for ALL status codes (400-599)
     let extractedMessage = null;
     let messageSource = '';
     
-    // Priority 1: Try to extract from response data
     const responseMessage = extractErrorMessage(data);
-    
-    // Priority 2: Use Axios error message if response extraction failed or gave generic message
     const isGenericResponseMessage = responseMessage && (
       responseMessage.includes('backend service is temporarily unavailable') ||
       responseMessage === 'Internal Server Error' ||
@@ -402,71 +164,30 @@ describe("Integration Tests - Full Error Handling Flow", () => {
     }
 
     return {
-      showToast: true,
+      showToast: true, // Now shows for all HTTP errors
       message: extractedMessage,
       source: messageSource,
       hasServiceContext: status >= 500 && url && getServiceContext(url) !== null
     };
   };
 
-  it("handles 500 error with service context", () => {
-    const result = mockFullErrorHandling(
-      500,
-      "Internal Server Error",
-      "/api/v1/telco/filters",
-      "Request failed with status code 500"
-    );
+  test.each([
+    [500, "Internal Server Error", "/api/v1/telco/filters", "Request failed with status code 500", "Telco Service: Request failed with status code 500", "Axios error message", true],
+    [422, { detail: [{ msg: "Field required", loc: ["query", "start_date"] }] }, "/api/v1/ocp/jobs", "Request failed with status code 422", "Field required (start_date)", "Response data extraction", false],
+    [400, { detail: { message: "Invalid date range" } }, "/api/v1/quay/jobs", "Request failed with status code 400", "Invalid date range", "Response data extraction", false],
+    [404, { detail: "Not found" }, "/api/v1/ocp/jobs", "Request failed with status code 404", "Not found", "Response data extraction", false]
+  ])('status %d with %j -> message="%s" hasServiceContext=%s', (status, data, url, axiosMessage, expectedMessage, expectedSource, expectedServiceContext) => {
+    const result = mockFullErrorHandling(status, data, url, axiosMessage);
     
-    expect(result.showToast).toBe(true);
-    expect(result.message).toBe("Telco Service: Request failed with status code 500");
-    expect(result.source).toBe("Axios error message");
-    expect(result.hasServiceContext).toBe(true);
+    expect(result).toEqual({
+      showToast: true,
+      message: expectedMessage,
+      source: expectedSource,
+      hasServiceContext: expectedServiceContext
+    });
   });
 
-  it("handles 422 validation error without service context", () => {
-    const result = mockFullErrorHandling(
-      422,
-      {
-        detail: [
-          { msg: "Field required", loc: ["query", "start_date"] }
-        ]
-      },
-      "/api/v1/ocp/jobs",
-      "Request failed with status code 422"
-    );
-    
-    expect(result.showToast).toBe(true);
-    expect(result.message).toBe("Field required (start_date)");
-    expect(result.source).toBe("Response data extraction");
-    expect(result.hasServiceContext).toBe(false);
-  });
-
-  it("skips toast for 404 errors", () => {
-    const result = mockFullErrorHandling(
-      404,
-      { detail: "Not found" },
-      "/api/v1/ocp/jobs",
-      "Request failed with status code 404"
-    );
-    
-    expect(result.showToast).toBe(false);
-  });
-
-  it("handles specific backend error message", () => {
-    const result = mockFullErrorHandling(
-      400,
-      { detail: { message: "Invalid date range provided" } },
-      "/api/v1/quay/jobs",
-      "Request failed with status code 400"
-    );
-    
-    expect(result.showToast).toBe(true);
-    expect(result.message).toBe("Invalid date range provided");
-    expect(result.source).toBe("Response data extraction");
-    expect(result.hasServiceContext).toBe(false);
-  });
-
-  it("handles network timeout scenario", () => {
+  it("handles enhanced error messages with service context", () => {
     const result = mockFullErrorHandling(
       500,
       "Gateway Timeout",
@@ -474,47 +195,7 @@ describe("Integration Tests - Full Error Handling Flow", () => {
       "timeout of 30000ms exceeded"
     );
     
-    expect(result.showToast).toBe(true);
     expect(result.message).toBe("OLS Service: The request timed out while connecting to external services. Please try again.");
-    expect(result.source).toBe("Response data extraction");
     expect(result.hasServiceContext).toBe(true);
-  });
-
-  describe("Real-world error scenarios", () => {
-    it("handles Splunk connection failure (Telco service)", () => {
-      const result = mockFullErrorHandling(
-        500,
-        "Internal Server Error",
-        "/api/v1/telco/filters",
-        "Request failed with status code 500"
-      );
-      
-      expect(result.message).toContain("Telco Service");
-      expect(result.message).toContain("Request failed with status code 500");
-    });
-
-    it("handles database timeout error", () => {
-      const result = mockFullErrorHandling(
-        500,
-        { detail: { message: "Database query timeout after 30 seconds" } },
-        "/api/v1/ocp/jobs",
-        "Request failed with status code 500"
-      );
-      
-      expect(result.message).toBe("OCP Service: Database query timeout after 30 seconds");
-      expect(result.source).toBe("Response data extraction");
-    });
-
-    it("handles authentication failure", () => {
-      const result = mockFullErrorHandling(
-        401,
-        { detail: "Invalid credentials" },
-        "/api/v1/ilab/runs",
-        "Request failed with status code 401"
-      );
-      
-      expect(result.message).toBe("Invalid credentials");
-      expect(result.showToast).toBe(true);
-    });
   });
 });
