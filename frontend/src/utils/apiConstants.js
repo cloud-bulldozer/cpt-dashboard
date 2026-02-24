@@ -1,4 +1,4 @@
-export const BASE_URL = ""
+export const BASE_URL = "";
 
 export const AGG_VERSION_API = "/api/version";
 
