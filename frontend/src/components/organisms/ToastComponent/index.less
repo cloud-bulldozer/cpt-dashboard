@@ -1,0 +1,100 @@
+// Toast animation styles for faster, smoother notifications
+
+.fast-fade-toast-group {
+  // Ensure proper z-index for toasts
+  z-index: 9999;
+  
+  // Animation for toast group
+  .pf-c-alert-group__item {
+    animation: slideInRight 0.3s ease-out;
+    transition: all 0.3s ease-out;
+  }
+}
+
+.fast-fade-toast {
+  // Faster transitions for all toast interactions
+  transition: all 0.3s ease-out !important;
+  
+  // Smoother entrance animation
+  animation: slideInRight 0.3s ease-out;
+  
+  // Override PatternFly's default fade-out animation to be faster
+  &.pf-m-fadeout {
+    animation: fadeOutRight 0.3s ease-in forwards !important;
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  
+  // Hover effects for better UX
+  &:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+    transform: translateY(-1px);
+  }
+}
+
+// Keyframes for smooth animations
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+@keyframes fadeOutRight {
+  from {
+    opacity: 1;
+    transform: translateX(0);
+  }
+  to {
+    opacity: 0;
+    transform: translateX(100%);
+  }
+}
+
+// Additional improvements for toast appearance
+.fast-fade-toast {
+  // Slightly more compact padding for quicker reading
+  .pf-c-alert__title {
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+  
+  // Better spacing for message content
+  p {
+    margin: 2px 0;
+    line-height: 1.4;
+  }
+  
+  // Smoother close button interaction
+  .pf-c-button.pf-m-plain {
+    transition: all 0.2s ease;
+    
+    &:hover {
+      background-color: rgba(255, 255, 255, 0.1);
+      transform: scale(1.1);
+    }
+  }
+}
+
+// Responsive behavior for mobile
+@media (max-width: 768px) {
+  .fast-fade-toast-group {
+    // Ensure toasts are readable on mobile
+    .pf-c-alert-group__item {
+      margin: 0 8px;
+    }
+  }
+  
+  .fast-fade-toast {
+    // Slightly smaller on mobile
+    font-size: 0.9rem;
+    
+    .pf-c-alert__title {
+      font-size: 1rem;
+    }
+  }
+}
