@@ -63,7 +63,6 @@ axiosInstance.interceptors.response.use(
   (error) => {
     if (error.response) {
       const { data, status } = error.response;
-      const requestUrl = error.config?.url || '';
       let extractedMessage = null;
       
       // Try to extract from response data using existing logic
