@@ -1,7 +1,7 @@
 import { showFailureToast, showToast } from "@/actions/toastActions";
 
 import { BASE_URL } from "./apiConstants";
-import { extractErrorMessage, getServiceContext } from "./errorUtils";
+import { extractErrorMessage } from "./errorUtils";
 import axios from "axios";
 import store from "@/store/store";
 
@@ -67,7 +67,7 @@ axiosInstance.interceptors.response.use(
       let extractedMessage = null;
       
       // Try to extract from response data using existing logic
-      const responseMessage = extractErrorMessage(data);
+      const responseMessage = extractErrorMessage(data, status);
       
       // Use Axios error message if response extraction failed or gave non-descriptive message
       const axiosMessage = error.message;
@@ -87,13 +87,6 @@ axiosInstance.interceptors.response.use(
         extractedMessage = responseMessage;
       }
       
-      // Add context about which service failed for 500 errors
-      if (status >= 500 && extractedMessage && requestUrl) {
-        const serviceContext = getServiceContext(requestUrl);
-        if (serviceContext) {
-          extractedMessage = `${serviceContext}: ${extractedMessage}`;
-        }
-      }
       
       //Display error message or fallback
       if (extractedMessage) {

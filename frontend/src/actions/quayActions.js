@@ -255,7 +255,8 @@ export const fetchGraphData = (uuid) => async (dispatch, getState) => {
       }
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    // Error handling is done automatically by axios interceptor
+    console.error('Failed to fetch aggregator version:', error);
   }
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };

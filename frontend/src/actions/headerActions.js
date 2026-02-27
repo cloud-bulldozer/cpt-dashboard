@@ -19,7 +19,7 @@ export const fetchAggregatorVersion = () => async (dispatch) => {
       });
     }
   } catch (error) {
-    // Error handling is now done automatically by axios interceptor
+    // Error handling is done automatically by axios interceptor
     console.error('Failed to fetch aggregator version:', error);
   }
 };

@@ -1,26 +1,26 @@
-export const extractErrorMessage = (data) => {
+/**
+ * Extract user-friendly error message from various API error response formats.
+ * @param {string|object|null} data - Response body (string or parsed JSON)
+ * @param {number} status - HTTP status code
+ * @returns {string|null} Extracted message or null if unparseable
+ */
+export const extractErrorMessage = (data, status) => {
   try {
+    // Enhanced error messages based on HTTP status codes for generic responses
+    const statusErrorMap = {
+      500: 'A backend service is temporarily unavailable.',
+      502: 'Unable to connect to backend service. Please try again in a moment.',
+      503: 'The service is temporarily overloaded or under maintenance. Please try again later.',
+      504: 'The request timed out while connecting to external services. Please try again.'
+    };
+
     // Handling for plain text response
     if (typeof data === 'string' && data.trim()) {
       const errorText = data.trim();
-
-      // Enhance generic server errors with more helpful context
-      if (errorText === 'Internal Server Error') {
-        return 'A backend service is temporarily unavailable.';
+      if (statusErrorMap[status]) {
+        return statusErrorMap[status];
       }
-
-      if (errorText === 'Bad Gateway') {
-        return 'Unable to connect to backend service. Please try again in a moment.';
-      }
-
-      if (errorText === 'Service Unavailable') {
-        return 'The service is temporarily overloaded or under maintenance. Please try again later.';
-      }
-
-      if (errorText === 'Gateway Timeout') {
-        return 'The request timed out while connecting to external services. Please try again.';
-      }
-
+      // Return original text for unrecognized status codes
       return errorText;
     }
 
@@ -77,24 +77,3 @@ export const extractErrorMessage = (data) => {
   }
 };
 
-export const getServiceContext = (url) => {
-  if (url.includes('/telco/')) {
-    return 'Telco Service';
-  }
-  if (url.includes('/ocp/')) {
-    return 'OCP Service';
-  }
-  if (url.includes('/ols/')) {
-    return 'OLS Service';
-  }
-  if (url.includes('/quay/')) {
-    return 'Quay Service';
-  }
-  if (url.includes('/ilab/')) {
-    return 'ILAB Service';
-  }
-  if (url.includes('/cpt/')) {
-    return 'CPT Service';
-  }
-  return null;
-};
