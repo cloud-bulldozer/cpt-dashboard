@@ -2,10 +2,10 @@
  * Error Handling Validation Tests
  *
  * Validates the enhanced axios interceptor error handling:
- * - Different FastAPI error response formats
+ * - Different FastAPI error response formats  
  * - Toast notifications for errors
  * - UI remains operational after errors
- * - Fallback messages for malformed responses
+ * - Error messages for 500 and 503 errors
  * - Centralized error handling in Axios layer
  *
  * Uses mocked API responses - no backend required.
@@ -108,7 +108,7 @@ describe('Error Handling Validation', () => {
     cy.contains('string detail format').should('be.visible');
   });
 
-  it('Format 4: {"error": "..."} - shows Internal Server Error toast', () => {
+  it('Format 4: {"error": "..."} - shows enhanced 500 error message', () => {
     cy.intercept('GET', '**/test-errors/format4*', {
       statusCode: 500,
       body: { error: 'This is a test error with direct error key' },
@@ -119,10 +119,10 @@ describe('Error Handling Validation', () => {
 
     cy.wait('@format4');
     cy.contains('Internal Server Error', { timeout: 10000 }).should('be.visible');
-    cy.contains('direct error key').should('be.visible');
+    cy.contains('A backend service is temporarily unavailable').should('be.visible');
   });
 
-  it('Malformed Response - shows fallback message when JSON cannot be parsed', () => {
+  it('Malformed Response - shows enhanced 503 error message', () => {
     cy.intercept('GET', '**/test-errors/malformed*', {
       statusCode: 503,
       body: 'This is not valid JSON',
@@ -133,16 +133,8 @@ describe('Error Handling Validation', () => {
     });
 
     cy.wait('@malformed');
-    // Malformed returns 503 - should show Server Error or Request Error fallback
-    cy.get('body', { timeout: 10000 }).should(($body) => {
-      const text = $body.text();
-      expect(
-        text.includes('Server Error') ||
-        text.includes('Request Error') ||
-        text.includes('Service Unavailable') ||
-        text.includes('issue with your request')
-      ).to.be.true;
-    });
+    // Status 503 now returns enhanced message regardless of response format
+    cy.contains('The service is temporarily overloaded or under maintenance', { timeout: 10000 }).should('be.visible');
   });
 
   it('Validation Errors - combines multiple validation errors in toast', () => {
