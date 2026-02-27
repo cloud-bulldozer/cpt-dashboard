@@ -1,9 +1,3 @@
-/**
- * Extract user-friendly error message from various API error response formats.
- * @param {string|object|null} data - Response body (string or parsed JSON)
- * @param {number} status - HTTP status code
- * @returns {string|null} Extracted message or null if unparseable
- */
 export const extractErrorMessage = (data, status) => {
   try {
     // Enhanced error messages based on HTTP status codes for generic responses
@@ -14,13 +8,14 @@ export const extractErrorMessage = (data, status) => {
       504: 'The request timed out while connecting to external services. Please try again.'
     };
 
+    // Always prioritize enhanced messages for these status codes
+    if (statusErrorMap[status]) {
+      return statusErrorMap[status];
+    }
+
     // Handling for plain text response
     if (typeof data === 'string' && data.trim()) {
       const errorText = data.trim();
-      if (statusErrorMap[status]) {
-        return statusErrorMap[status];
-      }
-      // Return original text for unrecognized status codes
       return errorText;
     }
 

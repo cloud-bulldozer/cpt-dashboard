@@ -65,26 +65,9 @@ axiosInstance.interceptors.response.use(
       const { data, status } = error.response;
       let extractedMessage = null;
       
-      // Try to extract from response data using existing logic
       const responseMessage = extractErrorMessage(data, status);
-      
-      // Use Axios error message if response extraction failed or gave non-descriptive message
-      const axiosMessage = error.message;
-      const isGenericResponseMessage = responseMessage && (
-        responseMessage.includes('backend service is temporarily unavailable') ||
-        responseMessage === 'Internal Server Error' ||
-        responseMessage === 'Bad Gateway' ||
-        responseMessage === 'Service Unavailable'
-      );
-      
-      //Determines which message content to display
-      if (responseMessage && !isGenericResponseMessage) {
-        extractedMessage = responseMessage;
-      } else if (axiosMessage && axiosMessage !== 'Network Error' && !axiosMessage.startsWith('timeout')) {
-        extractedMessage = axiosMessage;
-      } else if (responseMessage) {
-        extractedMessage = responseMessage;
-      }
+      // Use the response message if available, otherwise fall back to axios message
+      extractedMessage = responseMessage || error.message;
       
       
       //Display error message or fallback

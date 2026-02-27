@@ -8,22 +8,14 @@ import {
 const mockErrorPrioritization = (axiosMessage, responseData, status = 500) => {
   const responseMessage = extractErrorMessage(responseData, status);
   
-  // Enhanced messages (from status codes 500, 502, 503, 504) are always preferred
-  const enhancedMessages = [
-    'A backend service is temporarily unavailable.',
-    'Unable to connect to backend service. Please try again in a moment.',
-    'The service is temporarily overloaded or under maintenance. Please try again later.',
-    'The request timed out while connecting to external services. Please try again.'
-  ];
+  // Use response message if available, otherwise fall back to axios message
+  const extractedMessage = responseMessage || axiosMessage;
   
-  if (responseMessage && enhancedMessages.includes(responseMessage)) {
-    return { message: responseMessage, source: 'Response data extraction' };
-  } else if (responseMessage && typeof responseData === 'object') {
-    return { message: responseMessage, source: 'Response data extraction' };
-  } else if (axiosMessage && axiosMessage !== 'Network Error' && !axiosMessage.startsWith('timeout')) {
-    return { message: axiosMessage, source: 'Axios error message' };
-  } else if (responseMessage) {
-    return { message: responseMessage, source: 'Response data extraction' };
+  if (extractedMessage) {
+    return { 
+      message: extractedMessage, 
+      source: responseMessage ? 'Response data extraction' : 'Axios error message' 
+    };
   }
   
   return { message: null, source: 'none' };
@@ -69,8 +61,8 @@ describe("extractErrorMessage", () => {
   // Null/invalid inputs
   test.each([
     [null], [undefined], [{}], [123], [[]], [""], ["   "], [{ detail: [] }]
-  ])('returns null for unparseable data: %s', (input) => {
-    expect(extractErrorMessage(input, 500)).toBeNull();
+  ])('returns enhanced message for status 500 even with unparseable data: %s', (input) => {
+    expect(extractErrorMessage(input, 500)).toBe("A backend service is temporarily unavailable.");
   });
 
   it("handles validation errors with field paths", () => {
@@ -96,17 +88,17 @@ describe("extractErrorMessage", () => {
 
 describe("Error Prioritization Logic", () => {
   test.each([
-    ["Request failed with status code 500", { detail: { message: "Database connection timeout" } }, "Database connection timeout", "Response data extraction"],
+    ["Request failed with status code 422", { detail: { message: "Database connection timeout" } }, "Database connection timeout", "Response data extraction"],
     ["Request failed with status code 500", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"],
     ["Network Error", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"],
     ["Connection refused to database server", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"],
     ["timeout of 5000ms exceeded", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"],
     [null, { detail: { message: "Specific error" } }, "Specific error", "Response data extraction"],
     [undefined, "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"],
-    ["Network Error", { random: "data" }, null, "none"],
+    ["Network Error", { random: "data" }, "A backend service is temporarily unavailable.", "Response data extraction"],
     ["", "Internal Server Error", "A backend service is temporarily unavailable.", "Response data extraction"]
   ])('prioritization: axios="%s" response=%j -> message="%s" source="%s"', (axiosMessage, responseData, expectedMessage, expectedSource) => {
-    const result = mockErrorPrioritization(axiosMessage, responseData);
+    const result = mockErrorPrioritization(axiosMessage, responseData, responseData && typeof responseData === 'object' && responseData.detail ? 422 : 500);
     expect(result.message).toBe(expectedMessage);
     expect(result.source).toBe(expectedSource);
   });
@@ -128,33 +120,12 @@ describe("Error Prioritization Logic", () => {
 describe("Integration Tests - Full Error Handling Flow", () => {
   const mockFullErrorHandling = (status, data, url, axiosMessage) => {
     // Note: Current implementation shows toasts for ALL status codes (400-599)
-    let extractedMessage = null;
-    let messageSource = '';
-    
     const responseMessage = extractErrorMessage(data, status);
     
-    // Enhanced messages (from status codes 500, 502, 503, 504) are always preferred
-    const enhancedMessages = [
-      'A backend service is temporarily unavailable.',
-      'Unable to connect to backend service. Please try again in a moment.',
-      'The service is temporarily overloaded or under maintenance. Please try again later.',
-      'The request timed out while connecting to external services. Please try again.'
-    ];
-    
-    if (responseMessage && enhancedMessages.includes(responseMessage)) {
-      extractedMessage = responseMessage;
-      messageSource = 'Response data extraction';
-    } else if (responseMessage && typeof data === 'object') {
-      extractedMessage = responseMessage;
-      messageSource = 'Response data extraction';
-    } else if (axiosMessage && axiosMessage !== 'Network Error' && !axiosMessage.startsWith('timeout')) {
-      extractedMessage = axiosMessage;
-      messageSource = 'Axios error message';
-    } else if (responseMessage) {
-      extractedMessage = responseMessage;
-      messageSource = 'Response data extraction';
-    }
-    
+    // Use response message if available, otherwise fall back to axios message
+    const extractedMessage = responseMessage || axiosMessage;
+    const messageSource = responseMessage ? 'Response data extraction' : 'Axios error message';
+
     return {
       showToast: true, // Now shows for all HTTP errors
       message: extractedMessage,
