@@ -16,7 +16,6 @@ import {
 import API from "@/utils/axiosInstance";
 import { cloneDeep } from "lodash";
 import { setLastUpdatedTime } from "./headerActions";
-import { showFailureToast } from "@/actions/toastActions";
 import { OTHERS } from "@/assets/constants/jobStatusConstants";
 
 export const fetchQuayJobsData = () => async (dispatch) => {
@@ -256,7 +255,8 @@ export const fetchGraphData = (uuid) => async (dispatch, getState) => {
       }
     }
   } catch (error) {
-    dispatch(showFailureToast());
+    // Error handling is done automatically by axios interceptor
+    console.error('Failed to fetch aggregator version:', error);
   }
   dispatch({ type: TYPES.GRAPH_COMPLETED });
 };
